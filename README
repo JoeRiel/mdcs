@@ -1,0 +1,69 @@
+This package provides an Emacs major mode, mdb, for debugging Maple
+code.  It provides a frontend to the builtin Maple debugger that steps
+through the interpreted source code.
+
+REQUIREMENTS
+------------
+* GNU Emacs 22.2.1+
+* The binary pmaple and shell script emaple.  
+
+INSTALLATION
+------------
+Move mdb.el and ir.el to where Emacs can find them and (preferably)
+byte compile them.  Add the following to the .emacs file:
+
+(autoload 'mdb "mdb" "Maple debugger" t)
+
+USAGE
+-----
+Start mdb.
+
+M-x mdb
+
+This brings up a Maple prompt (with the default installation, the
+prompt is the string "(**) ".  You can enter standard Maple commands.
+The shell is currently rather crude.
+
+To debug a procedure, instrument it in the usual way, that is,
+by using the stopat procedure.  For example, to debug int, do
+
+(**) stopat(int):
+
+When int is executed, the debugger starts and mdb automatically
+switches to the *showstat* buffer.
+
+(**) int(x^2,x);
+
+The showstat buffer maps single keys to debugger commands.
+
+Tracing
+-------
+      c   continue
+      i   into
+      n   next
+      o   outfrom
+      q   quit
+      r   return
+      s   step
+(space)  repeat last command
+
+Breakpoints
+-----------
+Breakpoints can be set/cleared/queried.  To set a breakpoint,
+move the cursor to the statement and type "b".
+
+      b   breakpoint (set)
+      p   print breakpoints
+      u   unset breakpoint
+
+Information
+-----------
+      a   print the arguments of the current procedure
+      h   bring up Maple help page for debugger
+      k   showstack
+      l   return cursor to current state
+
+Miscellaneous
+-------------
+      e   evaluate a Maple expression
+C-c C-o   pop to mdb buffer
