@@ -1,0 +1,6 @@
+/.gitignore~
+/Makefile~
+/mdb.elc
+/mdb.el~
+/mdb_prettyprint.mla
+/mdb_prettyprint.mpl~
