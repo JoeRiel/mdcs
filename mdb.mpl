@@ -162,10 +162,10 @@ local prettyprint;
         m := nops(defparams);
         n := nops(pargs) - m;
 
-        return ( seq(params[i] = pargs[i][], i=1..n)      # required positional
+        return ( seq(params[i] = pargs[i][], i=1..n)         # required positional
                  , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
-                 , oargs[]                                 # optional args
-                 , `if`( rargs = []                        # _rest
+                 , oargs[]                                   # optional args
+                 , `if`( rargs = []                          # _rest
                          , NULL
                          , ':-_rest' = rargs[]
                        )
