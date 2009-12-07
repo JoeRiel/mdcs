@@ -113,6 +113,9 @@ local prettyprint;
 ##
 ## Try[NE]("3.2.0", proc(x,y:=1,z::integer:=NULL) end, 'assign' = "proc3_2");
 ## Try("3.2.1", FUNC("proc3_2", [[1],[]], [], []), y=1, z=NULL);
+##
+## Try[NE]("3.3.0", proc(x,y,$) end, 'assign' = "proc3_3");
+## Try("3.3.1", FUNC("proc3_3", [[[1,2]],[2]], [], []), x=[1,2], y=2);
 
     ArgsToEqs := proc(prc :: {string,procedure}
                       , pargs :: list
@@ -134,7 +137,8 @@ local prettyprint;
             end try;
         end if;
 
-        # Eliminate the $ parameter.
+        # Eliminate the $ parameter and everything beyond it.
+    local pos;
         if member(:-` $`, params, 'pos') then
             params := params[1..pos-1];
         end if;
@@ -154,19 +158,14 @@ local prettyprint;
                               )
                           , p in defparams)];
 
-        # Map params and defparams to pargs.
-    local defeqs, eqs, i, m, n;
-
+    local i, m, n;
         m := nops(defparams);
         n := nops(pargs) - m;
-        defeqs := seq(defparams[i]=pargs[n+i][], i=1..m);
 
-        eqs := seq(params[i] =~ pargs[i][], i=1..n);
-
-        return ( eqs
-                 , defeqs
-                 , oargs[]
-                 , `if`( rargs = []
+        return ( seq(params[i] = pargs[i][], i=1..n)      # required positional
+                 , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
+                 , oargs[]                                 # optional args
+                 , `if`( rargs = []                        # _rest
                          , NULL
                          , ':-_rest' = rargs[]
                        )
