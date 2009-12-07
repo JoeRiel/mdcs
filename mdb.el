@@ -135,6 +135,8 @@ handle prompts in a pipe."
   :type '(repeat list (string))
   :group 'mdb)
 
+;;{{{  prompts
+
 (defcustom mdb-prompt "(**) "
   "*eMaple prompt.
 Changing this, alas, does not currently change the prompt because the
@@ -149,19 +151,28 @@ prompt is defined as a preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
+;;}}}
+
 (defcustom mdb-history-size 50
   "Number of inputs the input-ring can hold."
   :type 'integer ; ensure positive
   :group 'mdb)
 
-(defcustom mdb-debugger-break (format "\n%s\n" (make-string 40 ?\u2500))
+(defcustom mdb-debugger-break (format "\n%s\n" (make-string 40 ?-))
   "String inserted into `mdb-debugger-output-buffer' when debugging starts."
   :type 'string
   :group 'mdb)
 
+;;{{{   faces
+
 (defgroup mdb-faces nil
   "Faces for mdb and related modes."
   :group 'mdb)
+
+(defface mdb-face-arg
+  '((((class color) (background dark)) (:foreground "magenta")))
+  "Face for arguments in a showstat buffer."
+  :group 'mdb-faces)
 
 (defface mdb-face-prompt
   '((((class color) (background dark)) (:foreground "Green")))
@@ -177,6 +188,9 @@ prompt is defined as a preprocessor-macro in the emaple source."
   '((((class color) (background dark)) (:foreground "LightBlue")))
   "Face for the procname when continued in a debugger output buffer."
   :group 'mdb-faces)
+
+;;}}}
+
 
 ;;}}}
 ;;{{{ constants
@@ -218,6 +232,8 @@ before the process terminates.")
 (defvar mdb-debugger-output-buffer nil "Buffer used for debugger output")
 (defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
 (defvar mdb-maple-buffer nil "Temporary buffer associated with maple process.")
+(defvar mdb-maple-procname nil "Name of current procedure being debugged.
+This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-pmark nil "Prompt mark in `mdb-buffer'.")
 (defvar mdb-process nil "Maple process used by mdb")
 (defvar mdb-showstat-arrow-position nil "Marker for state arrow.")
@@ -239,11 +255,10 @@ the values are additional alists.")
     (goto-char (match-end 0))))
 
 (defun mdb-bol (arg)
-  "Go to the beginning of line, then skips past the prompt, if any.
+  "Go back to the beginning of line, then skip forward past the prompt, if any.
 If a prefix argument is given (\\[universal-argument]), then do
 not skip prompt -- go straight to column 0.  The prompt skip is
-done by skipping text matching the regular expression
-`mdb--prompt-re'."
+done by skipping text matching the regular expression `mdb--prompt-re'."
   (interactive "P")
   (forward-line 0)
   (when (null arg) (mdb-skip-prompt)))
@@ -257,35 +272,46 @@ done by skipping text matching the regular expression
 
 
 (defun mdb-handle-maple-output (closure msg)
-  "CLOSURE is a cons-cell, \(PREFIX . SUFFIX\), MSG is a Maple output string.
-This procedure is a filter passed to tq-enqueue'.  If MSG
+  "CLOSURE is a cons-cell, \(FUNC . PROC\), MSG is a Maple output string.
+This procedure is a filter passed to `tq-enqueue'.  If MSG
 contains debugger status, the `mdb-showstat-buffer' is updated.
-If `mdb-debugging-p' is non-nil, MSG is written to
-`mdb-debugger-output-buffer', surrounded by PREFIX and SUFFIX,, if non-nil;
-otherwise MSG is written to `mdb-buffer'."
+If `mdb-debugging-p' is non-nil, MSG is first processed by
+FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
+and the new region is processed by PROC, if non-nil; otherwise
+MSG is written to `mdb-buffer'."
 
   (if (string-match mdb--debugger-status-re msg)
-      ;; msg contains debugger status;
-      ;; extract the groups and display accordingly.
+      ;;{{{ msg contains debugger status
+
+      ;;; extract the groups and display accordingly.
+      
       (let ((cmd-output (substring msg 0 (match-beginning 1)))
 	    (procname (match-string 1 msg))
 	    (state    (match-string 2 msg))
 	    (rest (substring msg (match-end 2)))
-	    (prefix  (car closure))
-	    (suffix  (cdr closure)))
+	    (func (car closure))
+	    (proc (cdr closure)))
 
+	;; Assign global variables
+	(setq mdb-maple-procname procname)
 	(mdb-set-debugging-p t)
+
 	;; Update the showstat buffer.
 	(mdb-showstat-update procname state)
 	;; Move focus to showstat buffer.
 	(switch-to-buffer mdb-showstat-buffer)
-	;; Display the Maple output, with optional prefix/suffix
-	(mdb-display-debugger-output (format "%s%s%s"
-					     (or prefix "")
-					     cmd-output
-					     (or suffix ""))))
+	;; Display the Maple output, stored in cmd-output.  If func is
+	;; assigned, then first apply it to the string in cmd-output.
+	;; The proc procedure, if assigned, will be applied to the
+	;; generated output region.
+	(mdb-display-debugger-output
+	 (if func
+	     (funcall func cmd-output)
+	   cmd-output)
+	 proc))
 
-    ;; msg does not contain debugger status.
+    ;;}}}
+      ;;{{{ msg does not contain debugger status
 
     ;; Update the `mdb-debugging-p' variable, provided msg contains
     ;; a prompt.  
@@ -318,7 +344,10 @@ otherwise MSG is written to `mdb-buffer'."
 	;; mdb-showstat-arrow-position is a bit of a hack and may not work
 	;; once we provide an option to move to showstat...
 	(unless (marker-buffer mdb-showstat-arrow-position)
-	  (switch-to-buffer buffer))))))
+	  (switch-to-buffer buffer)))))
+
+  ;;}}}
+      )
 
 (defun mdb-set-debugging-p (debugging)
   "Compare DEBUGGING with `mdb-debugging-p'.
@@ -387,9 +416,12 @@ This command must be run from the maple debugger buffer."
 	    (switch-to-buffer mdb-maple-buffer)))))
     proc))
 
-(defun mdb-send-string (str &optional prefix suffix)
+
+(defun mdb-send-string (str &optional prefix suffix proc)
   "Send STR to the maple process.
-The output from the maple process is handled by `mdb-handle-maple-out'."
+The output from the maple process is handled by `mdb-handle-maple-out'.
+The optional PREFIX and SUFFIX are added to the displayd output, unless
+PROC is also assigned, in which case it is used to process the region."
   (tq-enqueue mdb-tq
 	      str
 	      ;; This regex indicates the end of the process output.
@@ -398,8 +430,12 @@ The output from the maple process is handled by `mdb-handle-maple-out'."
 		      "[ \n]*\\|"
 		      mdb--emaple-done-re
 		      "\\)\\'")
-	      (cons prefix suffix)
-	      'mdb-handle-maple-output
+	      (cond
+	       (proc (cons nil proc))
+	       (suffix (cons `(lambda (msg) (format "%s%s%s" ,prefix msg ,suffix)) nil))
+	       (prefix (cons `(lambda (msg) (format "%s%s" ,prefix msg)) nil))
+	       (t nil))
+	      #'mdb-handle-maple-output
 	      'delay))
 
 (defun mdb-send-last-command ()
@@ -529,11 +565,8 @@ Special commands:
   (setq mdb-maple-buffer (get-buffer-create "*maple*"))
   (setq mdb-process (mdb-start-maple-process))
 
-
   ;; Start the transaction queue
   (setq mdb-tq (tq-create mdb-process))
-
-  ;;(mdb-send-string (concat mdb--assign-procParams "\n"))
 
   ;; Add hook to cleanup when buffer is killed
   (add-hook 'kill-buffer-hook 'mdb-shutdown nil 'local)
@@ -582,7 +615,7 @@ the arrow; otherwise call showstat to display the new procedure."
 								   'mdb-face-procname-cont))))
 	  ;; Display arguments if we just entered the procedure
 	  (if just-entered-p
-	      (mdb-eval-and-display-expr "args" "\u25A0\n"))))
+	    (mdb-show-args-as-equations))))
       same-procname)))
 
 (defun mdb-showstat-display-proc (buffer msg)
@@ -693,6 +726,8 @@ If optional argument SAVE is non-non, save this command for reuse."
   (mdb-showstat-send-command "cont" t))
 
 
+;;{{{ what is this? 
+
 (defun mdb-ident-around-point-interactive (prompt &optional default complete)
   "Request Maple identifier in minibuffer, using PROMPT.
 Default is identifier around point. If it is empty use DEFAULT.
@@ -700,7 +735,12 @@ Minibuffer completion is used if COMPLETE is non-nil."
   ;; Suppress error message
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
-        (ident (maplev--ident-around-point default))
+	;; this is really simple.  Need to improve...
+        (ident (if (looking-at " +[0-9]+\\*? +\\(?:\\(?:if\\|return\\) \\)?")
+		   (save-excursion
+		     (goto-char (match-end 0))
+		     (maplev--ident-around-point default))
+		 (maplev--ident-around-point default)))
         (maplev-completion-release maplev-release)
         choice)
     (setq prompt (concat prompt (unless (string-equal ident "")
@@ -717,13 +757,35 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 (defun mdb-eval-and-prettyprint (expr &optional suffix)
   (interactive (list (mdb-ident-around-point-interactive
-		      "eval: " "")))
+		      "prettyprint: " "")))
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string (format "mdb_prettyprint(%s)\n" expr)
+  (mdb-send-string (format "mdb:-PrettyPrint(%s)\n" expr)
 		   (propertize (format "%s:\n" expr)
 			       'face 'mdb-face-prompt ; FIXME: create appropriate face
 			       )
 		   suffix))
+
+(defun mdb-show-args-as-equations ()
+  "Display the parameters and arguments of the current Maple procedure as equations.
+This may fail with overloaded procedures in Maple 13 and lower."
+  (interactive)
+  (if current-prefix-arg (mdb-debugger-clear-output))
+  (mdb-send-string (format "mdb:-ArgsToEqs(\"%s\",[seq([_params[i]],i=1.._nparams)],[_rest],[_options])\n" mdb-maple-procname)
+		   nil
+		   nil
+		   #'mdb-prettify-args-as-equations))
+
+(defconst mdb--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\)")
+  
+(defun mdb-prettify-args-as-equations (beg end)
+  "Font lock the argument names in the region from BEG to END."
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward mdb--flush-left-arg-re end t)
+      (put-text-property (match-beginning 1) (match-end 1) 'face 'mdb-face-arg))))
+
+
 
 (defun mdb-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
@@ -797,6 +859,8 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-send-command "showstack" nil))
 
+;;}}}
+
 (defun mdb-showstop ()
   "Send the 'showstop' command to the debugger."
   (interactive)
@@ -848,6 +912,13 @@ If the state does not have a breakpoint, print a message."
     (ding)
     (message "not in showstat buffer")))
 
+(defun mdb-stopwhenif ()
+  "Set a ..."
+  (interactive)
+  (let* ((var (maplev-ident-around-point-interactive "variable: "))
+	 (val (read-string "value: ")))
+    (mdb-showstat-send-command (format "stopwhenif(%s,%s)" var val))))
+
 (defun mdb-where ()
   "Send the 'where' command to the debugger."
   (interactive)
@@ -874,14 +945,17 @@ If the state does not have a breakpoint, print a message."
   (let ((map (make-sparse-keymap))
 	(bindings
 	  '((" " . mdb-send-last-command)
+	    ("A" . mdb-show-args-as-equations)
 	    ("a" . mdb-args)
 	    ("b" . mdb-breakpoint)
 	    ("c" . mdb-cont)
+	    ("C" . mdb-debugger-clear-output)
 	    ("e" . mdb-eval-and-display-expr)
 	    ("E" . mdb-eval-and-display-expr-global)
 	    ("f" . self-insert-command)
 	    ("h" . mdb-help-debugger)
 	    ("i" . mdb-into)
+	    ("I" . mdb-stopwhenif)
 	    ("k" . mdb-showstack)
 	    ("K" . mdb-where)
 	    ("l" . mdb-goto-current-state)
@@ -922,6 +996,7 @@ Breakpoints
 \\[mdb-breakpoint] (stopat) set breakpoint at cursor
 \\[mdb-unstopat] (unstopat) clear breakpoint at cursor
 \\[mdb-showstop] (showstop) display all breakpoints
+\\[mdb-stopwhenif] (stopwhenif) set watchpoint on variable = value
 \\[mdb-stopwhen-local] (stopwhen) set watchpoint on local variable
 C-u \\[mdb-stopwhen-local] (stopwhen) clear watchpoint on local variable
 \\[mdb-stopwhen-global] (stopwhen) set watchpoint on global variable
@@ -929,20 +1004,24 @@ C-u \\[mdb-stopwhen-global] (stopwhen) clear watchpoint on global variable
 
 Information
 -----------
+\\[mdb-show-args-as-equations] display the parameter names and values
 \\[mdb-args] display the arguments of the current procedure
 \\[mdb-help-debugger] display Maple debugger help page
 \\[mdb-showstack] (showstack) display abbreviated stack
 \\[mdb-where] (where) display stack of procedure calls
-\\[mdb-goto-current-state] move cursor to current state
+\\[mdb-goto-current-state] move (return) cursor to current state
+\\[mdb-showexception] diplay the last exception
 
 Evaluation
 ----------
 \\[mdb-eval-and-display-expr] evalute a Maple expression
 \\[mdb-eval-and-display-expr-global] evalute a Maple expression in a global context
+\\[mdb-eval-and-prettyprint] evaluate and prettyprint a Maple expression
 
 Miscellaneous
 -------------
 \\[mdb-pop-to-mdb-buffer] pop to the mdb buffer
+\\[mdb-debugger-clear-output] clear the debugger output buffer
 "
   :group 'mdb
   (setq mdb-showstat-procname ""
@@ -954,7 +1033,7 @@ Miscellaneous
 
 ;;{{{ mdb-debugger-output
 
-(defun mdb-display-debugger-output (msg)
+(defun mdb-display-debugger-output (msg &optional func)
   "Display MSG in `mdb-debugger-output-buffer'."
   (unless (string= msg "")
     (let ((buf (mdb-debugger-get-output-buffer-create)))
@@ -962,9 +1041,12 @@ Miscellaneous
       (with-selected-window (get-buffer-window buf)
 	(with-current-buffer buf
 	  (goto-char (point-max))
-	  (insert msg)
+	  (let ((beg (point)))
+	    (insert msg)
+	    (if func
+		(funcall func beg (point)))))
 	;; Move point (end of buffer) to bottom of window.
-	(recenter -1))))))
+	(recenter -1)))))
       
 
 (defun mdb-debugger-get-output-buffer-create ()
@@ -980,6 +1062,7 @@ A new buffer is created if there is no live buffer."
 
 (defun mdb-debugger-clear-output ()
   "Clear the debugger output buffer."
+  (interactive)
   (when (bufferp mdb-debugger-output-buffer)
     (with-current-buffer mdb-debugger-output-buffer
       (delete-region (point-min) (point-max)))))
@@ -1027,8 +1110,14 @@ A new buffer is created if there is no live buffer."
 pop to the debugging buffer.  The optional FILE parameter
 specifies a startup file to pass to Maple."
   (interactive)
+
   (if (buffer-live-p mdb-buffer)
+      ;; buffer exists; bring up that buffer
       (pop-to-buffer mdb-buffer)
+
+    ;; buffer does not exist:
+
+    ;; launch maple
     (pop-to-buffer (setq mdb-buffer (generate-new-buffer "mdb")))
     (mdb-mode)
     ;; Generate 'fake' prompt.
@@ -1046,4 +1135,3 @@ specifies a startup file to pass to Maple."
 ;; Local Variables:
 ;; folded-file: t
 ;; End:
-
