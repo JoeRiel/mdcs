@@ -15,7 +15,7 @@ ELC	= $(emacs) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
 el-files  = $(addsuffix .el,mdb ir)
 elc-files = $(el-files:.el=.elc)
-mla = mdb_prettyprint.mla
+mla = mdb.mla
 
 default: compile
 compile: $(elc-files)
@@ -27,8 +27,8 @@ mdb.elc:
 $(elc-files): $(el-files)
 	$(ELC) $+
 
-$(mla): mdb_prettyprint.mpl
-	$(maple) $^
+$(mla): mdb.mpl
+	$(maple) -q $^
 
 installmaple: $(mla)
 	$(CP) --archive $+ $(mapleinstalldir)
