@@ -227,9 +227,9 @@ before the process terminates.")
 ;; debugging session can be run in one emacs session.  This may be
 ;; redone after a prototype is operational.
 
-(defvar mdb-buffer nil)
+(defvar mdb-buffer nil "Buffer used as shell.")
 (defvar mdb-debugging-p nil "Non-nil when debugging.")
-(defvar mdb-debugger-output-buffer nil "Buffer used for debugger output")
+(defvar mdb-debugger-output-buffer nil "Buffer used for debugger output.")
 (defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
 (defvar mdb-maple-buffer nil "Temporary buffer associated with maple process.")
 (defvar mdb-maple-procname nil "Name of current procedure being debugged.
@@ -277,7 +277,7 @@ This procedure is a filter passed to `tq-enqueue'.  If MSG
 contains debugger status, the `mdb-showstat-buffer' is updated.
 If `mdb-debugging-p' is non-nil, MSG is first processed by
 FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
-and the new region is processed by PROC, if non-nil; otherwise
+and the new region is processed by PROC (if non-nil); otherwise
 MSG is written to `mdb-buffer'."
 
   (if (string-match mdb--debugger-status-re msg)
@@ -448,6 +448,17 @@ PROC is also assigned, in which case it is used to process the region."
 
 ;;}}}
 
+(defun mdb--get-state ()
+  "Return the current Maple state number."
+  (interactive)
+  (save-excursion
+    (end-of-line)
+      (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([* ]\\)" nil t)
+	  (match-string-no-properties 1)
+	(ding)
+	(message "no previous state in buffer"))))
+
+
 ;;{{{ mdb-mode-map and electric functions
 
 (defun mdb-beginning-of-debug-line-p ()
@@ -589,10 +600,11 @@ the arrow; otherwise call showstat to display the new procedure."
 
     (let ((same-procname (equal procname mdb-showstat-procname)))
       (if same-procname
-	  ;; Move the arrow
-	  (mdb-showstat-display-state)
+	    ;; Move the arrow
+	    (mdb-showstat-display-state)
 
-	;; procname has changed.
+	;; procname has changed (or we jumped to state 1,
+	;; which could happen accidentally).
 	;; Save procname in the global variable,
 	;; then update the showstat buffer
 	(setq mdb-showstat-procname procname)
@@ -617,6 +629,14 @@ the arrow; otherwise call showstat to display the new procedure."
 	  (if just-entered-p
 	    (mdb-show-args-as-equations))))
       same-procname)))
+
+
+;; Currently not used.  This is tricky...
+(defun mdb--just-entered-proc ()
+  (mdb-display-debugger-output (format "%s:\n"
+				       (propertize procname 'face 'mdb-face-procname-entered)))
+  (mdb-show-args-as-equations))
+  
 
 (defun mdb-showstat-display-proc (buffer msg)
   "Insert MSG into BUFFER, which should be the showstat buffer.
@@ -709,7 +729,8 @@ If optional argument SAVE is non-non, save this command for reuse."
   (interactive)
   ;; Assume we are in the showstat buffer
   ;; TODO: An alternative is to move outward from
-  ;; the Maple structure.
+  ;; the Maple structure.  
+  ;; If at an elif or else, then move ...
   (save-excursion
     (end-of-line)
     (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([* ]\\)" nil t)
@@ -766,11 +787,10 @@ Minibuffer completion is used if COMPLETE is non-nil."
 		   suffix))
 
 (defun mdb-show-args-as-equations ()
-  "Display the parameters and arguments of the current Maple procedure as equations.
-This may fail with overloaded procedures in Maple 13 and lower."
+  "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string (format "mdb:-ArgsToEqs(\"%s\",[seq([_params[i]],i=1.._nparams)],[_rest],[_options])\n" mdb-maple-procname)
+  (mdb-send-string "mdb:-ArgsToEqs(thisproc,[seq([_params[i]],i=1.._nparams)],[_rest],[_options])\n" ; mdb-maple-procname)
 		   nil
 		   nil
 		   #'mdb-prettify-args-as-equations))
