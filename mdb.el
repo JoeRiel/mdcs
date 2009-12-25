@@ -1154,7 +1154,3 @@ specifies a startup file to pass to Maple."
 (provide 'mdb)
 
 ;;; mdb.el ends here
-
-;; Local Variables:
-;; folded-file: t
-;; End:

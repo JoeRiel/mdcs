@@ -126,7 +126,7 @@ local prettyprint;
 
         # Assign params the procedure's formal parameters.
         if prc :: procedure then
-            params := op(1,prc);
+            params := [op(1,eval(prc))];
         else
             # prc is a string; attempt to parse ...
             try
