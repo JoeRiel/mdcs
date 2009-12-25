@@ -206,7 +206,7 @@ then this is a debug-prompt.")
 This is the prompt as output from the maple process.")
 
 (defconst mdb--debugger-status-re
-  "^\\([^ \n][^\n]*\\):\n\\s-*\\([1-9][0-9]*\\)[ *]"
+  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *]")
   "Regexp that matches the status output of the debugger.
 The first group matches the procedure name, the second group the
 state number.")
