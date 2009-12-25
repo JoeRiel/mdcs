@@ -416,6 +416,12 @@ This command must be run from the maple debugger buffer."
 	    (switch-to-buffer mdb-maple-buffer)))))
     proc))
 
+(defun mdb--make-surround (prefix suffix)
+  `(lambda (msg) (format "%s%s%s"
+			 ,(or prefix "")
+			 msg
+			 ,(or suffix "")
+			 )))
 
 (defun mdb-send-string (str &optional prefix suffix proc)
   "Send STR to the maple process.
@@ -430,11 +436,7 @@ PROC is also assigned, in which case it is used to process the region."
 		      "[ \n]*\\|"
 		      mdb--emaple-done-re
 		      "\\)\\'")
-	      (cond
-	       (proc (cons nil proc))
-	       (suffix (cons `(lambda (msg) (format "%s%s%s" ,prefix msg ,suffix)) nil))
-	       (prefix (cons `(lambda (msg) (format "%s%s" ,prefix msg)) nil))
-	       (t nil))
+	      (cons (mdb--make-surround prefix suffix) proc)
 	      #'mdb-handle-maple-output
 	      'delay))
 
@@ -782,20 +784,21 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (if current-prefix-arg (mdb-debugger-clear-output))
   (mdb-send-string (format "mdb:-PrettyPrint(%s)\n" expr)
 		   (propertize (format "%s:\n" expr)
-			       'face 'mdb-face-prompt ; FIXME: create appropriate face
-			       )
-		   suffix))
+		   	       'face 'mdb-face-prompt ; FIXME: create appropriate face
+		    	       )
+		   nil
+		   #'mdb-prettify-args-as-equations))
 
 (defun mdb-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
   (mdb-send-string "mdb:-ArgsToEqs(thisproc,[seq([_params[i]],i=1.._nparams)],[_rest],[_options])\n" ; mdb-maple-procname)
-		   nil
+		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil
 		   #'mdb-prettify-args-as-equations))
 
-(defconst mdb--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\)")
+(defconst mdb--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
   
 (defun mdb-prettify-args-as-equations (beg end)
   "Font lock the argument names in the region from BEG to END."
