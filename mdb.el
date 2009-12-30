@@ -800,7 +800,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string "mdb:-ArgsToEqs(thisproc,[seq([_params[i]],i=1.._nparams)],[_rest],[_options])\n" ; mdb-maple-procname)
+  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n" ; mdb-maple-procname)
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil
