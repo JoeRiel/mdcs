@@ -84,10 +84,10 @@
 ;; to skip commented-out code.  Handling stuff in $ifdef macros is a
 ;; problem.
 
-;; Add stopwhenif to showstat actions.  There is a bug in the debugger
-;; (SCR64943) that currently prevents this from working.  It isn't all
-;; that useful, because it only applies to global variables.  Suggest
-;; that that be improved.
+;; Add stopwhenif to showstat actions (done).  There is a bug in the
+;; debugger (SCR64943) that currently prevents this from working.  It
+;; isn't all that useful, because it only applies to global variables.
+;; Suggest that that be improved.
 
 ;; Add function to intelligently select variable/expression at point.
 ;; For example, if `mdb-stopwhen' is activated at a for-loop, the
@@ -98,20 +98,11 @@
 ;; however, it is less useful than it could be because debugopts
 ;; does not currently handly local variables of module exports.
 
-;; BUGS:
-;;
-;; * When debugger finishes and is later relaunched, two views of the
-;; the *showstat* buffer appear.  FIXED.
-;;
-;; * Use a dedicated buffer for the output of showstat, rather than
-;; sending it to *message*.
-
 ;;}}}
 
 (require 'tq)
+(require 'ir)
 (require 'maplev)
-(eval-and-compile
-  (require 'ir))
 (eval-when-compile
   (require 'hl-line))
 
@@ -140,14 +131,14 @@ handle prompts in a pipe."
 (defcustom mdb-prompt "(**) "
   "*eMaple prompt.
 Changing this, alas, does not currently change the prompt because the
-prompt is defined as a preprocessor-macro in the emaple source."
+prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
 (defcustom mdb-debug-prompt "(*DBG*) "
   "*eMaple debug prompt.
 Changing this, alas, does not currently change the prompt because the
-prompt is defined as a preprocessor-macro in the emaple source."
+prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
@@ -194,6 +185,8 @@ prompt is defined as a preprocessor-macro in the emaple source."
 
 ;;}}}
 ;;{{{ constants
+
+(defconst mdb-version "1.2" "Version number of this version of mdb.")
 
 (defconst mdb--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
 				 (regexp-quote mdb-debug-prompt)
@@ -249,19 +242,6 @@ the values are additional alists.")
 ;;}}}
 ;;{{{ functions
 
-(defun mdb-skip-prompt ()
-  "Skip past the text matching regexp `mdb--prompt-re'."
-  (when (looking-at mdb--prompt-re)
-    (goto-char (match-end 0))))
-
-(defun mdb-bol (arg)
-  "Go back to the beginning of line, then skip forward past the prompt, if any.
-If a prefix argument is given (\\[universal-argument]), then do
-not skip prompt -- go straight to column 0.  The prompt skip is
-done by skipping text matching the regular expression `mdb--prompt-re'."
-  (interactive "P")
-  (forward-line 0)
-  (when (null arg) (mdb-skip-prompt)))
 
 (defun mdb-shutdown ()
   "Shutdown the debugger and kill the temporary buffers."
@@ -425,6 +405,8 @@ This command must be run from the maple debugger buffer."
     proc))
 
 (defun mdb--make-surround (prefix suffix)
+  "Return an anonymous procedure, lambda (MSG) ...), that surrounds MSG with PREFIX and SUFFIX.
+If either is nil, use the empty string."
   `(lambda (msg) (format "%s%s%s"
 			 ,(or prefix "")
 			 msg
@@ -444,8 +426,8 @@ PROC is also assigned, in which case it is used to process the region."
 		      "[ \n]*\\|"
 		      mdb--emaple-done-re
 		      "\\)\\'")
-	      (list exec (mdb--make-surround prefix suffix) proc)
-	      #'mdb-handle-maple-output
+	      (list exec (mdb--make-surround prefix suffix) proc) ; closure
+	      #'mdb-handle-maple-output                           ; handler
 	      'delay))
 
 (defun mdb-send-last-command ()
@@ -470,6 +452,20 @@ PROC is also assigned, in which case it is used to process the region."
 
 
 ;;{{{ mdb-mode-map and electric functions
+
+(defun mdb-skip-prompt ()
+  "Skip past the text matching regexp `mdb--prompt-re'."
+  (when (looking-at mdb--prompt-re)
+    (goto-char (match-end 0))))
+
+(defun mdb-bol (arg)
+  "Go back to the beginning of line, then skip forward past the prompt, if any.
+If a prefix argument is given (\\[universal-argument]), then do
+not skip prompt -- go straight to column 0.  The prompt skip is
+done by skipping text matching the regular expression `mdb--prompt-re'."
+  (interactive "P")
+  (forward-line 0)
+  (when (null arg) (mdb-skip-prompt)))
 
 (defun mdb-beginning-of-debug-line-p ()
   "Return non-nil if POINT is at the beginning of a debug input line.
@@ -902,6 +898,11 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-eval-expr "showstop"))
 
+(defun mdb-showerror ()
+  "Send the 'showerror' command to the debugger."
+  (interactive)
+  (mdb-showstat-eval-expr "showerror"))
+
 (defun mdb-showexception ()
   "Send the 'showexception' command to the debugger."
   (interactive)
@@ -986,6 +987,7 @@ If the state does not have a breakpoint, print a message."
 	   ("b" . mdb-breakpoint)
 	   ("c" . mdb-cont)
 	   ("C" . mdb-debugger-clear-output)
+	   ("d" . self-insert-command)
 	   ("e" . mdb-eval-and-display-expr)
 	   ("E" . mdb-eval-and-display-expr-global)
 	   ("f" . self-insert-command)
@@ -1005,6 +1007,7 @@ If the state does not have a breakpoint, print a message."
 	   ("w" . mdb-stopwhen-local)
 	   ("W" . mdb-stopwhen-global)
 	   ("x" . mdb-showexception)
+	   ("X" . mdb-showerror)
 	   ("." . mdb-eval-and-prettyprint)
 	   ("\C-c\C-o" . mdb-pop-to-mdb-buffer)
 	   )))
@@ -1167,3 +1170,5 @@ specifies a startup file to pass to Maple."
 (provide 'mdb)
 
 ;;; mdb.el ends here
+
+
