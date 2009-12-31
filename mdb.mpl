@@ -102,12 +102,14 @@ local prettyprint;
             end try;
         end if;
 
-        # Eliminate the $ parameter and everything beyond it.
+        # If $ was used in the procedure assignment, then all optional parameters
+        # can be easily removed.  Otherwise remove them later.
     local pos;
         if member(:-` $`, params, 'pos') then
             params := params[1..pos-1];
         end if;
 
+        # Remove default parameters from parameters.
         (defparams, params) := selectremove(type, params, 'assignment');
 
         # Remove type declarations from params and defparams.
@@ -123,8 +125,7 @@ local prettyprint;
                               )
                           , p in defparams)];
 
-        # Remove any options from the default positional parameters.
-        # They will be present if $ was not used in procedure declaration.
+        # Remove remaining options from the default positional parameters.
         defparams := remove(member, defparams, lhs~(oargs));
 
     local i, m, n;
@@ -180,6 +181,8 @@ local prettyprint;
 
 #}}}
 #{{{ PrintProc
+
+# Experimental.
 
     PrintProc := proc(nm, prc)
     local listing;
