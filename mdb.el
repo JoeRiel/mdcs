@@ -450,7 +450,6 @@ PROC is also assigned, in which case it is used to process the region."
       (ding)
       (message "no previous state in buffer"))))
 
-
 ;;{{{ mdb-mode-map and electric functions
 
 (defun mdb-skip-prompt ()
@@ -635,6 +634,7 @@ the arrow; otherwise call showstat to display the new procedure."
       (setq mdb-showstat-procname procname)
       ;; Send the showstat command to the debugger;
       (tq-enqueue mdb-tq "showstat\n"
+;;      (tq-enqueue mdb-tq "mdb:-PrintProc(procname,thisproc)\n"
 		  mdb--prompt-with-cr-re
 		  mdb-showstat-buffer
 		  #'mdb-showstat-display-proc
@@ -654,7 +654,6 @@ end proc
 ^MDBG>
 
 The preamble \"showstat\" and postamble prompt are elided."
-
   (with-current-buffer buffer
     (let ((buffer-read-only nil))
       ;; Delete old contents then insert the new.
@@ -800,7 +799,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n" ; mdb-maple-procname)
+  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n"
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil
@@ -956,10 +955,14 @@ If the state does not have a breakpoint, print a message."
 	 (val (read-string "value: ")))
     (mdb-showstat-eval-expr (format "stopwhenif(%s,%s)" var val))))
 
-(defun mdb-where ()
-  "Send the 'where' command to the debugger."
-  (interactive)
-  (mdb-showstat-eval-expr "where"))
+(defun mdb-where (&optional depth)
+  "Send the 'where' command to the debugger.
+The optional DEPTH parameter is a positive integer that specifies
+the number of activation levels to display."
+  (interactive "P")
+  (mdb-showstat-eval-expr (if depth
+			      (format "where %d" depth)
+			    "where")))
 
 (defun mdb-pop-to-mdb-buffer ()
   "Pop to the Maple debugger buffer."
