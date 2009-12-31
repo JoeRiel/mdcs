@@ -8,52 +8,16 @@
 
 mdb := module()
 
-export PrettyPrint, ArgsToEqs;
+export PrettyPrint, ArgsToEqs, PrintProc;
 local prettyprint;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
 
-#{{{ prettprint
-
-    prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr;
-        if nargs > 2 then
-            seq(procname(false,ex), ex in [_rest]);
-        else
-            expr := _rest;
-
-            if expr :: 'Or(set,list)' then
-                expr[];
-            elif expr :: 'record' then
-                local fld;
-                eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
-                if top then
-                    eqs;
-                else 'record'(eqs)
-                end if;
-            elif expr :: table then
-                local indx;
-                eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
-                if top then
-                    eqs
-                else
-                    'table'(eqs);
-                end if;
-            elif expr :: procedure then
-                showstat(expr);
-                return NULL;
-            else
-                expr
-            end if;
-        end if;
-    end proc:
-
-#}}}
 #{{{ ArgsToEqs
 
 ##DEFINE PROC ArgsToEqs
 ##PROCEDURE \MOD[\PROC]
-##HALFLINE create equations defining the parameters of a procedure call
+##HALFLINE return equations defining the parameters of a procedure call
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
 ##CALLINGSEQUENCE
@@ -116,6 +80,7 @@ local prettyprint;
 ##
 ## Try[NE]("3.3.0", proc(x,y,$) end, 'assign' = "proc3_3");
 ## Try("3.3.1", FUNC("proc3_3", [[[1,2]],[2]], [], []), x=[1,2], y=2);
+##
 
     ArgsToEqs := proc(prc :: {string,procedure}
                       , pargs :: list
@@ -158,6 +123,10 @@ local prettyprint;
                               )
                           , p in defparams)];
 
+        # Remove any options from the default positional parameters.
+        # They will be present if $ was not used in procedure declaration.
+        defparams := remove(member, defparams, lhs~(oargs));
+
     local i, m, n;
         m := nops(defparams);
         n := nops(pargs) - m;
@@ -174,6 +143,55 @@ local prettyprint;
     end proc;
 
 #}}}
+#{{{ prettprint
+
+    prettyprint := proc(top :: truefalse := true)
+    local eqs, ex, expr;
+        if nargs > 2 then
+            seq(procname(false,ex), ex in [_rest]);
+        else
+            expr := _rest;
+
+            if expr :: 'Or(set,list)' then
+                expr[];
+            elif expr :: 'record' then
+                local fld;
+                eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
+                if top then
+                    eqs;
+                else 'record'(eqs)
+                end if;
+            elif expr :: table then
+                local indx;
+                eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
+                if top then
+                    eqs
+                else
+                    'table'(eqs);
+                end if;
+            elif expr :: procedure then
+                showstat(expr);
+                return NULL;
+            else
+                expr
+            end if;
+        end if;
+    end proc:
+
+#}}}
+#{{{ PrintProc
+
+    PrintProc := proc(nm, prc)
+    local listing;
+        #listing := debugopts('procdump' = prc);
+        #printf("\n%a := %s\n", nm, listing);
+        printf("\n%", showstat(nm));
+    end proc;
+
+
+#}}}
+
+
 
 end module:
 
