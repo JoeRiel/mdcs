@@ -1,0 +1,470 @@
+\input texinfo
+@c %***start of header
+@setfilename mdb
+@settitle The Mdb Manual
+
+@set VERSION 1.0a
+@set DATE December 2009
+
+@dircategory Emacs
+@direntry
+* Mdb mode: (mdb).      Source-code debugger for Maple
+@end direntry
+
+@c Version and Contact Info
+@c @set MAINTAINERSITE @uref{http://orgmode.org,maintainers webpage}
+@set AUTHOR Joe Riel
+@set MAINTAINER Joe Riel
+@set MAINTAINEREMAIL @email{joer at san dot rr dot com}
+@set MAINTAINERCONTACT @uref{mailto:joer at san dot rr dot com,contact the maintainer}
+@c %**end of header
+@finalout
+
+@copying
+Mdb is a GNU Emacs major mode for debugging Maple code.
+Maple is a computer algebra system marked by Maplesoft Inc.
+
+This manual is for Mdb version @value{VERSION}.
+
+Copyright @copyright{} 2009, Joseph S. Riel
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+``GNU Free Documentation License.''
+@end quotation
+@end copying
+
+@titlepage
+@title The Mdb Manual
+
+@subtitle Release @value{VERSION}
+@author by Joseph Riel
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c Output the table of contents at the beginning.
+@contents
+
+@ifnottex
+@node Top, Introduction, (dir), (dir)
+@top Mdb Mode Manual
+
+@insertcopying
+@end ifnottex
+
+@menu
+* Introduction::                
+* Mdb Buffer::                  
+* Showstat Buffer::             
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Summary::                     Summary of what Mdb does
+* Installation::                How to install Mdb
+* Feedback::                    Bug reports, ideas, etc.
+
+Installation
+
+* Elisp::                       Installing the Emacs-Lisp code
+* Pmaple::                      Compiling a binary interface to Maple
+* Maple Library::               Installing a Maple archive
+
+Mdb Buffer
+
+* Usage::                       Intended usage of the mdb buffer
+* History and Key Bindings::    
+
+Showstat Buffer
+
+* Execution::                   Executing procedure statements
+* Status::                      Determining debugger status
+* Breakpoints::                 Setting and clearing breakpoints and watchpoints
+* Evaluation::                  Evaluating expressions
+
+@end detailmenu
+@end menu
+
+@node Introduction, Mdb Buffer, Top, Top
+@chapter Introduction
+@cindex introduction
+
+@menu
+* Summary::                     Summary of what Mdb does
+* Installation::                How to install Mdb
+* Feedback::                    Bug reports, ideas, etc.
+@end menu
+
+
+
+@node Summary, Installation, Introduction, Introduction
+@section Summary
+@cindex summary
+
+Mdb is an Emacs major-mode for debugging Maple code.
+
+Mdb is a front-end to the Maple command-line debugger.
+An instrumented procedure is displayed in a buffer,
+with the current statement marked.  
+The output of previously executed statements are displayed in a separate buffer.
+
+Upon entering a procedure,
+the formal parameters along with their values, are displayed in a vertical list of equations.
+Expressions can be directly evaluated and displayed in nice-format.
+For example, a record can be displayed as a vertical list of equations
+with field name on the left and the entry on the right.
+
+The common debugging commands, 
+  @strong{next}, @strong{into}, @strong{step}, etc.,
+are bound to keys.
+Breakpoints can be set or cleared directly in the buffer.
+
+@node Installation, Feedback, Summary, Introduction
+@section Installation
+@cindex installation
+
+This section describes how to install Mdb into GNU Emacs.
+The process is more complicated than is typical for an Emacs mode.
+In addition to byte-compiling the elisp code,
+a binary that interfaces to OpenMaple must be compiled and installed,
+and a Maple archive must be installed.
+
+@menu
+* Elisp::                       Installing the Emacs-Lisp code
+* Pmaple::                      Compiling a binary interface to Maple
+* Maple Library::               Installing a Maple archive
+@end menu
+
+@node Elisp, Pmaple, Installation, Installation
+@subsection Elisp
+@cindex elisp
+@cindex maplev
+
+Mdb requires MapleV mode, an Emacs mode for developing Maple source code.
+It is available at 
+@url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}.
+
+Move the files @file{mdb.el} and @file{ir.el}
+into your Emacs load path and byte-compile them.
+
+Add the following line to your @file{.emacs} file:
+
+@example
+(autoload 'mdb "mdb" "Maple debugger" t)
+@end example
+
+@node Pmaple, Maple Library, Elisp, Installation
+@subsection Pmaple
+@cindex pmaple
+
+Mdb uses 
+
+@node Maple Library,  , Pmaple, Installation
+@subsection Maple
+@cindex maple
+
+Mdb uses a Maple archive, @file{mdb.mla}, to store Maple procedures 
+used to prettyprint expressions in the debugger output.
+This archive must be installed in a location that can be found by Maple,
+that is, in the path defined by the Maple @code{libname} variable.
+
+
+@node Feedback,  , Installation, Introduction
+@section Feedback
+@cindex feedback
+
+If you find problems with Mdb, or if you have questions,
+comments, or ideas, please mail them to Joe Riel, @email{joer@@san.rr.com}.
+
+For bug reports, please provide as much information as possible,
+including the version information of Emacs (@kbd{C-h v emacs-version}),
+Mdb, (@kbd{C-h v mdb-version}), and Maple (@code{version()}).
+
+
+
+@node Mdb Buffer, Showstat Buffer, Introduction, Top
+@chapter Mdb Buffer
+
+When Mdb is started (@kbd{M-x mdb}), a buffer opens in @code{mdb-mode}.
+This buffer is an interface to the Maple engine.
+It is a rudimentary form of the tty interface @command{cmaple}.
+
+The prompt is @samp{(**)}.  
+Entering Maple statements at the prompt sends them to the Maple engine.  
+The output is printed beginning just below the prompt.
+For example
+
+@example
+(**) y := x^2;
+y := x^2
+(**) int(%, x=1..3);
+26/3
+@end example
+
+
+@menu
+* Usage::                       Intended usage of the mdb buffer
+* History and Key Bindings::    
+@end menu
+
+@node Usage, History and Key Bindings, Mdb Buffer, Mdb Buffer
+@section Usage
+
+The purpose of Mdb mode is to start the debugger.
+The Maple @code{stopat} command can be used to set a breakpoint
+in the procedure that is being debugged.
+For example,
+
+@example
+(**) stopat(int);
+[int]
+(**) int(x^2, x=1..2);
+@end example
+
+When the debugger starts, two buffers are opened,
+the @emph{showstat buffer}, which displays the current procedure,
+and 
+the @emph{debugger output buffer}, which displays Maple output
+during debugging.
+
+
+@node History and Key Bindings,  , Usage, Mdb Buffer
+@section History and Key Bindings
+
+@code{Mdb-mode} maintains a 50-line command history
+(the maximum size can be configured by customizing @code{mdb-history-size}).
+The following table lists the key bindings defined by @code{mdb-mode}.
+
+@table @kbd
+@item Up
+@itemx M-p
+Recall previous input.
+
+@item Down
+@itemx M-n
+Recall next input.
+
+@item C-a
+Move to beginning of line (right of the prompt).
+@kbd{C-u C-a} moves to the left margin.
+
+@end table
+
+
+
+
+@node Showstat Buffer,  , Mdb Buffer, Top
+@chapter Showstat Buffer
+
+The showstat buffer, which uses @code{showstat-mode},
+becomes active when an instrumented Maple procedure activates a breakpoint or watchpoint.
+The view in the buffer is the display of the procedure generated by the Maple @code{showstat} command.
+Maple statements are numbered and Maple keywords and syntactical elements are highlighted.
+The next Maple statement to be executed is indicated by an @emph{overlay-arrow} in the left margin.
+Breakpoints are marked by asterisks to the right of the statement numbers.
+
+The following figure shows a typical display.
+The overlay-arrow @samp{=>} is at the first statement of the procedure,
+which is also marked with an asterisk indicating that there is a breakpoint here.
+
+@example
+@iftex
+@strong{fibonacci} := @strong{proc}(i::integer) 
+=> 1*  @strong{if} i < 1 @strong{then}
+   2     0
+       @strong{elif} i = 1 @strong{then}
+   3     1
+       @strong{else}
+   4     procname(i-2)+procname(i-1)
+       @strong{end if}
+@strong{end proc}
+@end iftex
+@ifinfo
+fibonacci := proc(i::integer) 
+=> 1*  if i < 1 then
+   2     0
+       elif i = 1 then
+   3     1
+       else
+   4     procname(i-2)+procname(i-1)
+       end if
+end proc
+@end ifinfo
+@end example
+
+
+ 
+
+@example
+@end example
+
+@code{Showstat-mode} binds keys to the common debugging commands. 
+It also provides commands that are not available in the Maple debugger.
+The following sections describe these bindings and commands.
+They are grouped according to function.
+
+@menu
+* Execution::                   Executing procedure statements
+* Status::                      Determining debugger status
+* Breakpoints::                 Setting and clearing breakpoints and watchpoints
+* Evaluation::                  Evaluating expressions
+@end menu
+
+@node Execution, Status, Showstat Buffer, Showstat Buffer
+@section Execution
+Mdb supports all the Maple debugger commands for executing the statements of
+a procedure.   
+
+
+@table @kbd
+
+@item c (@code{mdb-cont})
+Continue: run until the next breakpoint or watchpoint.
+
+@item i (@code{mdb-into})
+Into: halfway between @code{next} (@code{n}) and @code{step}
+(@code{s}).  Executes the next statement.  Execution stops before the
+following statement within the current function, regardless of whether
+it is at the current nesting level or in the body of a control
+structure. Execution does not stop in a called function.
+
+@item n (@code{mdb-next})
+Next: execute the next statement.  If the statement
+is a control structure (for example, @code{if} or @code{for}), it is
+executed in its entirety before execution stops again. Likewise, if
+the statement contains function calls, these are executed in their
+entirety.  After executing the statement, control returns to the
+Debugger as though a breakpoint had been set.
+
+@item o (@code{mdb-outfrom})
+Outfrom: execute until the current statement sequence has finished, or
+until a breakpoint or watchpoint is encountered. If this command is
+executed while stopped in a loop, execution continues until just
+before the first statement to be executed after the closing @code{end do}.
+Note that if the same breakpoint that caused execution to stop in
+the loop is encountered again in a subsequent iteration of the loop,
+execution will stop again. If this command is executed while
+stopped in the body of an @code{if} statement, execution continues until just
+before the first statement to be executed after the closing @code{end if}.
+
+@item q (@code{mdb-quit})
+Quit: terminate execution immediately.
+
+@item r (@code{mdb-return})
+Return: execute statements until the first statement to be executed
+after the currently executing procedure returns.
+
+@item s (@code{mdb-step})
+Step: execute the next statement at any level.  Execution stops before
+the following statement, regardless of whether it is at the current
+nesting level, in the body of a control structure (for example,
+@code{if}), or in a called function.
+
+@item @key{SPACE} (@code{mdb-send-last-command})
+Re-execute the last command.
+This only applies to the commands in this table.
+
+@end table
+
+@node Status, Breakpoints, Execution, Showstat Buffer
+@section Status
+
+Mdb supports the following debugger commands for querying the status
+of the debugger.
+
+@table @kbd
+
+@item k (@code{mdb-showstack})
+Showstack: display an abbreviated form of the calling stack.
+Only the names of the procdures are shown.  The name of the current
+procedure is not shown.
+
+@item K (@code{mdb-where})
+Where: display the stack. 
+The top-most level is shown first.
+For each entry in the stack,
+the name of the calling procedure and the current statement within it are shown,
+followed on the next line by the list of arguments passed to corresponding procedure.
+An optional prefix argument can be passed; it specifies the number of levels to display.
+For example @kbd{C-u 2 K} displays the lowest two levels.
+
+@item p (@code{showstop})
+Showstop: display a list of all procedures containing breakpoints, all
+watchpoints, and all error watchpoints.
+
+@item x (@code{showexception})
+Showexception: display the value of @code{lastexception}.
+
+@item X (@code{showerror})
+Showerror: display the value of @code{lasterror}.
+
+
+@end table
+
+
+@node Breakpoints, Evaluation, Status, Showstat Buffer
+@section Breakpoints
+
+Mdb permits setting and clearing breakpoints, watchpoints, and error watchpoints.
+
+@table @kbd
+
+@item b (@code{mdb-breakpoint})
+Stopat:  Set a breakpoint at the start of the statement at the cursor.   
+An asterisk appears to the right of the statement number.
+
+
+@item u (@code{mdb-unstopat})
+Unstopat: Clear a breakpoint at the start of the statement at the cursor.
+
+@item w (@code{mdb-stopwhen-local})
+stopwhen: Set a local watchpoint. 
+
+@end table
+
+
+@node Evaluation,  , Breakpoints, Showstat Buffer
+@section Evaluation
+
+Mdb can evaluate expressions using the current context of Maple.
+
+@table @kbd
+
+@item a (@code{mdb-args})
+Display the arguments of the current procedure as a vertical list of values.
+
+@item A (@code{mdb-show-args-as-equations})
+Display the arguments of the current procedure as a vertical list of equations.
+The left-side of each equation is the formal parameter, 
+the right-side is the value.
+
+@item e (@code{mdb-eval-and-display-expr})
+Evaluate an expression in the current context.
+The expression is entered in the mini-buffer.  
+The default expression is taken from the text at the cursor.
+
+@item E (@code{mdb-eval-and-display-expr-global})
+Evaluate an expression in the global context.
+The expression is entered in the mini-buffer.  
+The default expression is taken from the text at the cursor.
+
+@item . (@code{mdb-eval-and-prettyprint})
+Evaluate an expression and prettyprint the result.
+The prettyprinting depends on the type of the evaluated expression.
+For example, a record is displayed as a vertical list of equations
+of the form @emph{fieldname}=@emph{value}.
+
+@end table
+
+
+@bye
