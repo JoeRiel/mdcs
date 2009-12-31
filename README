@@ -10,7 +10,7 @@ REQUIREMENTS
 INSTALLATION
 ------------
 Move mdb.el and ir.el to where Emacs can find them and (preferably)
-byte compile them.  Add the following to the .emacs file:
+byte-compile them.  Add the following to the .emacs file:
 
 (autoload 'mdb "mdb" "Maple debugger" t)
 
