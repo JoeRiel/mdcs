@@ -1053,7 +1053,7 @@ Information
 \\[mdb-showstack] (showstack) display abbreviated stack
 \\[mdb-where] (where) display stack of procedure calls
 \\[mdb-goto-current-state] move (return) cursor to current state
-;\\[mdb-showerror] diplay the last error
+\\[mdb-showerror] diplay the last error
 \\[mdb-showexception] diplay the last exception
 
 Evaluation
