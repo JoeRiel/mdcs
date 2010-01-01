@@ -168,7 +168,7 @@ line is the head position, at the end of line."
       ;; The current location in the vector is nil; move across the
       ;; the gap, which extends from hd+1 to the end of the vector.
       ;; N.B. once the ring is full, a one-cell gap can appear when
-      ;; scrolling from a duplicate entry.  Because that gap, which is
+      ;; scrolling from a duplicate entry.  Because that gap, which
       ;; follows the head index, is filled when scrolling, it never
       ;; triggers this clause.
       (setq cu (ir--set-cu ir (if next
