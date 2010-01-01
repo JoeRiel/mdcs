@@ -133,7 +133,7 @@ so, do not insert it.  Null the current-index."
 	  (aset vc hd in))))
     ;; Clear current index
     (ir--set-cu ir nil)))
-  
+
 (defun ir-scroll (ir &optional next)
   "Scroll the input-ring IR and update the display.
 If the optional argument NEXT is non-nil, scroll forward (to newer entries),
@@ -175,8 +175,8 @@ line is the head position, at the end of line."
 				  0
 				(ir--get-hd ir))))
       (insert (aref vc cu))
-    ;; Move point to appropriate location.
-    (ir--move-point ir))))
+      ;; Move point to appropriate location.
+      (ir--move-point ir))))
 
 (defun ir-export (ir)
   "Return a list of the strings in the input-ring IR.
@@ -221,7 +221,7 @@ The input line is from the marker to the end of the line."
 The input line is from the marker to the end of the line."
   (with-current-buffer (ir--buffer ir)
     (delete-region (ir--get-mk ir) (line-end-position))))
-  
+
 (defun ir--insert-only (ir item)
   "Insert into input-ring IR item ITEM.
 Increment the head index modulo the vector length."
@@ -242,7 +242,7 @@ location, but that requires another memory slot."
 	(hd (ir--get-hd ir)))
     (with-current-buffer (ir--buffer ir)
       (goto-char (if (and cu (/= cu hd))  ; not home
-		   mk
+		     mk
 		   (line-end-position))))))
 
 (defun ir--ir-p (ir)
