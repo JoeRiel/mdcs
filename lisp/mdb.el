@@ -33,21 +33,6 @@
 ;; *file*; however, it is the next best thing.
 
 ;;}}}
-;;{{{ Installation
-
-;; To install mpldoc-mode, put this file (mbdc.el) in your Emacs-Lisp
-;; load path and byte-compile it.  You will also need the maplev.el
-;; file (distributed separately) and ir.el, which is distributed with
-;; this package.  Put the following command into .emacs so that
-;; mdb-mode is automatically loaded when required:
-
-;; (autoload 'mdb "mdb" "Maple debugging shell" t)
-
-;; The shell script emaple and its associated binary pmaple are also
-;; required.  They are available in a separate package.  They should
-;; be available in //wmi/groups/scripts/share/emacs/emaple.
-
-;;}}}
 ;;{{{ TODO
 
 ;; A useful feature would be the ability to jump from the *showstat*
@@ -103,7 +88,7 @@
 ;;{{{ requirements
 
 (require 'tq)
-(require 'ir)
+(require 'mdb-ir)
 (require 'maplev)
 (eval-when-compile
   (require 'hl-line))
@@ -135,7 +120,7 @@ handle prompts in a pipe."
   :type '(repeat list (string))
   :group 'mdb)
 
-;;{{{  prompts
+;;{{{   prompts and cursors
 
 (defcustom mdb-prompt "(**) "
   "*eMaple prompt.
@@ -149,6 +134,16 @@ prompt is defined as a C-preprocessor-macro in the emaple source."
 Changing this, alas, does not currently change the prompt because the
 prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
+  :group 'mdb)
+
+(defcustom mdb-cursor-waiting 'hollow
+  "Cursor used in showstat buffer when waiting for Maple to respond."
+  :type 'symbol
+  :group 'mdb)
+
+(defcustom mdb-cursor-ready 'box
+  "Cursor used in showstat buffer when ready for a user input."
+  :type 'symbol
   :group 'mdb)
 
 ;;}}}
@@ -258,6 +253,21 @@ the values are additional alists.")
   (if mdb-debugger-output-buffer (kill-buffer mdb-debugger-output-buffer))
   (if mdb-showstat-buffer (kill-buffer mdb-showstat-buffer)))
 
+(defun mdb-kill-maple ()
+  "Kill the current maple process.
+Switch to the `mdb-buffer' and restart the Maple process."
+  (interactive)
+  (pop-to-buffer mdb-buffer)
+  (if (and mdb-tq (tq-process mdb-tq)) (tq-close mdb-tq))
+  (mdb-start-maple))
+
+(defun mdb-start-maple ()
+  "Start the maple process.
+Assign the global variables `mdb-maple-buffer', `mdb-process', and `mdb-tq'."
+  (setq mdb-maple-buffer (get-buffer-create "*maple*"))
+  (setq mdb-process (mdb-start-maple-process))
+  ;; Start and assign the transaction queue.
+  (setq mdb-tq (tq-create mdb-process)))
 
 (defun mdb-handle-maple-output (closure msg)
   "CLOSURE is a list, \(EXEC FUNC PROC\), MSG is a Maple output string.
@@ -446,6 +456,8 @@ PROC is also assigned, in which case it is used to process the region."
   (interactive)
   (mdb-send-string (concat mdb-last-debug-cmd "\n") t))
 
+
+
 ;;}}}
 
 ;;{{{ experimental
@@ -520,7 +532,7 @@ Otherwise return nil."
 	  ;; (setq mdb-showstat-update-p t)))
 	  ))
     ;; Enter the line into history.
-    (ir-enter mdb-ir)
+    (mdb-ir-enter mdb-ir)
     (mdb-send-string (concat input "\n") t)))
 
 (defun mdb-electric-space ()
@@ -534,12 +546,12 @@ Otherwise insert a space."
 (defun mdb-history-next ()
   "Scroll input-ring to next item."
   (interactive)
-  (ir-scroll mdb-ir 'next))
+  (mdb-ir-scroll mdb-ir 'next))
 
 (defun mdb-history-prev ()
   "Scroll input-ring previous next item."
   (interactive)
-  (ir-scroll mdb-ir))
+  (mdb-ir-scroll mdb-ir))
 
 (defvar mdb-mode-map
   (let ((map (make-sparse-keymap))
@@ -584,17 +596,13 @@ Special commands:
   (set-marker mdb-pmark (point-max))
 
   ;; Setup the history ring
-  (setq mdb-ir (ir-create mdb-history-size mdb-pmark))
+  (setq mdb-ir (mdb-ir-create mdb-history-size mdb-pmark))
 
   ;; Create the showstat buffer and assign it to `mdb-showstat-buffer'.
   (setq mdb-showstat-buffer (mdb-showstat-get-buffer-create))
 
-  ;; Create the maple buffer (TODO: uniqueify name)
-  (setq mdb-maple-buffer (get-buffer-create "*maple*"))
-  (setq mdb-process (mdb-start-maple-process))
-
-  ;; Start the transaction queue
-  (setq mdb-tq (tq-create mdb-process))
+  
+  (mdb-start-maple)
 
   ;; Add hook to cleanup when buffer is killed
   (add-hook 'kill-buffer-hook 'mdb-shutdown nil 'local)
