@@ -1,0 +1,4 @@
+/.gitignore~
+/mdb-ir.elc
+/mdb-showstat.elc
+/mdb.elc
