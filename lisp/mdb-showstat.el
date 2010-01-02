@@ -29,6 +29,8 @@ If `mdb-showstat-buffer' is already displaying PROCNAME, then move
 the arrow; otherwise call showstat to display the new procedure."
   (with-current-buffer mdb-showstat-buffer
     (setq mdb-showstat-state state)
+    ;; Revert cursor-type to ready status.
+    (setq cursor-type mdb-cursor-ready)
     (let ((at-first-state (string= state "1")))
       (if (and (equal procname mdb-showstat-procname)
 	     (not at-first-state))
@@ -103,31 +105,30 @@ and ensure that the buffer and line are visible.  The current
 state is stored in `mdb-showstat-state'.  If the `hl-line'
 feature is present in this session, then highlight the line.
 POINT is moved to the indentation of the current line."
-  (with-current-buffer mdb-showstat-buffer
-    (let ((buffer-read-only nil)
-	  (state mdb-showstat-state))
-      ;; Find the location of STATE in the buffer.
-      (goto-char (point-min))
-      (re-search-forward (concat "^ *" state "[ *]\\(!\\)?"))
-      ;; Remove the bang, which showstat uses to mark the current state.
-      (if (match-string 1)
-	  (replace-match " " nil nil nil 1))
-      ;; Move the arrow marker to the left margin of the state.
-      (beginning-of-line)
-      (or mdb-showstat-arrow-position
-	  (setq mdb-showstat-arrow-position (make-marker)))
-      (set-marker mdb-showstat-arrow-position (point))
-      ;; If `hl-line' is enabled, highlight the line.
-      (when (featurep 'hl-line)
-	(cond
-	 (global-hl-line-mode
-	  (global-hl-line-highlight))
-	 ((and hl-line-mode hl-line-sticky-flag)
-	  (hl-line-highlight))))
-      ;; Move point to indentation of the current line (not including the state number).
-      (re-search-forward "^ *[1-9][0-9]*[ *]? *" nil 'move)))
+  (let ((buffer-read-only nil)
+	(state mdb-showstat-state))
+    ;; Find the location of STATE in the buffer.
+    (goto-char (point-min))
+    (re-search-forward (concat "^ *" state "[ *]\\(!\\)?"))
+    ;; Remove the bang, which showstat uses to mark the current state.
+    (if (match-string 1)
+	(replace-match " " nil nil nil 1))
+    ;; Move the arrow marker to the left margin of the state.
+    (beginning-of-line)
+    (or mdb-showstat-arrow-position
+	(setq mdb-showstat-arrow-position (make-marker)))
+    (set-marker mdb-showstat-arrow-position (point))
+    ;; If `hl-line' is enabled, highlight the line.
+    (when (featurep 'hl-line)
+      (cond
+       (global-hl-line-mode
+	(global-hl-line-highlight))
+       ((and hl-line-mode hl-line-sticky-flag)
+	(hl-line-highlight))))
+    ;; Move point to indentation of the current line (not including the state number).
+    (re-search-forward "^ *[1-9][0-9]*[ *]? *" nil 'move))
   ;; Ensure marker is visible in buffer.
-  (set-window-point (get-buffer-window mdb-showstat-buffer) mdb-showstat-arrow-position))
+  (set-window-point (get-buffer-window mdb-showstat-buffer) (point)))
 
 (defun mdb-showstat-get-buffer-create ()
   "Return the `mdb-showstat-buffer' buffer.
@@ -151,8 +152,13 @@ If it does not exist, or is killed, then create it."
 
 (defun mdb-showstat-send-command (cmd)
   "Send CMD, with appended newline, to the Maple process.
-Save CMD in `mdb-last-debug-cmd'."
+Save CMD in `mdb-last-debug-cmd'.  Change cursor type to
+`mdb-cursor-waiting', which indicates we are waiting for a
+response from Maple.  This function assumes `mdb-showstat-buffer'
+is the current buffer."
   (setq mdb-last-debug-cmd cmd)
+  (setq cursor-type mdb-cursor-waiting)
+  (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mdb-send-string (concat cmd "\n") t))
 
 (defun mdb-showstat-eval-expr (expr)
@@ -160,6 +166,9 @@ Save CMD in `mdb-last-debug-cmd'."
   (mdb-send-string (concat expr "\n") nil))
 
 ;;}}}
+
+
+
 ;;{{{ select maple expressions
 
 (defun mdb-ident-around-point-interactive (prompt &optional default complete)
@@ -455,6 +464,7 @@ the number of activation levels to display."
 	   ("x" . mdb-showexception)
 	   ("X" . mdb-showerror)
 	   ("." . mdb-eval-and-prettyprint)
+	   ("\C-c\C-c" . mdb-kill-maple)
 	   ("\C-c\C-o" . mdb-pop-to-mdb-buffer)
 	   )))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
@@ -478,6 +488,7 @@ Tracing
 \\[mdb-step] (step) execute next statement at any level
 \\[mdb-return] (return) continue executing until current procedure returns
 \\[mdb-quit] (quit) terminate debugging, return to mdb buffer
+\\[mdb-kill-maple] kill and restart the Maple process
 
 Breakpoints
 -----------
@@ -511,6 +522,9 @@ Miscellaneous
 -------------
 \\[mdb-pop-to-mdb-buffer] pop to the mdb buffer
 \\[mdb-debugger-clear-output] clear the debugger output buffer
+\\[mdb-help-debugger] display help page for the Maple debugger
+\\[maplev-help-at-point] display a Maple help page
+\\[maplev-proc-at-point] display a Maple procedure
 "
   :group 'mdb
   (setq mdb-showstat-procname ""
@@ -521,3 +535,4 @@ Miscellaneous
 ;;}}}
 
 (provide 'mdb-showstat)
+
