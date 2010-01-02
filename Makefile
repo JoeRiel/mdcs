@@ -1,61 +1,121 @@
-base = mdb
-maple = smaple
-installdir = ~/emacs
-mapleinstalldir = $(HOME)/maple/lib
-localpath = $(installdir)
+# Makefile - for the mdb-mode distribution
+#
+# Maintainer: Joe Riel <jriel@maplesoft.com>
+# version: VERSIONTAG
+#
+
+SHELL = /bin/sh
+
+# {{{ Binaries
+
 CP = cp
+EMACS = emacs-snapshot
+INSTALL_INFO = install-info
+MAKEINFO = makeinfo
+MAPLE = smaple
+MKDIR = mkdir -p
+TEXI2PDF = texi2pdf
 
-#emacs	= emacs --debug-init --no-site-file --no-init-file --eval '(setq debug-on-error t)'
-emacs = emacs --no-site-file --no-init-file
+# }}}
+# {{{ Directories
 
-#ELFLAGS = --eval '(setq load-path (append (list "." "$(elibdir)" "$(lispdir)") load-path))'
-ELFLAGS	= --eval '(add-to-list (quote load-path) ".")' --eval '(add-to-list (quote load-path) "$(localpath)")'
-#ELC	= $(emacs) --batch $(ELFLAGS) --funcall=batch-byte-compile-if-not-done
-ELC	= $(emacs) --batch $(ELFLAGS) --funcall=batch-byte-compile
+# where local software is found
+prefix = /usr/local
 
-el-files  = $(addsuffix .el,mdb ir)
-elc-files = $(el-files:.el=.elc)
+# where local lisp files go
+lispdir = $(prefix)/share/emacs/site-lisp
+
+# where info files go
+# infodir = $(prefix)/share/info
+ infodir = /usr/share/info
+
+# where the maple archive goes
+mapleinstalldir = $(HOME)/maple/lib
+
+# }}}
+# {{{ Emacs
+
+ELFLAGS	= --no-site-file \
+	  --no-init-file \
+	  --eval "(progn \
+                    (add-to-list (quote load-path) (expand-file-name \"./lisp\")) \
+	            (add-to-list (quote load-path) \"$(lispdir)\"))"
+
+ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
+
+ELS = mdb \
+      mdb-showstat \
+      mdb-ir
+
+LISPFILES = $(ELS:%=lisp/%.el)
+ELCFILES = $(LISPFILES:.el=.elc)
+
+%.elc : %.el
+	$(ELC) $<
+
+# }}}
+
 mla = mdb.mla
 
+DOCFILES = doc/mdb.texi doc/mdb.pdf doc/mdb doc/dir
+TEXIFILES = doc/mdb.texi
+INFOFILES = doc/mdb
+
+doc/mdb.pdf: doc/mdb.texi
+	(cd doc; $(TEXI2PDF) mdb.texi)
+
+doc/mdb: doc/mdb.texi
+	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
+
+
 default: compile
-compile: $(elc-files)
+compile: $(ELCFILES)
+doc: doc/mdb.pdf
+info: doc/mdb
+pdf: doc/mdb.pdf
+p:
+	make pdf && evince doc/mdb.pdf
+i:
+	make info && info doc/mdb
+
 mla: $(mla)
-dist: $(base).zip
-
-mdb.elc:
-
-$(elc-files): $(el-files)
-	$(ELC) $+
+dist: mdb.zip
 
 $(mla): mdb.mpl
-	$(maple) -q $^
+	$(MAPLE) -q $^
 
-installmaple: $(mla)
+install-maple: $(mla)
 	$(CP) --archive $+ $(mapleinstalldir)
 
-installemacs: $(el-files) $(elc-files)
-	$(CP) --archive $+ $(installdir)
+install-lisp: $(LISPFILES) $(ELCFILES)
+	if [ ! -d $(lispdir) ]; then $(MKDIR) $(lispdir); else true; fi ;
+	$(CP) $+ $(lispdir)
 
-install: installmaple installemacs
+install-info: $(INFOFILES)
+	if [ ! -d $(infodir) ]; then $(MKDIR) $(infodir); else true; fi ;
+	$(CP) $(INFOFILES) $(infodir)
+	for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(infodir) $${file}; done
 
-# Does not install elc files; useful for checking old versions of emacs.
-installel: $(el-files)
+install: install-lisp install-maple install-info
+
+# Install el files but not elc files; useful for checking old versions of emacs.
+install-el: $(el-files)
 	$(CP) --archive $+ $(installdir)
 
 dist = $(el-files) Makefile README
 
-$(base).zip: $(dist)
+mdb.zip: $(dist)
 	zip $@ $?
 
 clean:
-	-$(RM) *.elc
+	-$(RM) lisp/*.elc
 
 # P4 upload
 
-p4dir = /home/joe/work/MapleSoft/sandbox/groups/share/emacs/$(base)
+p4dir = /home/joe/work/MapleSoft/sandbox/groups/share/emacs/mdb
 
 p4put: $(el-files) Makefile README
 	(cd $(p4dir); p4 edit $+)
 	$(CP) $+ $(p4dir)
 
-.PHONY: default compile install installel dist clean p4put mla installmaple installemacs
+.PHONY: default compile install install-el dist clean p4put mla install-maple install-lisp
