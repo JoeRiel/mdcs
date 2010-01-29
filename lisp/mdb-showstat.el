@@ -55,7 +55,7 @@ the arrow; otherwise call showstat to display the new procedure."
 								   'mdb-face-procname-entered
 								 'mdb-face-procname-cont))))
 	;; Display arguments if we just entered the procedure.
-	(if at-first-state
+	(if (and mdb-show-args-on-entry at-first-state)
 	    (mdb-show-args-as-equations)))
       
       ;; Save procname in the global variable,
@@ -167,8 +167,6 @@ is the current buffer."
 
 ;;}}}
 
-
-
 ;;{{{ select maple expressions
 
 (defun mdb-ident-around-point-interactive (prompt &optional default complete)
@@ -179,7 +177,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
 	;; this is really simple.  Need to improve...
-        (ident (if (looking-at " +[0-9]+\\*? +\\(?:\\(?:if\\|return\\) \\)?")
+        (ident (if (looking-at "\\(?:if\\|return\\) \\)?")
 		   (save-excursion
 		     (goto-char (match-end 0))
 		     (maplev--ident-around-point default))
