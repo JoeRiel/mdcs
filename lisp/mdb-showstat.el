@@ -240,9 +240,8 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mdb-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "cont"))
-
-
 
 (defun mdb-eval-and-prettyprint (expr &optional suffix)
   (interactive (list (mdb-ident-around-point-interactive
@@ -322,26 +321,31 @@ The result is returned in the message area."
 (defun mdb-into ()
   "Send the 'into' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "into"))
 
 (defun mdb-next ()
   "Send the 'next' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "next"))
 
 (defun mdb-outfrom ()
   "Send the 'outfrom' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "outfrom"))
 
 (defun mdb-quit ()
   "Send the 'quit' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "quit"))
 
 (defun mdb-return ()
   "Send the 'return' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "return"))
 
 (defun mdb-showstack ()
@@ -369,6 +373,7 @@ procedure stripped from it."
 (defun mdb-step ()
   "Send the 'step' command to the debugger."
   (interactive)
+  (mdb-goto-current-state)
   (mdb-showstat-send-command "step"))
 
 (defun mdb-stopwhen-local (clear)
