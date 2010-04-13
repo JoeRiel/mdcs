@@ -177,7 +177,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
 	;; this is really simple.  Need to improve...
-        (ident (if (looking-at "\\(?:if\\|return\\) \\)?")
+        (ident (if (looking-at " *\\(?:if\\|return\\)? +")
 		   (save-excursion
 		     (goto-char (match-end 0))
 		     (maplev--ident-around-point default))
