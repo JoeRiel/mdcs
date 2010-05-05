@@ -6,6 +6,7 @@ REQUIREMENTS
 ------------
 * GNU Emacs 22.2.1+
 * The binary pmaple and shell script emaple.
+* maplev-mode (Emacs mode for developing Maple code)
 
 INSTALLATION
 ------------
