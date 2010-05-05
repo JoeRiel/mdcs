@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# This script launches pmaple, a binary that provides an enhanced
+# pipeline communication with the Maple engine, using OpenMaple.
+
+# It uses two environmental variables:
+#
+#  MAPLE_ROOT    : Maple installation directory
+#  MAPLESIM_ROOT : Source directry for Maplesim.
+
+if [ -z "$MAPLE_ROOT" ]; then
+    echo "Environmental variable MAPLE_ROOT is not assigned.";
+    exit 100;
+fi;
+
+if [ -z "$MAPLESIM_ROOT" ]; then
+    echo "Environmental variable MAPLESIM_ROOT is not assigned.";
+    exit 100;
+fi;
+
+# Assign and export LD_LIBRARY_PATH to specify the libraries
+# against which pmaple was built.
+
+export LD_LIBRARY_PATH=$(getlibpath)
+
+# Customize this per your setup.  The include path is used by
+# Maple source files that have `$include' preprocessor statements.
+
+# Does this work?  According to the Maple Advance Programming Guide,
+# the -I option is not supported by StartMaple. 
+
+INCLUDE="-I ${MAPLESIM_ROOT}/maple/include -I ${MAPLE_ROOT}/lib/include"
+
+pmaple ${INCLUDE} "$@"

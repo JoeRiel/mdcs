@@ -1,0 +1,15 @@
+2009-12-05  Joe Riel  <joer@san.rr.com>
+
+	* pmaple.c: added redirectCallBack.  Modified textCallBack to use outfile.
+	This permits using writeto and appendto.  
+
+2009-10-09  Joe Riel  <joer@san.rr.com>
+
+	* getlibpath: bash script to return path for LD_LIBRARY_PATH suitable for emaple
+
+2009-09-29  Joe Riel  <joer@san.rr.com>
+
+	* emaple: added call to maple.system.type to set BINTYPE.
+	* Makefile: added SYSTYPE that calls maple.system.type;
+	is that always available (to consumer)?
+

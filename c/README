@@ -1,0 +1,19 @@
+This package provides a shell-script, emaple, and a binary, pmaple,
+that implements an enhanced pipe-line interface to the Maple engine.
+The enhancement is trivial but significant, it ensures that prompts
+are flushed as they are generated.  This fixes a deficiency in cmaple,
+which does not flush the prompts and thus makes it difficult to
+determine when a computation is complete.
+
+The shell-script, emaple, calls the binary pmaple after reassigning
+and exporting the shell environmental variable LD_LIBRARY_PATH, which
+is used to determine where the Maple shared-object libraries are
+located.  It also passes include options to pmaple.  
+
+To build pmaple, modify the Makefile the run 
+
+make
+
+To install, modify emaple according to your setup and then run
+
+make install
