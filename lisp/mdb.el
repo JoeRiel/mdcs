@@ -227,24 +227,37 @@ before the process terminates.")
 (defvar mdb-buffer nil "Buffer used as shell.")
 (defvar mdb-debugging-flag nil "Non-nil when debugging.")
 (defvar mdb-debugger-output-buffer nil "Buffer used for debugger output.")
+(defvar mdb-ir nil "Input ring used by mdb for history completion.")
 (defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
 (defvar mdb-maple-buffer nil "Temporary buffer associated with maple process.")
 (defvar mdb-maple-procname nil "Name of current procedure being debugged.
 This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-pmark nil "Prompt mark in `mdb-buffer'.")
 (defvar mdb-process nil "Maple process used by mdb")
+(defvar mdb-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
 (defvar mdb-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
 (defvar mdb-showstat-procname "" "Name of current showstat procedure.")
 (defvar mdb-showstat-state "1")
 (defvar mdb-tq nil "Transaction-queue used by mdb.")
-(defvar mdb-ir nil "Input ring used by mdb for history completion.")
 (defvar mdb-watch-alist nil
   "Alist for storing watch variables.  The keys are procedure names,
 the values are additional alists.")
 
 ;;}}}
 ;;{{{ functions
+
+(defun mdb-toggle-show-args (&optional arg)
+  "Toggle whether to display arguments when entering a procedure.
+With prefix argument ARG, show arguments if ARG is positive,
+otherwise do not show them."
+  (interactive "P")
+  (setq mdb-show-args-on-entry
+	(if (null arg) (not mdb-show-args-on-entry)
+	  (> (prefix-numeric-value arg) 0)))
+  (message "Show arguments when entering a procedure %s"
+	   (if mdb-show-args-on-entry "enabled" "disabled")))
+
 
 (defun mdb-shutdown ()
   "Shutdown the debugger and kill the temporary buffers."
