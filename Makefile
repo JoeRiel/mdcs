@@ -62,6 +62,8 @@ mla = mdb.mla
 TEXIFILES = doc/mdb.texi
 INFOFILES = doc/mdb
 
+default: byte-compile
+
 doc/mdb.pdf: doc/mdb.texi
 	(cd doc; $(TEXI2PDF) mdb.texi)
 
@@ -69,8 +71,7 @@ doc/mdb: doc/mdb.texi
 	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
 
 
-default: compile
-compile: $(ELCFILES)
+byte-compile: $(ELCFILES)
 doc: doc/mdb.pdf
 info: doc/mdb
 pdf: doc/mdb.pdf
