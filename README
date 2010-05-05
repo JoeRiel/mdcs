@@ -66,4 +66,5 @@ Information
 Miscellaneous
 -------------
       e   evaluate a Maple expression
+      .   prettyprint a Maple expression (sort of)
 C-c C-o   pop to mdb buffer

@@ -4,7 +4,6 @@
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2009
 ;; Keywords:   maple, debugger
-;; Repository: //wmi/groups/scripts/share/emacs/mdb/mdb.el
 
 ;;{{{ License
 

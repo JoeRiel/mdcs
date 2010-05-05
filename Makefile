@@ -1,3 +1,5 @@
+# -*- mode:makefile-gmake; mode:folding -*-
+#
 # Makefile - for the mdb-mode distribution
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
@@ -57,7 +59,6 @@ ELCFILES = $(LISPFILES:.el=.elc)
 
 mla = mdb.mla
 
-DOCFILES = doc/mdb.texi doc/mdb.pdf doc/mdb doc/dir
 TEXIFILES = doc/mdb.texi
 INFOFILES = doc/mdb
 
@@ -73,8 +74,12 @@ compile: $(ELCFILES)
 doc: doc/mdb.pdf
 info: doc/mdb
 pdf: doc/mdb.pdf
+
+# preview pdf
 p:
 	make pdf && evince doc/mdb.pdf
+
+# preview info
 i:
 	make info && info doc/mdb
 
@@ -102,7 +107,7 @@ install: install-lisp install-maple install-info
 install-el: $(el-files)
 	$(CP) --archive $+ $(installdir)
 
-dist = $(el-files) Makefile README
+dist = $(ELS) $(TEXIFILE) $(INFOFILES)  Makefile README
 
 mdb.zip: $(dist)
 	zip $@ $?

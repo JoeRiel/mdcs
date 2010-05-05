@@ -4,7 +4,6 @@
 
 ;; Author: Joe Riel <jriel@maplesoft.com>
 ;; Keywords: ring command history
-;; Repository: //wmi/groups/scripts/share/emacs/mdb/mdb-ir.el
 
 ;;{{{ License
 
