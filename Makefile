@@ -7,7 +7,6 @@
 SHELL = /bin/sh
 
 default: byte-compile
-byte-compile: $(ELCFILES)
 
 # {{{ Binaries
 
@@ -54,6 +53,8 @@ ELS = mdb \
 
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
+
+byte-compile: $(ELCFILES)
 
 %.elc : %.el
 	$(ELC) $<
