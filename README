@@ -1,6 +1,12 @@
 This package provides an Emacs major mode, mdb, for debugging Maple
-code.  It provides a frontend to the builtin Maple debugger that steps
-through the interpreted source code.
+code.  It is a frontend to the builtin Maple debugger.  Rather than
+seeing a single line of a debugged procedure, the entire procedure is
+displayed in a buffer, with keywords font-locked, and the cursor moves
+through the buffer as the code is executed.  Keyboard shortcuts are
+assigned for all the debugging operations, including tracing,
+evaluation, setting breakpoints and watchpoints.  Commands are defined
+for displaying procedure arguments and various structures in a nice
+way.
 
 REQUIREMENTS
 ------------

@@ -57,7 +57,7 @@ ELCFILES = $(LISPFILES:.el=.elc)
 
 # }}}
 
-mla = mdb.mla
+mla = maple/mdb.mla
 
 TEXIFILES = doc/mdb.texi
 INFOFILES = doc/mdb
@@ -87,7 +87,7 @@ i:
 mla: $(mla)
 dist: mdb.zip
 
-$(mla): mdb.mpl
+$(mla): maple/mdb.mpl
 	$(MAPLE) -q $^
 
 install-maple: $(mla)
