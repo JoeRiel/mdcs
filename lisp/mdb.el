@@ -216,6 +216,16 @@ state number.")
   "Regexp that matches the final message send by emaple
 before the process terminates.")
 
+(defconst mdb--end-of-process-output-re
+  (concat "^\\(?:"
+	  mdb--prompt-re
+	  "[ \n]*\\|"
+	  mdb--emaple-done-re
+	  "\\)\\'")
+  "Regexp that matches the end of process output.")
+
+
+
 ;;}}}
 ;;{{{ variables
 
@@ -450,12 +460,7 @@ The optional PREFIX and SUFFIX are added to the displayed output, unless
 PROC is also assigned, in which case it is used to process the region."
   (tq-enqueue mdb-tq
 	      str
-	      ;; This regex indicates the end of the process output.
-	      (concat "^\\(?:"
-		      mdb--prompt-re
-		      "[ \n]*\\|"
-		      mdb--emaple-done-re
-		      "\\)\\'")
+	      mdb--end-of-process-output-re
 	      (list exec (mdb--make-surround prefix suffix) proc) ; closure
 	      #'mdb-handle-maple-output                           ; handler
 	      'delay))

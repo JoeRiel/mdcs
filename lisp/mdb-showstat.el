@@ -244,7 +244,8 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 (defun mdb-eval-and-prettyprint (expr)
   "Pretty-print EXPR.  This calls the Maple procedure 
-mdb:-PrettyPrint to convert EXPR into a more useful display."
+mdb:-PrettyPrint to convert EXPR into a more useful display.
+With optional prefix, clear debugger output before displaying."
   (interactive (list (mdb-ident-around-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mdb-debugger-clear-output))

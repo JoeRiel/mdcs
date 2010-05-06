@@ -209,25 +209,37 @@ local prettyprint;
         else
             expr := _rest;
 
-            if expr :: 'Or(set,list)' then
-                return expr[];
+            if expr :: set then
+                printf("(*set*)\n");
+                return  `if`(expr = []
+                             , printf("NULL\n")
+                             , expr[]
+                            );
+            elif expr :: list then
+                printf("(*list*)\n");
+                return `if`(expr = []
+                            , printf("NULL\n")
+                            , expr[]
+                           )
             elif expr :: 'record' then
-                fld;
                 eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 if top then
-                    return eqs;
+                    return printf("(*record*)\n"), eqs;
                 else
                     return 'record'(eqs);
                 end if;
             elif expr :: table then
                 eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
                 if top then
-                    return eqs;
+                    return printf("(*table*)\n"), eqs;
                 else
                     return 'table'(eqs);
                 end if;
             elif expr :: procedure then
                 showstat(expr);
+                return NULL;
+            elif expr = NULL then
+                printf("NULL\n");
                 return NULL;
             else
                 return expr;
