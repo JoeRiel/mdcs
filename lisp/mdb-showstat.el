@@ -462,6 +462,7 @@ the number of activation levels to display."
 	   ("q" . mdb-quit)
 	   ("r" . mdb-return)
 	   ("s" . mdb-step)
+	   ("T" . toggle-truncate-lines)
 	   ("u" . mdb-unstopat)
 	   ("w" . mdb-stopwhen-local)
 	   ("W" . mdb-stopwhen-global)
@@ -529,6 +530,7 @@ Miscellaneous
 \\[mdb-help-debugger] display help page for the Maple debugger
 \\[maplev-help-at-point] display a Maple help page
 \\[maplev-proc-at-point] display a Maple procedure
+\\[toggle-truncate-lines] toggle whether to fold or truncate long lines
 "
   :group 'mdb
   (setq mdb-showstat-procname ""
