@@ -3,12 +3,15 @@
 # Makefile - for the mdb-mode distribution
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
-# version: VERSIONTAG
-#
 
 SHELL = /bin/sh
 
+default: byte-compile
+byte-compile: $(ELCFILES)
+
 # {{{ Binaries
+
+# Assign local variables for needed binaries
 
 CP = cp
 EMACS = emacs-snapshot
@@ -57,12 +60,10 @@ ELCFILES = $(LISPFILES:.el=.elc)
 
 # }}}
 
-mla = maple/mdb.mla
+# {{{ doc
 
 TEXIFILES = doc/mdb.texi
 INFOFILES = doc/mdb
-
-default: byte-compile
 
 doc/mdb.pdf: doc/mdb.texi
 	(cd doc; $(TEXI2PDF) mdb.texi)
@@ -71,7 +72,6 @@ doc/mdb: doc/mdb.texi
 	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
 
 
-byte-compile: $(ELCFILES)
 doc: doc/mdb.pdf
 info: doc/mdb
 pdf: doc/mdb.pdf
@@ -84,11 +84,18 @@ p:
 i:
 	make info && info doc/mdb
 
+# }}}
+# {{{ maple
+
+mla = maple/mdb.mla
 mla: $(mla)
 dist: mdb.zip
 
 $(mla): maple/mdb.mpl
-	$(MAPLE) -q $^
+	cd maple; $(MAPLE) -q $(notdir $^)
+
+# }}}
+# {{{ install
 
 install-maple: $(mla)
 	$(CP) --archive $+ $(mapleinstalldir)
@@ -108,20 +115,30 @@ install: install-lisp install-maple install-info
 install-el: $(el-files)
 	$(CP) --archive $+ $(installdir)
 
+# }}}
+# {{{ distribution
+
 dist = $(ELS) $(TEXIFILE) $(INFOFILES)  Makefile README
 
 mdb.zip: $(dist)
 	zip $@ $?
 
+# }}}
+
+# {{{ clean
+
 clean:
 	-$(RM) lisp/*.elc
 
-# P4 upload
+# }}}
+# {{{ p4
 
 p4dir = /home/joe/work/MapleSoft/sandbox/groups/share/emacs/mdb
 
 p4put: $(el-files) Makefile README
 	(cd $(p4dir); p4 edit $+)
 	$(CP) $+ $(p4dir)
+
+# }}}
 
 .PHONY: default compile install install-el dist clean p4put mla install-maple install-lisp
