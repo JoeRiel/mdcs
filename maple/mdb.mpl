@@ -95,7 +95,7 @@ local prettyprint;
                       , rargs :: list
                       , oargs :: list
                      )
-    local defparams, params, p;
+    local defparams, opacity, params, p, pos, i, m, n;
 
         # Assign params the procedure's formal parameters.
         if prc :: procedure then
@@ -103,7 +103,7 @@ local prettyprint;
         else
             # prc is a string; attempt to parse ...
             try
-                local opacity := kernelopts('opaquemodules'=false);
+                opacity := kernelopts('opaquemodules'=false);
                 params := [op(1,eval(parse(prc)))];
             finally
                 kernelopts('opaquemodules'=opacity);
@@ -112,7 +112,6 @@ local prettyprint;
 
         # If $ was used in the procedure assignment, then all optional parameters
         # can be easily removed.  Otherwise remove them later.
-    local pos;
         if member(:-` $`, params, 'pos') then
             params := params[1..pos-1];
         end if;
@@ -136,7 +135,6 @@ local prettyprint;
         # Remove remaining options from the default positional parameters.
         defparams := remove(member, defparams, lhs~(oargs));
 
-    local i, m, n;
         m := nops(defparams);
         n := nops(pargs) - m;
 
@@ -152,31 +150,57 @@ local prettyprint;
     end proc;
 
 #}}}
-#{{{ prettprint
+#{{{ prettyprint
 
 ##DEFINE PROC prettyprint
 ##PROCEDURE \MOD[\PROC]
-##HALFLINE
+##HALFLINE pretty print a Maple expression
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
 ##CALLINGSEQUENCE
-##- \PROC('top', ...)
+##- \PROC('top', ... )
 ##PARAMETERS
 ##- 'top' : ::truefalse::
 ##RETURNS
 ##- ::exprseq::
 ##DESCRIPTION
 ##- The `\PROC` procedure
+##  returns an expression sequence that better displays
+##  a Maple expression in the debugger.   It works
+##  by splitting an expression into an expression
+##  sequence, which are then displayed on
+##  separate lines in the debugger output buffer.
 ##
+##- The optional 'top' parameter is 'true' only
+##  if this `\PROC` was called directly by Emacs.
+##
+##- A sequence of expressions are handled separately, in order.
+##
+##- A ::record:: or ::table::
+##  is returned as an expression sequence of equations,
+##  the left side the field/index,
+##  the right side the entry.
+##
+##- A ::set:: or ::list::
+##  is returned as an expression sequence of its members.
+##
+##- A ::procedure:: is displayed with "showstat".
+##
+##- Any other expression type is returned as-is.
+##
+##
+##NOTES
+##- Need to provide a means to indicate the type.
 ##TEST
 ## $include <AssignFunc.mi>
 ## AssignFUNC(mdb:-prettyprint):
 ## $define T true
 ## Try("t", FUNC(T));
+## Try("exprseq", FUNC(T,a,b,c), a,b,c);
 ## Try("set", FUNC(T,{a,b}), a,b);
 ## Try("list", FUNC(T,[a,b]), a,b);
-## Try("record", FUNC(T,Record(a=23)), a=23);
-## Try("table", FUNC(T,table([a=23])), a=23);
+## Try("record", FUNC(T,Record(a=1,b=2)), a=1,b=2);
+## Try("table", {FUNC}(T,table([a=1,b=2])), {a=1,b=2});
 
     prettyprint := proc(top :: truefalse := true)
     local eqs, ex, expr, fld, indx;
@@ -216,12 +240,14 @@ local prettyprint;
 
 # Experimental.
 
+$ifdef SKIP
     PrintProc := proc(nm, prc)
     local listing;
         #listing := debugopts('procdump' = prc);
         #printf("\n%a := %s\n", nm, listing);
         printf("\n%", showstat(nm));
     end proc;
+$endif
 
 #}}}
 
