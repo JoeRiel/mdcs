@@ -57,29 +57,37 @@ local prettyprint;
 ##- A problem with passing a string is that parsing it does not necessarily
 ##  return the same procedure.
 ##
+##EXAMPLES
+##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
+##> macro(printargs=\MOD:-\PROC(thisproc, `[]`~([_params[..]]),[_rest],[_options])):
+##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
+##> f(3);
+##> f(3,4,keyword);
+##> f(3,4,5,keyword);
+##
 ##TEST
 ## $include <AssignFunc.mi>
 ## AssignFUNC(mdb:-ArgsToEqs):
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.1.0", proc(x,y) end, 'assign' = "proc1_1");
-## Try("1.1.1", FUNC("proc1_1", [[1],[2]],[],[]), x=1, y=2);
+## Try("1.1.1", [FUNC]("proc1_1", [[1],[2]],[],[]), [x=1, y=2]);
 ##
 ## Try[NE]("1.2.0", proc() end, 'assign' = "proc1_2");
-## Try("1.2.1", FUNC("proc1_2", [],[1,2],[]), _rest = (1,2));
+## Try("1.2.1", [FUNC]("proc1_2", [],[1,2],[]), [_rest = (1,2)]);
 ##
 ## Try[NE]("2.1.0", proc(x, {b::truefalse:=false}, $) end, 'assign' = "proc2_1");
-## Try("2.1.1", FUNC("proc2_1", [[1]], [], [b=false]), x=1, b=false);
-## Try("2.2.2", FUNC("proc2_1", [[1]], [], [b=true]), x=1,b=true);
+## Try("2.1.1", [FUNC]("proc2_1", [[1]], [], [b=false]), [x=1, b=false]);
+## Try("2.2.2", [FUNC]("proc2_1", [[1]], [], [b=true]),  [x=1, b=true ]);
 ##
 ## Try[NE]("3.1.0", proc(x,y:=1,z::integer:=2) end, 'assign' = "proc3_1");
-## Try("3.1.1", FUNC("proc3_1", [[1],[2]], [], []), y=1, z=2);
+## Try("3.1.1", [FUNC]("proc3_1", [[1],[2]], [], []), [y=1, z=2] );
 ##
 ## Try[NE]("3.2.0", proc(x,y:=1,z::integer:=NULL) end, 'assign' = "proc3_2");
-## Try("3.2.1", FUNC("proc3_2", [[1],[]], [], []), y=1, z=NULL);
+## Try("3.2.1", [FUNC]("proc3_2", [[1],[]], [], []), [y=1, z=NULL]);
 ##
 ## Try[NE]("3.3.0", proc(x,y,$) end, 'assign' = "proc3_3");
-## Try("3.3.1", FUNC("proc3_3", [[[1,2]],[2]], [], []), x=[1,2], y=2);
+## Try("3.3.1", [FUNC]("proc3_3", [[[1,2]],[2]], [], []), [x=[1,2], y=2]);
 ##
 
     ArgsToEqs := proc(prc :: {string,procedure}
@@ -146,35 +154,59 @@ local prettyprint;
 #}}}
 #{{{ prettprint
 
+##DEFINE PROC prettyprint
+##PROCEDURE \MOD[\PROC]
+##HALFLINE
+##AUTHOR   Joe Riel
+##DATE     Dec 2009
+##CALLINGSEQUENCE
+##- \PROC('top', ...)
+##PARAMETERS
+##- 'top' : ::truefalse::
+##RETURNS
+##- ::exprseq::
+##DESCRIPTION
+##- The `\PROC` procedure
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdb:-prettyprint):
+## $define T true
+## Try("t", FUNC(T));
+## Try("set", FUNC(T,{a,b}), a,b);
+## Try("list", FUNC(T,[a,b]), a,b);
+## Try("record", FUNC(T,Record(a=23)), a=23);
+## Try("table", FUNC(T,table([a=23])), a=23);
+
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr;
+    local eqs, ex, expr, fld, indx;
         if nargs > 2 then
             seq(procname(false,ex), ex in [_rest]);
         else
             expr := _rest;
 
             if expr :: 'Or(set,list)' then
-                expr[];
+                return expr[];
             elif expr :: 'record' then
-                local fld;
+                fld;
                 eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 if top then
-                    eqs;
-                else 'record'(eqs)
+                    return eqs;
+                else
+                    return 'record'(eqs);
                 end if;
             elif expr :: table then
-                local indx;
                 eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
                 if top then
-                    eqs
+                    return eqs;
                 else
-                    'table'(eqs);
+                    return 'table'(eqs);
                 end if;
             elif expr :: procedure then
                 showstat(expr);
                 return NULL;
             else
-                expr
+                return expr;
             end if;
         end if;
     end proc:
@@ -191,13 +223,16 @@ local prettyprint;
         printf("\n%", showstat(nm));
     end proc;
 
-
 #}}}
-
-
 
 end module:
 
+#{{{ Write to Maple Archive
+
 mla := "mdb.mla":
-fremove(mla);
+if FileTools:-Exists(mla) then
+    fremove(mla);
+end if;
 LibraryTools:-Save(mdb, mla);
+
+#}}}
