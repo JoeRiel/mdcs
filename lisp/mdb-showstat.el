@@ -243,9 +243,8 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (mdb-showstat-send-command "cont"))
 
 (defun mdb-eval-and-prettyprint (expr)
-  "Pretty-print EXPR and append an optional SUFFIX.
-This calls the Maple procedure mdb:-PrettyPrint to convert EXPR
-into a more useful display."
+  "Pretty-print EXPR.  This calls the Maple procedure 
+mdb:-PrettyPrint to convert EXPR into a more useful display."
   (interactive (list (mdb-ident-around-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mdb-debugger-clear-output))
