@@ -8,11 +8,21 @@ determine when a computation is complete.
 The shell-script, emaple, calls the binary pmaple after reassigning
 and exporting the shell environmental variable LD_LIBRARY_PATH, which
 is used to determine where the Maple shared-object libraries are
-located.  It also passes include options to pmaple.  
+located.  It also passes include options to pmaple.
 
-To build pmaple, modify the Makefile the run 
+
+BUILD
+-----
+To build pmaple, modify the Makefile, then run 
 
 make
+
+The Makefile uses the environmental variable MAPLE_ROOT,
+which should point to the directory where Maple is installed.
+If your environment does not assign MAPLE_ROOT consider
+modifying the Makefile to assign it internally or do
+
+MAPLE_ROOT="appropriate path" make
 
 To install, modify emaple according to your setup and then run
 

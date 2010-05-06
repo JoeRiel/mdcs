@@ -1,3 +1,13 @@
+# Makefile for pmaple
+#
+# Maintainer: Joe Riel <jriel@maplesoft.com>
+
+# Variables
+
+# This Makefile uses the environmental variable
+# MAPLE_ROOT, which points to the directory
+# where your maple is installed.
+
 targets := pmaple
 CC 	:= gcc 
 RM 	:= rm -rf
@@ -6,7 +16,6 @@ SYSTYPE := $(shell ./maple.system.type)
 LIB     := $(MAPLE)/internal/$(SYSTYPE)
 INCLUDE := -I $(MAPLE)/extern/include
 LIBS 	:= -L $(LIB)
-#ENV     := LD_LIBRARY_PATH=$(LIB) MAPLE=$(MAPLE)
 ENV     := LD_LIBRARY_PATH=$(shell ./getlibpath) MAPLE=$(MAPLE)
 
 #CFLAGS  := -m32

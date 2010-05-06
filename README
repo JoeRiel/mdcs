@@ -14,20 +14,35 @@ REQUIREMENTS
 * The binary pmaple and shell script emaple.
 * maplev-mode (Emacs mode for developing Maple code)
 
-INSTALLATION
+BUILD/INSTALLATION
 ------------
-Move mdb.el and ir.el to where Emacs can find them and (preferably)
-byte-compile them.  Add the following to the .emacs file:
+1. Compile and install pmaple (in the c directory),
+   which uses provides an OpenMaple interface to the
+   Maple engine.   See the c/README for (scant) details.
 
-(autoload 'mdb "mdb" "Maple debugger" t)
+2. Modify the Makefile per your setup:
 
-Compile and install pmaple (in the c directory),
-which uses provides an OpenMaple interface to the
-Maple engine.   See the c/README for (scant) details.
+   Binaries section:
+   
+     Assign the EMACS and MAPLE variables appropriately.
+
+   Directories section:
+
+     Assign the lispdir, infodir, and mapleinstalldir
+   variables appropriately. 
+
+3. Run make:
+
+   make 
+   make install
+
+4.  Add the following to your .emacs file:
+
+    (autoload 'mdb "mdb" "Maple debugger" t)
 
 USAGE
 -----
-Start mdb.
+Fire up Emacs and launch mdb:
 
 M-x mdb
 

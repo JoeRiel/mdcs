@@ -12,11 +12,14 @@ default: byte-compile
 
 # Assign local variables for needed binaries
 
-CP = cp
+# Definitely modify these to something appropriate.
+
 EMACS = emacs-snapshot
+MAPLE = smaple
+
+CP = cp
 INSTALL_INFO = install-info
 MAKEINFO = makeinfo
-MAPLE = smaple
 MKDIR = mkdir -p
 TEXI2PDF = texi2pdf
 
@@ -31,7 +34,7 @@ lispdir = $(prefix)/share/emacs/site-lisp
 
 # where info files go
 # infodir = $(prefix)/share/info
- infodir = /usr/share/info
+infodir = /usr/share/info
 
 # where the maple archive goes
 mapleinstalldir = $(HOME)/maple/lib
