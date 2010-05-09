@@ -17,7 +17,7 @@ build-all: byte-compile pmaple doc mla
 # Definitely modify these to something appropriate.
 
 EMACS = emacs-snapshot
-MAPLE = smaple
+MAPLE = $(MAPLE_ROOT)/bin/smaple
 
 CP = cp
 INSTALL_INFO = install-info
@@ -55,7 +55,7 @@ doc/mdb: doc/mdb.texi
 	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
 
 
-doc: doc/mdb.pdf
+doc: info pdf
 info: doc/mdb
 pdf: doc/mdb.pdf
 

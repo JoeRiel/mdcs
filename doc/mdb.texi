@@ -169,7 +169,7 @@ Breakpoints can be set or cleared directly in the buffer.
 @cindex Requirements
 
 
-@table @var 
+@table @r
 @item GNU Emacs 22.2.1+
 Mdb may work with earlier versions, but I have not tested it.
 @item Maple 14+  
@@ -207,7 +207,10 @@ The former creates
   the documentation (@file{doc/mdb})
   and the Maple archive (@file{maple/mdb.mla}).
 It calls the latter to build the binary executable (@file{c/pmaple}).
-Modify these makefiles per your setup.  
+Modify these makefiles per your setup.  In particular,
+be sure to properly assign the
+@code{lispdir}, @code{infodir}, and @code{mapleinstalldir}
+variables.
 
 @vindex MAPLE_ROOT
 The @file{c/Makefile} uses the environmental variable

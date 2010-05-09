@@ -11,8 +11,9 @@ way.
 REQUIREMENTS
 ------------
 * GNU Emacs 22.2.1+
-* The binary pmaple and shell script emaple.
+* The binary pmaple and shell script emaple (source included)
 * maplev-mode (Emacs mode for developing Maple code)
+* Maple 14+ (earlier versions will work, but need some tweaks)
 
 BUILD
 -----
@@ -59,6 +60,24 @@ Modify Makefile and c/Makefile per your setup.
 Add the following to your .emacs file
 
     (autoload 'mdb "mdb" "Maple debugger" t)
+
+SETUP
+-----
+
+The executables use two environmental variables:
+
+MAPLE_ROOT:
+
+As mentioned n the BUILD section (above), the environmental variable
+MAPLE_ROOT must be assigned and point to the directory of your Maple
+installation.  
+
+MAPLE_INCLUDE_PATH:
+
+The environmental variable MAPLE_INCLUDE_PATH specifies the
+directories to be search for files specified by the Maple
+preprocessor $include directive.  Multiple directories
+are separated by commas. 
 
 USAGE
 -----
