@@ -454,10 +454,13 @@ If either is nil, use the empty string."
 			 )))
 
 (defun mdb-send-string (str exec &optional prefix suffix proc)
-  "Send STR to the maple process.
-The output from the maple process is handled by `mdb-handle-maple-out'.
-The optional PREFIX and SUFFIX are added to the displayed output, unless
-PROC is also assigned, in which case it is used to process the region."
+
+  "Send STR to the maple process.  If EXEC is non-nil, then STR
+executes a line of the debugged code.  The output from the maple
+process is handled by `mdb-handle-maple-out'.  The optional
+PREFIX and SUFFIX are added to the displayed output, unless PROC
+is also assigned, in which case it is used to process the
+region."
   (tq-enqueue mdb-tq
 	      str
 	      mdb--end-of-process-output-re
