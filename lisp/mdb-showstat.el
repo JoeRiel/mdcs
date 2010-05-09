@@ -214,109 +214,14 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 ;; Define the interactive commands bound to keys
 
-(defun mdb-args ()
-  "Display the arguments of the current procedure."
-  (interactive)
-  (mdb-showstat-eval-expr "args"))
+;;{{{ (*) Tracing
 
-(defun mdb-breakpoint ()
-  "Set a breakpoint at the current/previous state."
-  (interactive)
-  ;; Assume we are in the showstat buffer
-  ;; TODO: An alternative is to move outward from
-  ;; the Maple structure.  
-  ;; If at an elif or else, then move ...
-  (save-excursion
-    (end-of-line)
-    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([* ]\\)" nil t)
-	(let ((state (match-string-no-properties 1))
-	      (inhibit-read-only t))
-	  (replace-match "*" nil nil nil 2)
-	  (mdb-showstat-eval-expr (concat "stopat " state)))
-      (ding)
-      (message "no previous state in buffer"))))
 
 (defun mdb-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
   (mdb-goto-current-state)
   (mdb-showstat-send-command "cont"))
-
-(defun mdb-eval-and-prettyprint (expr)
-  "Pretty-print EXPR.  This calls the Maple procedure 
-mdb:-PrettyPrint to convert EXPR into a more useful display.
-With optional prefix, clear debugger output before displaying."
-  (interactive (list (mdb-ident-around-point-interactive
-		      "prettyprint: " "")))
-  (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string (format "mdb:-PrettyPrint(%s)\n" expr)
-		   nil ; not advancing the debugger
-		   (propertize (format "%s:\n" expr)
-		   	       'face 'mdb-face-prompt ; FIXME: create appropriate face
-		    	       )
-		   nil
-		   #'mdb-prettify-args-as-equations))
-
-(defun mdb-show-args-as-equations ()
-  "Display the parameters and arguments of the current Maple procedure as equations."
-  (interactive)
-  (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n"
-		   nil
-		   (propertize "args:\n" 'face 'mdb-face-prompt)
-		   nil
-		   #'mdb-prettify-args-as-equations))
-
-(defconst mdb--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
-
-(defun mdb-prettify-args-as-equations (beg end)
-  "Font lock the argument names in the region from BEG to END."
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward mdb--flush-left-arg-re end t)
-      (put-text-property (match-beginning 1) (match-end 1) 'face 'mdb-face-arg))))
-
-(defun mdb-eval-and-display-expr (expr &optional suffix)
-  "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
-If called interactively, EXPR is queried."
-  (interactive (list (mdb-ident-around-point-interactive
-		      "eval: " "")))
-  (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string (concat expr "\n")
-		   nil
-		   (propertize (format "%s:\n" expr)
-			       'face 'mdb-face-prompt ; FIXME: create appropriate face
-			       )
-		   suffix ))
-
-
-(defun mdb-eval-and-display-expr-global (expr)
-  "Evaluate a Maple expression, EXPR, in a global context.  
-If called interactively, EXPR is queried.
-The result is returned in the message area."
-  (interactive (list (mdb-ident-around-point-interactive
-		      "global eval: " "")))
-  (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-eval-and-display-expr (concat "statement " expr)))
-
-
-(defun mdb-goto-current-state ()
-  "Move cursor to the current state in the showstat buffer."
-  (interactive)
-  (mdb-goto-state mdb-showstat-state))
-
-(defun mdb-goto-state (state)
-  "Move POINT to STATE."
-  ;; Assume we are in the showstat buffer.
-  (goto-char (point-min))
-  (unless (re-search-forward (concat "^ *" state "[ *]\\s-*") nil t)
-    (ding)
-    (message "cannot find state %s" state)))
-
-(defun mdb-help-debugger ()
-  (interactive)
-  (maplev-help-show-topic "debugger"))
 
 (defun mdb-into ()
   "Send the 'into' command to the debugger."
@@ -348,6 +253,173 @@ The result is returned in the message area."
   (mdb-goto-current-state)
   (mdb-showstat-send-command "return"))
 
+(defun mdb-step ()
+  "Send the 'step' command to the debugger."
+  (interactive)
+  (mdb-goto-current-state)
+  (mdb-showstat-send-command "step"))
+
+;;}}}
+;;{{{ (*) Stop points
+
+(defvar mdb-showstat-stoperror-history-list '("all" "traperror")
+  "History list used by stoperror.")
+
+(defvar mdb-showstat-stopwhen-history-list nil
+  "History list used by stopwhen.")
+
+(defun mdb--query-stop-var (cmd type hist)
+  "Prompt the user with \"CMD [TYPE]: \", using history list HIST."
+  (completing-read (format "%s [%s]: " cmd type)
+		   nil nil nil nil hist))
+
+(defun mdb-breakpoint ()
+  "Set a breakpoint at the current/previous state."
+  (interactive)
+  ;; Assume we are in the showstat buffer
+  ;; TODO: An alternative is to move outward from
+  ;; the Maple structure.  
+  ;; If at an elif or else, then move ...
+  (save-excursion
+    (end-of-line)
+    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([* ]\\)" nil t)
+	(let ((state (match-string-no-properties 1))
+	      (inhibit-read-only t))
+	  (replace-match "*" nil nil nil 2)
+	  (mdb-showstat-eval-expr (concat "stopat " state)))
+      (ding)
+      (message "no previous state in buffer"))))
+
+(defun mdb-stoperror (clear)
+  "Query for and set or clear, if CLEAR is non-nil, a watchpoint on an error."
+  (interactive "P")
+  (let* ((cmd (if clear "unstoperror" "stoperror"))
+	 (err (mdb--query-stop-var cmd "errMsg" 'mdb-showstat-stoperror-history-list)))
+    (mdb-showstat-eval-expr (format "%s %s" cmd err))))
+
+(defun mdb-stoperror-clear ()
+  "Query for and clear a watchpoint on an error."
+  (interactive)
+  (mdb-stoperror 'clear))
+
+(defun mdb-stopwhen-local (clear)
+  "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
+Query for local variable, using symbol at point as default."
+  (interactive "P")
+  (let* ((cmd (if clear "unstopwhen" "stopwhen"))
+	 (var (mdb--query-stop-var cmd "var" 'mdb-showstat-stopwhen-history-list)))
+    (mdb-showstat-eval-expr (format "%s procname %s" cmd var))))
+
+(defun mdb-stopwhen-global (clear)
+  "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
+Query for global variable, using symbol at point as default."
+  (interactive "P")
+  (let* ((cmd (if clear "unstopwhen" "stopwhen"))
+	 (var (mdb--query-stop-var cmd "var" 'mdb-showstat-stopwhen-history-list)))
+    (mdb-showstat-eval-expr (format "%s %s" cmd var))))
+
+(defun mdb-stopwhenif ()
+  "Query and set a conditional watchpoint on a variable."
+  (interactive)
+  (let* ((cmd "stopwhenif")
+	 (var (mdb--query-stop-var cmd "var" 'mdb-showstat-stopwhen-history-list))
+	 (val (read-string "value: ")))
+    (mdb-showstat-eval-expr (format "%s(%s,%s)" cmd var val))))
+
+(defun mdb-stopwhen-clear ()
+  "Query and clear a watchpoint on a variable."
+  (interactive)
+  (mdb-stopwhen-global 'clear))
+
+(defun mdb-unstopat ()
+  "Clear a breakpoint at the current state.
+If the state does not have a breakpoint, print a message."
+  (interactive)
+  (if (eq (current-buffer) mdb-showstat-buffer)
+      (save-excursion			; this does no good ...
+	(end-of-line)
+	(if (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\(\\*?\\)" nil t)
+		 (string= (match-string 2) "*"))
+	    (let ((state (match-string-no-properties 1))
+		  (inhibit-read-only t))
+	      (replace-match " " nil nil nil 2)
+	      (mdb-showstat-eval-expr (concat "unstopat " state)))
+	  (ding)
+	  (message "no breakpoint at this state")))
+    (ding)
+    (message "not in showstat buffer")))
+
+;;}}}
+;;{{{ (*) Evaluation
+
+(defun mdb-eval-and-prettyprint (expr)
+  "Pretty-print EXPR.  This calls the Maple procedure 
+mdb:-PrettyPrint to convert EXPR into a more useful display.
+With optional prefix, clear debugger output before displaying."
+  (interactive (list (mdb-ident-around-point-interactive
+		      "prettyprint: " "")))
+  (if current-prefix-arg (mdb-debugger-clear-output))
+  (mdb-send-string (format "mdb:-PrettyPrint(%s)\n" expr)
+		   nil ; not advancing the debugger
+		   (propertize (format "%s:\n" expr)
+		   	       'face 'mdb-face-prompt ; FIXME: create appropriate face
+		    	       )
+		   nil
+		   #'mdb-prettify-args-as-equations))
+
+(defun mdb-eval-and-display-expr (expr &optional suffix)
+  "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
+If called interactively, EXPR is queried."
+  (interactive (list (mdb-ident-around-point-interactive
+		      "eval: " "")))
+  (if current-prefix-arg (mdb-debugger-clear-output))
+  (mdb-send-string (concat expr "\n")
+		   nil
+		   (propertize (format "%s:\n" expr)
+			       'face 'mdb-face-prompt ; FIXME: create appropriate face
+			       )
+		   suffix ))
+
+
+(defun mdb-eval-and-display-expr-global (expr)
+  "Evaluate a Maple expression, EXPR, in a global context.  
+If called interactively, EXPR is queried.
+The result is returned in the message area."
+  (interactive (list (mdb-ident-around-point-interactive
+		      "global eval: " "")))
+  (if current-prefix-arg (mdb-debugger-clear-output))
+  (mdb-eval-and-display-expr (concat "statement " expr)))
+
+
+;;}}}
+;;{{{ (*) Information
+
+(defun mdb-args ()
+  "Display the arguments of the current procedure."
+  (interactive)
+  (mdb-showstat-eval-expr "args"))
+
+
+(defun mdb-show-args-as-equations ()
+  "Display the parameters and arguments of the current Maple procedure as equations."
+  (interactive)
+  (if current-prefix-arg (mdb-debugger-clear-output))
+  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n"
+		   nil
+		   (propertize "args:\n" 'face 'mdb-face-prompt)
+		   nil
+		   #'mdb-prettify-args-as-equations))
+
+(defconst mdb--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
+
+(defun mdb-prettify-args-as-equations (beg end)
+  "Font lock the argument names in the region from BEG to END."
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward mdb--flush-left-arg-re end t)
+      (put-text-property (match-beginning 1) (match-end 1) 'face 'mdb-face-arg))))
+
 (defun mdb-showstack ()
   "Send the 'showstack' command to the debugger.
 Note that the string displayed in the echo area has the current
@@ -370,54 +442,21 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-eval-expr "showexception"))
 
-(defun mdb-step ()
-  "Send the 'step' command to the debugger."
+;;}}}
+;;{{{ (*) Miscellaneous
+
+(defun mdb-goto-current-state ()
+  "Move cursor to the current state in the showstat buffer."
   (interactive)
-  (mdb-goto-current-state)
-  (mdb-showstat-send-command "step"))
+  (mdb-goto-state mdb-showstat-state))
 
-(defun mdb-stopwhen-local (clear)
-  "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
-Query for local variable, using symbol at point as default."
-  (interactive "P")
-  (let* ((cmd (if clear "unstopwhen" "stopwhen"))
-	 (var (maplev-ident-around-point-interactive
-	       (format "%s local variable: " cmd) "")))
-    (mdb-showstat-eval-expr (format "%s procname %s" cmd var))))
-
-(defun mdb-stopwhen-global (clear)
-  "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
-Query for global variable, using symbol at point as default."
-  (interactive "P")
-  (let* ((cmd (if clear "unstopwhen" "stopwhen"))
-	 (var (maplev-ident-around-point-interactive
-	       (format "%s global variable: " cmd) "")))
-    (mdb-showstat-eval-expr (format "%s %s" cmd var))))
-
-(defun mdb-unstopat ()
-  "Clear a breakpoint at the current state.
-If the state does not have a breakpoint, print a message."
-  (interactive)
-  (if (eq (current-buffer) mdb-showstat-buffer)
-      (save-excursion			; this does no good ...
-	(end-of-line)
-	(if (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\(\\*?\\)" nil t)
-		 (string= (match-string 2) "*"))
-	    (let ((state (match-string-no-properties 1))
-		  (inhibit-read-only t))
-	      (replace-match " " nil nil nil 2)
-	      (mdb-showstat-eval-expr (concat "unstopat " state)))
-	  (ding)
-	  (message "no breakpoint at this state")))
+(defun mdb-goto-state (state)
+  "Move POINT to STATE."
+  ;; Assume we are in the showstat buffer.
+  (goto-char (point-min))
+  (unless (re-search-forward (concat "^ *" state "[ *]\\s-*") nil t)
     (ding)
-    (message "not in showstat buffer")))
-
-(defun mdb-stopwhenif ()
-  "Set a ..."
-  (interactive)
-  (let* ((var (maplev-ident-around-point-interactive "variable: "))
-	 (val (read-string "value: ")))
-    (mdb-showstat-eval-expr (format "stopwhenif(%s,%s)" var val))))
+    (message "cannot find state %s" state)))
 
 (defun mdb-toggle-truncate-lines (output-buffer)
   "Toggle the truncation of long lines.  If OUTPUT-BUFFER is
@@ -445,6 +484,17 @@ the number of activation levels to display."
   (interactive)
   (pop-to-buffer mdb-buffer))
 
+(defun mdb-help-debugger ()
+  (interactive)
+  (maplev-help-show-topic "debugger"))
+
+(defun mdb-info ()
+  "Display the info page for Mdb."
+  (interactive)
+  (info "mdb"))
+
+;;}}}
+
 ;;}}}
 ;;{{{ mode map
 
@@ -462,6 +512,7 @@ the number of activation levels to display."
 	   ("E" . mdb-eval-and-display-expr-global)
 	   ("f" . self-insert-command)
 	   ("h" . mdb-help-debugger)
+	   ("H" . mdb-info)
 	   ("i" . mdb-into)
 	   ("I" . mdb-stopwhenif)
 	   ("k" . mdb-showstack)
@@ -472,6 +523,7 @@ the number of activation levels to display."
 	   ("p" . mdb-showstop)
 	   ("q" . mdb-quit)
 	   ("r" . mdb-return)
+	   ("R" . mdb-stoperror)
 	   ("s" . mdb-step)
 	   ("T" . mdb-toggle-truncate-lines)
 	   ("u" . mdb-unstopat)
@@ -488,6 +540,63 @@ the number of activation levels to display."
     map))
 
 ;;}}}
+
+;;{{{ menu
+
+(defvar mdb-menu nil)
+(unless mdb-menu
+  (easy-menu-define
+    mdb-showstat-menu mdb-showstat-mode-map
+    "Menu for Mdb mode"
+    `("Mdb"
+
+      ("Tracing"
+       ["Continue"	mdb-cont t]
+       ["Next"		mdb-next t]
+       ["Into"		mdb-into t]
+       ["Outfrom"	mdb-outfrom t]
+       ["Step"		mdb-step t]
+       ["Return"	mdb-return t]
+       ["Quit"		mdb-step t]
+       ["Kill"		mdb-kill-maple t])
+
+      ("Stop points"
+       ["Set breakpoint at point"    mdb-breakpoint t]
+       ["Clear breakpoint at point"  mdb-unstopat t]
+       "----"
+       ["Set global watchpoint"      mdb-stopwhen-global t]
+       ["Set local watchpoint"       mdb-stopwhen-local t]
+       ["Set conditional watchpoint" mdb-stopwhenif t] 
+       ["Clear watchpoint"           mdb-stopwhen-clear :keys "C-u w"]
+       "----"
+       ["Set watchpoint on error"    mdb-stoperror t]
+       ["Clear watchpoint on error"  mdb-stoperror-clear :keys "C-u R"]
+       "----"
+       ["Show all stop points"       mdb-showstop t]
+       )
+
+      ("Evaluation"
+       ["Evaluate expression"			mdb-eval-and-display-expr t]
+       ["Evaluate expression in global context" mdb-eval-and-display-expr-global t]
+       ["Evaluate and prettyprint expression"	mdb-eval-and-prettyprint t] )
+
+      ("Information"
+       ["Display parameters and values" mdb-show-args-as-equations t]
+       ["Show stack"			mdb-showstack t]
+       ["Show stack with arguments"	mdb-where t]
+       ["Show error"			mdb-showerror t]
+       ["Show exception"		mdb-showexception t])
+
+      ("Miscellaneous"
+       ["Pop to Mdb buffer"        mdb-pop-to-mdb-buffer t]
+       ["Clear debugger output"    mdb-debugger-clear-output t]
+       ["Help Maple debugger"      mdb-help-debugger t]
+       ["Info for Maple debugger"  mdb-info t]
+       ["Toggle truncate lines"    mdb-toggle-truncate-lines t]
+       ))))
+
+;;}}}
+
 ;;{{{ showstat-mode
 
 (define-derived-mode mdb-showstat-mode maplev-proc-mode "showstat-mode"
@@ -497,16 +606,16 @@ This mode is automatically applied to the `mdb-showstat-buffer' generated by `md
 Tracing
 -------
 \\[mdb-send-last-command] repeat the last tracing command
-\\[mdb-cont] (cont) continue execution until next breakpoint
+\\[mdb-cont] (cont) continue execution until next stop point
 \\[mdb-next] (next) execute next statement at current nesting level
 \\[mdb-into] (into) execute next statement at any level in current procedure
-\\[mdb-outfrom] (outfrom) execute current statement sequence or until breakpoint
+\\[mdb-outfrom] (outfrom) execute current statement sequence or until stop point
 \\[mdb-step] (step) execute next statement at any level
 \\[mdb-return] (return) continue executing until current procedure returns
 \\[mdb-quit] (quit) terminate debugging, return to mdb buffer
 \\[mdb-kill-maple] kill and restart the Maple process
 
-Breakpoints
+Stop points
 -----------
 \\[mdb-breakpoint] (stopat) set breakpoint at cursor
 \\[mdb-unstopat] (unstopat) clear breakpoint at cursor
@@ -524,9 +633,8 @@ Information
 \\[mdb-help-debugger] display Maple debugger help page
 \\[mdb-showstack] (showstack) display abbreviated stack
 \\[mdb-where] (where) display stack of procedure calls
-\\[mdb-goto-current-state] move (return) cursor to current state
-\\[mdb-showerror] diplay the last error
-\\[mdb-showexception] diplay the last exception
+\\[mdb-showerror] display the last error
+\\[mdb-showexception] display the last exception
 
 Evaluation
 ----------
@@ -539,8 +647,10 @@ C-u \\[mdb-eval-and-prettyprint] clear output then evaluate and prettyprint a Ma
 Miscellaneous
 -------------
 \\[mdb-pop-to-mdb-buffer] pop to the mdb buffer
+\\[mdb-goto-current-state] move (return) cursor to current state
 \\[mdb-debugger-clear-output] clear the debugger output buffer
 \\[mdb-help-debugger] display help page for the Maple debugger
+\\[mdb-info] display info pages for the Maple debugger
 \\[maplev-help-at-point] display a Maple help page
 \\[maplev-proc-at-point] display a Maple procedure
 \\[mdb-toggle-truncate-lines] toggle whether to fold or truncate long lines
@@ -550,6 +660,9 @@ C-u \\[mdb-toggle-truncate-lines] toggle truncation in debugger output buffer
   (setq mdb-showstat-procname ""
 	mdb-showstat-state ""
 	mdb-showstat-arrow-position nil)
+
+  (and mdb-menu (easy-menu-add mdb-menu))
+
   (add-hook 'kill-buffer-hook '(lambda () (setq mdb-update-showstat-p t)) nil 'local))
 
 ;;}}}
