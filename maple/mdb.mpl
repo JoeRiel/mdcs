@@ -210,13 +210,13 @@ local prettyprint;
             expr := _rest;
 
             if expr :: set then
-                printf("(*set*)\n");
-                return  `if`(expr = []
-                             , printf("NULL\n")
-                             , expr[]
-                            );
+                if top then printf("(*set*)\n"); end if;
+                return `if`(expr = []
+                            , printf("NULL\n")
+                            , expr[]
+                           )
             elif expr :: list then
-                printf("(*list*)\n");
+                if top then printf("(*list*)\n"); end if;
                 return `if`(expr = []
                             , printf("NULL\n")
                             , expr[]
