@@ -74,14 +74,16 @@ Texts.  A copy of the license is included in the section entitled
 Introduction
 
 * Summary::                     Summary of what Mdb does
+* Requirements::                
+* Build::                       
 * Installation::                How to install Mdb
+* Configuration::               
 * Feedback::                    Bug reports, ideas, etc.
 
-Installation
+Configuration
 
-* Elisp::                       Installing the Emacs-Lisp code
-* Pmaple::                      Compiling a binary interface to Maple
-* Maple Library::               Installing a Maple archive
+* Emacs::                       
+* Environment::                 
 
 Mdb Buffer
 
@@ -112,7 +114,10 @@ Command and Variable Index
 
 @menu
 * Summary::                     Summary of what Mdb does
+* Requirements::                
+* Build::                       
 * Installation::                How to install Mdb
+* Configuration::               
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -131,7 +136,7 @@ rather than the actual source.
 
 @itemize @bullet
 @item
-The debugged procedure is displayed in a buffer;
+The procedure being debugged is displayed in a buffer;
 font-locking is enabled to highlight syntactic elements.
 @item
 Executing the code advances an @emph{overlay-arrow} 
@@ -145,7 +150,7 @@ can be saved and reused as Maple input.
 Upon entering a procedure,
 its formal parameters and values are displayed as a list of equations.
 @item
-Expressions can be directly evaluated and displayed in nice format.
+Expressions can be directly evaluated and displayed in a nice format.
 For example, a record can be displayed as a vertical list of equations
 with field name on the left and the entry on the right.
 @item
@@ -157,34 +162,89 @@ Breakpoints can be set or cleared directly in the buffer.
 
 @end itemize
 
+@node Requirements, Build, Summary, Introduction
+@comment  node-name,  next,  previous,  up
+@section Requirements
+@cindex Requirements
+
+
+@table @var 
+@item GNU Emacs 22.2.1+
+Mdb may work with earlier versions, but I have not tested it.
+@item Maple 14+  
+Mdb will work with earlier versions of Maple, however,
+some features may not be available, or work as well.  In particular,
+the prettyprinting of a procedure's arguments can not be done robustly
+in earlier versions.
+@item MapleV mode
+An Emacs mode for developing Maple source code.
+If you use Maple with Emacs, you definitely want to have this,
+regardless whether you use Mdb.
+See 
+@url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}
+for a recent version.
+Debian and Ubuntu provide a version with the @file{emacs-goodies-el}
+package, but it may be dated.
+@end table
+
+
+
+@node Build, Installation, Summary, Introduction
+@comment  node-name,  next,  previous,  up
+@section Build
+@cindex Build
+
+This section describes how to build Mdb.
+
+There are two makefiles included with the distribution,
+@file{Makefile} and @file{c/Makefile}.
+The former creates
+  the documentation (@file{doc/mdb})
+  and the Maple archive (@file{maple/mdb.mla}).
+It calls the latter to build the binary executable (@file{c/pmaple}).
+Modify these makefiles per your setup.  
+
+@vindex MAPLE_ROOT
+The @file{c/Makefile} uses the environmental variable
+@env{MAPLE_ROOT}, which should point to the installation directory of
+Maple.  This environmental variable is also used by the installed
+scripts to locate the Maple libraries.
+
+In the @file{mdb} directory, run
+
+@example
+make build-all
+@end example
+
 
 @node Installation, Feedback, Summary, Introduction
 @section Installation
 @cindex installation
 
-This section describes how to install Mdb into GNU Emacs.
-The process is more complicated than is typical for an Emacs mode.
-In addition to byte-compiling the elisp code,
-a binary that interfaces to OpenMaple must be compiled and installed,
-and a Maple archive must be installed.
+After building Mdb, install it with
+
+@example
+make install
+@end example
+
+
+@node Configuration, Feedback, Installation, Introduction
+@comment  node-name,  next,  previous,  up
+@section Configuration
+@cindex configuration
+
 
 @menu
-* Elisp::                       Installing the Emacs-Lisp code
-* Pmaple::                      Compiling a binary interface to Maple
-* Maple Library::               Installing a Maple archive
+* Emacs::                       
+* Environment::                 
 @end menu
 
-@node Elisp, Pmaple, Installation, Installation
-@subsection Elisp
-@cindex elisp
-@cindex maplev
+@node Emacs
+@comment  node-name,  next,  previous,  up
+@subsection Emacs
+@cindex Emacs
+@cindex .emacs
 
-Mdb requires MapleV mode, an Emacs mode for developing Maple source code.
-It is available at 
-@url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}.
-
-Move the files @file{mdb.el} and @file{ir.el}
-into your Emacs load path and byte-compile them.
 
 Add the following line to your @file{.emacs} file:
 
@@ -192,21 +252,19 @@ Add the following line to your @file{.emacs} file:
 (autoload 'mdb "mdb" "Maple debugger" t)
 @end example
 
-@node Pmaple, Maple Library, Elisp, Installation
-@subsection Pmaple
-@cindex pmaple
+@node Environment, Pmaple, Emacs, Configuration
+@comment  node-name,  next,  previous,  up
+@subsection Environment
+@cindex environmental variables
 
-Mdb uses 
-
-@node Maple Library,  , Pmaple, Installation
-@subsection Maple
-@cindex maple
-
-Mdb uses a Maple archive, @file{mdb.mla}, to store Maple procedures 
-used to pretty-print expressions in the debugger output.
-This archive must be installed in a location that can be found by Maple,
-that is, in the path defined by the Maple @code{libname} variable.
-
+@vindex MAPLE_ROOT
+As mentioned previously, the @env{MAPLE_ROOT} environmental variable
+must be assigned to point to the installation directory of Maple.
+@vindex MAPLE_INCLUDE_PATH
+If you use Maple preprocessor include directives in your source
+that must search a particular directory then you can assign
+the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
+sequence of directories to search.
 
 @node Feedback,  , Installation, Introduction
 @section Feedback
