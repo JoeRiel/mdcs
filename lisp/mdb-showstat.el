@@ -250,7 +250,7 @@ With optional prefix, clear debugger output before displaying."
 		      "prettyprint: " "")))
   (if current-prefix-arg (mdb-debugger-clear-output))
   (mdb-send-string (format "mdb:-PrettyPrint(%s)\n" expr)
-		   nil
+		   nil ; not advancing the debugger
 		   (propertize (format "%s:\n" expr)
 		   	       'face 'mdb-face-prompt ; FIXME: create appropriate face
 		    	       )
@@ -277,8 +277,6 @@ With optional prefix, clear debugger output before displaying."
     (while (re-search-forward mdb--flush-left-arg-re end t)
       (put-text-property (match-beginning 1) (match-end 1) 'face 'mdb-face-arg))))
 
-
-
 (defun mdb-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
 If called interactively, EXPR is queried."
@@ -290,7 +288,7 @@ If called interactively, EXPR is queried."
 		   (propertize (format "%s:\n" expr)
 			       'face 'mdb-face-prompt ; FIXME: create appropriate face
 			       )
-		   suffix))
+		   suffix ))
 
 
 (defun mdb-eval-and-display-expr-global (expr)
@@ -421,6 +419,18 @@ If the state does not have a breakpoint, print a message."
 	 (val (read-string "value: ")))
     (mdb-showstat-eval-expr (format "stopwhenif(%s,%s)" var val))))
 
+(defun mdb-toggle-truncate-lines (output-buffer)
+  "Toggle the truncation of long lines.  If OUTPUT-BUFFER is
+non-nil, do so in the `mdb-debugger-output-buffer', otherwise do so in 
+the `mdb-showstat-buffer'."
+  (interactive "P")
+  (with-current-buffer
+      (if output-buffer
+	  mdb-debugger-output-buffer
+	mdb-showstat-buffer)
+  (toggle-truncate-lines)))
+    
+
 (defun mdb-where (&optional depth)
   "Send the 'where' command to the debugger.
 The optional DEPTH parameter is a positive integer that specifies
@@ -463,7 +473,7 @@ the number of activation levels to display."
 	   ("q" . mdb-quit)
 	   ("r" . mdb-return)
 	   ("s" . mdb-step)
-	   ("T" . toggle-truncate-lines)
+	   ("T" . mdb-toggle-truncate-lines)
 	   ("u" . mdb-unstopat)
 	   ("w" . mdb-stopwhen-local)
 	   ("W" . mdb-stopwhen-global)
@@ -521,8 +531,10 @@ Information
 Evaluation
 ----------
 \\[mdb-eval-and-display-expr] evalute a Maple expression
+C-u \\[mdb-eval-and-display-expr] clear output then evalute a Maple expression
 \\[mdb-eval-and-display-expr-global] evalute a Maple expression in a global context
 \\[mdb-eval-and-prettyprint] evaluate and prettyprint a Maple expression
+C-u \\[mdb-eval-and-prettyprint] clear output then evaluate and prettyprint a Maple expression
 
 Miscellaneous
 -------------
@@ -531,7 +543,8 @@ Miscellaneous
 \\[mdb-help-debugger] display help page for the Maple debugger
 \\[maplev-help-at-point] display a Maple help page
 \\[maplev-proc-at-point] display a Maple procedure
-\\[toggle-truncate-lines] toggle whether to fold or truncate long lines
+\\[mdb-toggle-truncate-lines] toggle whether to fold or truncate long lines
+C-u \\[mdb-toggle-truncate-lines] toggle truncation in debugger output buffer
 "
   :group 'mdb
   (setq mdb-showstat-procname ""
