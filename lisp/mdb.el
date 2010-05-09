@@ -454,7 +454,6 @@ If either is nil, use the empty string."
 			 )))
 
 (defun mdb-send-string (str exec &optional prefix suffix proc)
-
   "Send STR to the maple process.  If EXEC is non-nil, then STR
 executes a line of the debugged code.  The output from the maple
 process is handled by `mdb-handle-maple-out'.  The optional
