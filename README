@@ -19,7 +19,7 @@ BUILD
 -----
 1. Modify the Makefile per your setup
 
-   Binaries section:
+   Executables section:
    
      Assign the EMACS and MAPLE variables appropriately.
 
@@ -32,7 +32,7 @@ BUILD
    the installed executables use an environmental variable MAPLE_ROOT
    that is assigned the directory where Maple is installed.  
    Modify the appropriate startup file (.profile, etc) so that it
-   is assigned.
+   is assigned and source it or otherwise ensure that it is assigned.
 
 3. Run make
 
@@ -75,7 +75,7 @@ installation.
 MAPLE_INCLUDE_PATH:
 
 The environmental variable MAPLE_INCLUDE_PATH specifies the
-directories to be search for files specified by the Maple
+directories to be searched for files specified by the Maple
 preprocessor $include directive.  Multiple directories
 are separated by commas. 
 
