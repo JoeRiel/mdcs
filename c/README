@@ -10,20 +10,20 @@ and exporting the shell environmental variable LD_LIBRARY_PATH, which
 is used to determine where the Maple shared-object libraries are
 located.  It also passes include options to pmaple.
 
+The Makefile uses the environmental variable MAPLE_ROOT,
+which should point to the directory where Maple is installed.
 
 BUILD
 -----
-To build pmaple, modify the Makefile, then run 
+To build pmaple, modify the Makefile as needed, then run
 
 make
 
-The Makefile uses the environmental variable MAPLE_ROOT,
-which should point to the directory where Maple is installed.
-If your environment does not assign MAPLE_ROOT consider
-modifying the Makefile to assign it internally or do
+INSTALL
+-------
+The Make file installs the executables (binaries and associated
+shell-scripts) into $HOME/bin.
 
-MAPLE_ROOT="appropriate path" make
-
-To install, modify emaple according to your setup and then run
+To install, do
 
 make install

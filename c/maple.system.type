@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Return a string corresponding to the O/S.
 
 if ! [ "${SYS}" ]; then
     SYS_TYPE=$(uname -a | awk '{ print $1 }')

@@ -3,14 +3,9 @@
 # Return a colon (:) separated list of Maple binary directories.
 # The environmental variable MAPLE_ROOT points to the directory
 # where Maple is installed.
-#
-# If SYS is assigned, then it determines the basename of the binary directory,
-# that is, "bin.${SYS}".
-
-MAPLE=${MAPLE_ROOT}
 
 SYSTYPE="$(maple.system.type)"
-MAPLE_BIN=${MAPLE}/internal/${SYSTYPE}
+MAPLE_BIN=${MAPLE_ROOT}/internal/${SYSTYPE}
 
 # Check whether MAPLE_BIN has subdirectories, 
 # if so assign them to EXTRA_MAPLE_BIN_DIRS.
@@ -25,6 +20,8 @@ else
     EXTRA_MAPLE_BIN_DIRS=""
 fi
 
-echo ${EXTRA_MAPLE_BIN_DIRS}${MAPLE_BIN}:${MAPLE}/toolbox/MapleSim/${SYSTYPE}
+echo ${EXTRA_MAPLE_BIN_DIRS}${MAPLE_BIN}:${MAPLE_ROOT}/toolbox/MapleSim/${SYSTYPE}
 
 exit 0
+
+

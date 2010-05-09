@@ -128,7 +128,7 @@ static M_BOOL M_DECL redirectCallBack( void *data, char *name, char *mode )
 /* {{{ streamCallBack */
 
 static char* M_DECL streamCallBack( void *data, char *name,
-				     M_INT nargs, char **args )
+				     int nargs, char **args )
 {
   if( strcmp(name,"app_version") == 0 ) {
     return( "1.1;" );

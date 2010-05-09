@@ -14,13 +14,9 @@ REQUIREMENTS
 * The binary pmaple and shell script emaple.
 * maplev-mode (Emacs mode for developing Maple code)
 
-BUILD/INSTALLATION
-------------
-1. Compile and install pmaple (in the c directory),
-   which uses provides an OpenMaple interface to the
-   Maple engine.   See the c/README for (scant) details.
-
-2. Modify the Makefile per your setup:
+BUILD
+-----
+1. Modify the Makefile per your setup
 
    Binaries section:
    
@@ -31,12 +27,36 @@ BUILD/INSTALLATION
      Assign the lispdir, infodir, and mapleinstalldir
    variables appropriately. 
 
-3. Run make:
+2. Modify c/Makefile per your setup.  See c/README.  The Makefile and
+   the installed executables use an environmental variable MAPLE_ROOT
+   that is assigned the directory where Maple is installed.  
+   Modify the appropriate startup file (.profile, etc) so that it
+   is assigned.
 
-   make 
+3. Run make
+
+   make build-all
+
+INSTALL
+-------
+
+The default installation uses the following locations:
+
+                       $HOME/bin:  pmaple, emaple, and associated shell scripts
+                 $HOME/maple/lib:  mdb.mla
+/usr/local/share/emacs/site-lisp:  mdb.el, mdb.elc, etc.
+                 /usr/share/info:  mdb
+             /usr/share/info/dir:  updates with link to mdb info
+
+Modify Makefile and c/Makefile per your setup.
+
+1. Install package
+
    make install
 
-4.  Add the following to your .emacs file:
+2. Update your .emacs file
+
+Add the following to your .emacs file
 
     (autoload 'mdb "mdb" "Maple debugger" t)
 
@@ -112,6 +132,7 @@ Miscellaneous
 C-c C-o pop to the mdb buffer
 C clear the debugger output buffer
 h display help page for the Maple debugger
+T toggle-truncate-lines (C-u for output buffer)
 ? display a Maple help page
 M-? display a Maple procedure
 

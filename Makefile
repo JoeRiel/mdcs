@@ -6,9 +6,11 @@
 
 SHELL = /bin/sh
 
+.PHONY: byte-compile build-all default
 default: byte-compile
+build-all: byte-compile pmaple doc mla
 
-# {{{ Binaries
+# {{{ Executables
 
 # Assign local variables for needed binaries
 
@@ -40,29 +42,6 @@ infodir = /usr/share/info
 mapleinstalldir = $(HOME)/maple/lib
 
 # }}}
-# {{{ Emacs
-
-ELFLAGS	= --no-site-file \
-	  --no-init-file \
-	  --eval "(progn \
-                    (add-to-list (quote load-path) (expand-file-name \"./lisp\")) \
-	            (add-to-list (quote load-path) \"$(lispdir)\"))"
-
-ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
-
-ELS = mdb \
-      mdb-showstat \
-      mdb-ir
-
-LISPFILES = $(ELS:%=lisp/%.el)
-ELCFILES = $(LISPFILES:.el=.elc)
-
-byte-compile: $(ELCFILES)
-
-%.elc : %.el
-	$(ELC) $<
-
-# }}}
 
 # {{{ doc
 
@@ -89,17 +68,60 @@ i:
 	make info && info doc/mdb
 
 # }}}
-# {{{ maple
 
+# {{{ Emacs
+
+ELFLAGS	= --no-site-file \
+	  --no-init-file \
+	  --eval "(progn \
+                    (add-to-list (quote load-path) (expand-file-name \"./lisp\")) \
+	            (add-to-list (quote load-path) \"$(lispdir)\"))"
+
+ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
+
+ELS = mdb \
+      mdb-showstat \
+      mdb-ir
+
+LISPFILES = $(ELS:%=lisp/%.el)
+ELCFILES = $(LISPFILES:.el=.elc)
+
+byte-compile: $(ELCFILES)
+
+%.elc : %.el
+	$(ELC) $<
+
+# }}}
+
+# {{{ pmaple
+
+pmaple := c
+
+.PHONY: pmaple $(pmaple)
+
+pmaple: $(pmaple)
+
+$(pmaple):
+	$(MAKE) --directory=$@
+
+# }}}
+# {{{ mla
+
+.PHONY: mla
 mla = maple/mdb.mla
 mla: $(mla)
-dist: mdb.zip
 
 $(mla): maple/mdb.mpl
 	cd maple; $(MAPLE) -q $(notdir $^)
 
 # }}}
+
 # {{{ install
+
+.PHONY: install-pmaple install-el install-maple install-lisp install-info install
+
+install-pmaple: $(pmaple)
+	$(MAKE) --directory=c
 
 install-maple: $(mla)
 	$(CP) --archive $+ $(mapleinstalldir)
@@ -122,7 +144,11 @@ install-el: $(el-files)
 # }}}
 # {{{ distribution
 
+PHONY: dist
+
 dist = $(ELS) $(TEXIFILE) $(INFOFILES)  Makefile README
+
+dist: mdb.zip
 
 mdb.zip: $(dist)
 	zip $@ $?
@@ -131,18 +157,12 @@ mdb.zip: $(dist)
 
 # {{{ clean
 
+.PHONY: clean
 clean:
 	-$(RM) lisp/*.elc
-
-# }}}
-# {{{ p4
-
-p4dir = /home/joe/work/MapleSoft/sandbox/groups/share/emacs/mdb
-
-p4put: $(el-files) Makefile README
-	(cd $(p4dir); p4 edit $+)
-	$(CP) $+ $(p4dir)
+	-$(RM) -f $(filter-out doc/mdb.texi,$(wildcard doc/mdb*))
+	-$(RM) maple/mdb.mla
+	$(MAKE) --directory=c $@
 
 # }}}
 
-.PHONY: default compile install install-el dist clean p4put mla install-maple install-lisp
