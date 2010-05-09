@@ -95,6 +95,7 @@ Showstat Buffer
 * Breakpoints::                 Setting and clearing breakpoints
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
+* Miscellaneous::               
 * Help::                        Get help
 
 Command and Variable Index
@@ -367,6 +368,7 @@ They are grouped according to function.
 * Breakpoints::                 Setting and clearing breakpoints
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
+* Miscellaneous::               
 * Help::                        Get help
 @end menu
 
@@ -533,6 +535,11 @@ A statement with a breakpoint has an asterisk to the right of the statement numb
 Stopat:  Set a breakpoint at the start of the statement at the cursor.
 An asterisk appears to the right of the statement number.
 
+@kindex p
+@findex mdb-showstop
+@item p (@code{mdb-showstop})
+Showstop: display a list of all procedures containing breakpoints, all
+watchpoints, and all error watchpoints.
 
 @kindex u
 @findex mdb-unstopat
@@ -571,6 +578,13 @@ causes the debugger to stop at the top of each loop and print the value of the c
 stopwhenif:  Set a conditional watchpoint on the specified global variable, 
 and display the current list of all watchpoints.
 
+@kindex p
+@findex mdb-showstop
+@item p (@code{mdb-showstop})
+Showstop: display a list of all procedures containing breakpoints, all
+watchpoints, and all error watchpoints.
+
+
 @kindex w
 @kindex C-u w
 @findex mdb-stopwhen-local
@@ -592,7 +606,7 @@ stopwhen: Set a global watchpoint.
 @end table
 
 
-@node Evaluation, Help, Watchpoints, Showstat Buffer
+@node Evaluation, Miscellaneous, Watchpoints, Showstat Buffer
 @section Evaluation
 @cindex evaluation, expression
 
@@ -631,12 +645,43 @@ The default expression is taken from the text at the cursor.
 @item . (@code{mdb-eval-and-prettyprint})
 Evaluate an expression and prettyprint the result.
 The pretty-printing depends on the type of the evaluated expression.
-For example, a record is displayed as a vertical list of equations
-of the form @emph{fieldname}=@emph{value}.
+The first line of the display (after the echoing of the expression)
+shows the type of the output, the remaining lines display the
+expression in an expanded form.
+
+For a list or set, each element is displayed on a separate line.
+For a record or table, each field/entry is displayed as an equation
+with the index/field on the left, the entry on the right.
+
+For example, the display of a record named @samp{SomeRecord} looks like
+
+@example
+@anchor{prettyprint}
+SomeRecord:
+(*record*)
+a = 23,
+b = 12,
+c = NULL
+@end example
+
 
 @end table
 
-@node Help,  , Evaluation, Showstat Buffer
+@node Miscellaneous, Help, Evaluation, Showstat Buffer
+@section Miscellaneous
+@cindex miscellaneous
+
+@table @asis
+
+@kindex T
+@findex mdb-toggle-truncate-lines
+@item T (@code{mdb-toggle-truncate-lines})
+Toggle the truncating/wrapping of long lines. 
+With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
+
+@end table
+
+@node Help,  , Miscellaneous, Showstat Buffer
 @section Help
 @cindex help
 
