@@ -625,24 +625,27 @@ the watchpoint is tripped when the variable is assigned that value.
 
 Maple distinguishes two types of watchpoints: @emph{global} and @emph{local}.
 Global watchpoints apply to global variables, local watchpoints to local variables.
+
+@strong{Nota Bene:}
 The Maple debugger has a bug in that it does not properly handle watchpoints
-for variables that are local to a module-local variable (that is, a variable
-declared as local to a procedure that is local to a module).  
-Fortunately, a global watchpoint can be set on such a variable; however,
-it must be reset each time the procedure is debugged.
+for variables that are local to a module-local procedure.
+Attempting to set a watchpoint on such a variable returns the error
 
-As an example,
-a watchpoint set on a @code{for} loop counter
-causes the debugger to stop at the top of each loop and print the value of the counter.
+@example
+Error, global name or [proc name, local name] expected
+@end example
 
+As a workaround, set a global watchpoint on a module-local variable.
+Note that a global watchpoint must be reset each time the procedure is debugged.
 
 @table @asis
 
 @kindex I
 @findex mdb-stopwhenif
 @item I (@code{mdb-stopwhenif})
-stopwhenif:  Set a conditional watchpoint on the specified global variable, 
-and display the current list of all watchpoints.
+stopwhenif:  Set a conditional watchpoint on the specified global variable.
+The variable name and conditional value are entered separately in the mini-buffer.
+Use @kbd{C-u W} to clear a conditional watchpoint.
 
 @kindex p
 @findex mdb-showstop
@@ -650,22 +653,21 @@ and display the current list of all watchpoints.
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
-
 @kindex w
 @kindex C-u w
 @findex mdb-stopwhen-local
 @item w (@code{mdb-stopwhen-local})
 stopwhen: Set a local watchpoint.   
-The variable name is entered in the mini-buffer; the default is taken
-from the context at the cursor.
-Use @kbd{C-u w} to clear a watchpoint.
+The variable name is entered in the mini-buffer.
+Use @kbd{C-u w} to clear a local watchpoint.
 
 
 @kindex W
 @findex mdb-stopwhen-global
 @item W (@code{mdb-stopwhen-global})
 stopwhen: Set a global watchpoint. 
-
+The variable name is entered in the mini-buffer.
+Use @kbd{C-u W} to clear a global watchpoint.
 
 
 
