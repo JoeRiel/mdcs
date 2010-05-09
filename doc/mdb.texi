@@ -3,8 +3,8 @@
 @setfilename mdb
 @settitle The Mdb Manual
 
-@set VERSION 1.0a
-@set DATE December 2009
+@set VERSION 1.2b
+@set DATE May 2010
 
 @dircategory Emacs
 @direntry
@@ -74,16 +74,16 @@ Texts.  A copy of the license is included in the section entitled
 Introduction
 
 * Summary::                     Summary of what Mdb does
-* Requirements::                
-* Build::                       
+* Requirements::                What is needed to run Mdb
+* Build::                       How to build Mdb
 * Installation::                How to install Mdb
-* Configuration::               
+* Configuration::               How to configure Mdb
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
-* Emacs::                       
-* Environment::                 
+* Emacs::                       Updating @file{.emacs}
+* Environment::                 Environmental variables
 
 Mdb Buffer
 
@@ -114,16 +114,17 @@ Command and Variable Index
 
 @menu
 * Summary::                     Summary of what Mdb does
-* Requirements::                
-* Build::                       
+* Requirements::                What is needed to run Mdb
+* Build::                       How to build Mdb
 * Installation::                How to install Mdb
-* Configuration::               
+* Configuration::               How to configure Mdb
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
 
 
-@node Summary, Installation, Introduction, Introduction
+@node Summary, Requirements, Introduction, Introduction
+@comment  node-name,  next,  previous,  up
 @section Summary
 @cindex summary
 
@@ -189,12 +190,16 @@ package, but it may be dated.
 
 
 
-@node Build, Installation, Summary, Introduction
+@node Build, Installation, Requirements, Introduction
 @comment  node-name,  next,  previous,  up
 @section Build
 @cindex Build
 
 This section describes how to build Mdb.
+The readme files included with the distribution,
+@file{README} and @file{c/README} give further details.
+In all likelihood they take precedence over this document;
+contact the author (@ref{Feedback}) if in doubt.
 
 There are two makefiles included with the distribution,
 @file{Makefile} and @file{c/Makefile}.
@@ -217,7 +222,7 @@ make build-all
 @end example
 
 
-@node Installation, Feedback, Summary, Introduction
+@node Installation, Configuration, Build, Introduction
 @section Installation
 @cindex installation
 
@@ -235,11 +240,11 @@ make install
 
 
 @menu
-* Emacs::                       
-* Environment::                 
+* Emacs::                       Updating @file{.emacs}
+* Environment::                 Environmental variables
 @end menu
 
-@node Emacs
+@node Emacs, Environment, Configuration, Configuration
 @comment  node-name,  next,  previous,  up
 @subsection Emacs
 @cindex Emacs
@@ -252,7 +257,7 @@ Add the following line to your @file{.emacs} file:
 (autoload 'mdb "mdb" "Maple debugger" t)
 @end example
 
-@node Environment, Pmaple, Emacs, Configuration
+@node Environment,  , Emacs, Configuration
 @comment  node-name,  next,  previous,  up
 @subsection Environment
 @cindex environmental variables
@@ -266,7 +271,7 @@ that must search a particular directory then you can assign
 the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
 sequence of directories to search.
 
-@node Feedback,  , Installation, Introduction
+@node Feedback,  , Configuration, Introduction
 @section Feedback
 @cindex feedback
 
@@ -426,7 +431,7 @@ They are grouped according to function.
 * Breakpoints::                 Setting and clearing breakpoints
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
-* Miscellaneous::               
+* Miscellaneous::               Miscellaneous commands
 * Help::                        Get help
 @end menu
 
