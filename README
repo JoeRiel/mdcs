@@ -11,7 +11,6 @@ way.
 REQUIREMENTS
 ------------
 * GNU Emacs 22.2.1+
-* The binary pmaple and shell script emaple (source included)
 * maplev-mode (Emacs mode for developing Maple code)
 * Maple 14+ (earlier versions will work, but need some tweaks)
 
@@ -36,7 +35,7 @@ BUILD
 
 3. Run make
 
-   make build-all
+   make build
 
 INSTALL
 -------

@@ -232,8 +232,6 @@ before the process terminates.")
 	  "\\)\\'")
   "Regexp that matches the end of process output.")
 
-
-
 ;;}}}
 ;;{{{ variables
 
@@ -670,7 +668,6 @@ If the file is not readable, return nil."
       (error "Cannot write to history file %s" file))))
   
 ;;}}}
-
 
 ;;{{{ mdb-debugger-output
 

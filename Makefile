@@ -6,9 +6,9 @@
 
 SHELL = /bin/sh
 
-.PHONY: byte-compile build-all default
+.PHONY: byte-compile build default
 default: byte-compile
-build-all: byte-compile pmaple doc mla
+build: byte-compile pmaple doc mla
 
 # {{{ Executables
 

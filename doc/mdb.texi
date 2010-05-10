@@ -157,8 +157,8 @@ For example, a record can be displayed as a vertical list of equations
 with field name on the left and the entry on the right.
 @item
 The common debugging commands, 
-  @strong{next}, @strong{into}, @strong{step}, etc.,
-are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}).
+@strong{next}, @strong{into}, @strong{step}, etc.,
+are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
 @item 
 Breakpoints can be set or cleared directly in the buffer.
 
@@ -205,8 +205,8 @@ contact the author (@ref{Feedback}) if in doubt.
 There are two makefiles included with the distribution,
 @file{Makefile} and @file{c/Makefile}.
 The former creates
-  the documentation (@file{doc/mdb})
-  and the Maple archive (@file{maple/mdb.mla}).
+the documentation (@file{doc/mdb})
+and the Maple archive (@file{maple/mdb.mla}).
 It calls the latter to build the binary executable (@file{c/pmaple}).
 Modify these makefiles per your setup.  In particular,
 be sure to properly assign the
@@ -219,10 +219,10 @@ The @file{c/Makefile} uses the environmental variable
 Maple.  This environmental variable is also used by the installed
 scripts to locate the Maple libraries.
 
-In the @file{mdb} directory, run
+Execute the following in the @file{mdb} directory
 
 @example
-make build-all
+make build
 @end example
 
 
@@ -230,7 +230,8 @@ make build-all
 @section Installation
 @cindex installation
 
-After building Mdb, install it with
+After building Mdb (@xref{Build}) install it,
+execute the following in the @file{mdb} directory
 
 @example
 make install
@@ -267,10 +268,10 @@ Add the following line to your @file{.emacs} file:
 @cindex environmental variables
 
 @vindex MAPLE_ROOT
-As mentioned previously, the @env{MAPLE_ROOT} environmental variable
+The @env{MAPLE_ROOT} environmental variable
 must be assigned to point to the installation directory of Maple.
 @vindex MAPLE_INCLUDE_PATH
-If you use Maple preprocessor include directives in your source
+If you use Maple preprocessor include directives in source
 that must search a particular directory then you can assign
 the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
 sequence of directories to search.
@@ -347,10 +348,12 @@ and the output of the program is displayed in the buffer.
 
 @code{Mdb-mode} maintains a 50-line command history
 (the maximum size can be configured by customizing @code{mdb-history-size}).
+It is accessed with @kbd{M-p} and @kbd{M-n}.
 
 @findex mdb-write-history-file
 @cindex history file
 @vindex mdb-history-file
+
 @code{Mdb-mode} uses a history file to store the history between sessions.
 The name of the history file is stored in the customizable variable
 @code{mdb-history-file}, whose default value is @file{~/.mdb_history}.
