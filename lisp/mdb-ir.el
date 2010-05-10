@@ -56,8 +56,8 @@
 ;;     the newest entry.
 ;; cu: index into vc; it points to the current location in the ring,
 ;;     which is decreased and increased when scrolling through the ring
-;;     to access elements.  When set to nil indicates that no scrolling
-;;     has occurred since the last entry.
+;;     to access elements.  Nil indicates that no scrolling has occurred 
+;;     since the last entry.
 ;; vc: a vector that stores the strings.  The vector (as all elisp vectors)
 ;;     is indexed from 0 to n-1, with n being the size.
 ;; mk: a marker that is supposed to point to the right of the prompt of
