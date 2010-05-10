@@ -151,6 +151,7 @@ Miscellaneous
 C-c C-o pop to the mdb buffer
 C clear the debugger output buffer
 h display help page for the Maple debugger
+H display info page for Mdb
 T toggle-truncate-lines (C-u for output buffer)
 ? display a Maple help page
 M-? display a Maple procedure

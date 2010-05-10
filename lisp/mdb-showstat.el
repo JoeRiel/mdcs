@@ -590,10 +590,13 @@ the number of activation levels to display."
       ("Miscellaneous"
        ["Pop to Mdb buffer"        mdb-pop-to-mdb-buffer t]
        ["Clear debugger output"    mdb-debugger-clear-output t]
+       ["Toggle truncate lines"    mdb-toggle-truncate-lines t])
+
+      ("Help"
        ["Help Maple debugger"      mdb-help-debugger t]
-       ["Info for Maple debugger"  mdb-info t]
-       ["Toggle truncate lines"    mdb-toggle-truncate-lines t]
-       ))))
+       ["Info for Mdb mode"        mdb-info t])
+
+       )))
 
 ;;}}}
 

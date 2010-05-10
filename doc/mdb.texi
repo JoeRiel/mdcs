@@ -764,6 +764,11 @@ Display the Maple help page for the Maple debugger.
 @item C-h m
 Display the help for this mode.
 
+@kindex H
+@findex mdb-info
+@item H (@code{mdb-info})
+Open the @command{info} document for Mdb mode.
+
 @kindex C-?
 @findex maplev-help-at-point
 @item C-? (@code{maplev-help-at-point})
