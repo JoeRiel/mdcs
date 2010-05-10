@@ -88,7 +88,8 @@ Configuration
 Mdb Buffer
 
 * Usage::                       Intended usage of the mdb buffer
-* History and Key Bindings::    The history mechanism and key bindings
+* History::                     Saving entries
+* Key Bindings::                
 
 Showstat Buffer
 
@@ -97,7 +98,7 @@ Showstat Buffer
 * Breakpoints::                 Setting and clearing breakpoints
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
-* Miscellaneous::               
+* Miscellaneous::               Miscellaneous commands
 * Help::                        Get help
 
 Command and Variable Index
@@ -309,10 +310,11 @@ y := x^2
 
 @menu
 * Usage::                       Intended usage of the mdb buffer
-* History and Key Bindings::    The history mechanism and key bindings
+* History::                     Saving entries
+* Key Bindings::                
 @end menu
 
-@node Usage, History and Key Bindings, Mdb Buffer, Mdb Buffer
+@node Usage, History, Mdb Buffer, Mdb Buffer
 @section Usage
 @cindex usage
 
@@ -339,14 +341,29 @@ and the output of the program is displayed in the buffer.
 
 
 
-@node History and Key Bindings,  , Usage, Mdb Buffer
-@section History and Key Bindings
+@node History, Key Bindings, Usage, Mdb Buffer
+@section History
 @cindex history, mdb-mode
-@cindex key bindings, mdb-mode
 
 @code{Mdb-mode} maintains a 50-line command history
 (the maximum size can be configured by customizing @code{mdb-history-size}).
+
+@findex mdb-write-history-file
+@cindex history file
+@vindex mdb-history-file
+@code{Mdb-mode} uses a history file to store the history between sessions.
+The name of the history file is stored in the customizable variable
+@code{mdb-history-file}, whose default value is @file{~/.mdb_history}.
+The command @command{mdb-write-history-file}
+writes the current content of the history to @code{mdb-history-file}.
+
 @vindex mdb-history-size
+
+@node Key Bindings,  , History, Mdb Buffer
+@section Key Bindings
+@cindex key bindings
+@comment  node-name,  next,  previous,  up
+
 The following table lists the key bindings defined by @code{mdb-mode}.
 
 @table @asis
