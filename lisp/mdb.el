@@ -157,6 +157,14 @@ prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
+(defcustom mdb-history-file "~/.mdb_history"
+  "Filename to record history."
+  :type 'string
+  :group 'mdb)
+
+
+
+
 ;;{{{   faces
 
 (defgroup mdb-faces nil
@@ -475,8 +483,6 @@ region."
   (interactive)
   (mdb-send-string (concat mdb-last-debug-cmd "\n") t))
 
-
-
 ;;}}}
 
 ;;{{{ experimental
@@ -617,6 +623,9 @@ Special commands:
   ;; Setup the history ring
   (setq mdb-ir (mdb-ir-create mdb-history-size mdb-pmark))
 
+  ;; Temporary hack.  
+  (mdb-ir-import mdb-ir (mdb-read-history-file))
+
   ;; Create the showstat buffer and assign it to `mdb-showstat-buffer'.
   (setq mdb-showstat-buffer (mdb-showstat-get-buffer-create))
 
@@ -630,6 +639,38 @@ Special commands:
   (run-hooks 'mdb-mode-hook))
 
 ;;}}}
+
+;;{{{ history file
+
+(defun mdb-read-history-file ()
+  "Read `mdb-history-file' and return it as a list of strings.
+If the file is not readable, return nil."
+  (and (file-readable-p mdb-history-file)
+       (with-temp-buffer
+	 (insert-file-contents mdb-history-file)
+	 (goto-char (point-min))
+	 (let (lst line)
+	   (while (not (eobp))
+	     (setq line (buffer-substring-no-properties (point) (line-end-position)))
+	     (setq lst (cons line lst))
+	     (forward-line))
+	   lst))))
+
+(defun mdb-write-history-file ()
+  "Write the input ring to `mdb-history-file'."
+  (interactive)
+  (let ((file mdb-history-file)
+	(lst (mdb-ir-export mdb-ir)))
+    (if (file-writable-p file)
+	(with-temp-file file
+	  (while lst
+	    (insert (car lst))
+	    (insert "\n")
+	    (setq lst (cdr lst))))
+      (error "Cannot write to history file %s" file))))
+  
+;;}}}
+
 
 ;;{{{ mdb-debugger-output
 
