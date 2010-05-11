@@ -208,10 +208,10 @@ The former creates
 the documentation (@file{doc/mdb})
 and the Maple archive (@file{maple/mdb.mla}).
 It calls the latter to build the binary executable (@file{c/pmaple}).
-Modify these makefiles per your setup.  In particular,
-be sure to properly assign the
-@code{lispdir}, @code{infodir}, and @code{mapleinstalldir}
-variables.
+Modify these makefiles per your setup, or use environment
+variables to override the settings.  In particular,
+be sure to properly assign 
+@code{LISPDIR}, @code{INFODIR}, and @code{MAPLEINSTALLDIR}.
 
 @vindex MAPLE_ROOT
 The @file{c/Makefile} uses the environmental variable
