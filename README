@@ -24,8 +24,9 @@ BUILD
 
    Directories section:
 
-     Assign the lispdir, infodir, and mapleinstalldir
-   variables appropriately. 
+     Assign the LISPDIR, INFODIR, and MAPLEINSTALLDIR
+   variables appropriately.  Rather than modifying the Makefile,
+   you can specify the values on the command line, that is,
 
 2. Modify c/Makefile per your setup.  See c/README.  The Makefile and
    the installed executables use an environmental variable MAPLE_ROOT
@@ -42,13 +43,15 @@ INSTALL
 
 The default installation uses the following locations:
 
-                       $HOME/bin:  pmaple, emaple, and associated shell scripts
-                 $HOME/maple/lib:  mdb.mla
-/usr/local/share/emacs/site-lisp:  mdb.el, mdb.elc, etc.
-                 /usr/share/info:  mdb
-             /usr/share/info/dir:  updates with link to mdb info
+           BINDIR = $HOME/bin:                          pmaple, emaple, and associated shell scripts
+  MAPLEINSTALLDIR = $HOME/maple/lib:                    mdb.mla
+          LISPDIR = /usr/local/share/emacs/site-lisp:   mdb.el, mdb.elc, etc.
+          INFODIR = /usr/share/info:                    mdb, dir (updated)
 
-Modify Makefile and c/Makefile per your setup.
+
+
+Modify Makefile and c/Makefile per your setup, or override the variables on the 
+command line.
 
 1. Install package
 

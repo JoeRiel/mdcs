@@ -14,7 +14,8 @@ build: byte-compile pmaple doc mla
 
 # Assign local variables for needed binaries
 
-# Definitely modify these to something appropriate.
+# Modify these to something appropriate, or
+# specify values on the command line.
 
 EMACS = emacs-snapshot
 MAPLE = $(MAPLE_ROOT)/bin/smaple
