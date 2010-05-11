@@ -29,17 +29,17 @@ TEXI2PDF = texi2pdf
 # {{{ Directories
 
 # where local software is found
-prefix = /usr/local
+PREFIX = /usr/local
 
 # where local lisp files go
-lispdir = $(prefix)/share/emacs/site-lisp
+LISPDIR = $(PREFIX)/share/emacs/site-lisp
 
 # where info files go
-# infodir = $(prefix)/share/info
-infodir = /usr/share/info
+# INFODIR = $(PREFIX)/share/info
+INFODIR = /usr/share/info
 
 # where the maple archive goes
-mapleinstalldir = $(HOME)/maple/lib
+MAPLEINSTALLDIR = $(HOME)/maple/lib
 
 # }}}
 
@@ -73,9 +73,7 @@ i:
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
-	  --eval "(progn \
-                    (add-to-list (quote load-path) (expand-file-name \"./lisp\")) \
-	            (add-to-list (quote load-path) \"$(lispdir)\"))"
+	  --eval "(add-to-list (quote load-path) (expand-file-name \"./lisp\"))"
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
@@ -121,21 +119,21 @@ $(mla): maple/mdb.mpl
 .PHONY: install-pmaple install-el install-maple install-lisp install-info install
 
 install-pmaple: $(pmaple)
-	$(MAKE) --directory=c
+	$(MAKE) --directory=c install
 
 install-maple: $(mla)
-	$(CP) --archive $+ $(mapleinstalldir)
+	$(CP) --archive $+ $(MAPLEINSTALLDIR)
 
 install-lisp: $(LISPFILES) $(ELCFILES)
-	if [ ! -d $(lispdir) ]; then $(MKDIR) $(lispdir); else true; fi ;
-	$(CP) $+ $(lispdir)
+	if [ ! -d $(LISPDIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
+	$(CP) $+ $(LISPDIR)
 
 install-info: $(INFOFILES)
-	if [ ! -d $(infodir) ]; then $(MKDIR) $(infodir); else true; fi ;
-	$(CP) $(INFOFILES) $(infodir)
-	for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(infodir) $${file}; done
+	if [ ! -d $(INFODIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
+	$(CP) $(INFOFILES) $(INFODIR)
+	for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFODIR) $${file}; done
 
-install: install-lisp install-maple install-info
+install: install-lisp install-maple install-info install-pmaple
 
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(el-files)
