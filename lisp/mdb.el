@@ -764,6 +764,18 @@ If one already exists, then pop to the debugging buffer."
 
 ;;}}}
 
+;; Need to bind this to a key; but what?  Should it be globally
+;; accessible?  Maybe better would be to toggle between showstat and
+;; output.  Probably the thing to do is to create a debugger output
+;; mode.
+
+(defun mdb-pop-to-showstat-buffer ()
+  "Pop to the Mdb showstat (`mdb-showstat-buffer')."
+  (interactive)
+  (pop-to-buffer mdb-showstat-buffer))
+
+(defun mdb-showstat-buffer ())
+
 (provide 'mdb)
 
 ;;; mdb.el ends here
