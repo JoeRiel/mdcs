@@ -1,5 +1,8 @@
 #!/bin/bash
 
+script="$0"
+scriptdir="${0%/*}"
+
 # This script launches pmaple, a binary that provides an enhanced
 # pipeline communication with the Maple engine, using OpenMaple.
 
@@ -11,7 +14,7 @@
 # Assign and export LD_LIBRARY_PATH to specify the libraries
 # against which pmaple was built.
 
-export LD_LIBRARY_PATH=$(getlibpath)
+export LD_LIBRARY_PATH=$(${scriptdir}/getlibpath)
 
 # Assign the include path
 
@@ -21,4 +24,4 @@ else
     INCLUDES=
 fi
 
-pmaple ${INCLUDES} "$@"
+${scriptdir}/pmaple ${INCLUDES} "$@"

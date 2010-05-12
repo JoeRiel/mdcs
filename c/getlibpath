@@ -1,10 +1,13 @@
 #!/bin/bash
 
+script="$0"
+scriptdir="${0%/*}"
+
 # Return a colon (:) separated list of Maple binary directories.
 # The environmental variable MAPLE_ROOT points to the directory
 # where Maple is installed.
 
-SYSTYPE="$(maple.system.type)"
+SYSTYPE="$(${scriptdir}/maple.system.type)"
 MAPLE_BIN=${MAPLE_ROOT}/internal/${SYSTYPE}
 
 # Check whether MAPLE_BIN has subdirectories, 

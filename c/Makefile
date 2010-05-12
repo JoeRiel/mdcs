@@ -39,10 +39,14 @@ clean:
 
 # Installation
 
-.PHONY: install
+.PHONY: install uninstall
 
 BINDIR := ${HOME}/bin
 
-install: pmaple emaple getlibpath maple.system.type
+installs = pmaple emaple getlibpath maple.system.type
+
+install: $(installs)
 	install $+ $(BINDIR)
 
+uninstall:
+	$(RM) -f $(addprefix $(BINDIR)/,$(installs))
