@@ -8,7 +8,7 @@
 
 mdb := module()
 
-export PrettyPrint, ArgsToEqs, PrintProc;
+export PrettyPrint, ArgsToEqs, PrintProc, quickstop;
 local prettyprint;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
@@ -260,6 +260,71 @@ $ifdef SKIP
         printf("\n%", showstat(nm));
     end proc;
 $endif
+
+#}}}
+
+#{{{ quickstop
+
+##DEFINE CMD quickstop
+##PROCEDURE \MOD[\CMD]
+##HALFLINE a fast method to instrument a procedure
+##AUTHOR   Erik Postma
+##DATE     May 2010
+##CALLINGSEQUENCE
+##- \CMD('p', 'n', 'cond')
+##PARAMETERS
+##- 'p'    : ::{name,`::`}::; procedure to instrument
+##- 'n'    : (optional) ::posint::; statement number
+##- 'cond' : (optional) ::uneval::; condition
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdb:-quickstop);
+## $define NE testnoerror
+##
+## Try[NE]("1.0", FUNC("int:-ModuleApply"));
+
+quickstop := proc(p :: {name,`::`,string}
+                  , n :: posint
+                  , cond :: uneval
+                  , $ )
+local
+    pn, opacity, pnm;
+
+    try
+        opacity := kernelopts('opaquemodules'=false);
+
+        if p :: indexed then
+            # Convert indexed to slashed name;
+            # e.g. pkg[func] --> `pkg/func`
+            pn := nprintf("%a/%a",op(0,p),op(1,p));
+
+            if not eval(pn)::procedure
+            or (eval(p)::procedure and not has(eval(p),pn)) then
+                pn := p;
+            fi
+        elif p :: string then
+            pn := parse(p);
+        else
+            pn := p;
+        end if;
+
+        # eval in order to make sure everything is loaded from the
+        # library.
+        pnm := eval(pn);
+        while assigned(pnm[':-ModuleApply']) do
+            pnm := eval(pnm:-ModuleApply);
+        end do;
+    finally
+        kernelopts('opaquemodules'=opacity);
+    end try;
+
+    if   _npassed = 1 then debugopts('stopat'=[pn,1])
+    elif _npassed = 2 then debugopts('stopat'=[pn,n])
+    else debugopts('stopat'=[pn,n,'cond'])
+    fi;
+    NULL;
+end proc:
 
 #}}}
 
