@@ -270,8 +270,8 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 (defun mdb--query-stop-var (cmd type hist)
   "Prompt the user with \"CMD [TYPE]: \", using history list HIST."
-  (completing-read (format "%s [%s]: " cmd type)
-		   nil nil nil nil hist))
+  (read-from-minibuffer (format "%s [%s]: " cmd type)
+			nil nil nil nil hist))
 
 (defun mdb-breakpoint ()
   "Set a breakpoint at the current/previous state."
@@ -282,13 +282,30 @@ Minibuffer completion is used if COMPLETE is non-nil."
   ;; If at an elif or else, then move ...
   (save-excursion
     (end-of-line)
-    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([* ]\\)" nil t)
+    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t))
+	  ;; FIXME: only replace a space, not a ?
 	  (replace-match "*" nil nil nil 2)
 	  (mdb-showstat-eval-expr (concat "stopat " state)))
       (ding)
       (message "no previous state in buffer"))))
+
+(defun mdb-breakpoint-cond ()
+  "Set a conditional breakpoint at the current/previous state."
+  (interactive)
+  ;; Assume we are in the showstat buffer
+  (save-excursion
+    (end-of-line)
+    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
+	(let ((state (match-string-no-properties 1))
+	       (inhibit-read-only t)
+	       (cond (mdb--query-stop-var "stopat-cond" "condition" 'mdb-showstat-stopwhen-history-list)))
+	  (replace-match "?" nil nil nil 2)
+	  (mdb-showstat-eval-expr (format "debugopts('stopat'=[thisproc,%s,%s])" state cond)))
+      (ding)
+      (message "no previous state in buffer"))))
+
 
 (defun mdb-stoperror (clear)
   "Query for and set or clear, if CLEAR is non-nil, a watchpoint on an error."
@@ -301,6 +318,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   "Query for and clear a watchpoint on an error."
   (interactive)
   (mdb-stoperror 'clear))
+
 
 (defun mdb-stopwhen-local (clear)
   "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
@@ -506,6 +524,7 @@ the number of activation levels to display."
 	   ("A" . mdb-show-args-as-equations)
 	   ("a" . mdb-args)
 	   ("b" . mdb-breakpoint)
+	   ("B" . mdb-breakpoint-cond)
 	   ("c" . mdb-cont)
 	   ("C" . mdb-debugger-clear-output)
 	   ("d" . self-insert-command)
@@ -564,6 +583,7 @@ the number of activation levels to display."
       ("Stop points"
        ["Set breakpoint at point"    mdb-breakpoint t]
        ["Clear breakpoint at point"  mdb-unstopat t]
+       ["Clear conditional breakpoint at point"  mdb-breakpoint-cond t]
        "----"
        ["Set global watchpoint"      mdb-stopwhen-global t]
        ["Set local watchpoint"       mdb-stopwhen-local t]
@@ -623,6 +643,7 @@ Stop points
 -----------
 \\[mdb-breakpoint] (stopat) set breakpoint at cursor
 \\[mdb-unstopat] (unstopat) clear breakpoint at cursor
+\\[mdb-breakpoint-cond] (stopat-cond) set conditional breakpoint at cursor
 
 \\[mdb-stopwhenif] (stopwhenif) set watchpoint on variable = value
 
