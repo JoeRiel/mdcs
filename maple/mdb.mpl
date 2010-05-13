@@ -8,7 +8,7 @@
 
 mdb := module()
 
-export PrettyPrint, ArgsToEqs, PrintProc, quickstop;
+export PrettyPrint, ArgsToEqs, PrintProc, stopat;
 local prettyprint;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
@@ -138,14 +138,15 @@ local prettyprint;
         m := nops(defparams);
         n := nops(pargs) - m;
 
-        return ( seq(params[i] = pargs[i][], i=1..n)         # required positional
-                 , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
-                 , oargs[]                                   # optional args
-                 , `if`( rargs = []                          # _rest
-                         , NULL
-                         , ':-_rest' = rargs[]
-                       )
-               );
+        return prettyprint(false
+                           , ( seq(params[i] = pargs[i][], i=1..n)         # required positional
+                               , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
+                               , oargs[]                                   # optional args
+                               , `if`( rargs = []                          # _rest
+                                       , NULL
+                                       , ':-_rest' = rargs[]
+                                     )
+                             ));
 
     end proc;
 
@@ -228,6 +229,14 @@ local prettyprint;
                 else
                     return 'record'(eqs);
                 end if;
+            elif expr :: `module` then
+                if top then
+                    return ( printf("(*module*)\n")
+                             , seq(fld = procname(false, expr[fld]), fld in [exports(expr)])
+                           );
+                else
+                    return `module() ... end module`; # questionable
+                end if;
             elif expr :: table then
                 eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
                 if top then
@@ -241,6 +250,8 @@ local prettyprint;
             elif expr = NULL then
                 printf("NULL\n");
                 return NULL;
+            elif expr :: 'name = anything' then
+                return lhs(expr) = procname(false,rhs(expr));
             else
                 return expr;
             end if;
@@ -263,9 +274,9 @@ $endif
 
 #}}}
 
-#{{{ quickstop
+#{{{ stopat
 
-##DEFINE CMD quickstop
+##DEFINE CMD stopat
 ##PROCEDURE \MOD[\CMD]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
@@ -273,58 +284,121 @@ $endif
 ##CALLINGSEQUENCE
 ##- \CMD('p', 'n', 'cond')
 ##PARAMETERS
-##- 'p'    : ::{name,`::`}::; procedure to instrument
+##- 'p'    : ::{name,string}::; procedure to instrument
 ##- 'n'    : (optional) ::posint::; statement number
 ##- 'cond' : (optional) ::uneval::; condition
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  is a fast version of "stopat", with a few modifications.
+##  It sets a breakpoint at a statement number of a procedure.
+##
+##- The 'p' parameter is the procedure to instrument.
+##-- If 'p' is indexed
+##EXAMPLES
+##>> f := proc()
+##>> local i;
+##>>    for i to 5 do
+##>>        print(i);
+##>>    end do;
+##>> end proc:
+##
 ##
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(mdb:-quickstop);
+## AssignFUNC(mdb:-stopat);
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.0", FUNC("int:-ModuleApply"));
+## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
+## Try    ("2.1", FUNC(f,1,i>3));
+## Try    ("2.2", f());
 
-quickstop := proc(p :: {name,`::`,string}
-                  , n :: posint
-                  , cond :: uneval
-                  , $ )
-local
-    pn, opacity, pnm;
+    stopat := proc(p :: {name,string}
+                   , n :: posint
+                   , cond :: uneval
+                   , $ )
+    local
+        pn, opacity, pnm;
 
-    try
-        opacity := kernelopts('opaquemodules'=false);
+        try
+            opacity := kernelopts('opaquemodules'=false);
 
-        if p :: indexed then
-            # Convert indexed to slashed name;
-            # e.g. pkg[func] --> `pkg/func`
-            pn := nprintf("%a/%a",op(0,p),op(1,p));
-
-            if not eval(pn)::procedure
-            or (eval(p)::procedure and not has(eval(p),pn)) then
+            if p :: indexed then
+                # Convert indexed to slashed name;
+                # e.g. pkg[func] --> `pkg/func`
+                pn := indexed2slashed(p);
+                if not eval(pn)::procedure
+                or (eval(p)::procedure and not has(eval(p),pn)) then
+                    pn := p;
+                fi;
+            elif p :: string then
+                pn := parse(p);
+            else
                 pn := p;
-            fi
-        elif p :: string then
-            pn := parse(p);
-        else
-            pn := p;
+            end if;
+
+            # eval in order to make sure everything is loaded from the
+            # library.
+            pnm := eval(pn);
+            while assigned(pnm[':-ModuleApply']) do
+                pnm := eval(pnm:-ModuleApply);
+            end do;
+        finally
+            kernelopts('opaquemodules'=opacity);
+        end try;
+
+        if   _npassed = 1 then debugopts('stopat'=[pn,1])
+        elif _npassed = 2 then debugopts('stopat'=[pn,n])
+        else                   debugopts('stopat'=[pn,n,'cond'])
         end if;
 
-        # eval in order to make sure everything is loaded from the
-        # library.
-        pnm := eval(pn);
-        while assigned(pnm[':-ModuleApply']) do
-            pnm := eval(pnm:-ModuleApply);
-        end do;
-    finally
-        kernelopts('opaquemodules'=opacity);
-    end try;
+        return NULL;
 
-    if   _npassed = 1 then debugopts('stopat'=[pn,1])
-    elif _npassed = 2 then debugopts('stopat'=[pn,n])
-    else debugopts('stopat'=[pn,n,'cond'])
-    fi;
-    NULL;
-end proc:
+    end proc:
+
+#}}}
+#{{{ indexed2slashed
+
+##DEFINE PROC indexed2slashed
+##PROCEDURE \MOD[\PROC]
+##HALFLINE convert indexed name to a slashed name
+##AUTHOR   Joe Riel
+##DATE     May 2010
+##CALLINGSEQUENCE
+##- \PROC('nm')
+##PARAMETERS
+##- 'nm' : ::name::; name to convert
+##RETURNS
+##- ::symbol::
+##DESCRIPTION
+##-
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdb:-indexed2slashed);
+## $define NE testnoerror
+##
+## Try("1.0", FUNC(a), a);
+## Try("1.1", FUNC(a[1]), `a/1`);
+## Try("1.2", FUNC(a[1][2]), `a/1/2`);
+##
+## Try("3.1", FUNC(`a+b`[1][2]), `a+b/1/2`);
+##
+## $define TE testerror
+## Try[TE]("10.2", FUNC(a[1,2]), "cannot convert");
+
+local
+    indexed2slashed := proc(nm :: name, $)
+        if nm :: indexed then
+            if nops(nm) > 1 then
+                error "cannot convert";
+            end if;
+            return nprintf("%A/%A", procname(op(0,nm)), op(1,nm));
+        else
+            return nm
+        end if;
+    end proc;
 
 #}}}
 
