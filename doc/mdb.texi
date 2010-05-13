@@ -208,18 +208,16 @@ The former creates
 the documentation (@file{doc/mdb})
 and the Maple archive (@file{maple/mdb.mla}).
 It calls the latter to build the binary executable (@file{c/pmaple}).
-Modify these makefiles per your setup, or use environment
-variables to override the settings.  In particular,
-be sure to properly assign 
-@code{LISPDIR}, @code{INFODIR}, and @code{MAPLEINSTALLDIR}.
 
 @vindex MAPLE_ROOT
-The @file{c/Makefile} uses the environmental variable
-@env{MAPLE_ROOT}, which should point to the installation directory of
-Maple.  This environmental variable is also used by the installed
-scripts to locate the Maple libraries.
+The environmental variable @env{MAPLE_ROOT},
+which points to the directory where Maple is installed,
+must be assigned.  It is also needed for execution,
+so the assignment should go in a startup file.
+@xref{Environment}.
 
-Execute the following in the @file{mdb} directory
+To build Mdb, 
+execute the following command in the @file{mdb} directory,
 
 @example
 make build
@@ -230,12 +228,48 @@ make build
 @section Installation
 @cindex installation
 
-After building Mdb (@xref{Build}) install it,
-execute the following in the @file{mdb} directory
+To install Mdb, the environmental variables described
+in the following table must be properly assigned.
+
+@table @env
+
+@item BINDIR
+@vindex BINDIR
+The directory where the executables are installed.
+The default is @file{$HOME/bin}.
+
+@item INFODIR
+@vindex INFODIR
+The directory where the info files are installed.
+The default is @file{/usr/share/info}.
+
+@item LISPDIR
+@vindex LISPDIR
+The directory where the lisp files are installed.
+The default is @file{/usr/local/share/emacs/sitelisp}.
+
+@item MAPLEINSTALLDIR
+@vindex MAPLEINSTALLDIR
+The directory where the maple archive and help database are installed.
+The default is @file{$HOME/maple/lib}.
+
+@end table
+
+To install Mdb,
+execute the following command in the @file{mdb} directory.
 
 @example
 make install
 @end example
+
+To avoid touching the makefiles, the environmental variables can
+be assigned on the command line and the @samp{-e} option 
+passed to @command{make}; for example
+
+@example
+LISPDIR=$HOME/lisp INFODIR=$HOME/info make -e install
+@end example
+
 
 
 @node Configuration, Feedback, Installation, Introduction
@@ -267,14 +301,22 @@ Add the following line to your @file{.emacs} file:
 @subsection Environment
 @cindex environmental variables
 
-@vindex MAPLE_ROOT
 The @env{MAPLE_ROOT} environmental variable
 must be assigned to point to the installation directory of Maple.
+
 @vindex MAPLE_INCLUDE_PATH
 If you use Maple preprocessor include directives in source
 that must search a particular directory then you can assign
 the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
 sequence of directories to search.
+
+For example, something like the following could be put in your @file{.profile} file,
+
+@example
+MAPLE_ROOT="/usr/local/share/maple/r14"
+MAPLE_INCLUDE_PATH="$HOME/maple/lib/include,$MAPLE_ROOT/extern/include"
+@end example
+
 
 @node Feedback,  , Configuration, Introduction
 @section Feedback
