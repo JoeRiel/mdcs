@@ -662,12 +662,22 @@ A statement with a breakpoint has an asterisk to the right of the statement numb
 @item b (@code{mdb-breakpoint})
 Stopat:  Set a breakpoint at the start of the statement at the cursor.
 An asterisk appears to the right of the statement number.
+The debugger is halted each time it reaches the statement.
+
+@kindex B
+@findex mdb-breakpoint-cond
+@item B (@code{mdb-breakpoint-cond})
+Stopat-cond:  Set a conditional breakpoint at the start of the statement at the cursor.
+The condition is entered in the mini-buffer.  It must be a Maple boolean expression.
+A question mark appears to the right of the statement number.
+The debugger is halted each time it reaches the statement and the condition evaluates to true.
 
 @kindex p
 @findex mdb-showstop
 @item p (@code{mdb-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
-watchpoints, and all error watchpoints.
+watchpoints, and all error watchpoints.  Conditional breakpoints are
+not included.
 
 @kindex u
 @findex mdb-unstopat
