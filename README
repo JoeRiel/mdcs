@@ -123,6 +123,7 @@ C-c C-c kill and restart the Maple process
 Breakpoints
 -----------
 b (stopat) set breakpoint at cursor
+B (stopat-cond) set conditional breakpoint at cursor
 u (unstopat) clear breakpoint at cursor
 p (showstop) display all breakpoints
 I (stopwhenif) set watchpoint on variable = value
