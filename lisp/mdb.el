@@ -210,7 +210,7 @@ then this is a debug-prompt.")
 This is the prompt as output from the maple process.")
 
 (defconst mdb--debugger-status-re
-  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *]")
+  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
   "Regexp that matches the status output of the debugger.
 The first group matches the procedure name, the second group the
 state number.")
@@ -254,6 +254,7 @@ This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
 (defvar mdb-showstat-procname "" "Name of current showstat procedure.")
 (defvar mdb-showstat-state "1")
+(defvar mdb-thisproc "thisproc" "Must be \"procname\" for pre Maple14")
 (defvar mdb-tq nil "Transaction-queue used by mdb.")
 (defvar mdb-watch-alist nil
   "Alist for storing watch variables.  The keys are procedure names,
