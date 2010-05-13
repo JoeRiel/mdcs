@@ -108,7 +108,7 @@ POINT is moved to the indentation of the current line."
 	(state mdb-showstat-state))
     ;; Find the location of STATE in the buffer.
     (goto-char (point-min))
-    (re-search-forward (concat "^ *" state "[ *]\\(!\\)?"))
+    (re-search-forward (concat "^ *" state "[ *?]\\(!\\)?"))
     ;; Remove the bang, which showstat uses to mark the current state.
     (if (match-string 1)
 	(replace-match " " nil nil nil 1))
@@ -125,7 +125,7 @@ POINT is moved to the indentation of the current line."
        ((and hl-line-mode hl-line-sticky-flag)
 	(hl-line-highlight))))
     ;; Move point to indentation of the current line (not including the state number).
-    (re-search-forward "^ *[1-9][0-9]*[ *]? *" nil 'move))
+    (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window mdb-showstat-buffer) (point)))
 
@@ -404,7 +404,8 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string "mdb:-ArgsToEqs(thisproc, `[]`~([_params[..]]),[_rest],[_options])\n"
+  (mdb-send-string (format "mdb:-ArgsToEqs(%s, `[]`~([_params[..]]),[_rest],[_options])\n"
+			   mdb-thisproc)
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil
@@ -454,7 +455,7 @@ procedure stripped from it."
   "Move POINT to STATE."
   ;; Assume we are in the showstat buffer.
   (goto-char (point-min))
-  (unless (re-search-forward (concat "^ *" state "[ *]\\s-*") nil t)
+  (unless (re-search-forward (concat "^ *" state "[ *?]\\s-*") nil t)
     (ding)
     (message "cannot find state %s" state)))
 
@@ -622,12 +623,15 @@ Stop points
 -----------
 \\[mdb-breakpoint] (stopat) set breakpoint at cursor
 \\[mdb-unstopat] (unstopat) clear breakpoint at cursor
-\\[mdb-showstop] (showstop) display all breakpoints
+
 \\[mdb-stopwhenif] (stopwhenif) set watchpoint on variable = value
+
 \\[mdb-stopwhen-local] (stopwhen) set watchpoint on local variable
 C-u \\[mdb-stopwhen-local] (stopwhen) clear watchpoint on local variable
 \\[mdb-stopwhen-global] (stopwhen) set watchpoint on global variable
 C-u \\[mdb-stopwhen-global] (stopwhen) clear watchpoint on global variable
+
+\\[mdb-showstop] (showstop) display all breakpoints
 
 Information
 -----------
