@@ -29,14 +29,13 @@ TEXI2PDF = texi2pdf
 # }}}
 # {{{ Directories
 
-# where local software is found
-PREFIX = /usr/local
+# where executables go
+export BINDIR = ${HOME}/bin
 
-# where local lisp files go
-LISPDIR = $(PREFIX)/share/emacs/site-lisp
+# where lisp files go
+LISPDIR = /usr/local/share/emacs/site-lisp
 
 # where info files go
-# INFODIR = $(PREFIX)/share/info
 INFODIR = /usr/share/info
 
 # where the maple archive goes
@@ -120,7 +119,7 @@ $(mla): maple/mdb.mpl
 .PHONY: install-pmaple install-el install-maple install-lisp install-info install
 
 install-pmaple: $(pmaple)
-	$(MAKE) --directory=c install
+	$(MAKE) --directory=c --environment-overrides install
 
 install-maple: $(mla)
 	$(CP) --archive $+ $(MAPLEINSTALLDIR)
