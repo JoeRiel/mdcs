@@ -30,16 +30,16 @@ TEXI2PDF = texi2pdf
 # {{{ Directories
 
 # where executables go
-export BINDIR = ${HOME}/bin
+export BIN_INSTALL_DIR = $(HOME)/bin
 
 # where lisp files go
-LISPDIR = /usr/local/share/emacs/site-lisp
+LISP_DIR = $(HOME)/.emacs.d
 
 # where info files go
-INFODIR = /usr/share/info
+INFO_DIR = $(HOME)/share/info
 
 # where the maple archive goes
-MAPLEINSTALLDIR = $(HOME)/maple/lib
+MAPLE_INSTALL_DIR = $(HOME)/maple/lib
 
 # }}}
 
@@ -122,16 +122,18 @@ install-pmaple: $(pmaple)
 	$(MAKE) --directory=c --environment-overrides install
 
 install-maple: $(mla)
-	$(CP) --archive $+ $(MAPLEINSTALLDIR)
+	$(CP) --archive $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(LISPFILES) $(ELCFILES)
-	if [ ! -d $(LISPDIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
-	$(CP) $+ $(LISPDIR)
+	if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
+	$(CP) $+ $(LISP_DIR)
 
 install-info: $(INFOFILES)
-	if [ ! -d $(INFODIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
-	$(CP) $(INFOFILES) $(INFODIR)
-	for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFODIR) $${file}; done
+	if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
+	$(CP) $(INFOFILES) $(INFO_DIR)
+	if [ -f $(INFO_DIR)/dir ]; then \
+		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
+	fi
 
 install: install-lisp install-maple install-info install-pmaple
 

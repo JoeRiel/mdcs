@@ -113,10 +113,9 @@ handle prompts in a pipe."
   :type 'string
   :group 'mdb)
 
-(defcustom mdb-maple-setup-switches
-  nil
+(defcustom mdb-maple-setup-switches  nil
   "*List of command-line switches passed to `mdb-maple-cmd'."
-  :type '(repeat list (string))
+  :type '(repeat string)
   :group 'mdb)
 
 ;;{{{   prompts and cursors

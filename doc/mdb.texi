@@ -233,23 +233,23 @@ in the following table must be properly assigned.
 
 @table @env
 
-@item BINDIR
-@vindex BINDIR
+@item BIN_INSTALL_DIR
+@vindex BIN_INSTALL_DIR
 The directory where the executables are installed.
 The default is @file{$HOME/bin}.
 
-@item INFODIR
-@vindex INFODIR
+@item INFO_DIR
+@vindex INFO_DIR
 The directory where the info files are installed.
-The default is @file{/usr/share/info}.
+The default is @file{$HOME/share/info}.
 
-@item LISPDIR
-@vindex LISPDIR
+@item LISP_DIR
+@vindex LISP_DIR
 The directory where the lisp files are installed.
-The default is @file{/usr/local/share/emacs/sitelisp}.
+The default is @file{$HOME/.emacs.d}.
 
-@item MAPLEINSTALLDIR
-@vindex MAPLEINSTALLDIR
+@item MAPLE_INSTALL_DIR
+@vindex MAPLE_INSTALL_DIR
 The directory where the maple archive and help database are installed.
 The default is @file{$HOME/maple/lib}.
 
@@ -267,7 +267,7 @@ be assigned on the command line and the @samp{-e} option
 passed to @command{make}; for example
 
 @example
-LISPDIR=$HOME/lisp INFODIR=$HOME/info make -e install
+LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @end example
 
 
