@@ -10,21 +10,16 @@ scriptdir="${0%/*}"
 SYSTYPE="$(${scriptdir}/maple.system.type)"
 MAPLE_BIN=${MAPLE_ROOT}/internal/${SYSTYPE}
 
-# Check whether MAPLE_BIN has subdirectories, 
-# if so assign them to EXTRA_MAPLE_BIN_DIRS.
+# Add binary directories from Maple toolboxes
 
-if [ "$(ls -1p | sed -n '/\/$/{p;q}')" ]; then
-    EXTRA_MAPLE_BIN_DIRS="$(ls -1d ${MAPLE_BIN}/*/ | tr '
-' ':')"
-    if [ "$EXTRA_MAPLE_BIN_DIRS" = ":" ]; then
-	EXTRA_MAPLE_BIN_DIRS=""
-    fi
+TOOLBOX_BIN_DIRS="$(ls --directory ${MAPLE_ROOT}/toolbox/*/${SYSTYPE})"
+
+if [ -z "${TOOLBOX_BIN_DIRS}" ]; then
+    LD_LIBRARY_PATH="${MAPLE_BIN}"
 else
-    EXTRA_MAPLE_BIN_DIRS=""
+    LD_LIBRARY_PATH="${MAPLE_BIN}:${TOOLBOX_BIN_DIRS}"
 fi
 
-echo ${EXTRA_MAPLE_BIN_DIRS}${MAPLE_BIN}:${MAPLE_ROOT}/toolbox/MapleSim/${SYSTYPE}
+echo "${LD_LIBRARY_PATH}"
 
 exit 0
-
-
