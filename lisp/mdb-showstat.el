@@ -422,7 +422,10 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-  (mdb-send-string (format "mdb:-ArgsToEqs(%s, `[]`~([_params[..]]),[_rest],[_options])\n"
+					; this uses the global variable _k.
+					; There isn't any way around this.
+					; Alternatively we could use %.  
+  (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[_k]],_k=1.._nparams)],[_rest],[_options])\n"
 			   mdb-thisproc)
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
