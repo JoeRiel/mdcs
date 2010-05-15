@@ -59,11 +59,14 @@ local prettyprint;
 ##
 ##EXAMPLES
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
-##> macro(printargs=\MOD:-\PROC(thisproc, `[]`~([_params[..]]),[_rest],[_options])):
+##> macro(printargs=\MOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
 ##> f(3);
 ##> f(3,4,keyword);
 ##> f(3,4,5,keyword);
+##- Ensure that it works with `NULL` default values.
+##> g := proc(y:=NULL, z:=1, { key := NULL} ) printargs; end proc:
+##> g();
 ##
 ##TEST
 ## $include <AssignFunc.mi>
@@ -89,6 +92,9 @@ local prettyprint;
 ## Try[NE]("3.3.0", proc(x,y,$) end, 'assign' = "proc3_3");
 ## Try("3.3.1", [FUNC]("proc3_3", [[[1,2]],[2]], [], []), [x=[1,2], y=2]);
 ##
+## macro(printargs=FUNC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
+## Try[NE]("5.1.0", proc(x:=NULL,y:=[1],$) printargs; end, 'assign' = "proc5_1");
+## Try("5.1.1", [proc5_1()], [x=NULL,y=[1]]);
 
     ArgsToEqs := proc(prc :: {string,procedure}
                       , pargs :: list
@@ -138,15 +144,17 @@ local prettyprint;
         m := nops(defparams);
         n := nops(pargs) - m;
 
-        return prettyprint(false
-                           , ( seq(params[i] = pargs[i][], i=1..n)         # required positional
-                               , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
-                               , oargs[]                                   # optional args
-                               , `if`( rargs = []                          # _rest
-                                       , NULL
-                                       , ':-_rest' = rargs[]
-                                     )
-                             ));
+    local ppargs := ( NULL
+                      , seq(params[i] = pargs[i][], i=1..n)       # required positional
+                      , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
+                      , oargs[]                                   # optional args
+                      , `if`( rargs = []                          # _rest
+                              , NULL
+                              , ':-_rest' = rargs[]
+                            )
+                    );
+
+        return prettyprint(false, ppargs);
 
     end proc;
 
@@ -250,8 +258,8 @@ local prettyprint;
             elif expr = NULL then
                 printf("NULL\n");
                 return NULL;
-            elif expr :: 'name = anything' then
-                return lhs(expr) = procname(false,rhs(expr));
+#            elif expr :: 'name = anything' then
+#                return lhs(expr) = procname(false,rhs(expr));
             else
                 return expr;
             end if;
