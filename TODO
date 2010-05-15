@@ -1,0 +1,35 @@
+-*- org -*-
+
+* DONE Make prefix, etc., variables in [[file:Makefile::prefix%20usr%20local][Makefile]] overwritable by environment.
+  CLOSED: [2010-05-11 Tue 09:11]
+  This will allow Erik to avoid resolving when pulling in changes.
+  Decided to just capitalize and document how to change them on CL.
+  Using ?= seems dangerous.  Why?
+* DONE SCR 1: debugopts doesn't work 
+  CLOSED: [2010-05-12 Wed 10:21]
+       mdb-next 'continues' when breakpoint is set with debugopts(stopat=[func,1]]).
+       For example
+
+       restart:  debugopts(stopat=[int,1]): int(x,x);
+       # then type 'n';
+
+       The problem is a binding issue; not sure why it occurs.
+       Erik wrote quickstop; I added it to mdb.
+
+* TODO Document customizations
+
+* TODO Create an Instrument command/package.
+  This would permit instrumenting any command in a package.
+  Maybe this should be done with a Maplet, and be a stand-alone
+  Maple package. 
+
+
+* DONE Fix installation problem; getlibpath does not work
+  CLOSED: [2010-05-12 Wed 10:19]
+  Use scriptdir="$0" in scripts to find the other executables;
+  that avoids dependency on user's PATH and allows getlibpath
+  to work during installation.
+
+* TODO Write mpldoc and create mdb.hdb.
+* TODO Make work with Maple 13
+* TODO Add menu to mdb-mode
