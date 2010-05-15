@@ -1,6 +1,6 @@
 -*- org -*-
 
-* TODO SCR 1  debugopts doesn't instrument correctly
+* TODO SCR 1: debugopts does not instrument correctly
 
   Submitter: [[mailto:epostma@maplesoft.com][Erik Postma]]
   Priority:  Low
@@ -15,13 +15,17 @@
   and emaple.  I've recorded the input sent to the engine and it
   seems fine.   
 
-* DONE SRC 2  argument display is wrong with optional arguments that default to NULL
+  As a workaround added Erik's quickstop routine (renamed stopat)
+  as an export to mdb.  That evaluates the procedure being debugged
+  but avoids the complexity of stopat.
+
+* DONE SCR 2:  argument display is wrong with optional arguments that default to NULL
   CLOSED: [2010-05-15 Sat 10:40]
 
   Submitter: Joe Riel
-  Priority:  Hig
+  Priority:  High
 
   Resolution: use seq instead of map to extract _params; the downside
   is that a global variable must be used, so must pick a safe one (_k).
-
+  
   
