@@ -381,12 +381,17 @@ $endif
 ##RETURNS
 ##- ::symbol::
 ##DESCRIPTION
-##-
+##- The `\PROC` procedure
+##  converts an indexed name to a slashed name.
+##  For example, ~base[index]~ is converted to
+##  ~`base/index`~.
+##
+##- If a name is not indexed it is returned as is.
 ##TEST
 ## $include <AssignFunc.mi>
 ## AssignFUNC(mdb:-indexed2slashed);
 ## $define NE testnoerror
-##
+## #stopat(FUNC):
 ## Try("1.0", FUNC(a), a);
 ## Try("1.1", FUNC(a[1]), `a/1`);
 ## Try("1.2", FUNC(a[1][2]), `a/1/2`);
@@ -394,17 +399,19 @@ $endif
 ## Try("3.1", FUNC(`a+b`[1][2]), `a+b/1/2`);
 ##
 ## $define TE testerror
-## Try[TE]("10.2", FUNC(a[1,2]), "cannot convert");
+## err := "cannot convert":
+## Try[TE]("10.1", FUNC(a[]), err);
+## Try[TE]("10.2", FUNC(a[1,2]), err);
 
 local
     indexed2slashed := proc(nm :: name, $)
         if nm :: indexed then
-            if nops(nm) > 1 then
+            if nops(nm) <> 1 then
                 error "cannot convert";
             end if;
             return nprintf("%A/%A", procname(op(0,nm)), op(1,nm));
         else
-            return nm
+            return nm;
         end if;
     end proc;
 
