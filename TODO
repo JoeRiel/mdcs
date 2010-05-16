@@ -31,5 +31,7 @@
   to work during installation.
 
 * TODO Write mpldoc and create mdb.hdb.
-* TODO Make work with Maple 13
+* DONE Make work with Maple 13
+  CLOSED: [2010-05-16 Sun 15:26]
+  Added mdb-pre-Maple-14 customizable boolean variable.
 * TODO Add menu to mdb-mode
