@@ -76,9 +76,10 @@ Introduction
 
 * Summary::                     Summary of what Mdb does
 * Requirements::                What is needed to run Mdb
-* Building::                    
+* Building::                    How to build Mdb
 * Installation::                How to install Mdb
 * Configuration::               How to configure Mdb
+* Customization::               Customize Mdb variables
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
@@ -117,9 +118,10 @@ Command and Variable Index
 @menu
 * Summary::                     Summary of what Mdb does
 * Requirements::                What is needed to run Mdb
-* Building::                    
+* Building::                    How to build Mdb
 * Installation::                How to install Mdb
 * Configuration::               How to configure Mdb
+* Customization::               Customize Mdb variables
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -273,7 +275,7 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 
 
 
-@node Configuration, Feedback, Installation, Introduction
+@node Configuration, Customization, Installation, Introduction
 @comment  node-name,  next,  previous,  up
 @section Configuration
 @cindex configuration
@@ -319,7 +321,21 @@ MAPLE_INCLUDE_PATH="$HOME/maple/lib/include,$MAPLE_ROOT/extern/include"
 @end example
 
 
-@node Feedback,  , Configuration, Introduction
+@node Customization, Feedback, Configuration, Introduction
+@comment  node-name,  next,  previous,  up
+@section Customization
+@cindex customization
+
+Mdb mode has a number of variables that can be customized.
+To access them load Mdb (@code{M-x mdb}) then run 
+@code{M-x customize-group} and enter @code{mdb-group}.
+Most of the variables are not significant, and some should
+not be changed without also recompiling @command{pmaple}.
+
+If you are using a Maple release earlier than
+Maple 14, set @code{mdb-pre-Maple-14} to non-nil.
+
+@node Feedback,  , Customization, Introduction
 @section Feedback
 @cindex feedback
 
