@@ -119,7 +119,7 @@ handle prompts in a pipe."
   :group 'mdb)
 
 (defcustom mdb-pre-Maple-14 nil
-  "*Boolean flag.  Set to true if Maple is a release earlier than Maple 14."
+  "*Boolean flag.  Set to non-nil if Maple is a release earlier than Maple 14."
   :type 'boolean
   :group 'mdb)
 
