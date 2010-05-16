@@ -302,7 +302,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	       (inhibit-read-only t)
 	       (cond (mdb--query-stop-var "stopat-cond" "condition" 'mdb-showstat-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mdb-showstat-eval-expr (format "debugopts('stopat'=[thisproc,%s,%s])" state cond)))
+	  (mdb-showstat-eval-expr (format "debugopts('stopat'=[%s,%s,%s])" (mdb-thisproc) state cond)))
       (ding)
       (message "no previous state in buffer"))))
 
@@ -426,7 +426,7 @@ The result is returned in the message area."
 					; There isn't any way around this.
 					; Alternatively we could use %.  
   (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[_Env1]],_Env1=1.._nparams)],[_rest],[_options])\n"
-			   mdb-thisproc)
+			   (mdb-thisproc))
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil
