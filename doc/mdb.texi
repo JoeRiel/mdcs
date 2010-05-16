@@ -335,7 +335,7 @@ Mdb, (@kbd{C-h v mdb-version}), and Maple (@code{version()}).
 @chapter Launching Mdb
 @cindex launching mdb
 
-@findex{mdb}
+@findex mdb
 The @kbd{M-x mdb} command launches an Mdb buffer (@ref{Mdb Buffer}).
 If an Mdb buffer already exists, it pops to it.
 If called with an optional prefix argument (@kbd{C-u M-x mdb})
