@@ -803,15 +803,22 @@ then insert a command that reads the source file into the mdb buffer."
 
 ;; Need to bind this to a key; but what?  Should it be globally
 ;; accessible?  Maybe better would be to toggle between showstat and
-;; output.  Probably the thing to do is to create a debugger output
-;; mode.
+;; output.
 
 (defun mdb-pop-to-showstat-buffer ()
   "Pop to the Mdb showstat (`mdb-showstat-buffer')."
   (interactive)
   (pop-to-buffer mdb-showstat-buffer))
 
-(defun mdb-showstat-buffer ())
+(defun mdb-toggle-buffer ()
+  "Toggle between `mdb-showstat-buffer' and `mdb-debugger-output-buffer'."
+  (interactive)
+  (let* ((curr-buf (current-buffer))
+	 (next-buf (cond
+		    ((eq curr-buf mdb-debugger-output-buffer) mdb-showstat-buffer)
+		    ((eq curr-buf mdb-showstat-buffer) mdb-debugger-output-buffer)
+		    (t mdb-showstat-buffer))))
+    (pop-to-buffer next-buf)))
 
 (provide 'mdb)
 
