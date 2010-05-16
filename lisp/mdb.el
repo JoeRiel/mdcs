@@ -762,7 +762,8 @@ then insert a command that reads the source file into the mdb buffer."
   (let ((orig-file (buffer-file-name))
 	(insert-read (and insert-read
 			  (or (eq major-mode 'maplev-mode)
-			      (eq major-mode 'mpldoc-mode)))))
+			      (eq major-mode 'mpldoc-mode)
+			      (eq major-mode 'mpldoc-test-mode)))))
     (if insert-read (mdb-save-modified-buffer))
     
     (if (buffer-live-p mdb-buffer)
