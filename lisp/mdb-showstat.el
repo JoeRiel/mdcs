@@ -302,7 +302,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	       (inhibit-read-only t)
 	       (cond (mdb--query-stop-var "stopat-cond" "condition" 'mdb-showstat-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mdb-showstat-eval-expr (format "debugopts('stopat'=[thisproc,%s,%s])" state cond)))
+	  (mdb-showstat-eval-expr (format "debugopts('stopat'=[%s,%s,%s])" (mdb-thisproc) state cond)))
       (ding)
       (message "no previous state in buffer"))))
 
@@ -422,11 +422,11 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-					; _Env1 is used as the index because
-					; environmental variables cannot be
-					; protected, which would break seq.
+					; this uses the global variable _Env1.
+					; There isn't any way around this.
+					; Alternatively we could use %.  
   (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[_Env1]],_Env1=1.._nparams)],[_rest],[_options])\n"
-			   mdb-thisproc)
+			   (mdb-thisproc))
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
 		   nil

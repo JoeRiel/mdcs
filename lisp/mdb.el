@@ -118,6 +118,11 @@ handle prompts in a pipe."
   :type '(repeat string)
   :group 'mdb)
 
+(defcustom mdb-pre-Maple-14 nil
+  "*Boolean flag.  Set to true if Maple is a release earlier than Maple 14."
+  :type 'boolean
+  :group 'mdb)
+
 ;;{{{   prompts and cursors
 
 (defcustom mdb-prompt "(**) "
@@ -253,7 +258,6 @@ This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
 (defvar mdb-showstat-procname "" "Name of current showstat procedure.")
 (defvar mdb-showstat-state "1")
-(defvar mdb-thisproc "thisproc" "Must be \"procname\" for pre Maple14")
 (defvar mdb-tq nil "Transaction-queue used by mdb.")
 (defvar mdb-watch-alist nil
   "Alist for storing watch variables.  The keys are procedure names,
@@ -741,26 +745,59 @@ A new buffer is created if there is no live buffer."
 
 ;;}}}
 
+;;{{{ Miscellaneous functions
+
+(defun mdb-save-modified-buffer ()
+  "Query user to save current buffer, if modified."
+  (if (and (buffer-modified-p)
+           (y-or-n-p "Save buffer? "))
+      (save-buffer)))
+
+(defun mdb-thisproc ()
+  "Return string corresponding to current procedure."
+  (if mdb-pre-Maple-14
+      "procname"
+    "thisproc"))
+
+;;}}}
+
 ;;{{{ mdb command
 
-(defun mdb ()
-  "Launch a Maple debugger session.  
-If one already exists, then pop to the debugging buffer."
-  (interactive)
+(defun mdb (insert-read)
+  "Launch a Maple debugger session.
+If one already exists, then pop to the debugging buffer.
+If optional prefix is non-nil and original buffer is a Maple source buffer,
+then insert a command that reads the source file into the mdb buffer."
+  (interactive "P")
+  (let ((orig-file (buffer-file-name))
+	(insert-read (and insert-read
+			  (or (eq major-mode 'maplev-mode)
+			      (eq major-mode 'mpldoc-mode)
+			      (eq major-mode 'mpldoc-test-mode)))))
+    (if insert-read (mdb-save-modified-buffer))
+    
+    (if (buffer-live-p mdb-buffer)
+	;; buffer exists; bring up that buffer
+	(progn
+	  (pop-to-buffer mdb-buffer)
+	  (if insert-read
+	      (insert (format "read \"%s\":" orig-file))))
 
-  (if (buffer-live-p mdb-buffer)
-      ;; buffer exists; bring up that buffer
-      (pop-to-buffer mdb-buffer)
+      ;; buffer does not exist
+      ;; pop to mdb buffer and launch maple
+      (pop-to-buffer (setq mdb-buffer (generate-new-buffer "mdb")))
+      (mdb-mode)
+      ;; Generate 'fake' prompt.
+      (insert (concat (propertize mdb-prompt
+				  'face 'mdb-face-prompt
+				  'rear-nonsticky t)))
+      (set-marker mdb-pmark (point))
+      (if insert-read
+	  (insert (format "read \"%s\":" orig-file))))))
 
-    ;; buffer does not exist:
-    ;; launch maple
-    (pop-to-buffer (setq mdb-buffer (generate-new-buffer "mdb")))
-    (mdb-mode)
-    ;; Generate 'fake' prompt.
-    (insert (concat (propertize mdb-prompt
-				'face 'mdb-face-prompt
-				'rear-nonsticky t)))
-    (set-marker mdb-pmark (point))))
+	
+      
+      
 
 ;;}}}
 

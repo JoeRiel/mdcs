@@ -62,6 +62,7 @@ Texts.  A copy of the license is included in the section entitled
 
 @menu
 * Introduction::                Getting started
+* Launching Mdb::               
 * Mdb Buffer::                  Launching Mdb
 * Showstat Buffer::             Stepping through code
 * Main Index::                  The main index 
@@ -75,7 +76,7 @@ Introduction
 
 * Summary::                     Summary of what Mdb does
 * Requirements::                What is needed to run Mdb
-* Build::                       How to build Mdb
+* Building::                    
 * Installation::                How to install Mdb
 * Configuration::               How to configure Mdb
 * Feedback::                    Bug reports, ideas, etc.
@@ -109,14 +110,14 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Mdb Buffer, Top, Top
+@node Introduction, Launching Mdb, Top, Top
 @chapter Introduction
 @cindex introduction
 
 @menu
 * Summary::                     Summary of what Mdb does
 * Requirements::                What is needed to run Mdb
-* Build::                       How to build Mdb
+* Building::                    
 * Installation::                How to install Mdb
 * Configuration::               How to configure Mdb
 * Feedback::                    Bug reports, ideas, etc.
@@ -164,10 +165,10 @@ Breakpoints can be set or cleared directly in the buffer.
 
 @end itemize
 
-@node Requirements, Build, Summary, Introduction
+@node Requirements, Building, Summary, Introduction
 @comment  node-name,  next,  previous,  up
 @section Requirements
-@cindex Requirements
+@cindex requirements
 
 
 @table @r
@@ -191,10 +192,10 @@ package, but it may be dated.
 
 
 
-@node Build, Installation, Requirements, Introduction
+@node Building, Installation, Requirements, Introduction
 @comment  node-name,  next,  previous,  up
-@section Build
-@cindex Build
+@section Building
+@cindex building
 
 This section describes how to build Mdb.
 The readme files included with the distribution,
@@ -224,7 +225,7 @@ make build
 @end example
 
 
-@node Installation, Configuration, Build, Introduction
+@node Installation, Configuration, Building, Introduction
 @section Installation
 @cindex installation
 
@@ -286,7 +287,7 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @node Emacs, Environment, Configuration, Configuration
 @comment  node-name,  next,  previous,  up
 @subsection Emacs
-@cindex Emacs
+@cindex emacs
 @cindex .emacs
 
 
@@ -330,11 +331,25 @@ including the version information of Emacs (@kbd{C-h v emacs-version}),
 Mdb, (@kbd{C-h v mdb-version}), and Maple (@code{version()}).
 
 
+@node Launching Mdb, Mdb Buffer, Introduction, Top
+@chapter Launching Mdb
+@cindex launching mdb
 
-@node Mdb Buffer, Showstat Buffer, Introduction, Top
+@findex mdb
+The @kbd{M-x mdb} command launches an Mdb buffer (@ref{Mdb Buffer}).
+If an Mdb buffer already exists, it pops to it.
+If called with an optional prefix argument (@kbd{C-u M-x mdb})
+and the current buffer is a Maple source buffer,
+then a Maple @code{read @var{filename}:} command is inserted into
+the Mdb buffer, where @var{filename} is the filename associated
+with the buffer.
+
+
+@node Mdb Buffer, Showstat Buffer, Launching Mdb, Top
 @chapter Mdb Buffer
+@cindex mdb buffer
 
-When Mdb is started (@kbd{M-x mdb}), a buffer opens in @code{mdb-mode}.
+When Mdb is launched (@xref{Launching Mdb}), a buffer opens in @code{mdb-mode}.
 This buffer is an interface to the Maple engine.
 It is a rudimentary form of the tty interface @command{cmaple}.
 
@@ -413,13 +428,13 @@ The following table lists the key bindings defined by @code{mdb-mode}.
 
 @table @asis
 @kindex M-p
-@kindex Up
+@kindex up
 @findex mdb-history-prev
 @item Up
 @itemx M-p (@code{mdb-history-prev})
 Recall previous input.
 
-@kindex Down
+@kindex down
 @kindex M-n
 @findex mdb-history-next
 @item Down

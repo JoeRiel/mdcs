@@ -299,19 +299,14 @@ $endif
 ##- `NULL`
 ##DESCRIPTION
 ##- The `\CMD` command
-##  is a fast version of "stopat", with a few modifications.
+##  is a fast version of  ":-stopat", with a few modifications.
 ##  It sets a breakpoint at a statement number of a procedure.
 ##
 ##- The 'p' parameter is the procedure to instrument.
-##-- If 'p' is indexed
-##EXAMPLES
-##>> f := proc()
-##>> local i;
-##>>    for i to 5 do
-##>>        print(i);
-##>>    end do;
-##>> end proc:
-##
+##-- If 'p' is indexed it is converted to a *slashed* name.
+##-- If 'p' is a string it is parsed.
+##  This provides a means to enter a module local procedure without assigning
+##   _kernelopts('opaquemodules'=false)_.
 ##
 ##TEST
 ## $include <AssignFunc.mi>
