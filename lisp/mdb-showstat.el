@@ -242,10 +242,13 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (mdb-showstat-send-command "outfrom"))
 
 (defun mdb-quit ()
-  "Send the 'quit' command to the debugger."
+  "Send the 'quit' command to the debugger.
+If not debugging, pop to the `mdb-buffer'."
   (interactive)
-  (mdb-goto-current-state)
-  (mdb-showstat-send-command "quit"))
+  (if (not mdb-debugging-flag)
+      (mdb-pop-to-mdb-buffer)
+    (mdb-goto-current-state)
+    (mdb-showstat-send-command "quit")))
 
 (defun mdb-return ()
   "Send the 'return' command to the debugger."
