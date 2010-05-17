@@ -262,6 +262,7 @@ This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-watch-alist nil
   "Alist for storing watch variables.  The keys are procedure names,
 the values are additional alists.")
+;;(defvar mdb-tq-buffer nil "Buffer used by tq.")
 
 ;;}}}
 ;;{{{ functions
@@ -819,6 +820,20 @@ then insert a command that reads the source file into the mdb buffer."
 		    ((eq curr-buf mdb-showstat-buffer) mdb-debugger-output-buffer)
 		    (t mdb-showstat-buffer))))
     (pop-to-buffer next-buf)))
+
+(defun mdb-cycle-buffers ()
+  "Cycle between several mdb buffers."
+  (interactive)
+  (let* ((curr-buf (current-buffer))
+	 (mdb-tq-buffer   (tq-buffer mdb-tq))
+	 (next-buf (cond
+		    ((eq curr-buf  mdb-showstat-buffer)        mdb-debugger-output-buffer)
+		    ((eq curr-buf  mdb-debugger-output-buffer) mdb-maple-buffer)
+		    ((eq curr-buf  mdb-maple-buffer)           mdb-tq-buffer)
+		    ((eq curr-buf  mdb-tq-buffer)              mdb-showstat-buffer)
+		    (t                                         mdb-showstat-buffer))))
+    (switch-to-buffer next-buf)))
+
 
 (provide 'mdb)
 
