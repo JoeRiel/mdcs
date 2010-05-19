@@ -242,10 +242,13 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (mdb-showstat-send-command "outfrom"))
 
 (defun mdb-quit ()
-  "Send the 'quit' command to the debugger."
+  "Send the 'quit' command to the debugger.
+If not debugging, pop to the `mdb-buffer'."
   (interactive)
-  (mdb-goto-current-state)
-  (mdb-showstat-send-command "quit"))
+  (if (not mdb-debugging-flag)
+      (mdb-pop-to-mdb-buffer)
+    (mdb-goto-current-state)
+    (mdb-showstat-send-command "quit")))
 
 (defun mdb-return ()
   "Send the 'return' command to the debugger."
@@ -422,10 +425,10 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mdb-debugger-clear-output))
-					; this uses the global variable _Env1.
-					; There isn't any way around this.
-					; Alternatively we could use %.  
-  (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[_Env1]],_Env1=1.._nparams)],[_rest],[_options])\n"
+					; We need to use a global variable for the index,
+					; one that isn't likely to appear in an expression.
+					; Alternatively, a module expoart could be used.
+  (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 			   (mdb-thisproc))
 		   nil
 		   (propertize "args:\n" 'face 'mdb-face-prompt)
@@ -566,12 +569,12 @@ the number of activation levels to display."
 
 ;;{{{ menu
 
-(defvar mdb-menu nil)
-(unless mdb-menu
+(defvar mdb-showstat-menu nil)
+(unless mdb-showstat-menu
   (easy-menu-define
     mdb-showstat-menu mdb-showstat-mode-map
-    "Menu for Mdb mode"
-    `("Mdb"
+    "Menu for Mdb showstat mode"
+    `("Showstat"
 
       ("Tracing"
        ["Continue"	mdb-cont t]
@@ -692,7 +695,7 @@ C-u \\[mdb-toggle-truncate-lines] toggle truncation in debugger output buffer
 	mdb-showstat-state ""
 	mdb-showstat-arrow-position nil)
 
-  (and mdb-menu (easy-menu-add mdb-menu))
+  (and mdb-showstat-menu (easy-menu-add mdb-showstat-menu))
 
   (add-hook 'kill-buffer-hook '(lambda () (setq mdb-update-showstat-p t)) nil 'local))
 

@@ -211,6 +211,7 @@ local prettyprint;
 ## Try("record", FUNC(T,Record(a=1,b=2)), a=1,b=2);
 ## Try("table", {FUNC}(T,table([a=1,b=2])), {a=1,b=2});
 
+
     prettyprint := proc(top :: truefalse := true)
     local eqs, ex, expr, fld, indx;
         if nargs > 2 then
@@ -219,17 +220,24 @@ local prettyprint;
             expr := _rest;
 
             if expr :: set then
-                if top then printf("(*set*)\n"); end if;
-                return `if`(expr = []
-                            , printf("NULL\n")
-                            , expr[]
-                           )
+                if top then printf("(*set*)\n");
+                    return `if`(expr = []
+                                , printf("NULL\n")
+                                , expr[]
+                               );
+                else
+                    return expr;
+                end if;
             elif expr :: list then
-                if top then printf("(*list*)\n"); end if;
-                return `if`(expr = []
-                            , printf("NULL\n")
-                            , expr[]
-                           )
+                if top then printf("(*list*)\n");
+                    return `if`(expr = []
+                                , printf("NULL\n")
+                                , expr[]
+                               );
+                else
+                    return expr;
+                end if;
+
             elif expr :: 'record' then
                 eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 if top then
@@ -237,14 +245,30 @@ local prettyprint;
                 else
                     return 'record'(eqs);
                 end if;
+
             elif expr :: `module` then
-                if top then
-                    return ( printf("(*module*)\n")
-                             , seq(fld = procname(false, expr[fld]), fld in [exports(expr)])
-                           );
+                # type/object won't work for some older maples.
+                if attributes(expr)='object' then
+                    try
+                        if top then
+                            printf("(*object*)\n");
+                        end if;
+                        local opacity := kernelopts('opaquemodules'=false);
+                        expr:-ModulePrint;
+                        return ModulePrint(expr);
+                    catch:
+                        printf("object(...)\n");
+                    finally
+                        kernelopts('opaquemodules'=opacity);
+                    end try;
+                    return NULL;
+                elif top then
+                    printf("(*module*)\n");
+                    return seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 else
                     return `module() ... end module`; # questionable
                 end if;
+
             elif expr :: table then
                 eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
                 if top then
@@ -253,13 +277,17 @@ local prettyprint;
                     return 'table'(eqs);
                 end if;
             elif expr :: procedure then
-                showstat(expr);
-                return NULL;
+                if top then
+                    showstat(expr);
+                    return NULL;
+                else
+                    `proc() ... end proc`;
+                end if;
             elif expr = NULL then
                 printf("NULL\n");
                 return NULL;
-#            elif expr :: 'name = anything' then
-#                return lhs(expr) = procname(false,rhs(expr));
+            elif expr :: 'name = anything' then
+                return lhs(expr) = procname(false,rhs(expr));
             else
                 return expr;
             end if;
