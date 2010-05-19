@@ -598,6 +598,21 @@ Otherwise insert a space."
   "Key bindings for `mdb-mode'.")
 
 ;;}}}
+
+;;{{{ menu
+
+(defvar mdb-menu nil)
+(unless mdb-menu
+  (easy-menu-define
+    mdb-mdenu mdb-mode-map
+    "Menu for mdb mode"
+    `("Mdb"
+      ["Write history"  mdb-write-history-file t]
+      ["Edit history"   (find-file mdb-history-file) t]
+      )))
+
+;;}}}
+
 ;;{{{ mdb-mode
 
 (defun mdb-mode ()
@@ -762,6 +777,7 @@ A new buffer is created if there is no live buffer."
 
 ;;}}}
 
+
 ;;{{{ mdb command
 
 (defun mdb (insert-read)
@@ -802,6 +818,8 @@ then insert a command that reads the source file into the mdb buffer."
 
 ;;}}}
 
+;;{{{ commands for switching buffers
+
 ;; Need to bind this to a key; but what?  Should it be globally
 ;; accessible?  Maybe better would be to toggle between showstat and
 ;; output.
@@ -834,6 +852,7 @@ then insert a command that reads the source file into the mdb buffer."
 		    (t                                         mdb-showstat-buffer))))
     (switch-to-buffer next-buf)))
 
+;;}}}
 
 (provide 'mdb)
 
