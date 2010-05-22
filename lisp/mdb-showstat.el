@@ -500,9 +500,21 @@ the `mdb-showstat-buffer'."
 The optional DEPTH parameter is a positive integer that specifies
 the number of activation levels to display."
   (interactive "P")
-  (mdb-showstat-eval-expr (if depth
-			      (format "where %d" depth)
-			    "where")))
+  (let ((cmd (if depth
+		 (format "where %d\n" depth)
+	       "where\n")))
+    (mdb-send-string cmd nil nil nil
+		     #'mdb-highlight-where-output)))
+
+(defun mdb-highlight-where-output (beg end)
+  "Font lock the names of called functions in the region from BEG to END,
+which is the output of `mdb-where'."
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward "^[^ \t\n]+: " end t)
+      (put-text-property (match-beginning 0) (match-end 0) 'face 'font-lock-function-name-face))))
+
 
 (defun mdb-pop-to-mdb-buffer ()
   "Pop to the Maple debugger buffer."
