@@ -36,6 +36,12 @@
   CLOSED: [2010-05-16 Sun 15:26]
   Added mdb-pre-Maple-14 customizable boolean variable.
 ** TODO Add menu to mdb-mode
+** TODO Font-lock the code output of mdb-where
+   1. Alas, maplev doesn't provide a maplev-font-lock-region
+      function.  May have to ask.  How to do that without
+      assigning font-lock-defaults to the buffer?
+
+
 * Long Term
  
 ** Handle large Maple output faster.
@@ -45,4 +51,25 @@
    
 ** Implement tracking
 ** Associate output with statement   
-   
+** Set breakpoints in calling procedure(s)   
+   * Using "where:" returns the name of the procedures on the stack
+     and the corresponding lines (but not the statement numbers).
+   * It wouldn't be hard to search for the line
+   * As a preliminary, provide a means to open a non-current procedure
+     in a showstat buffer.  Maybe a separate showstat-buffer.
+     Breakpoints could then be set manually.
+
+** Display non-debugged procedures in showstat
+   1. This isn't hard to do; it can be done manually by calling
+      mdb-update-showstat
+   2. Debugger commands that execute code in the debugged procedure
+     will still refer to the original procedure; consequently, they
+     should be blocked while it is not being displayed.  Possibly they
+     should just return to the original buffer.
+   3. Is it better to reuse the buffer, or open another?  Reusing is
+      easier and may cause less confusion, though there is some
+      advantage to having multiple buffer open.  Hmm.  If Emacs
+      had floating windows it might make sense, but ...
+  
+
+     

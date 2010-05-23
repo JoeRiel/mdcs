@@ -21,18 +21,30 @@
 
 ;;{{{ showstat buffer creation and update
 
-(defun mdb-showstat-update (procname state)
+(defun mdb-showstat-update (procname state &optional save-procname)
   "Update the showstat buffer, `mdb-showstat-procname', and `mdb-showstat-state'.
-PROCNAME is the name of the procedure, STATE is the current state.
-If `mdb-showstat-buffer' is already displaying PROCNAME, then move
-the arrow; otherwise call showstat to display the new procedure."
+PROCNAME is the name of the procedure, STATE is the current
+state; both are strings.  If `mdb-showstat-buffer' is already
+displaying PROCNAME, then move the arrow; otherwise call showstat
+to display the new procedure."
   (with-current-buffer mdb-showstat-buffer
+
+    ;; save the active procname
+					   
+    (if save-procname
+	(setq mdb-showstat-procname-active    mdb-showstat-procname
+	      mdb-showstat-state-active       mdb-showstat-state
+	      mdb-showstat-procname-inactive  procname)
+      (setq mdb-showstat-procname-active    procname
+	    mdb-showstat-procname-inactive  nil))
+      
+
     (setq mdb-showstat-state state)
     ;; Revert cursor-type to ready status.
     (setq cursor-type mdb-cursor-ready)
     (let ((at-first-state (string= state "1")))
       (if (and (equal procname mdb-showstat-procname)
-	     (not at-first-state))
+	       (not at-first-state))
 	  
 	  ;; procname has not changed.
 	  ;;
@@ -47,12 +59,13 @@ the arrow; otherwise call showstat to display the new procedure."
 	;; determine whether we just entered procname or are
 	;; continuing (this may not be robust).
 	
-	;; Print the procname (just the name) with appropriate face.
-	(mdb-display-debugger-output (format "%s:\n"
-					     (propertize procname
-							 'face (if at-first-state
-								   'mdb-face-procname-entered
-								 'mdb-face-procname-cont))))
+	;; Print procname (just the name) with appropriate face.
+	(mdb-display-debugger-output 
+	 (format "%s:\n"
+		 (propertize procname
+			     'face (if at-first-state
+				       'mdb-face-procname-entered
+				     'mdb-face-procname-cont))))
 	;; Display arguments if we just entered the procedure.
 	(if (and mdb-show-args-on-entry at-first-state)
 	    (mdb-show-args-as-equations)))
@@ -61,7 +74,7 @@ the arrow; otherwise call showstat to display the new procedure."
       ;; then update the showstat buffer
       (setq mdb-showstat-procname procname)
       ;; Send the showstat command to the debugger;
-      (tq-enqueue mdb-tq "showstat\n"
+      (tq-enqueue mdb-tq (format "showstat %s\n" procname)
 		  mdb--prompt-with-cr-re
 		  mdb-showstat-buffer
 		  #'mdb-showstat-display-proc
@@ -216,7 +229,6 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 ;;{{{ (*) Tracing
 
-
 (defun mdb-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
@@ -290,7 +302,7 @@ If not debugging, pop to the `mdb-buffer'."
 	      (inhibit-read-only t))
 	  ;; FIXME: only replace a space, not a ?
 	  (replace-match "*" nil nil nil 2)
-	  (mdb-showstat-eval-expr (concat "stopat " state)))
+	  (mdb-showstat-eval-expr (format "stopat %s %s" mdb-showstat-procname state)))
       (ding)
       (message "no previous state in buffer"))))
 
@@ -471,9 +483,11 @@ procedure stripped from it."
 ;;{{{ (*) Miscellaneous
 
 (defun mdb-goto-current-state ()
-  "Move cursor to the current state in the showstat buffer."
-  (interactive)
-  (mdb-goto-state mdb-showstat-state))
+  "Move cursor to the current state in the active showstat buffer."
+  (interactive) 
+  (if mdb-showstat-procname-inactive
+      (mdb-showstat-update mdb-showstat-procname-active mdb-showstat-state-active)
+    (mdb-goto-state mdb-showstat-state)))
 
 (defun mdb-goto-state (state)
   "Move POINT to STATE."
