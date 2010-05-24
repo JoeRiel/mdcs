@@ -257,7 +257,10 @@ This can be avoided with thisproc, but that requires Maple 14.")
 (defvar mdb-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
 (defvar mdb-showstat-procname "" "Name of current showstat procedure.")
+(defvar mdb-showstat-procname-active "" "Name of active showstat procedure.")
+(defvar mdb-showstat-procname-inactive nil "Name of inactive showstat procedure.")
 (defvar mdb-showstat-state "1")
+(defvar mdb-showstat-state-active nil "Store current state of active procedure")
 (defvar mdb-tq nil "Transaction-queue used by mdb.")
 (defvar mdb-watch-alist nil
   "Alist for storing watch variables.  The keys are procedure names,

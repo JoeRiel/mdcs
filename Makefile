@@ -125,13 +125,13 @@ install-maple: $(mla)
 	$(CP) --archive $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(LISPFILES) $(ELCFILES)
-	if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
-	$(CP) $+ $(LISP_DIR)
+	@if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
+	@$(CP) $+ $(LISP_DIR)
 
 install-info: $(INFOFILES)
-	if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
-	$(CP) $(INFOFILES) $(INFO_DIR)
-	if [ -f $(INFO_DIR)/dir ]; then \
+	@if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
+	@$(CP) $(INFOFILES) $(INFO_DIR)
+	@if [ -f $(INFO_DIR)/dir ]; then \
 		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
 	fi
 
