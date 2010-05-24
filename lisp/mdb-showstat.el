@@ -21,7 +21,7 @@
 
 ;;{{{ showstat buffer creation and update
 
-(defun mdb-showstat-update (procname state &optional save-procname)
+(defun mdb-showstat-update (procname state)
   "Update the showstat buffer, `mdb-showstat-procname', and `mdb-showstat-state'.
 PROCNAME is the name of the procedure, STATE is the current
 state; both are strings.  If `mdb-showstat-buffer' is already
@@ -31,15 +31,11 @@ to display the new procedure."
 
     ;; save the active procname
 					   
-    (if save-procname
-	(setq mdb-showstat-procname-active    mdb-showstat-procname
-	      mdb-showstat-state-active       mdb-showstat-state
-	      mdb-showstat-procname-inactive  procname)
-      (setq mdb-showstat-procname-active    procname
-	    mdb-showstat-procname-inactive  nil))
+    (setq mdb-showstat-procname-active    procname
+	  mdb-showstat-procname-inactive  nil)
       
-
     (setq mdb-showstat-state state)
+
     ;; Revert cursor-type to ready status.
     (setq cursor-type mdb-cursor-ready)
     (let ((at-first-state (string= state "1")))
@@ -76,13 +72,37 @@ to display the new procedure."
       ;; Send the showstat command to the debugger;
       (tq-enqueue mdb-tq (format "showstat %s\n" procname)
 		  mdb--prompt-with-cr-re
-		  mdb-showstat-buffer
+		  (cons mdb-showstat-buffer nil)
 		  #'mdb-showstat-display-proc
 		  'delay)
       )))
 
+(defun mdb-showstat-display-inactive (procname statement)
+  "Update the showstat buffer, `mdb-showstat-procname', and `mdb-showstat-state'.
+PROCNAME is the name of the procedure, STATE is the current
+state; both are strings.  If `mdb-showstat-buffer' is already
+displaying PROCNAME, then move the arrow; otherwise call showstat
+to display the new procedure."
+  (with-current-buffer mdb-showstat-buffer
 
-(defun mdb-showstat-display-proc (buffer msg)
+    (if (not mdb-showstat-procname-inactive)
+	;; save the active procname and state
+	(setq mdb-showstat-procname-active    mdb-showstat-procname
+	      mdb-showstat-state-active       mdb-showstat-state))
+
+    (setq mdb-showstat-procname-inactive  procname
+	  mdb-showstat-procname           procname)
+
+    ;; Send the showstat command to the debugger;
+    (tq-enqueue mdb-tq (format "mdb:-showstat(\"%s\")\n" procname)
+		mdb--prompt-with-cr-re
+		(cons mdb-showstat-buffer statement)
+		#'mdb-showstat-display-proc
+		'delay)
+    ))
+
+
+(defun mdb-showstat-display-proc (closure msg)
   "Insert MSG into BUFFER, which should be the showstat buffer.
 MSG is expected to have the general form
 showstat
@@ -94,22 +114,28 @@ end proc
 ^MDBG>
 
 The preamble \"showstat\" and postamble prompt are elided."
-  (with-current-buffer buffer
-    (let ((buffer-read-only nil))
-      ;; Delete old contents then insert the new.
-      (delete-region (point-min) (point-max))
-      (insert msg)
-      ;; Delete prompt and extra lines at end of buffer.
-      (forward-line 0)
-      (delete-region (point) (point-max))
-      ;; Delete 'showstat' and blank lines at beginning of buffer.
-      (goto-char (point-min))
-      (forward-line 1)
-      (delete-region (point-min) (point))
-      ;; Set the state arrow
-      (mdb-showstat-display-state)
-      ;; Display the buffer.
-      (display-buffer buffer))))
+  (let ((buffer (car closure))
+	(statement (cdr closure)))
+    (with-current-buffer buffer
+      (let ((buffer-read-only nil))
+	;; Delete old contents then insert the new.
+	(delete-region (point-min) (point-max))
+	(insert msg)
+	;; Delete prompt and extra lines at end of buffer.
+	(forward-line 0)
+	(delete-region (point) (point-max))
+	;; Delete 'showstat' and blank lines at beginning of buffer.
+	(goto-char (point-min))
+	(forward-line 1) 
+	(delete-region (point-min) (point))
+	;; Goto current state
+       	(when statement
+	  (search-forward statement nil t)
+	  (setq mdb-showstat-state (mdb-showstat-get-state)))
+	;; Set the state arrow
+	(mdb-showstat-display-state)
+	;; Display the buffer.
+	(display-buffer buffer)))))
 
 (defun mdb-showstat-display-state ()
   "Move the overlay arrow in the showstat buffer to current state
@@ -223,6 +249,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
     (maplev-ident-around-point-interactive prompt default complete)))
 
 ;;}}}
+
 ;;{{{ commands
 
 ;; Define the interactive commands bound to keys
@@ -277,6 +304,11 @@ If not debugging, pop to the `mdb-buffer'."
 ;;}}}
 ;;{{{ (*) Stop points
 
+(defun mdb-showstat-get-state ()
+  (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
+       (match-string-no-properties 1)))
+	       
+
 (defvar mdb-showstat-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
 
@@ -297,14 +329,15 @@ If not debugging, pop to the `mdb-buffer'."
   ;; If at an elif or else, then move ...
   (save-excursion
     (end-of-line)
-    (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
-	(let ((state (match-string-no-properties 1))
-	      (inhibit-read-only t))
-	  ;; FIXME: only replace a space, not a ?
-	  (replace-match "*" nil nil nil 2)
-	  (mdb-showstat-eval-expr (format "stopat %s %s" mdb-showstat-procname state)))
-      (ding)
-      (message "no previous state in buffer"))))
+    (let ((state (mdb-showstat-get-state))
+	  (inhibit-read-only t))
+      (if state
+	  (progn
+	    ;; FIXME: only replace a space, not a ?
+	    (replace-match "*" nil nil nil 2)
+	    (mdb-showstat-eval-expr (format "mdb:-stopat(\"%s\",%s)" mdb-showstat-procname state)))
+	(ding)
+	(message "no previous state in buffer")))))
 
 (defun mdb-breakpoint-cond ()
   "Set a conditional breakpoint at the current/previous state."
@@ -520,14 +553,32 @@ the number of activation levels to display."
     (mdb-send-string cmd nil nil nil
 		     #'mdb-highlight-where-output)))
 
+(defconst mdb-showstat-procname-re "^\\([^ \t\n]+\\): ")
+
 (defun mdb-highlight-where-output (beg end)
   "Font lock the names of called functions in the region from BEG to END,
 which is the output of `mdb-where'."
   (interactive "r")
   (save-excursion
     (goto-char beg)
-    (while (re-search-forward "^[^ \t\n]+: " end t)
-      (put-text-property (match-beginning 0) (match-end 0) 'face 'font-lock-function-name-face))))
+    (while (re-search-forward mdb-showstat-procname-re end t)
+      (make-text-button (match-beginning 1) (match-end 1) :type 'mdb-showstat-open-button))))
+
+(define-button-type 'mdb-showstat-open-button
+  'help-echo "Open procedure"
+  'action 'mdb-showstat-open-procedure
+  'follow-link t
+  'face 'link)
+
+(defun mdb-showstat-open-procedure (button)
+  (save-excursion
+    (beginning-of-line)
+    (unless (looking-at a"TopLevel")
+      (looking-at mdb-showstat-procname-re)
+      (let ((procname (match-string-no-properties 1))
+	    (statement (buffer-substring-no-properties
+			(match-end 0) (line-end-position))))
+      (mdb-showstat-display-inactive procname statement)))))
 
 
 (defun mdb-pop-to-mdb-buffer ()
@@ -728,4 +779,3 @@ C-u \\[mdb-toggle-truncate-lines] toggle truncation in debugger output buffer
 ;;}}}
 
 (provide 'mdb-showstat)
-
