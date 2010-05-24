@@ -8,7 +8,8 @@
 
 mdb := module()
 
-export PrettyPrint, ArgsToEqs, PrintProc, stopat;
+export PrettyPrint, ArgsToEqs, PrintProc, showstat, stopat;
+
 local prettyprint;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
@@ -310,6 +311,48 @@ $endif
 
 #}}}
 
+#{{{ showstat
+
+##DEFINE CMD showstat
+##PROCEDURE \MOD[\CMD]
+##HALFLINE display a procedure with statement numbers for debugging
+##AUTHOR   Joe Riel
+##DATE     May 2010
+##CALLINGSEQUENCE
+##- \CMD('p')
+##PARAMETERS
+##- 'p' : ::string::
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  displays a procedure with statement numbers.
+##
+##- It is essentially equivalent to "showstat",
+##  but (currently) only takes one argument and
+##  rather than being a procedure is a string that
+##  parses to a procedure (name).
+##
+##- The purpose of this is to allow passing
+##  names of procedures that require the
+##  use of ~kernelopts(opaquemodules=false)~
+##  to access.
+##
+##EXAMPLES
+##> \MOD:-\CMD("int");
+
+    showstat := proc(p :: string)
+    local opacity;
+        try
+            opacity := kernelopts('opaquemodules' = false);
+            map2(`debugger/printf`, "\n%s", debugopts('procdump' = parse(p)));
+        finally
+            kernelopts('opaquemodules' = opacity);
+        end try;
+        return NULL;
+    end proc;
+
+#}}}
 #{{{ stopat
 
 ##DEFINE CMD stopat
