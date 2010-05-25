@@ -8,7 +8,7 @@
 ;;
 ;;; Commentary:
 
-;; This file contains the source for the showstat 
+;; This file contains the source for the showstat functions.
 
 ;;; Code:
 
@@ -70,7 +70,7 @@ to display the new procedure."
       ;; then update the showstat buffer
       (setq mdb-showstat-procname procname)
       ;; Send the showstat command to the debugger;
-      (tq-enqueue mdb-tq (format "showstat %s\n" procname)
+      (tq-enqueue mdb-tq (format "showstat\n")
 		  mdb--prompt-with-cr-re
 		  (cons mdb-showstat-buffer nil)
 		  #'mdb-showstat-display-proc
@@ -456,7 +456,6 @@ The result is returned in the message area."
   (if current-prefix-arg (mdb-debugger-clear-output))
   (mdb-eval-and-display-expr (concat "statement " expr)))
 
-
 ;;}}}
 ;;{{{ (*) Information
 
@@ -502,15 +501,23 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-eval-expr "showstop"))
 
-(defun mdb-showerror ()
-  "Send the 'showerror' command to the debugger."
-  (interactive)
-  (mdb-showstat-eval-expr "showerror"))
+(defun mdb-showerror (raw)
+  "Send the 'showerror' command to the debugger.
+If RAW (prefix arg) is non-nil, display the raw output, 
+otherwise run through StringTools:-FormatMessage."
+  (interactive "P")
+  (if raw
+      (mdb-showstat-eval-expr "showerror")
+    (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")))
 
-(defun mdb-showexception ()
-  "Send the 'showexception' command to the debugger."
-  (interactive)
-  (mdb-showstat-eval-expr "showexception"))
+(defun mdb-showexception (raw)
+  "Send the 'showexception' command to the debugger.
+If RAW (prefix arg) is non-nil, display the raw output, 
+otherwise run through StringTools:-FormatMessage."
+  (interactive "P")
+  (if raw
+      (mdb-showstat-eval-expr "showexception")
+    (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
 
 ;;}}}
 ;;{{{ (*) Miscellaneous
@@ -573,7 +580,7 @@ which is the output of `mdb-where'."
 (defun mdb-showstat-open-procedure (button)
   (save-excursion
     (beginning-of-line)
-    (unless (looking-at a"TopLevel")
+    (unless (looking-at "TopLevel")
       (looking-at mdb-showstat-procname-re)
       (let ((procname (match-string-no-properties 1))
 	    (statement (buffer-substring-no-properties
@@ -689,7 +696,9 @@ which is the output of `mdb-where'."
        ["Show stack"			mdb-showstack t]
        ["Show stack with arguments"	mdb-where t]
        ["Show error"			mdb-showerror t]
-       ["Show exception"		mdb-showexception t])
+       ["Show error raw"		(mdb-showerror t) t]
+       ["Show exception"		mdb-showexception t]
+       ["Show exception raw"		(mdb-showexception t) t])
 
       ("Miscellaneous"
        ["Pop to Mdb buffer"        mdb-pop-to-mdb-buffer t]
@@ -745,7 +754,9 @@ Information
 \\[mdb-showstack] (showstack) display abbreviated stack
 \\[mdb-where] (where) display stack of procedure calls
 \\[mdb-showerror] display the last error
+C-u \\[mdb-showerror] display the last error (raw)
 \\[mdb-showexception] display the last exception
+C-u \\[mdb-showexception] display the last exception (raw)
 
 Evaluation
 ----------
