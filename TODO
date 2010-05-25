@@ -35,23 +35,28 @@
 ** DONE Make work with Maple 13
   CLOSED: [2010-05-16 Sun 15:26]
   Added mdb-pre-Maple-14 customizable boolean variable.
-** TODO Add menu to mdb-mode
+** DONE Add menu to mdb-mode
+   CLOSED: [2010-05-24 Mon 11:59]
+   1. A simple menu has been added.
 ** TODO Font-lock the code output of mdb-where
    1. Alas, maplev doesn't provide a maplev-font-lock-region
       function.  May have to ask.  How to do that without
       assigning font-lock-defaults to the buffer?
+   2. With hypelinks implemented this is less urgent as it is
+      generally more useful to jump back to the calling procedure.
 
 
 * Long Term
  
-** Handle large Maple output faster.
+** TODO Handle large Maple output faster.
    This may require eliminating the transaction queue.
-** Allow concurrent debuggers
+** TODO Allow concurrent debuggers
    Once operational, extend to allow relative debugging.
    
-** Implement tracking
-** Associate output with statement   
-** Set breakpoints in calling procedure(s)   
+** TODO Implement tracking
+** TODO Associate output with statement   
+** DONE Set breakpoints in calling procedure(s)
+   CLOSED: [2010-05-24 Mon 11:55]
    * Using "where:" returns the name of the procedures on the stack
      and the corresponding lines (but not the statement numbers).
    * It wouldn't be hard to search for the line
@@ -59,7 +64,7 @@
      in a showstat buffer.  Maybe a separate showstat-buffer.
      Breakpoints could then be set manually.
 
-** Display non-debugged procedures in showstat
+** PENDING Display non-debugged procedures in showstat
    1. This isn't hard to do; it can be done manually by calling
       mdb-update-showstat
    2. Debugger commands that execute code in the debugged procedure
@@ -70,6 +75,7 @@
       easier and may cause less confusion, though there is some
       advantage to having multiple buffer open.  Hmm.  If Emacs
       had floating windows it might make sense, but ...
-  
+   4. It is now operational; need to provide a friendly user-interface.
+      
 
      

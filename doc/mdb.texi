@@ -654,6 +654,19 @@ followed on the next line by the list of arguments passed to corresponding proce
 An optional prefix argument can be passed; it specifies the number of levels to display.
 For example @kbd{C-u 2 K} displays the lowest two levels.
 
+The procedure names are active links.  Clicking on a link opens the
+procedure in the showstat buffer, at the callling line.  
+Breakpoints can be set in the opened procedure.
+Use @code{M-x mdb-goto-current-state} (@kbd{l})
+to return to the current procedure.
+
+For this to work with module exports, the modules must be @emph{named},
+otherwise the output of the @command{where} command does
+not include the module name, so the links do not work properly.
+To name a module either use the explicit form (see the Maple 
+help page @code{module[named]}) or save the module to an archive
+and then load it.
+
 @kindex p
 @findex showstop
 @item p (@code{mdb-showstop})
@@ -664,11 +677,15 @@ watchpoints, and all error watchpoints.
 @findex showexception
 @item x (@code{mdb-showexception})
 Showexception: display the value of @code{lastexception}.
+The output is formatted;
+to see the raw exception, use @kbd{C-u x}.
 
 @kindex X
 @findex showerror
 @item X (@code{mdb-showerror})
 Showerror: display the value of @code{lasterror}.
+The output is formatted;
+to see the raw exception, use @kbd{C-u X}.
 
 
 @end table
