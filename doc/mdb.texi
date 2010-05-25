@@ -660,11 +660,11 @@ Breakpoints can be set in the opened procedure.
 Use @code{M-x mdb-goto-current-state} (@kbd{l})
 to return to the current procedure.
 
-For this to work with modules, the modules must be @emph{named},
+For this to work with module exports, the modules must be @emph{named},
 otherwise the output of the @command{where} command does
 not include the module name, so the links do not work properly.
 To name a module either use the explicit form (see the Maple 
-help page @code{modules[named]}) or save the module to an archive
+help page @code{module[named]}) or save the module to an archive
 and then load it.
 
 @kindex p
