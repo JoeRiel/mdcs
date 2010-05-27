@@ -512,11 +512,13 @@ otherwise hyperlink the raw message."
     (mdb-send-string "showerror\n" nil nil nil #'mdb-showerror-link)
     ))
 
+(defconst mdb-link-error-re "^\\[\\([^\"].*?\\), ")
+
 (defun mdb-showerror-link (beg end)
   (interactive "r")
   (save-excursion
     (goto-char beg)
-    (if (looking-at "^\\[\\(.*?\\), ")
+    (if (looking-at  mdb-link-error-re)
       (make-text-button (match-beginning 1) (match-end 1) :type 'mdb-showstat-open-button))))
 		    
 (define-button-type 'mdb-showerror-open-button
@@ -528,10 +530,8 @@ otherwise hyperlink the raw message."
 (defun mdb-showerror-open-procedure (button)
   (save-excursion
     (beginning-of-line)
-    (let ((procname (match-string-no-properties 1)))
-      (mdb-showstat-display-inactive procname nil))))
-
-
+    (if (looking-at mdb-link-error-re)
+	(mdb-showstat-display-inactive (match-string-no-properties 1) nil))))
 
 (defun mdb-showexception (raw)
   "Send the 'showexception' command to the debugger.
@@ -539,7 +539,8 @@ If RAW (prefix arg) is non-nil, display the raw output,
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
   (if raw
-      (mdb-showstat-eval-expr "showexception")
+      (mdb-send-string "showexception\n" nil nil nil #'mdb-showerror-link)
+      ;;(mdb-showstat-eval-expr "showexception")
     (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
 
 ;;}}}
