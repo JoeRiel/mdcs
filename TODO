@@ -45,6 +45,12 @@
    2. With hypelinks implemented this is less urgent as it is
       generally more useful to jump back to the calling procedure.
 
+** TODO Fix munged up display of inactive procedure in showstat
+   * When using the mdb-hyperlinks, the current line of the active
+     procedure will occasionally be printed after the inactive procedure.
+     One solution is to use a separate buffer for the inactive procedure;
+     that has the advantage that both are then displayed concurrently.
+     But it also clutters the screen.
 
 * Long Term
  
