@@ -155,6 +155,7 @@ local prettyprint;
                             )
                     );
 
+        # return ppargs;
         return prettyprint(false, ppargs);
 
     end proc;
@@ -240,7 +241,11 @@ local prettyprint;
                 end if;
 
             elif expr :: 'record' then
-                eqs := seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
+                eqs := seq(`if`(assigned(expr[fld])
+                                , fld = procname(false, expr[fld])
+                                , fld
+                               )
+                           , fld in [exports(expr)]);
                 if top then
                     return printf("(*record*)\n"), eqs;
                 else
@@ -271,7 +276,7 @@ local prettyprint;
                 end if;
 
             elif expr :: table then
-                eqs := seq(indx = procname(false, expr[indx]), indx in [indices(expr,'nolist')]);
+                eqs := seq(indx = procname(false, expr[indx[]]), indx in [indices(expr)]);
                 if top then
                     return printf("(*table*)\n"), eqs;
                 else
@@ -285,8 +290,7 @@ local prettyprint;
                     `proc() ... end proc`;
                 end if;
             elif expr = NULL then
-                printf("NULL\n");
-                return NULL;
+                return "NULL";
             elif expr :: 'name = anything' then
                 return lhs(expr) = procname(false,rhs(expr));
             else
