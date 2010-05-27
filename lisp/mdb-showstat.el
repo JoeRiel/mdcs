@@ -501,14 +501,37 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-eval-expr "showstop"))
 
-(defun mdb-showerror (raw)
+(defun mdb-showerror (fmt)
   "Send the 'showerror' command to the debugger.
-If RAW (prefix arg) is non-nil, display the raw output, 
-otherwise run through StringTools:-FormatMessage."
+If FMT (prefix arg) is non-nil, display the formatted message,
+otherwise hyperlink the raw message."
   (interactive "P")
-  (if raw
-      (mdb-showstat-eval-expr "showerror")
-    (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")))
+  (if fmt
+      (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")
+    ;;(mdb-showstat-eval-expr "showerror")
+    (mdb-send-string "showerror\n" nil nil nil #'mdb-showerror-link)
+    ))
+
+(defun mdb-showerror-link (beg end)
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (if (looking-at "^\\[\\(.*?\\), ")
+      (make-text-button (match-beginning 1) (match-end 1) :type 'mdb-showstat-open-button))))
+		    
+(define-button-type 'mdb-showerror-open-button
+  'help-echo "Open procedure"
+  'action 'mdb-showerror-open-procedure
+  'follow-link t
+  'face 'link)
+
+(defun mdb-showerror-open-procedure (button)
+  (save-excursion
+    (beginning-of-line)
+    (let ((procname (match-string-no-properties 1)))
+      (mdb-showstat-display-inactive procname nil))))
+
+
 
 (defun mdb-showexception (raw)
   "Send the 'showexception' command to the debugger.
