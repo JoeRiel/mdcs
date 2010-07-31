@@ -580,7 +580,7 @@ the number of activation levels to display."
   (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d\n" depth)
-	       "where\n")))
+	       "where:\n")))
     (mdb-send-string cmd nil nil nil
 		     #'mdb-highlight-where-output)))
 
@@ -722,12 +722,14 @@ which is the output of `mdb-where'."
        ["Show error"			mdb-showerror t]
        ["Show error raw"		(mdb-showerror t) t]
        ["Show exception"		mdb-showexception t]
-       ["Show exception raw"		(mdb-showexception t) t])
+       ["Show exception raw"		(mdb-showexception t) t] )
 
       ("Miscellaneous"
        ["Pop to Mdb buffer"        mdb-pop-to-mdb-buffer t]
        ["Clear debugger output"    mdb-debugger-clear-output t]
-       ["Toggle truncate lines"    mdb-toggle-truncate-lines t])
+       ["Toggle truncate lines"    mdb-toggle-truncate-lines t]
+       ["Toggle display of arguments"   mdb-toggle-show-args t] )
+      
 
       ("Help"
        ["Help Maple debugger"      mdb-help-debugger t]
