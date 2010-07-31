@@ -278,7 +278,7 @@ otherwise do not show them."
   (setq mdb-show-args-on-entry
 	(if (null arg) (not mdb-show-args-on-entry)
 	  (> (prefix-numeric-value arg) 0)))
-  (message "Show arguments when entering a procedure %s"
+  (message "Show arguments when entering a procedure: %s"
 	   (if mdb-show-args-on-entry "enabled" "disabled")))
 
 
@@ -860,5 +860,3 @@ then insert a command that reads the source file into the mdb buffer."
 (provide 'mdb)
 
 ;;; mdb.el ends here
-
-
