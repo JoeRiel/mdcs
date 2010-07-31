@@ -215,14 +215,14 @@ local prettyprint;
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr, fld, indx;
+    local eqs, ex, expr, fld, ix, typ;
         if nargs > 2 then
             seq(procname(false,ex), ex in [_rest]);
         else
             expr := _rest;
 
             if expr :: set then
-                if top then printf("(*set*)\n");
+                if top then printf("(*set: %d*)\n", nops(expr));
                     return `if`(expr = []
                                 , printf("NULL\n")
                                 , expr[]
@@ -231,7 +231,7 @@ local prettyprint;
                     return expr;
                 end if;
             elif expr :: list then
-                if top then printf("(*list*)\n");
+                if top then printf("(*list: %d*)\n", nops(expr));
                     return `if`(expr = []
                                 , printf("NULL\n")
                                 , expr[]
@@ -276,11 +276,12 @@ local prettyprint;
                 end if;
 
             elif expr :: table then
-                eqs := seq(indx = procname(false, expr[indx[]]), indx in [indices(expr)]);
+                typ := op(0,eval(expr));
+                eqs := seq(ix = procname(false, expr[ix[]]), ix in [indices(expr)]);
                 if top then
-                    return printf("(*table*)\n"), eqs;
+                    return (printf("(*%a*)\n", typ), eqs);
                 else
-                    return 'table'(eqs);
+                    return (typ -> 'typ'(eqs))(typ);
                 end if;
             elif expr :: procedure then
                 if top then
