@@ -284,7 +284,7 @@ local prettyprint;
                 end if;
             elif expr :: procedure then
                 if top then
-                    showstat(expr);
+                    :-showstat(expr);
                     return NULL;
                 else
                     `proc() ... end proc`;
