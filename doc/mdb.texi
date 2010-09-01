@@ -887,6 +887,10 @@ c = NULL
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
+@findex mdb-toggle-show-args
+@item @code{mdb-toggle-show-args}
+Toggle the display of arguments upon entering a procedure.
+
 @end table
 
 @node Help,  , Miscellaneous, Showstat Buffer
