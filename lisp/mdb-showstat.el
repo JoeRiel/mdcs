@@ -130,7 +130,7 @@ The preamble \"showstat\" and postamble prompt are elided."
 	(delete-region (point-min) (point))
 	;; Goto current state
        	(when statement
-	  (search-forward statement nil t)
+	  (search-forward (concat " " statement) nil t)
 	  (setq mdb-showstat-state (mdb-showstat-get-state)))
 	;; Set the state arrow
 	(mdb-showstat-display-state)
@@ -471,7 +471,7 @@ The result is returned in the message area."
   (if current-prefix-arg (mdb-debugger-clear-output))
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
-					; Alternatively, a module expoart could be used.
+					; Alternatively, a module export could be used.
   (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 			   (mdb-thisproc))
 		   nil
@@ -554,7 +554,8 @@ otherwise run through StringTools:-FormatMessage."
     (mdb-goto-state mdb-showstat-state)))
 
 (defun mdb-goto-state (state)
-  "Move POINT to STATE."
+  "Move POINT to STATE.
+STATE is a string corresponding to an integer."
   ;; Assume we are in the showstat buffer.
   (goto-char (point-min))
   (unless (re-search-forward (concat "^ *" state "[ *?]\\s-*") nil t)
