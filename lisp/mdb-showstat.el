@@ -130,7 +130,7 @@ The preamble \"showstat\" and postamble prompt are elided."
 	(delete-region (point-min) (point))
 	;; Goto current state
        	(when statement
-	  (search-forward statement nil t)
+	  (search-forward (concat " " statement) nil t)
 	  (setq mdb-showstat-state (mdb-showstat-get-state)))
 	;; Set the state arrow
 	(mdb-showstat-display-state)
@@ -471,7 +471,7 @@ The result is returned in the message area."
   (if current-prefix-arg (mdb-debugger-clear-output))
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
-					; Alternatively, a module expoart could be used.
+					; Alternatively, a module export could be used.
   (mdb-send-string (format "mdb:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 			   (mdb-thisproc))
 		   nil
@@ -501,14 +501,37 @@ procedure stripped from it."
   (interactive)
   (mdb-showstat-eval-expr "showstop"))
 
-(defun mdb-showerror (raw)
+(defun mdb-showerror (fmt)
   "Send the 'showerror' command to the debugger.
-If RAW (prefix arg) is non-nil, display the raw output, 
-otherwise run through StringTools:-FormatMessage."
+If FMT (prefix arg) is non-nil, display the formatted message,
+otherwise hyperlink the raw message."
   (interactive "P")
-  (if raw
-      (mdb-showstat-eval-expr "showerror")
-    (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")))
+  (if fmt
+      (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")
+    ;;(mdb-showstat-eval-expr "showerror")
+    (mdb-send-string "showerror\n" nil nil nil #'mdb-showerror-link)
+    ))
+
+(defconst mdb-link-error-re "^\\[\\([^\"].*?\\), ")
+
+(defun mdb-showerror-link (beg end)
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (if (looking-at  mdb-link-error-re)
+      (make-text-button (match-beginning 1) (match-end 1) :type 'mdb-showstat-open-button))))
+		    
+(define-button-type 'mdb-showerror-open-button
+  'help-echo "Open procedure"
+  'action 'mdb-showerror-open-procedure
+  'follow-link t
+  'face 'link)
+
+(defun mdb-showerror-open-procedure (button)
+  (save-excursion
+    (beginning-of-line)
+    (if (looking-at mdb-link-error-re)
+	(mdb-showstat-display-inactive (match-string-no-properties 1) nil))))
 
 (defun mdb-showexception (raw)
   "Send the 'showexception' command to the debugger.
@@ -516,7 +539,8 @@ If RAW (prefix arg) is non-nil, display the raw output,
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
   (if raw
-      (mdb-showstat-eval-expr "showexception")
+      (mdb-send-string "showexception\n" nil nil nil #'mdb-showerror-link)
+      ;;(mdb-showstat-eval-expr "showexception")
     (mdb-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
 
 ;;}}}
@@ -530,7 +554,8 @@ otherwise run through StringTools:-FormatMessage."
     (mdb-goto-state mdb-showstat-state)))
 
 (defun mdb-goto-state (state)
-  "Move POINT to STATE."
+  "Move POINT to STATE.
+STATE is a string corresponding to an integer."
   ;; Assume we are in the showstat buffer.
   (goto-char (point-min))
   (unless (re-search-forward (concat "^ *" state "[ *?]\\s-*") nil t)
@@ -556,7 +581,7 @@ the number of activation levels to display."
   (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d\n" depth)
-	       "where\n")))
+	       "where:\n")))
     (mdb-send-string cmd nil nil nil
 		     #'mdb-highlight-where-output)))
 
@@ -698,12 +723,14 @@ which is the output of `mdb-where'."
        ["Show error"			mdb-showerror t]
        ["Show error raw"		(mdb-showerror t) t]
        ["Show exception"		mdb-showexception t]
-       ["Show exception raw"		(mdb-showexception t) t])
+       ["Show exception raw"		(mdb-showexception t) t] )
 
       ("Miscellaneous"
        ["Pop to Mdb buffer"        mdb-pop-to-mdb-buffer t]
        ["Clear debugger output"    mdb-debugger-clear-output t]
-       ["Toggle truncate lines"    mdb-toggle-truncate-lines t])
+       ["Toggle truncate lines"    mdb-toggle-truncate-lines t]
+       ["Toggle display of arguments"   mdb-toggle-show-args t] )
+      
 
       ("Help"
        ["Help Maple debugger"      mdb-help-debugger t]

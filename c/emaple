@@ -14,7 +14,13 @@ scriptdir="${0%/*}"
 # Assign and export LD_LIBRARY_PATH to specify the libraries
 # against which pmaple was built.
 
-export LD_LIBRARY_PATH=$(${scriptdir}/getlibpath)
+LD_LIBRARY_PATH=$(${scriptdir}/getlibpath)
+
+if [ "$MATLAB_SYS" ]; then
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$MATLAB_BASEDIR/extern/lib/$MATLAB_SYS:$MATLAB_BASEDIR/sys/os/$MATLAB_SYS:$MATLAB_BASEDIR/bin/$MATLAB_SYS"
+fi
+
+export LD_LIBRARY_PATH
 
 # Assign the include path
 

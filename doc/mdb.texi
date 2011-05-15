@@ -280,10 +280,13 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @section Configuration
 @cindex configuration
 
+This section describes how to configure your system
+to run Mdb.  
+
 
 @menu
 * Emacs::                       Updating @file{.emacs}
-* Environment::                 Environmental variables
+* Environment::                 Shell variables
 @end menu
 
 @node Emacs, Environment, Configuration, Configuration
@@ -292,8 +295,8 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @cindex emacs
 @cindex .emacs
 
-
-Add the following line to your @file{.emacs} file:
+To permit @kbd{M-x mdb} to launch mdb, 
+add the following line to your @file{.emacs} file:
 
 @example
 (autoload 'mdb "mdb" "Maple debugger" t)
@@ -304,20 +307,37 @@ Add the following line to your @file{.emacs} file:
 @subsection Environment
 @cindex environmental variables
 
-The @env{MAPLE_ROOT} environmental variable
+The @env{MAPLE_ROOT} shell environmental variable
 must be assigned to point to the installation directory of Maple.
+For example
+
+@example
+export MAPLE_ROOT="/usr/local/share/maple/r14"
+@end example
 
 @vindex MAPLE_INCLUDE_PATH
-If you use Maple preprocessor include directives in source
+If you use Maple preprocessor include directives in Maple source code
 that must search a particular directory then you can assign
 the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
 sequence of directories to search.
-
-For example, something like the following could be put in your @file{.profile} file,
+For example
 
 @example
-MAPLE_ROOT="/usr/local/share/maple/r14"
-MAPLE_INCLUDE_PATH="$HOME/maple/lib/include,$MAPLE_ROOT/extern/include"
+export MAPLE_INCLUDE_PATH="$HOME/maple/lib/include,$MAPLE_ROOT/lib/include"
+@end example
+
+This might be useful in a Maple source file that
+included, say, the @file{userinfo.mi} that is
+distributed with Maple:
+
+@example
+# Assign UI_INFO, UI_TRACE, UI_DEBUG
+$include <userinfo.mi>
+
+myproc := proc(x)
+    userinfo( UI_DEBUG, procname, "entering myproc" );
+    (* useful code *)
+end proc:
 @end example
 
 
@@ -365,7 +385,7 @@ with the buffer.
 @chapter Mdb Buffer
 @cindex mdb buffer
 
-When Mdb is launched (@xref{Launching Mdb}), a buffer opens in @code{mdb-mode}.
+When Mdb is launched (@ref{Launching Mdb}), a buffer opens in @code{mdb-mode}.
 This buffer is an interface to the Maple engine.
 It is a rudimentary form of the tty interface @command{cmaple}.
 
@@ -866,6 +886,10 @@ c = NULL
 @item T (@code{mdb-toggle-truncate-lines})
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
+
+@findex mdb-toggle-show-args
+@item @code{mdb-toggle-show-args}
+Toggle the display of arguments upon entering a procedure.
 
 @end table
 
