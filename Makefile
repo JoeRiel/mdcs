@@ -17,8 +17,8 @@ build: byte-compile pmaple doc mla
 # Modify these to something appropriate, or
 # specify values on the command line.
 
-EMACS = emacs-snapshot
-MAPLE = $(MAPLE_ROOT)/bin/smaple
+EMACS = emacs
+MAPLE = $(MAPLE_ROOT)/bin/smaple -B
 
 CP = cp
 INSTALL_INFO = install-info
