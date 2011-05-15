@@ -167,8 +167,6 @@ prompt is defined as a C-preprocessor-macro in the emaple source."
   :group 'mdb)
 
 
-
-
 ;;{{{   faces
 
 (defgroup mdb-faces nil
@@ -319,73 +317,74 @@ FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
 and the new region is processed by PROC (if non-nil); otherwise
 MSG is written to `mdb-buffer'."
 
-  (if (string-match mdb--debugger-status-re msg)
-      ;;{{{ msg contains debugger status
+  (with-syntax-table maplev--symbol-syntax-table
+    (if (string-match mdb--debugger-status-re msg)
+	;;{{{ msg contains debugger status
 
-      (let ((cmd-output (substring msg 0 (match-beginning 1)))
-	    (procname (match-string 1 msg))
-	    (state    (match-string 2 msg))
-	    (rest (substring msg (match-end 2)))
-	    (exec (nth 0 closure))
-	    (func (nth 1 closure))
-	    (proc (nth 2 closure)))
+	(let ((cmd-output (substring msg 0 (match-beginning 1)))
+	      (procname (match-string 1 msg))
+	      (state    (match-string 2 msg))
+	      (rest (substring msg (match-end 2)))
+	      (exec (nth 0 closure))
+	      (func (nth 1 closure))
+	      (proc (nth 2 closure)))
 
-	;; Assign global variables.
-	(setq mdb-maple-procname procname)  ;; FIXME: not used (at least in M14)
-	(mdb-set-debugging-flag t)
+	  ;; Assign global variables.
+	  (setq mdb-maple-procname procname)  ;; FIXME: not used (at least in M14)
+	  (mdb-set-debugging-flag t)
 
-	(if exec
-	    ;; A statement was executed in showstat;
-	    ;; update the showstat buffer.
-	    (mdb-showstat-update procname state))
+	  (if exec
+	      ;; A statement was executed in showstat;
+	      ;; update the showstat buffer.
+	      (mdb-showstat-update procname state))
 
-	;; Move focus to showstat buffer.
-	(switch-to-buffer mdb-showstat-buffer)
-	;; Display the Maple output, stored in cmd-output.  If func is
-	;; assigned, then first apply it to the string in cmd-output.
-	;; The proc procedure, if assigned, will be applied to the
-	;; generated output region.
-	(mdb-display-debugger-output
-	 (if func
-	     (funcall func cmd-output)
-	   cmd-output)
-	 proc))
+	  ;; Move focus to showstat buffer.
+	  (switch-to-buffer mdb-showstat-buffer)
+	  ;; Display the Maple output, stored in cmd-output.  If func is
+	  ;; assigned, then first apply it to the string in cmd-output.
+	  ;; The proc procedure, if assigned, will be applied to the
+	  ;; generated output region.
+	  (mdb-display-debugger-output
+	   (if func
+	       (funcall func cmd-output)
+	     cmd-output)
+	   proc))
 
-    ;;}}}
-    ;;{{{ msg does not contain debugger status
+      ;;}}}
+      ;;{{{ msg does not contain debugger status
 
-    ;; Update the `mdb-debugging-flag' variable, provided msg contains
-    ;; a prompt.  
-    ;; TODO: doesn't it *have* to contain a prompt?
-    (when (string-match mdb--prompt-re msg)
-      (mdb-set-debugging-flag (match-string 1 msg))
-      ;; font-lock the prompt.
-      (set-text-properties (match-beginning 0) (match-end 0)
-			   '(face mdb-face-prompt rear-nonsticky t)
-			   msg))
+      ;; Update the `mdb-debugging-flag' variable, provided msg contains
+      ;; a prompt.  
+      ;; TODO: doesn't it *have* to contain a prompt?
+      (when (string-match mdb--prompt-re msg)
+	(mdb-set-debugging-flag (match-string 1 msg))
+	;; font-lock the prompt.
+	(set-text-properties (match-beginning 0) (match-end 0)
+			     '(face mdb-face-prompt rear-nonsticky t)
+			     msg))
 
-    ;; Determine what to do with msg.
-    (if mdb-debugging-flag
-	;; display, but strip any prompt
-	(mdb-display-debugger-output (if (string-match mdb--prompt-re msg)
-					 (substring msg 0 (match-beginning 1))
-				       msg))
+      ;; Determine what to do with msg.
+      (if mdb-debugging-flag
+	  ;; display, but strip any prompt
+	  (mdb-display-debugger-output (if (string-match mdb--prompt-re msg)
+					   (substring msg 0 (match-beginning 1))
+					 msg))
 
-      ;; Not debugging, so MSG goes to mdb-buffer.
-      (let ((buffer mdb-buffer))
-	(with-current-buffer buffer
-	  (goto-char (point-max))
-	  (insert "\n" msg)
-	  (if (string-match mdb--emaple-done-re msg)
-	      (progn
-		(message msg)
-		(kill-buffer buffer))
-	    (set-marker mdb-pmark (point))))
-	;; Move point to `mdb-buffer' if we are finished debugging.  Using
-	;; mdb-showstat-arrow-position is a bit of a hack and may not work
-	;; once we provide an option to move to showstat...
-	(unless (marker-buffer mdb-showstat-arrow-position)
-	  (switch-to-buffer buffer)))))
+	;; Not debugging, so MSG goes to mdb-buffer.
+	(let ((buffer mdb-buffer))
+	  (with-current-buffer buffer
+	    (goto-char (point-max))
+	    (insert "\n" msg)
+	    (if (string-match mdb--emaple-done-re msg)
+		(progn
+		  (message msg)
+		  (kill-buffer buffer))
+	      (set-marker mdb-pmark (point))))
+	  ;; Move point to `mdb-buffer' if we are finished debugging.  Using
+	  ;; mdb-showstat-arrow-position is a bit of a hack and may not work
+	  ;; once we provide an option to move to showstat...
+	  (unless (marker-buffer mdb-showstat-arrow-position)
+	    (switch-to-buffer buffer))))))
 
   ;;}}}
   )
@@ -808,9 +807,9 @@ then insert a command that reads the source file into the mdb buffer."
       (pop-to-buffer (setq mdb-buffer (generate-new-buffer "mdb")))
       (mdb-mode)
       ;; Generate 'fake' prompt.
-      (insert (concat (propertize mdb-prompt
-				  'face 'mdb-face-prompt
-				  'rear-nonsticky t)))
+      (insert (propertize mdb-prompt
+			  'face 'mdb-face-prompt
+			  'rear-nonsticky t))
       (set-marker mdb-pmark (point))
       (if insert-read
 	  (insert (format "read \"%s\":" orig-file))))))
