@@ -82,6 +82,24 @@
       advantage to having multiple buffer open.  Hmm.  If Emacs
       had floating windows it might make sense, but ...
    4. It is now operational; need to provide a friendly user-interface.
-      
 
-     
+** TODO Handle exports of unnamed modules.
+   1. The problem occurs when a module is assigned as
+      M := module() ... end module.  Unless the module is
+      saved and loaded from a library, the module technically
+      does not have a name.  Consequently, showstat does not
+      display the module name when an export is printed.
+      This makes it impossible for the debugger to operate on the 
+      correct procedure.
+   2. One solution is to modify 'debugger' so that the current
+      procedure name is stored in a global variable.  That, however,
+      doesn't solve the problem if we open an inactive procedure,
+      say by using the 'where' procedure.   
+   3. Another solution, with the same limitation, but advantageous
+      in that it does not require a change to 'debugger', is to
+      elide the procedure name passed to showstat when inside
+      the active procedure.
+   4. The practical workaround is to name modules.  That does not
+      work with constructed modules, that is, those returned by
+      a procedure.  Do they have to be unnamed?
+      
