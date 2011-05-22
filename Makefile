@@ -6,9 +6,16 @@
 
 SHELL = /bin/sh
 
+include help-system.mak
+
 .PHONY: byte-compile build default
+
+comma := ,
+
+default: $(call print-help,default,Byte-compile the elisp)
 default: byte-compile
-build: byte-compile pmaple doc mla
+build: $(call print-help,build,Byte-compile compile$(comma) doc$(comma) and mla)
+build: byte-compile compile doc mla
 
 # {{{ Executables
 
@@ -55,25 +62,33 @@ doc/mdb: doc/mdb.texi
 	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
 
 
+doc: $(call print-help,doc,Create info and pdf)
 doc: info pdf
+info: $(call print-help,info,Create info)
 info: doc/mdb
+pdf: $(call print-help,pdf,Create pdf)
 pdf: doc/mdb.pdf
 
 # preview pdf
+p: $(call print-help,p,Update and display pdf)
 p:
 	make pdf && evince doc/mdb.pdf
 
 # preview info
+i: $(call print-help,i,Update and display info)
 i:
 	make info && info doc/mdb
 
 # }}}
 
-# {{{ Emacs
+# {{{ emacs
+
+#LISP_DIR_DOS := $(shell cygpath --mixed "$(LISP_DIR)")
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
-	  --eval "(add-to-list (quote load-path) (expand-file-name \"./lisp\"))"
+	--eval "(add-to-list (quote load-path) (expand-file-name \"./lisp\"))" \
+	--eval "(add-to-list (quote load-path) \"$(LISP_DIR)\")"
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
@@ -91,13 +106,14 @@ byte-compile: $(ELCFILES)
 
 # }}}
 
-# {{{ pmaple
+# {{{ compile
 
 pmaple := c
 
-.PHONY: pmaple $(pmaple)
+.PHONY: compile $(pmaple)
 
-pmaple: $(pmaple)
+compile: $(call help-system,compile,Compile c/pmaple.c)
+compile: $(pmaple)
 
 $(pmaple):
 	$(MAKE) --directory=$@
@@ -107,9 +123,10 @@ $(pmaple):
 
 .PHONY: mla 
 mla := $(addprefix maple/,mdb.mla EmacsDebugger.mla)
+mla: $(call print-help,mla,Create Maple archives: $(mla))
 mla: $(mla)
 
-%.mla: maple/%.mpl
+%.mla: %.mpl
 	cd maple; $(MAPLE) -q $(notdir $^)
 
 # }}}
@@ -118,16 +135,23 @@ mla: $(mla)
 
 .PHONY: install-pmaple install-el install-maple install-lisp install-info install
 
+install: $(call print-help,install,Install everything)
+install: install-lisp install-info install-maple install-pmaple
+
+install-pmaple: $(call print-help,install-pmaple,Install pmaple)
 install-pmaple: $(pmaple)
 	$(MAKE) --directory=c --environment-overrides install
 
+install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
 	$(CP) --archive $+ $(MAPLE_INSTALL_DIR)
 
+install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
 	@if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
 	@$(CP) $+ $(LISP_DIR)
 
+install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
 install-info: $(INFOFILES)
 	@if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
 	@$(CP) $(INFOFILES) $(INFO_DIR)
@@ -135,9 +159,8 @@ install-info: $(INFOFILES)
 		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
 	fi
 
-install: install-lisp install-maple install-info install-pmaple
-
 # Install el files but not elc files; useful for checking old versions of emacs.
+install-el: $(call print-help,install-el,Install el files but not elc files)
 install-el: $(el-files)
 	$(CP) --archive $+ $(installdir)
 
@@ -158,6 +181,8 @@ mdb.zip: $(dist)
 # {{{ clean
 
 .PHONY: clean
+
+clean: $(call print-help,clean,Remove files)
 clean:
 	-$(RM) lisp/*.elc
 	-$(RM) -f $(filter-out doc/mdb.texi,$(wildcard doc/mdb*))
