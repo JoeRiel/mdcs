@@ -105,11 +105,11 @@ $(pmaple):
 # }}}
 # {{{ mla
 
-.PHONY: mla
-mla = maple/mdb.mla
+.PHONY: mla 
+mla := $(addprefix maple/,mdb.mla EmacsDebugger.mla)
 mla: $(mla)
 
-$(mla): maple/mdb.mpl
+%.mla: maple/%.mpl
 	cd maple; $(MAPLE) -q $(notdir $^)
 
 # }}}
