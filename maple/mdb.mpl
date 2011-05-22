@@ -557,6 +557,7 @@ local
         return NULL;
     end proc;
 #}}}
+
 end module:
 
 #{{{ Write to Maple Archive
