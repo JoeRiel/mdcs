@@ -34,11 +34,16 @@ local ModuleLoad
     , EmacsDebuggerPort := 10\000
     ;
 
+#{{{ ModuleLoad
+
     ModuleLoad := proc()
         replaceProcs();
         sid := Sockets:-Open("localhost", EmacsDebuggerPort);
         return NULL;
     end proc;
+
+#}}}
+#{{{ ModuleUnload
 
     ModuleUnload := proc()
         Sockets:-Close( sid );
@@ -46,6 +51,7 @@ local ModuleLoad
         restoreProcs();
     end proc;
 
+#}}}
 #{{{ ModuleApply
 
     ModuleApply := proc( load :: truefalse := true
@@ -460,6 +466,7 @@ local ModuleLoad
 #}}}
 
 end module:
+
 protect('EmacsDebugger'):
 
 $undef DEBUGGER_PROCS
