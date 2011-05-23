@@ -14,8 +14,6 @@ unprotect('EmacsDebugger'):
 
 module EmacsDebugger()
 
-option load = replaceProcs, unload = restoreProcs;
-
 global DEBUGGER_PROCS;
 
 export ModuleApply;
@@ -23,24 +21,35 @@ export ModuleApply;
 # Using fixed pipes prevents multiple instances.
 # Need to assign them automatically.
 
-local pipe_to_maple := "/tmp/pipe_to_maple"
-    , pipe_to_emacs := "/tmp/pipe_to_emacs"
-    , Pipes := [pipe_to_maple, pipe_to_emacs]
+local ModuleLoad
+    , ModuleUnload
     , Procs := 'DEBUGGER_PROCS'
-    , justLaunched := true
     , _debugger
     , debugger_printf
     , debugger_readline
-    , createPipes
-    , killPipes
     , printf_to_emacs
     , replaceProcs
     , restoreProcs
+    , sid
+    , EmacsDebuggerPort := 10\000
     ;
+
+    ModuleLoad := proc()
+        replaceProcs();
+        sid := Sockets:-Open("localhost", EmacsDebuggerPort);
+        return NULL;
+    end proc;
+
+    ModuleUnload := proc()
+        Sockets:-Close( sid );
+        # hmm, maybe not.  Check if already done.
+        restoreProcs();
+    end proc;
 
 #{{{ ModuleApply
 
-    ModuleApply := proc( load :: truefalse := true, $)
+    ModuleApply := proc( load :: truefalse := true
+                         , $)
         if not load then
             restoreProcs();
         end if;
@@ -51,11 +60,7 @@ local pipe_to_maple := "/tmp/pipe_to_maple"
 #{{{ restoreProcs
 
     restoreProcs := proc()
-        killPipes();
-        unprotect(Procs);
-        map(unassign, [Procs]);
         map( p -> kernelopts('unread' = p), [Procs] );
-        protect(Procs);
         return NULL;
     end proc;
 
@@ -63,9 +68,6 @@ local pipe_to_maple := "/tmp/pipe_to_maple"
 #{{{ replaceProcs
 
     replaceProcs := proc()
-
-        createPipes();
-
         # Reassign library debugger procedures
         unprotect(Procs);
         debugger := eval(_debugger);
@@ -114,7 +116,8 @@ local pipe_to_maple := "/tmp/pipe_to_maple"
         `debugger/printf`("\n");
         do
             #res := traperror(readline(-2));
-            res := traperror(readline(pipe_to_maple));
+            #res := traperror(readline(pipe_to_maple));
+            res := traperror(Sockets:-Read(sid));
             if res <> lasterror then break fi;
             printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
         od;
@@ -202,11 +205,6 @@ local pipe_to_maple := "/tmp/pipe_to_maple"
     local procName, statNumber, evalLevel, i, j, n, line, original, statLevel,
         pName, lNum, cond, cmd, err;
     global showstat, showstop, `debugger/no_output`;
-
-        if justLaunched then
-            justLaunched := false;
-            printf("Launching Emacs debugger\n");
-        end if;
 
         evalLevel := kernelopts('level') - 21;
         n := _npassed;
@@ -442,46 +440,20 @@ local pipe_to_maple := "/tmp/pipe_to_maple"
                 err := line;
             fi;
             if err = lasterror then
-                `debugger/printf`("Error, %s\n",
-                                  StringTools:-FormatMessage(lastexception[2..]))
+                `debugger/printf`("Error, %s\n"
+                                  , StringTools:-FormatMessage(lastexception[2..])
+                                 );
             fi
         od;
     end proc:
 
 #}}}
-
-#{{{ createPipes
-
-    createPipes := proc()
-    local pipe;
-        killPipes();
-        for pipe in Pipes do
-            ssystem(sprintf("mkfifo %s", pipe));
-        end do;
-        return NULL;
-    end proc;
-
-#}}}
-#{{{ killPipes
-
-    killPipes := proc()
-    local pipe;
-        for pipe in Pipes do
-            if FileTools:-Exists(pipe) then
-                # fflush(pipe);
-                fclose(pipe);
-                FileTools:-Remove(pipe);
-            end if;
-        end do;
-        return NULL;
-    end proc;
-
-#}}}
 #{{{ printf_to_emacs
 
     printf_to_emacs := proc()
-        fprintf(pipe_to_emacs, _passed);
-        fflush(pipe_to_emacs);
+    local msg;
+        msg := sprintf(_passed);
+        Sockets:-Write(sid, msg);
         return NULL;
     end proc;
 
