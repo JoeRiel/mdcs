@@ -137,6 +137,7 @@ procedure."
     ;; 		(cons mdb-showstat-buffer nil)
     ;; 		#'mdb-showstat-display-proc
     ;; 		'delay)
+    
     (mdb-showstat-send "showstat")))
 
 (defun mdb-showstat-display-inactive (procname statement)
@@ -164,40 +165,21 @@ to display the new procedure."
     (mdb-showstat-send (format "mdb:-showstat(\"%s\")" procname)))
 
 
-(defun mdb-showstat-display-proc (closure msg)
-  "Insert MSG into BUFFER, which should be the showstat buffer.
-MSG is expected to have the general form
-showstat
-
-proc()
-...
-end proc
-
-^MDBG>
-
+(defun mdb-showstat-display-proc (msg)
+  "Insert MSG into the showstat buffer.
 The preamble \"showstat\" and postamble prompt are elided."
-  (let ((buffer (car closure))
-	(statement (cdr closure)))
-    (with-current-buffer buffer
-      (let ((buffer-read-only nil))
-	;; Delete old contents then insert the new.
-	(delete-region (point-min) (point-max))
-	(insert msg)
-	;; Delete prompt and extra lines at end of buffer.
-	(forward-line 0)
-	(delete-region (point) (point-max))
-	;; Delete 'showstat' and blank lines at beginning of buffer.
-	(goto-char (point-min))
-	(forward-line 1) 
-	(delete-region (point-min) (point))
-	;; Goto current state
-       	(when statement
-	  (search-forward (concat " " statement) nil t)
-	  (setq mdb-showstat-state (mdb-showstat-get-state)))
-	;; Set the state arrow
-	(mdb-showstat-display-state)
-	;; Display the buffer.
-	(display-buffer buffer)))))
+  (let ((buffer-read-only nil))
+    ;; Delete old contents then insert the new.
+    (delete-region (point-min) (point-max))
+    (insert msg)
+    ;; Goto current state
+    ;; (when statement
+    ;;   (search-forward (concat " " statement) nil t)
+    ;;   (setq mdb-showstat-state (mdb-showstat-get-state)))
+    ;; Set the state arrow
+    (mdb-showstat-display-state)
+    ;; Display the buffer.
+    (display-buffer (current-buffer))))
 
 (defun mdb-showstat-display-state ()
   "Move the overlay arrow in the showstat buffer to current state
@@ -416,7 +398,6 @@ If not debugging, pop to the `mdb-buffer'."
 (defun mdb-showstat-get-state ()
   (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
        (match-string-no-properties 1)))
-
 
 (defvar mdb-showstat-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
