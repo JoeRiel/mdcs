@@ -32,6 +32,7 @@ local ModuleLoad
     , restoreProcs
     , sid
     , EmacsDebuggerPort := 10\000
+    , ss := false;
     ;
 
 #{{{ ModuleLoad
@@ -46,7 +47,10 @@ local ModuleLoad
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
-        Sockets:-Close( sid );
+        try
+            Sockets:-Close( sid );
+        catch:
+        end try;
         # hmm, maybe not.  Check if already done.
         restoreProcs();
     end proc;
@@ -120,6 +124,8 @@ local ModuleLoad
     global `debugger/default`;
 
         `debugger/printf`("\n");
+
+        #{{{ Get response (from emacs)
         do
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
@@ -127,7 +133,8 @@ local ModuleLoad
             if res <> lasterror then break fi;
             printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
         od;
-
+        #}}}
+        #{{{ Handle solo enter (repeat previous command)
         # If the user just pressed ENTER, use the value of the variable
         # `debugger/default`, which contains whatever debugger command the user
         # issued last time. If there is no previous command, return a command to
@@ -139,8 +146,8 @@ local ModuleLoad
         else
             `debugger/default` := res;
         fi;
-
-        # Remove leading blanks, trailing comments, and colons.
+        #}}}
+        #{{{ Remove leading blanks, trailing comments, and colons.
         startp := 1;
         len := length(res);
         endp := len;
@@ -167,14 +174,15 @@ local ModuleLoad
                 fi
             fi
         od;
-
-        # Record whether or not the command ended in a colon.
+        #}}}
+        #{{{ Record whether or not the command ended in a colon.
         if _npassed > 0 and type(_passed[1],name) then
             assign(_passed[1],endcolon)
         fi;
-
-        # Complain if there were any non-blank, non-comment characters after the
-        # end of the typed command.
+        #}}}
+        #{{{ Check for characters after comment
+        # Complain if there were any non-blank, non-comment
+        #characters after the end of the typed command.
         if i < len and res[i] <> "#" then
             for i from i to len do
                 if i <> " " then
@@ -183,18 +191,20 @@ local ModuleLoad
                 fi
             od
         fi;
-
-        # Strip trailing whitespace.
+        #}}}
+        #{{{ Strip trailing whitespace.
         while endp >= startp and res[endp] <= " " do endp := endp -1 od;
         res := res[startp..endp];
-
+        #}}}
+        #{{{ Extraneous stuff
         # Means the user typed something which still ended up being nothing, such
         # as a single semicolon, just a comment, etc.
         if res = "" then
             res := "`debugger/printf`(""See ?debugger for available commands\n"")"
         fi;
+        #}}}
 
-        res
+        return res;
     end proc:
 
 #}}}
@@ -213,6 +223,7 @@ local ModuleLoad
     global showstat, showstop, `debugger/no_output`;
 
         evalLevel := kernelopts('level') - 21;
+
         n := _npassed;
         if n > 0 and type(_passed[n],list) and nops(_passed[n]) > 0
         and _passed[n][1] = 'DEBUGINFO' then
@@ -225,10 +236,13 @@ local ModuleLoad
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
 
-# Joe Riel: remove optional indices, they cannot be used in the name.
+        #{{{ remove indices in procName
+        # Added by Joe Riel
         while procName :: 'And(indexed,Not(procedure))' do
             procName := op(0,procName);
         end do;
+        #}}}
+        #{{{ process args
 
         for i from 1 to n do
             if _passed[i] = lasterror then
@@ -272,6 +286,9 @@ local ModuleLoad
                 fi
             fi
         od;
+
+        #}}}
+        #{{{ handle negative statement number
         if procName <> 0 then
             if statNumber < 0 then
                 `debugger/printf`("Warning, statement number may be incorrect\n");
@@ -279,6 +296,8 @@ local ModuleLoad
             fi;
             `debugger/printf`("%s",debugopts('procdump'=[procName,0..statNumber]))
         fi;
+        #}}}
+        #{{{ command loop
         do
             line := `debugger/readline`('`debugger/no_output`');
             # If there's an assignment, make sure it is delimited by spaces.
@@ -306,6 +325,9 @@ local ModuleLoad
                 fi
             fi;
             err := NULL;
+
+            #{{{ parse cmd (else is arbitrary expression)
+
             if cmd = "cont" then
                 return
             elif cmd = "next" then
@@ -393,7 +415,7 @@ local ModuleLoad
                         else lNum := line[i]
                         fi
                     od;
-                    err := traperror(showstat['nonl'](pName,lNum))
+                    err := traperror(showstat['nonl'](pName,lNum));
                 fi
             elif cmd = "showstop" then
                 err := traperror(showstop['nonl']())
@@ -445,12 +467,19 @@ local ModuleLoad
                 fi;
                 err := line;
             fi;
+
+            #}}}
+            #{{{ handle error
+
             if err = lasterror then
                 `debugger/printf`("Error, %s\n"
                                   , StringTools:-FormatMessage(lastexception[2..])
                                  );
             fi
+
+            #}}}
         od;
+        #}}}
     end proc:
 
 #}}}
@@ -459,6 +488,10 @@ local ModuleLoad
     printf_to_emacs := proc()
     local msg;
         msg := sprintf(_passed);
+        if ss then
+            msg := sprintf("<showstat>%s</showstat>", msg);
+            ss := false;
+        end if;
         Sockets:-Write(sid, msg);
         return NULL;
     end proc;
