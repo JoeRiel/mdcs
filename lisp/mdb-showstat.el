@@ -20,30 +20,37 @@
 ;;{{{ variables
 
 (defvar mdb-showstat-arrow-position	nil "Marker for state arrow.")
-;;(defvar mdb-showstat-buffer		nil "Buffer that displays showstat info.")
-(defvar mdb-showstat-server-proc	nil "Server associated with this buffer")
+(defvar mdb-showstat-debugging-flag nil "Non-nil when debugging.")
+(defvar mdb-showstat-last-debug-cmd "" "Stores the last debugger command.")
 (defvar mdb-showstat-output-buffer	nil "Buffer that displays output")
 (defvar mdb-showstat-procname		""  "Name of current showstat procedure.")
 (defvar mdb-showstat-procname-active	""  "Name of active showstat procedure.")
 (defvar mdb-showstat-procname-inactive	nil "Name of inactive showstat procedure.")
+(defvar mdb-showstat-server-proc	nil "Server associated with this buffer")
 (defvar mdb-showstat-state              "1" "Current state of procedure.")
 (defvar mdb-showstat-state-active	nil "Store current state of active procedure")
+(defvar mdb-watch-alist nil  "Alist for storing watch variables.  The keys are procedure names,the values are additional alists.")
 
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
-      '(mdb-showstat-arrow-position
-;;	mdb-showstat-buffer
-	mdb-showstat-server-proc
+      '(
+	mdb-showstat-arrow-position
+	mdb-showstat-debugging-flag
+	mdb-showstat-last-debug-cmd
 	mdb-showstat-output-buffer
 	mdb-showstat-procname
 	mdb-showstat-procname-active
 	mdb-showstat-procname-inactive
+	mdb-showstat-server-proc
 	mdb-showstat-state
-	mdb-showstat-state-active))
+	mdb-showstat-state-active
+	mdb-showstat-watch-alist
+	))
 
 (add-to-list 'overlay-arrow-variable-list 'mdb-showstat-arrow-position)
 
 ;;}}}
+
 ;;{{{ send strings to maple
 
 (defun mdb-showstat-send (msg &rest rest)
@@ -59,11 +66,11 @@ what was expected."
 
 (defun mdb-showstat-send-command (cmd)
   "Send CMD, with appended newline, to the Maple process.
-Save CMD in `mdb-last-debug-cmd'.  Change cursor type to
+Save CMD in `mdb-showstat-last-debug-cmd'.  Change cursor type to
 `mdb-cursor-waiting', which indicates we are waiting for a
 response from Maple.  This function assumes we are in 
 the appropriate `mdb-showstat-buffer'."
-  (setq mdb-last-debug-cmd cmd)
+  (setq mdb-showstat-last-debug-cmd cmd)
   (setq cursor-type mdb-cursor-waiting)
   (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mdb-showstat-send (concat cmd "\n") t))
@@ -110,15 +117,16 @@ procedure."
       ;; continuing (this may not be robust).
       
       ;; Print procname (just the name) with appropriate face.
-      (mdb-display-debugger-output 
+      (mdb-showstat-display-debugger-output 
        (format "%s:\n"
 	       (propertize procname
 			   'face (if at-first-state
 				     'mdb-face-procname-entered
 				   'mdb-face-procname-cont))))
       ;; Display arguments if we just entered the procedure.
-      (if (and mdb-show-args-on-entry at-first-state)
-	  (mdb-show-args-as-equations)))
+      ;;(if (and mdb-show-args-on-entry at-first-state)
+      ;;      (mdb-show-args-as-equations))
+      )
     
     ;; Save procname in the global variable,
     ;; then update the showstat buffer
@@ -238,15 +246,73 @@ and an `mdb-showstat-output-buffer'."
 	    mdb-showstat-server-proc proc))
     buf))
 
-
 ;;}}}
+
 
 (defun mdb-showstat-kill-buffer (buf)
   (when (bufferp buf)
     (with-current-buffer buf
       (kill-buffer mdb-showstat-output-buffer))
     (kill-buffer buf)))
+
+
+(defun mdb-showstat-display-debugger-output (msg &optional func)
+  "Display MSG in `mdb-debugger-output-buffer'."
+  (unless (string= msg "")
+    (let ((buf mdb-showstat-output-buffer))
+      (display-buffer buf)
+      (with-selected-window (get-buffer-window buf)
+	(with-current-buffer buf
+	  (goto-char (point-max))
+	  (let ((beg (point)))
+	    (insert msg)
+	    (if func
+		(funcall func beg (point)))))
+	;; Move point (end of buffer) to bottom of window.
+	(recenter -1)))))
+
 			    
+
+(defun mdb-showstat-set-debugging-flag (debugging)
+  "Compare DEBUGGING with `mdb-showstat-debugging-flag'.
+A difference indicates that debugging has started/stopped.  Reassign
+`mdb-debugging-flag' and run either `mdb-showstat-start-debugging' or
+`mdb-showstat-finish-debugging'."
+  (if mdb-showstat-debugging-flag
+      (unless debugging
+	;; turn-off debugging.
+	(setq mdb-showstat-debugging-flag nil)
+	(mdb-showstat-finish-debugging))
+    (when debugging
+      ;; turn-on debugging
+      (mdb-showstat-start-debugging)
+      (setq mdb-showstat-debugging-flag t))))
+
+(defun mdb-showstat-start-debugging ()
+  "Called when the debugger starts."
+  (mdb-showstat-display-debugger-output
+   (propertize mdb-debugger-break
+	       'face 'mdb-face-prompt
+	       'rear-nonsticky t)))
+
+(defun mdb-showstat-finish-debugging ()
+  "Called when the debugger finishes."
+  (ding)
+  (message "finished debugging")
+  ;; Clear overlay in showstat buffer.
+  ;; Does this handle hl-line?
+  (set-marker mdb-showstat-arrow-position nil)
+  ;; Reset the showstat variables.
+  (setq mdb-showstat-procname ""
+	mdb-showstat-state "1"))
+
+
+(defun mdb-thisproc ()
+  "Return string corresponding to current procedure."
+  (if mdb-pre-Maple-14
+      "procname"
+    "thisproc"))
+
 
 ;;{{{ select maple expressions
 
@@ -327,7 +393,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   "Send the 'quit' command to the debugger.
 If not debugging, pop to the `mdb-buffer'."
   (interactive)
-  (if (not mdb-debugging-flag)
+  (if (not mdb-showstat-debugging-flag)
       (mdb-pop-to-mdb-buffer)
     (mdb-goto-current-state)
     (mdb-showstat-send-command "quit")))
