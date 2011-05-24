@@ -1,20 +1,21 @@
 # -*- mode:makefile-gmake; mode:folding -*-
 #
-# Makefile - for the mdb-mode distribution
+# Makefile - for mdcs, a Maple Debugger Client/Server
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
 
-SHELL = /bin/sh
+SHELL := /bin/sh
 
 include help-system.mak
 
 .PHONY: byte-compile build default
 
+PKG := mdcs
 comma := ,
 
 default: $(call print-help,default,Byte-compile the elisp)
 default: byte-compile
-build: $(call print-help,build,Byte-compile compile$(comma) doc$(comma) and mla)
+build: $(call print-help,build,Byte-compile$(comma) doc$(comma) and mla)
 build: byte-compile compile doc mla
 
 # {{{ Executables
@@ -52,32 +53,32 @@ MAPLE_INSTALL_DIR = $(HOME)/maple/lib
 
 # {{{ doc
 
-TEXIFILES = doc/mdb.texi
-INFOFILES = doc/mdb
+TEXIFILES = doc/$(PKG).texi
+INFOFILES = doc/$(PKG)
 
-doc/mdb.pdf: doc/mdb.texi
-	(cd doc; $(TEXI2PDF) mdb.texi)
+doc/$(PKG).pdf: doc/$(PKG).texi
+	(cd doc; $(TEXI2PDF) $(PKG).texi)
 
-doc/mdb: doc/mdb.texi
-	(cd doc; $(MAKEINFO) --no-split mdb.texi --output=mdb)
+doc/$(PKG): doc/$(PKG).texi
+	(cd doc; $(MAKEINFO) --no-split $(PKG).texi --output=$(PKG))
 
 
 doc: $(call print-help,doc,Create info and pdf)
 doc: info pdf
 info: $(call print-help,info,Create info)
-info: doc/mdb
+info: doc/$(PKG)
 pdf: $(call print-help,pdf,Create pdf)
-pdf: doc/mdb.pdf
+pdf: doc/$(PKG).pdf
 
 # preview pdf
 p: $(call print-help,p,Update and display pdf)
 p:
-	make pdf && evince doc/mdb.pdf
+	make pdf && evince doc/$(PKG).pdf
 
 # preview info
 i: $(call print-help,i,Update and display info)
 i:
-	make info && info doc/mdb
+	make info && info doc/$(PKG)
 
 # }}}
 
@@ -92,9 +93,8 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mdb \
-      mdb-showstat \
-      mdb-ir
+ELS = mdcs-server \
+      mdcs-showstat
 
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
@@ -106,41 +106,24 @@ byte-compile: $(ELCFILES)
 
 # }}}
 
-# {{{ compile
-
-pmaple := c
-
-.PHONY: compile $(pmaple)
-
-compile: $(call help-system,compile,Compile c/pmaple.c)
-compile: $(pmaple)
-
-$(pmaple):
-	$(MAKE) --directory=$@
-
-# }}}
 # {{{ mla
 
 .PHONY: mla 
-mla := $(addprefix maple/,mdb.mla EmacsDebugger.mla)
-mla: $(call print-help,mla,Create Maple archives: $(mla))
+mla := $(PKG).mla
+mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
-%.mla: %.mpl
-	cd maple; $(MAPLE) -q $(notdir $^)
+%.mla: maple/src/%.mpl maple/src/*.mm
+	mload -I maple -m $@ $^
 
 # }}}
 
 # {{{ install
 
-.PHONY: install-pmaple install-el install-maple install-lisp install-info install
+.PHONY: install-el install-maple install-lisp install-info install
 
 install: $(call print-help,install,Install everything)
-install: install-lisp install-info install-maple install-pmaple
-
-install-pmaple: $(call print-help,install-pmaple,Install pmaple)
-install-pmaple: $(pmaple)
-	$(MAKE) --directory=c --environment-overrides install
+install: install-lisp install-info install-maple
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
@@ -171,9 +154,9 @@ PHONY: dist
 
 dist = $(ELS) $(TEXIFILE) $(INFOFILES)  Makefile README
 
-dist: mdb.zip
+dist: $(PKG).zip
 
-mdb.zip: $(dist)
+$(PKG).zip: $(dist)
 	zip $@ $?
 
 # }}}
@@ -185,9 +168,10 @@ mdb.zip: $(dist)
 clean: $(call print-help,clean,Remove files)
 clean:
 	-$(RM) lisp/*.elc
-	-$(RM) -f $(filter-out doc/mdb.texi,$(wildcard doc/mdb*))
-	-$(RM) maple/mdb.mla
+	-$(RM) -f $(filter-out doc/mdcs.texi,$(wildcard doc/$(PKG)*))
+	-$(RM) $(mla)
 	$(MAKE) --directory=c $@
 
 # }}}
 
+# end Make

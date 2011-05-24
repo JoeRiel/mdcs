@@ -1,4 +1,4 @@
-;;; mdb-server.el --- mdb-server-mode
+;;; mdcs-server.el
 ;;; -*- mode: emacs-lisp -*-
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
@@ -82,7 +82,7 @@
 ;; Suggest that that be improved.
 
 ;; Add function to intelligently select variable/expression at point.
-;; For example, if `mdb-stopwhen' is activated at a for-loop, the
+;; For example, if `mdcs-stopwhen' is activated at a for-loop, the
 ;; default should not be the symbol 'for', but rather the
 ;; loop-variable.
 
@@ -94,7 +94,7 @@
 
 ;;{{{ Lisp Requirements
 
-(require 'mdb-showstat)
+(require 'mdcs-showstat)
 (require 'maplev)
 (eval-when-compile
   (require 'hl-line))
@@ -107,7 +107,7 @@
   "Major mode for debugging Maple."
   :group 'tools)
 
-(defcustom mdb-maple-cmd "emaple"
+(defcustom mdcs-maple-cmd "emaple"
   "*Shell command to launch command-line maple.
 The default, emaple, is a customizable script that calls a
 binary, pmaple.  It does not use cmaple, which does not properly
@@ -115,79 +115,79 @@ handle prompts in a pipe."
   :type 'string
   :group 'mdb)
 
-(defcustom mdb-maple-setup-switches  nil
-  "*List of command-line switches passed to `mdb-maple-cmd'."
+(defcustom mdcs-maple-setup-switches  nil
+  "*List of command-line switches passed to `mdcs-maple-cmd'."
   :type '(repeat string)
   :group 'mdb)
 
-(defcustom mdb-pre-Maple-14 nil
+(defcustom mdcs-pre-Maple-14 nil
   "*Boolean flag.  Set to non-nil if Maple is a release earlier than Maple 14."
   :type 'boolean
   :group 'mdb)
 
 ;;{{{   prompts and cursors
 
-(defcustom mdb-prompt "(**) "
+(defcustom mdcs-prompt "(**) "
   "*eMaple prompt.
 Changing this, alas, does not currently change the prompt because the
 prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
-(defcustom mdb-debug-prompt "(*DBG*) "
+(defcustom mdcs-debug-prompt "(*DBG*) "
   "*eMaple debug prompt.
 Changing this, alas, does not currently change the prompt because the
 prompt is defined as a C-preprocessor-macro in the emaple source."
   :type 'string
   :group 'mdb)
 
-(defcustom mdb-cursor-waiting 'hollow
+(defcustom mdcs-cursor-waiting 'hollow
   "Cursor used in showstat buffer when waiting for Maple to respond."
   :type 'symbol
   :group 'mdb)
 
-(defcustom mdb-cursor-ready 'box
+(defcustom mdcs-cursor-ready 'box
   "Cursor used in showstat buffer when ready for a user input."
   :type 'symbol
   :group 'mdb)
 
 ;;}}}
 
-(defcustom mdb-history-size 50
+(defcustom mdcs-history-size 50
   "Number of inputs the input-ring can hold."
   :type 'integer ; ensure positive
   :group 'mdb)
 
-(defcustom mdb-debugger-break (format "\n%s\n" (make-string 40 ?-))
-  "String inserted into `mdb-debugger-output-buffer' when debugging starts."
+(defcustom mdcs-debugger-break (format "\n%s\n" (make-string 40 ?-))
+  "String inserted into `mdcs-debugger-output-buffer' when debugging starts."
   :type 'string
   :group 'mdb)
 
 ;;{{{   faces
 
-(defgroup mdb-faces nil
+(defgroup mdcs-faces nil
   "Faces for mdb and related modes."
   :group 'mdb)
 
-(defface mdb-face-arg
+(defface mdcs-face-arg
   '((((class color) (background dark)) (:foreground "magenta")))
   "Face for arguments in a showstat buffer."
-  :group 'mdb-faces)
+  :group 'mdcs-faces)
 
-(defface mdb-face-prompt
+(defface mdcs-face-prompt
   '((((class color) (background dark)) (:foreground "Green")))
   "Face for the prompt in an mdb buffer."
-  :group 'mdb-faces)
+  :group 'mdcs-faces)
 
-(defface mdb-face-procname-entered
+(defface mdcs-face-procname-entered
   '((((class color) (background dark)) (:foreground "Cyan")))
   "Face for the procname at entry in a debugger output buffer."
-  :group 'mdb-faces)
+  :group 'mdcs-faces)
 
-(defface mdb-face-procname-cont
+(defface mdcs-face-procname-cont
   '((((class color) (background dark)) (:foreground "LightBlue")))
   "Face for the procname when continued in a debugger output buffer."
-  :group 'mdb-faces)
+  :group 'mdcs-faces)
 
 ;;}}}
 
@@ -196,156 +196,156 @@ prompt is defined as a C-preprocessor-macro in the emaple source."
 
 ;;{{{ Constants
 
-(defconst mdb-server-version "1.0" "Version number the mdb-server.")
+(defconst mdcs-server-version "1.0" "Version number the mdcs-server.")
 
-(defconst mdb--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
-				 (regexp-quote mdb-debug-prompt)
-				 (regexp-quote mdb-prompt))
+(defconst mdcs--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
+				 (regexp-quote mdcs-debug-prompt)
+				 (regexp-quote mdcs-prompt))
   "Regexp matching Maple prompt.  If the first group matches,
 then this is a debug-prompt.")
 
-(defconst mdb--prompt-with-cr-re (concat mdb--prompt-re "$")
+(defconst mdcs--prompt-with-cr-re (concat mdcs--prompt-re "$")
   "Regexp matching Maple prompt with preceding carriage return.
 This is the prompt as output from the maple process.")
 
-(defconst mdb--debugger-status-re
+(defconst mdcs--debugger-status-re
   (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
   "Regexp that matches the status output of the debugger.
 The first group matches the procedure name, the second group the
 state number.")
 
-(defconst mdb--maple-output-re
+(defconst mdcs--maple-output-re
   (concat "^\\([^ \n][^\n]*\\):\n\\s-*\\([1-9][0-9]*\\)\ " ; (1,2) procname: state
 	  "\\(?:[^\r]*\\)"                                 ; next line
-	  "\\(" mdb--prompt-re "\\)$"))                    ; (3) prompt
+	  "\\(" mdcs--prompt-re "\\)$"))                    ; (3) prompt
 
-(defconst mdb--showstat-re
+(defconst mdcs--showstat-re
   (concat "^\n\\(" maplev--name-re "\\) := proc("))
   
 
-(defconst mdb--emaple-done-re "That's all, folks.\n"
+(defconst mdcs--emaple-done-re "That's all, folks.\n"
   "Regexp that matches the final message send by emaple
 before the process terminates.")
 
-(defconst mdb-server-port 10000
+(defconst mdcs-server-port 10000
   "Port used by mdb server")
 
-(defvar mdb-server-proc nil "process for the server")
+(defvar mdcs-server-proc nil "process for the server")
 
-(defconst mdb-server-buffer "*mdb-server*"
+(defconst mdcs-server-buffer "*mdcs-server*"
   "Buffer associated with mdb server")
 
 ;;}}}
 ;;{{{ variables
 
-(defvar mdb-debugging-flag nil "Non-nil when debugging.")
-(defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
-(defvar mdb-maple-buffer nil "Temporary buffer associated with maple process.")
-(defvar mdb-pmark nil "Prompt mark in `mdb-buffer'.")
-(defvar mdb-process nil "Maple process used by mdb")
-(defvar mdb-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
-(defvar mdb-showstat-arrow-position nil "Marker for state arrow.")
-(defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
-;;(defvar mdb-tq-buffer nil "Buffer used by tq.")
+(defvar mdcs-debugging-flag nil "Non-nil when debugging.")
+(defvar mdcs-last-debug-cmd "" "Stores the last debugger command.")
+(defvar mdcs-maple-buffer nil "Temporary buffer associated with maple process.")
+(defvar mdcs-pmark nil "Prompt mark in `mdcs-buffer'.")
+(defvar mdcs-process nil "Maple process used by mdb")
+(defvar mdcs-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
+(defvar mdcs-showstat-arrow-position nil "Marker for state arrow.")
+(defvar mdcs-showstat-buffer nil "Buffer that displays showstat info.")
+;;(defvar mdcs-tq-buffer nil "Buffer used by tq.")
 
 ;;}}}
 ;;{{{ Variables
 
-(defvar mdb-server-client-id 0)
+(defvar mdcs-server-client-id 0)
 
-(defvar mdb-server-clients '() 
+(defvar mdcs-server-clients '() 
   "Alist where KEY is a client/server process.")
 
 ;;}}}
 
 ;;{{{ Access fields in client entry of alist
 
-(defun mdb-server-alist-entry (proc id)
-  "Create an entry for the `mdb-servers-clients' alist.
+(defun mdcs-server-alist-entry (proc id)
+  "Create an entry for the `mdcs-servers-clients' alist.
 Generate new buffers for the showstat and Maple output."
-  (cons (mdb-showstat-generate-buffer proc) id))
+  (cons (mdcs-showstat-generate-buffer proc) id))
 
-;; Access elements of a client (entry in `mdb-server-clients')
+;; Access elements of a client (entry in `mdcs-server-clients')
 ;; Don't forget the entry, which comes from (assoc ...),
 ;; is a cons cell of the key and 
-(defsubst mdb-server--get-proc            (entry) (car entry))
-(defsubst mdb-server--get-showstat-buffer (entry) (cadr entry))
-(defsubst mdb-server--get-id              (entry) (cddr entry))
+(defsubst mdcs-server--get-proc            (entry) (car entry))
+(defsubst mdcs-server--get-showstat-buffer (entry) (cadr entry))
+(defsubst mdcs-server--get-id              (entry) (cddr entry))
 
 ;;}}}
 
 ;;{{{ Start and stop server
 
-(defun mdb-server-start ()
+(defun mdcs-server-start ()
   "Start an mdb server; return the process."
   (interactive)
-  (get-buffer-create mdb-server-buffer)
-  (unless (process-status "mdb-server")
-    (setq mdb-server-clients '()
-	  mdb-server-client-id 0
-	  mdb-server-proc (make-network-process 
-			   :name "mdb-server" 
-			   :buffer mdb-server-buffer
+  (get-buffer-create mdcs-server-buffer)
+  (unless (process-status "mdcs-server")
+    (setq mdcs-server-clients '()
+	  mdcs-server-client-id 0
+	  mdcs-server-proc (make-network-process 
+			   :name "mdcs-server" 
+			   :buffer mdcs-server-buffer
 			   :family 'ipv4 
-			   :service mdb-server-port 
-			   :sentinel 'mdb-server-sentinel 
-			   :filter 'mdb-server-filter
+			   :service mdcs-server-port 
+			   :sentinel 'mdcs-server-sentinel 
+			   :filter 'mdcs-server-filter
 			   :server 't))))
 
-(defun mdb-server-stop nil
+(defun mdcs-server-stop nil
   "Stop the Emacs mdb server."
   (interactive)
   ;; Delete each entry, killing process and buffers
-  (while mdb-server-clients
-    (let ((entry (car mdb-server-clients)))
-      (delete-process (mdb-server--get-proc entry))
-      (mdb-showstat-kill-buffer (mdb-server--get-showstat-buffer entry)))
-    (setq mdb-server-clients (cdr mdb-server-clients)))
+  (while mdcs-server-clients
+    (let ((entry (car mdcs-server-clients)))
+      (delete-process (mdcs-server--get-proc entry))
+      (mdcs-showstat-kill-buffer (mdcs-server--get-showstat-buffer entry)))
+    (setq mdcs-server-clients (cdr mdcs-server-clients)))
   ;; Kill the server process and buffer
-  (if (process-status mdb-server-proc)
-      (delete-process mdb-server-proc))
-  (kill-buffer mdb-server-buffer))
+  (if (process-status mdcs-server-proc)
+      (delete-process mdcs-server-proc))
+  (kill-buffer mdcs-server-buffer))
 
 ;;}}}
 ;;{{{ Filter and sentinel
 
 
-(defun mdb-server-sentinel (proc msg)
+(defun mdcs-server-sentinel (proc msg)
   (cond
    ((eq 't (compare-strings msg 0 10 "open from " 0 10))
     ;; A Maple client has attached.
     ;; Create mdb and showstat buffers, and add to alist
-    (mdb-server-add-client proc))
+    (mdcs-server-add-client proc))
    ((string= msg "connection broken by remote peer\n")
     ;; A Maple client has closed.
-    (mdb-server-delete-client proc))
+    (mdcs-server-delete-client proc))
    ((string= msg "deleted\n"))
    (t (error "unexpected sentinel message: %s" msg))))
 
 ;;}}}
 
-;;{{{ mdb-server-filter
+;;{{{ mdcs-server-filter
 
-(defun mdb-server-filter (proc msg)
+(defun mdcs-server-filter (proc msg)
   "CLOSURE is a list, \(EXEC FUNC PROC\), MSG is a Maple output string.
 This procedure is a filter passed to `tq-enqueue'.  If MSG
-contains debugger status, the `mdb-showstat-buffer' is updated.
+contains debugger status, the `mdcs-showstat-buffer' is updated.
 
 The EXEC element of CLOSURE is a flag; if non-nil then the output
 is from executing statements in the debugged code (rather than
 evaluating expressions entered by the user).
 
-If `mdb-showstat-debugging-flag' is non-nil, MSG is first processed by
-FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
+If `mdcs-showstat-debugging-flag' is non-nil, MSG is first processed by
+FUNC (if non-nil), then written to `mdcs-debugger-output-buffer',
 and the new region is processed by PROC (if non-nil); otherwise
-MSG is written to `mdb-buffer'."
+MSG is written to `mdcs-buffer'."
 
-  (with-current-buffer (mdb-server--get-showstat-buffer
-			(assoc proc mdb-server-clients))
+  (with-current-buffer (mdcs-server--get-showstat-buffer
+			(assoc proc mdcs-server-clients))
 
     (with-syntax-table maplev--symbol-syntax-table
       (cond
-       ((string-match mdb--debugger-status-re msg)
+       ((string-match mdcs--debugger-status-re msg)
 	;;{{{ msg contains debugger status
 
 	(let ((cmd-output (substring msg 0 (match-beginning 1)))
@@ -358,20 +358,20 @@ MSG is written to `mdb-buffer'."
 	      )
 
 	  ;; Assign global variables.
-	  (mdb-showstat-set-debugging-flag t)
+	  (mdcs-showstat-set-debugging-flag t)
 
 	  ;; (if exec
 	  ;;     ;; A statement was executed in showstat;
 	  ;;     ;; update the showstat buffer.
-	  (mdb-showstat-update procname state)
+	  (mdcs-showstat-update procname state)
 
 	  ;; Move focus to showstat buffer.
-	  ;; (switch-to-buffer mdb-showstat-buffer)
+	  ;; (switch-to-buffer mdcs-showstat-buffer)
 	  ;; Display the Maple output, stored in cmd-output.  If func is
 	  ;; assigned, then first apply it to the string in cmd-output.
 	  ;; The proc procedure, if assigned, will be applied to the
 	  ;; generated output region.
-	  (mdb-showstat-display-debugger-output
+	  (mdcs-showstat-display-debugger-output
 	   ;; (if func
 	   ;;     (funcall func cmd-output)
 	   ;;   cmd-output)
@@ -380,84 +380,84 @@ MSG is written to `mdb-buffer'."
 
 	;;}}}
 	)
-      ((string-match mdb--showstat-re msg)
+      ((string-match mdcs--showstat-re msg)
        ;; handle showstat output
-       (mdb-showstat-display-proc msg))
+       (mdcs-showstat-display-proc msg))
       ;; otherwise print to debugger output buffer
-      ('t (mdb-showstat-display-debugger-output msg))))))
+      ('t (mdcs-showstat-display-debugger-output msg))))))
 
 ;;}}}
 
 ;;{{{ Handle Clients
 
-(defun mdb-server-add-client (proc)
-  "Add a Maple client.  Buffers are created and added to the `mdb-servers-clients' alist."
-  (if (assoc proc mdb-server-clients)
+(defun mdcs-server-add-client (proc)
+  "Add a Maple client.  Buffers are created and added to the `mdcs-servers-clients' alist."
+  (if (assoc proc mdcs-server-clients)
       (error "client already exists in list")
     ;; Create and add mdb buffers, add to 
-    (setq mdb-server-client-id (1+ mdb-server-client-id)
-	  mdb-server-clients (cons (cons proc 
-					 (mdb-server-alist-entry proc mdb-server-client-id))
-				   mdb-server-clients))
-    (mdb-server-log proc "added client")))
+    (setq mdcs-server-client-id (1+ mdcs-server-client-id)
+	  mdcs-server-clients (cons (cons proc 
+					 (mdcs-server-alist-entry proc mdcs-server-client-id))
+				   mdcs-server-clients))
+    (mdcs-server-log proc "added client")))
 
-(defun mdb-server-delete-client (proc)
-  (let ((entry (assoc proc mdb-server-clients)))
+(defun mdcs-server-delete-client (proc)
+  (let ((entry (assoc proc mdcs-server-clients)))
     (if (null entry)
 	(error "client does not exist")
-      (mdb-server-log proc "removing client")
+      (mdcs-server-log proc "removing client")
       ;; kill the showstat 
-      (mdb-showstat-kill-buffer (mdb-server--get-showstat-buffer entry))
-      (setq mdb-server-clients (delq entry mdb-server-clients)))))
+      (mdcs-showstat-kill-buffer (mdcs-server--get-showstat-buffer entry))
+      (setq mdcs-server-clients (delq entry mdcs-server-clients)))))
 
 ;;}}}
 
 ;;{{{ talk to client
 
-(defun mdb-server-send-client (proc msg)
+(defun mdcs-server-send-client (proc msg)
   "Send MSG to Maple client with process PROC."
   (process-send-string proc msg))
 
-(defun mdb-server-send-client-id (id msg)
+(defun mdcs-server-send-client-id (id msg)
   "Send MSG to the Maple client with ID."
   (interactive)
-  (let ((clients mdb-server-clients)
+  (let ((clients mdcs-server-clients)
 	client proc)
     (while (and clients (null proc))
       (setq client (car clients))
-      (if (eq id (mdb-server--get-id client))
+      (if (eq id (mdcs-server--get-id client))
     	  (setq proc (car client))
     	(setq clients (cdr clients))))
     (if proc
-    	(mdb-server-send-client proc msg)
+    	(mdcs-server-send-client proc msg)
       (error "no client with id: %d" id))))
 
 ;;}}}
 
 ;;{{{ log stuff
 
-(defun mdb-server-log (proc msg)
-  (with-current-buffer mdb-server-buffer
+(defun mdcs-server-log (proc msg)
+  (with-current-buffer mdcs-server-buffer
     (goto-char (point-max))
-    (let* ((client (assoc proc mdb-server-clients))
-	   (id (mdb-server--get-id client)))
+    (let* ((client (assoc proc mdcs-server-clients))
+	   (id (mdcs-server--get-id client)))
       (insert (format "client %d: %s\n" id msg)))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
 
-(provide 'mdb-server)
+(provide 'mdcs-server)
 
 ;;{{{ Manual Tests
 ;;
-;; (load "/home/joe/emacs/mdb/lisp/mdb-showstat.el")
-;; (load "/home/joe/emacs/mdb/lisp/mdb-server.el")
-;; (mdb-server-start)
-;; (mdb-server-stop)
+;; (load "/home/joe/emacs/mdb/lisp/mdcs-showstat.el")
+;; (load "/home/joe/emacs/mdb/lisp/mdcs-server.el")
+;; (mdcs-server-start)
+;; (mdcs-server-stop)
 ;; 
-;; (mdb-server-send-client-id 1 "cont")
+;; (mdcs-server-send-client-id 1 "cont")
 
 ;;}}}
 
-;;; mdb-showstat.el ends here
+;;; mdcs-server.el ends here
 

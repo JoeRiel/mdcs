@@ -4,8 +4,7 @@ help:
 	@echo $(if $(need-help),,Type \'$(MAKE)$(dash-f) help\' to get help)
 	@echo
 	@echo 'To install, do'
-	@echo '$$ sudo make install'
-	@echo '$$ make install-maple'
+	@echo '$$ make install'
 
 need-help := $(filter help,$(MAKECMDGOALS))
 
