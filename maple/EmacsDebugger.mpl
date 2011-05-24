@@ -18,12 +18,11 @@ global DEBUGGER_PROCS;
 
 export ModuleApply;
 
-# Using fixed pipes prevents multiple instances.
-# Need to assign them automatically.
+#{{{ locals
 
 local ModuleLoad
     , ModuleUnload
-    , Procs := 'DEBUGGER_PROCS'
+    , Procs := 'DEBUGGER_PROCS' # macro
     , _debugger
     , debugger_printf
     , debugger_readline
@@ -34,6 +33,8 @@ local ModuleLoad
     , EmacsDebuggerPort := 10\000
     , ss := false;
     ;
+
+#}}}
 
 #{{{ ModuleLoad
 
