@@ -194,6 +194,8 @@ prompt is defined as a C-preprocessor-macro in the emaple source."
 
 ;;}}}
 
+;;{{{ Constants
+
 (defconst mdb-server-version "1.0" "Version number the mdb-server.")
 
 (defconst mdb--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
@@ -217,13 +219,13 @@ state number.")
 	  "\\(?:[^\r]*\\)"                                 ; next line
 	  "\\(" mdb--prompt-re "\\)$"))                    ; (3) prompt
 
+(defconst mdb--showstat-re
+  (concat "^\n\\(" maplev--name-re "\\) := proc("))
+  
+
 (defconst mdb--emaple-done-re "That's all, folks.\n"
   "Regexp that matches the final message send by emaple
 before the process terminates.")
-
-
-;;}}}
-;;{{{ Constants
 
 (defconst mdb-server-port 10000
   "Port used by mdb server")
@@ -235,7 +237,6 @@ before the process terminates.")
 
 ;;}}}
 ;;{{{ variables
-
 
 (defvar mdb-debugging-flag nil "Non-nil when debugging.")
 (defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
@@ -272,7 +273,6 @@ Generate new buffers for the showstat and Maple output."
 (defsubst mdb-server--get-id              (entry) (cddr entry))
 
 ;;}}}
-
 
 ;;{{{ Start and stop server
 
@@ -324,14 +324,9 @@ Generate new buffers for the showstat and Maple output."
 
 ;;}}}
 
-;;{{{ mdb-server-handle-maple-output 
+;;{{{ mdb-server-filter
 
 (defun mdb-server-filter (proc msg)
-  "Filter to handle the Maple clients.
-PROC identifies the client, MSG is the message."
-  (mdb-server-handle-maple-output proc msg))
-
-(defun mdb-server-handle-maple-output (proc msg)
   "CLOSURE is a list, \(EXEC FUNC PROC\), MSG is a Maple output string.
 This procedure is a filter passed to `tq-enqueue'.  If MSG
 contains debugger status, the `mdb-showstat-buffer' is updated.
@@ -345,69 +340,51 @@ FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
 and the new region is processed by PROC (if non-nil); otherwise
 MSG is written to `mdb-buffer'."
 
-  (message "%s" msg)
-
   (with-current-buffer (mdb-server--get-showstat-buffer
 			(assoc proc mdb-server-clients))
 
     (with-syntax-table maplev--symbol-syntax-table
-      (if (string-match mdb--debugger-status-re msg)
+      (cond
+       ((string-match mdb--debugger-status-re msg)
+	;;{{{ msg contains debugger status
 
-	  ;;{{{ msg contains debugger status
+	(let ((cmd-output (substring msg 0 (match-beginning 1)))
+	      (procname (match-string 1 msg))
+	      (state    (match-string 2 msg))
+	      (rest (substring msg (match-end 2)))
+	      ;;(exec (nth 0 closure))
+	      ;;(func (nth 1 closure))
+	      ;;(proc (nth 2 closure)))
+	      )
 
-	  (let ((cmd-output (substring msg 0 (match-beginning 1)))
-		(procname (match-string 1 msg))
-		(state    (match-string 2 msg))
-		(rest (substring msg (match-end 2)))
-		;;(exec (nth 0 closure))
-		;;(func (nth 1 closure))
-		;;(proc (nth 2 closure)))
-		)
+	  ;; Assign global variables.
+	  (mdb-showstat-set-debugging-flag t)
 
-	    ;; Assign global variables.
-	    (mdb-showstat-set-debugging-flag t)
+	  ;; (if exec
+	  ;;     ;; A statement was executed in showstat;
+	  ;;     ;; update the showstat buffer.
+	  (mdb-showstat-update procname state)
 
-	    ;; (if exec
-	    ;;     ;; A statement was executed in showstat;
-	    ;;     ;; update the showstat buffer.
-	    (mdb-showstat-update procname state)
-
-	    ;; Move focus to showstat buffer.
-	    ;; (switch-to-buffer mdb-showstat-buffer)
-	    ;; Display the Maple output, stored in cmd-output.  If func is
-	    ;; assigned, then first apply it to the string in cmd-output.
-	    ;; The proc procedure, if assigned, will be applied to the
-	    ;; generated output region.
-	    (mdb-showstat-display-debugger-output
-	     ;; (if func
-	     ;;     (funcall func cmd-output)
-	     ;;   cmd-output)
-	     ;; proc
-	     cmd-output))
+	  ;; Move focus to showstat buffer.
+	  ;; (switch-to-buffer mdb-showstat-buffer)
+	  ;; Display the Maple output, stored in cmd-output.  If func is
+	  ;; assigned, then first apply it to the string in cmd-output.
+	  ;; The proc procedure, if assigned, will be applied to the
+	  ;; generated output region.
+	  (mdb-showstat-display-debugger-output
+	   ;; (if func
+	   ;;     (funcall func cmd-output)
+	   ;;   cmd-output)
+	   ;; proc
+	   cmd-output))
 
 	;;}}}
-	;;{{{ msg does not contain debugger status
-
-	;; Update the `mdb-showstat-debugging-flag' variable, provided msg contains
-	;; a prompt.  
-	;; TODO: doesn't it *have* to contain a prompt?
-	(when (string-match mdb--prompt-re msg)
-	  (mdb-showstat-set-debugging-flag (match-string 1 msg))
-	  ;; font-lock the prompt.
-	  (set-text-properties (match-beginning 0) (match-end 0)
-			       '(face mdb-face-prompt rear-nonsticky t)
-			       msg))
-
-	;; Determine what to do with msg.
-	(if mdb-showstat-debugging-flag
-	    ;; display, but strip any prompt
-	    (mdb-showstat-display-debugger-output
-	     (if (string-match mdb--prompt-re msg)
-		 (substring msg 0 (match-beginning 1))
-	       msg))
-
-	  ;; Not debugging, what to do?
-	  )))))
+	)
+      ((string-match mdb--showstat-re msg)
+       ;; handle showstat output
+       (mdb-showstat-display-proc msg))
+      ;; otherwise print to debugger output buffer
+      ('t (mdb-showstat-display-debugger-output msg))))))
 
 ;;}}}
 
@@ -435,7 +412,6 @@ MSG is written to `mdb-buffer'."
 
 ;;}}}
 
-
 ;;{{{ talk to client
 
 (defun mdb-server-send-client (proc msg)
@@ -458,8 +434,6 @@ MSG is written to `mdb-buffer'."
 
 ;;}}}
 
-
-
 ;;{{{ log stuff
 
 (defun mdb-server-log (proc msg)
@@ -472,7 +446,6 @@ MSG is written to `mdb-buffer'."
 
 ;;}}}
 
-
 (provide 'mdb-server)
 
 ;;{{{ Manual Tests
@@ -481,7 +454,7 @@ MSG is written to `mdb-buffer'."
 ;; (load "/home/joe/emacs/mdb/lisp/mdb-server.el")
 ;; (mdb-server-start)
 ;; (mdb-server-stop)
-;;
+;; 
 ;; (mdb-server-send-client-id 1 "cont")
 
 ;;}}}
