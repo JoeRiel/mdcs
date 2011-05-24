@@ -68,14 +68,6 @@ local ModuleLoad
 
 #}}}
 
-#{{{ restoreProcs
-
-    restoreProcs := proc()
-        map( p -> kernelopts('unread' = p), [Procs] );
-        return NULL;
-    end proc;
-
-#}}}
 #{{{ replaceProcs
 
     replaceProcs := proc()
@@ -88,6 +80,14 @@ local ModuleLoad
 
         return NULL;
 
+    end proc;
+
+#}}}
+#{{{ restoreProcs
+
+    restoreProcs := proc()
+        map( p -> kernelopts('unread' = p), [Procs] );
+        return NULL;
     end proc;
 
 #}}}
@@ -136,6 +136,7 @@ local ModuleLoad
         od;
         #}}}
         #{{{ Handle solo enter (repeat previous command)
+
         # If the user just pressed ENTER, use the value of the variable
         # `debugger/default`, which contains whatever debugger command the user
         # issued last time. If there is no previous command, return a command to
@@ -182,6 +183,7 @@ local ModuleLoad
         fi;
         #}}}
         #{{{ Check for characters after comment
+
         # Complain if there were any non-blank, non-comment
         #characters after the end of the typed command.
         if i < len and res[i] <> "#" then
@@ -198,6 +200,7 @@ local ModuleLoad
         res := res[startp..endp];
         #}}}
         #{{{ Extraneous stuff
+
         # Means the user typed something which still ended up being nothing, such
         # as a single semicolon, just a comment, etc.
         if res = "" then
