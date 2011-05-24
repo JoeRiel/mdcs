@@ -55,7 +55,7 @@ export ModuleApply;
 
 local Connect
     , ModuleUnload
-    , Procs := 'DEBUGGER_PROCS' # macro
+    , debugger_procs := 'DEBUGGER_PROCS' # macro
     , _debugger
     , debugger_printf
     , debugger_readline
@@ -93,7 +93,6 @@ local Connect
             Sockets:-Close( sid );
         catch:
         end try;
-        # hmm, maybe not.  Check if already done.
         restoreProcs();
     end proc;
 
@@ -124,7 +123,13 @@ local Connect
         view_flag := view;
 
         replaceProcs();
-        Connect(host, port);
+
+        try
+            Connect(host, port);
+        catch:
+            restoreProcs();
+            error;
+        end try;
 
         return NULL;
 
@@ -137,11 +142,11 @@ local Connect
     replaceProcs := proc()
         if not replaced then
             # Reassign library debugger procedures
-            unprotect(Procs);
+            unprotect(debugger_procs);
             debugger := eval(_debugger);
             `debugger/printf` := eval(debugger_printf);
             `debugger/readline` := eval(debugger_readline);
-            protect(Procs);
+            protect(debugger_procs);
             replaced := true;
         end if;
         return NULL;
@@ -153,7 +158,7 @@ local Connect
     restoreProcs := proc()
         # Dave H. suggests using 'forget'
         if replaced then
-            map( p -> kernelopts('unread' = p), [Procs] );
+            map( p -> kernelopts('unread' = p), [debugger_procs] );
             replaced := false;
         end if;
         return NULL;
