@@ -94,13 +94,135 @@
 
 ;;{{{ Lisp Requirements
 
-;;(require 'mdb-showstat)
-;;(require 'maplev)
+(require 'mdb-showstat)
+(require 'maplev)
 (eval-when-compile
   (require 'hl-line))
 
 ;;}}}
 
+;;{{{ customization
+
+(defgroup mdb nil
+  "Major mode for debugging Maple."
+  :group 'tools)
+
+(defcustom mdb-maple-cmd "emaple"
+  "*Shell command to launch command-line maple.
+The default, emaple, is a customizable script that calls a
+binary, pmaple.  It does not use cmaple, which does not properly
+handle prompts in a pipe."
+  :type 'string
+  :group 'mdb)
+
+(defcustom mdb-maple-setup-switches  nil
+  "*List of command-line switches passed to `mdb-maple-cmd'."
+  :type '(repeat string)
+  :group 'mdb)
+
+(defcustom mdb-pre-Maple-14 nil
+  "*Boolean flag.  Set to non-nil if Maple is a release earlier than Maple 14."
+  :type 'boolean
+  :group 'mdb)
+
+;;{{{   prompts and cursors
+
+(defcustom mdb-prompt "(**) "
+  "*eMaple prompt.
+Changing this, alas, does not currently change the prompt because the
+prompt is defined as a C-preprocessor-macro in the emaple source."
+  :type 'string
+  :group 'mdb)
+
+(defcustom mdb-debug-prompt "(*DBG*) "
+  "*eMaple debug prompt.
+Changing this, alas, does not currently change the prompt because the
+prompt is defined as a C-preprocessor-macro in the emaple source."
+  :type 'string
+  :group 'mdb)
+
+(defcustom mdb-cursor-waiting 'hollow
+  "Cursor used in showstat buffer when waiting for Maple to respond."
+  :type 'symbol
+  :group 'mdb)
+
+(defcustom mdb-cursor-ready 'box
+  "Cursor used in showstat buffer when ready for a user input."
+  :type 'symbol
+  :group 'mdb)
+
+;;}}}
+
+(defcustom mdb-history-size 50
+  "Number of inputs the input-ring can hold."
+  :type 'integer ; ensure positive
+  :group 'mdb)
+
+(defcustom mdb-debugger-break (format "\n%s\n" (make-string 40 ?-))
+  "String inserted into `mdb-debugger-output-buffer' when debugging starts."
+  :type 'string
+  :group 'mdb)
+
+;;{{{   faces
+
+(defgroup mdb-faces nil
+  "Faces for mdb and related modes."
+  :group 'mdb)
+
+(defface mdb-face-arg
+  '((((class color) (background dark)) (:foreground "magenta")))
+  "Face for arguments in a showstat buffer."
+  :group 'mdb-faces)
+
+(defface mdb-face-prompt
+  '((((class color) (background dark)) (:foreground "Green")))
+  "Face for the prompt in an mdb buffer."
+  :group 'mdb-faces)
+
+(defface mdb-face-procname-entered
+  '((((class color) (background dark)) (:foreground "Cyan")))
+  "Face for the procname at entry in a debugger output buffer."
+  :group 'mdb-faces)
+
+(defface mdb-face-procname-cont
+  '((((class color) (background dark)) (:foreground "LightBlue")))
+  "Face for the procname when continued in a debugger output buffer."
+  :group 'mdb-faces)
+
+;;}}}
+
+
+;;}}}
+
+(defconst mdb-server-version "1.0" "Version number the mdb-server.")
+
+(defconst mdb--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
+				 (regexp-quote mdb-debug-prompt)
+				 (regexp-quote mdb-prompt))
+  "Regexp matching Maple prompt.  If the first group matches,
+then this is a debug-prompt.")
+
+(defconst mdb--prompt-with-cr-re (concat mdb--prompt-re "$")
+  "Regexp matching Maple prompt with preceding carriage return.
+This is the prompt as output from the maple process.")
+
+(defconst mdb--debugger-status-re
+  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
+  "Regexp that matches the status output of the debugger.
+The first group matches the procedure name, the second group the
+state number.")
+
+(defconst mdb--maple-output-re
+  (concat "^\\([^ \n][^\n]*\\):\n\\s-*\\([1-9][0-9]*\\)\ " ; (1,2) procname: state
+	  "\\(?:[^\r]*\\)"                                 ; next line
+	  "\\(" mdb--prompt-re "\\)$"))                    ; (3) prompt
+
+(defconst mdb--emaple-done-re "That's all, folks.\n"
+  "Regexp that matches the final message send by emaple
+before the process terminates.")
+
+
+;;}}}
 ;;{{{ Constants
 
 (defconst mdb-server-port 10000
@@ -112,6 +234,20 @@
   "Buffer associated with mdb server")
 
 ;;}}}
+;;{{{ variables
+
+
+(defvar mdb-debugging-flag nil "Non-nil when debugging.")
+(defvar mdb-last-debug-cmd "" "Stores the last debugger command.")
+(defvar mdb-maple-buffer nil "Temporary buffer associated with maple process.")
+(defvar mdb-pmark nil "Prompt mark in `mdb-buffer'.")
+(defvar mdb-process nil "Maple process used by mdb")
+(defvar mdb-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
+(defvar mdb-showstat-arrow-position nil "Marker for state arrow.")
+(defvar mdb-showstat-buffer nil "Buffer that displays showstat info.")
+;;(defvar mdb-tq-buffer nil "Buffer used by tq.")
+
+;;}}}
 ;;{{{ Variables
 
 (defvar mdb-server-client-id 0)
@@ -120,6 +256,23 @@
   "Alist where KEY is a client/server process.")
 
 ;;}}}
+
+;;{{{ Access fields in client entry of alist
+
+(defun mdb-server-alist-entry (proc id)
+  "Create an entry for the `mdb-servers-clients' alist.
+Generate new buffers for the showstat and Maple output."
+  (cons (mdb-showstat-generate-buffer proc) id))
+
+;; Access elements of a client (entry in `mdb-server-clients')
+;; Don't forget the entry, which comes from (assoc ...),
+;; is a cons cell of the key and 
+(defsubst mdb-server--get-proc            (entry) (car entry))
+(defsubst mdb-server--get-showstat-buffer (entry) (cadr entry))
+(defsubst mdb-server--get-id              (entry) (cddr entry))
+
+;;}}}
+
 
 ;;{{{ Start and stop server
 
@@ -136,7 +289,7 @@
 			   :family 'ipv4 
 			   :service mdb-server-port 
 			   :sentinel 'mdb-server-sentinel 
-			   :filter 'mdb-server-filter 
+			   :filter 'mdb-server-filter
 			   :server 't))))
 
 (defun mdb-server-stop nil
@@ -156,16 +309,8 @@
 ;;}}}
 ;;{{{ Filter and sentinel
 
-(defun mdb-server-filter (proc msg)
-  "Filter to handle the Maple clients.
-PROC identifies the client, MSG is the message."
-  (mdb-server-log proc msg))
 
 (defun mdb-server-sentinel (proc msg)
-  "Handle change to client status.  PROC is client process,
-MSG is the message indicating the changed status."
-  ;; Consider adding a validation message.
-  ;; Possibly other stuff.
   (cond
    ((eq 't (compare-strings msg 0 10 "open from " 0 10))
     ;; A Maple client has attached.
@@ -176,6 +321,93 @@ MSG is the message indicating the changed status."
     (mdb-server-delete-client proc))
    ((string= msg "deleted\n"))
    (t (error "unexpected sentinel message: %s" msg))))
+
+;;}}}
+
+;;{{{ mdb-server-handle-maple-output 
+
+(defun mdb-server-filter (proc msg)
+  "Filter to handle the Maple clients.
+PROC identifies the client, MSG is the message."
+  (mdb-server-handle-maple-output proc msg))
+
+(defun mdb-server-handle-maple-output (proc msg)
+  "CLOSURE is a list, \(EXEC FUNC PROC\), MSG is a Maple output string.
+This procedure is a filter passed to `tq-enqueue'.  If MSG
+contains debugger status, the `mdb-showstat-buffer' is updated.
+
+The EXEC element of CLOSURE is a flag; if non-nil then the output
+is from executing statements in the debugged code (rather than
+evaluating expressions entered by the user).
+
+If `mdb-showstat-debugging-flag' is non-nil, MSG is first processed by
+FUNC (if non-nil), then written to `mdb-debugger-output-buffer',
+and the new region is processed by PROC (if non-nil); otherwise
+MSG is written to `mdb-buffer'."
+
+  (message "%s" msg)
+
+  (with-current-buffer (mdb-server--get-showstat-buffer
+			(assoc proc mdb-server-clients))
+
+    (with-syntax-table maplev--symbol-syntax-table
+      (if (string-match mdb--debugger-status-re msg)
+
+	  ;;{{{ msg contains debugger status
+
+	  (let ((cmd-output (substring msg 0 (match-beginning 1)))
+		(procname (match-string 1 msg))
+		(state    (match-string 2 msg))
+		(rest (substring msg (match-end 2)))
+		;;(exec (nth 0 closure))
+		;;(func (nth 1 closure))
+		;;(proc (nth 2 closure)))
+		)
+
+	    ;; Assign global variables.
+	    (mdb-showstat-set-debugging-flag t)
+
+	    ;; (if exec
+	    ;;     ;; A statement was executed in showstat;
+	    ;;     ;; update the showstat buffer.
+	    (mdb-showstat-update procname state)
+
+	    ;; Move focus to showstat buffer.
+	    ;; (switch-to-buffer mdb-showstat-buffer)
+	    ;; Display the Maple output, stored in cmd-output.  If func is
+	    ;; assigned, then first apply it to the string in cmd-output.
+	    ;; The proc procedure, if assigned, will be applied to the
+	    ;; generated output region.
+	    (mdb-showstat-display-debugger-output
+	     ;; (if func
+	     ;;     (funcall func cmd-output)
+	     ;;   cmd-output)
+	     ;; proc
+	     cmd-output))
+
+	;;}}}
+	;;{{{ msg does not contain debugger status
+
+	;; Update the `mdb-showstat-debugging-flag' variable, provided msg contains
+	;; a prompt.  
+	;; TODO: doesn't it *have* to contain a prompt?
+	(when (string-match mdb--prompt-re msg)
+	  (mdb-showstat-set-debugging-flag (match-string 1 msg))
+	  ;; font-lock the prompt.
+	  (set-text-properties (match-beginning 0) (match-end 0)
+			       '(face mdb-face-prompt rear-nonsticky t)
+			       msg))
+
+	;; Determine what to do with msg.
+	(if mdb-showstat-debugging-flag
+	    ;; display, but strip any prompt
+	    (mdb-showstat-display-debugger-output
+	     (if (string-match mdb--prompt-re msg)
+		 (substring msg 0 (match-beginning 1))
+	       msg))
+
+	  ;; Not debugging, what to do?
+	  )))))
 
 ;;}}}
 
@@ -203,21 +435,6 @@ MSG is the message indicating the changed status."
 
 ;;}}}
 
-;;{{{ Access fields in client entry of alist
-
-(defun mdb-server-alist-entry (proc id)
-  "Create an entry for the `mdb-servers-clients' alist.
-Generate new buffers for the showstat and Maple output."
-  (cons (mdb-showstat-generate-buffer proc) id))
-
-;; Access elements of a client (entry in `mdb-server-clients')
-;; Don't forget the entry, which comes from (assoc ...),
-;; is a cons cell of the key and 
-(defsubst mdb-server--get-proc            (entry) (car entry))
-(defsubst mdb-server--get-showstat-buffer (entry) (cadr entry))
-(defsubst mdb-server--get-id              (entry) (cddr entry))
-
-;;}}}
 
 ;;{{{ talk to client
 
@@ -241,6 +458,8 @@ Generate new buffers for the showstat and Maple output."
 
 ;;}}}
 
+
+
 ;;{{{ log stuff
 
 (defun mdb-server-log (proc msg)
@@ -260,19 +479,10 @@ Generate new buffers for the showstat and Maple output."
 ;;
 ;; (load "/home/joe/emacs/mdb/lisp/mdb-showstat.el")
 ;; (load "/home/joe/emacs/mdb/lisp/mdb-server.el")
-;; (describe-variable 'mdb-server-clients)
 ;; (mdb-server-start)
 ;; (mdb-server-stop)
 ;;
-;; (mdb-server-send-client-id 2 "showstat")
-;; (mdb-server-send-client-id 2 "cont")
-;; (mdb-server-send-client-id 2 "showstack")
-;; (mdb-server-send-client-id 2 "where")
-;; (mdb-server-send-client-id 2 "stopat 10")
-;; (mdb-server-send-client-id 2 "cont")
-;; (mdb-server-send-client-id 2 "step")
-;; (mdb-server-send-client-id 2 "showstat")
-;; (mdb-server-send-client-id 2 "cont")
+;; (mdb-server-send-client-id 1 "cont")
 
 ;;}}}
 
