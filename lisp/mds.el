@@ -231,7 +231,6 @@ Maximum is given by `mds-max-number-clients'.")
 
 ;;}}}
 
-
 ;;{{{ Access fields in client entry of alist
 
 ;; Access elements of a client (entry in `mds-clients')
@@ -291,10 +290,7 @@ Generate new buffers for the showstat and Maple output."
   (interactive)
   ;; Delete each entry, killing process and buffers
   (while mds-clients
-    (let ((entry (car mds-clients)))
-      (delete-process (mds--get-proc entry))
-      (mds-showstat-kill-buffers (mds--get-showstat-buffer entry)))
-    (setq mds-clients (cdr mds-clients)))
+    (mds-delete-client (mds--get-proc (car mds-clients))))
   ;; Kill the server process and buffer
   (if (process-status mds-proc)
       (delete-process mds-proc))
@@ -309,16 +305,19 @@ Generate new buffers for the showstat and Maple output."
      ((string-match mds--client-attach-re msg)
       ;; A client has attached.
       (let ((conn (match-string 1 msg)))
-	(mds-log proc (format "client has attached: %s" (substring msg 0 -2)))
+	(mds-writeto-log proc (format "client has attached: %s" (substring msg 0 -2)))
 	(let ((status (mds-get-client-status proc)))
 	  (cond
-	   ((eq status 'accepted) (mds-log proc "accepted client"))
-	   ((eq status 'rejected) (mds-log proc "rejected client"))
-	   ((eq status 'login)    (mds-log proc "begin login"))))))
+	   ((eq status 'accepted)
+	    (mds-writeto-log proc "accepted client"))
+	   ((eq status 'rejected) 
+	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
+	    (mds-writeto-log proc "rejected client"))
+	   ((eq status 'login)    (mds-writeto-log proc "begin login"))))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
       ;; Delete associated buffers.
-      (mds-log proc
+      (mds-writeto-log proc
 	       (format "%sclient has unattached"
 		       (if (mds-delete-client proc)
 			   "accepted " ""))))
@@ -357,6 +356,7 @@ MSG is written to `mds-buffer'."
     (cond
      ((eq status 'accepted)
       ;; route MSG to proper buffer
+      ;; (mds-writeto-log proc msg)
       (with-current-buffer (mds--get-showstat-buffer
 			    (assoc proc mds-clients))
 	(with-syntax-table maplev--symbol-syntax-table
@@ -402,13 +402,12 @@ MSG is written to `mds-buffer'."
 	   ;; otherwise print to debugger output buffer
 	   (t (mds-showstat-display-debugger-output msg))))))
      ((eq status 'pending)
-      ;;(mds-login proc msg)
+      ;;(mds-writeto-login proc msg)
       )
      ((eq status 'rejected)
-      (mds-log proc "ignoring msg from rejected client")))))
+      (mds-writeto-log proc "ignoring msg from rejected client")))))
 
 ;;}}}
-
 
 ;;{{{ Handle Clients
 
@@ -422,18 +421,21 @@ MSG is written to `mds-buffer'."
       (if entry
 	  (progn 
 	    (mds-swap-proc-in-clients (mds--get-proc entry) proc)
-	    (mds-log proc "moved client"))
+	    (mds-writeto-log proc "moved client"))
 	;; Create and add mds buffers, add to
 	(mds-add-client-to-alist proc id)
-	(mds-log proc "added client")))))
+	(mds-writeto-log proc "added client")))))
 
 
 (defun mds-delete-client (proc)
+  "If PROC is a client process, delete PROC it associated buffers, 
+remove the entry from the alist, and decrement `mds-number-clients'."
   (let ((entry (assoc proc mds-clients)))
     (and entry
 	 (progn
-	   (mds-log proc "removing client")
-	   ;; kill the showstat buffer
+	   (mds-writeto-log proc "removing client")
+	   ;; kill the process and buffers
+	   (delete-process proc)
 	   (mds-showstat-kill-buffers (mds--get-showstat-buffer entry))
 	   (setq mds-clients (delq entry mds-clients)
 		 mds-number-clients (1- mds-number-clients))))))
@@ -448,6 +450,7 @@ MSG is written to `mds-buffer'."
 
 ;;}}}
 
+;;{{{ mds-kill-buffer
 
 (defun mds-kill-buffer (buf)
   "Kill buffer BUF; verify that it is a live buffer."
@@ -455,17 +458,18 @@ MSG is written to `mds-buffer'."
        (buffer-name buf)
        (kill-buffer buf)))
 
+;;}}}
 
 ;;{{{ log stuff
 
-(defun mds-log (proc msg)
-  (with-current-buffer mds-log-buffer-name
+(defun mds-writeto-log (proc msg)
+  "Write PROC: MSG to log buffer."
+  (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert (format "%s: %s\n" (prin1-to-string proc) msg))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
-
 
 (provide 'mds '(mds-start))
 
