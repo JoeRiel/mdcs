@@ -469,7 +469,7 @@ MSG is written to `mds-buffer'."
 ;;}}}
 
 
-(provide 'mds)
+(provide 'mds '(mds-start))
 
 ;;{{{ Manual Tests
 ;;
