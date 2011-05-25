@@ -3,3 +3,4 @@
 !/doc/*.texi
 *.mla
 /lisp/*.elc
+/ChangeLog
