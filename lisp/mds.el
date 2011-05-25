@@ -174,6 +174,10 @@ state number.")
 
 (defconst mds--showstat-re
   (concat "^\n\\(" maplev--name-re "\\) := proc("))
+
+(defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
+  "Regexp to match message when a client attaches.
+The first group identifies SOMETHING.")
   
 
 (defconst mds--emaple-done-re "That's all, folks.\n"
@@ -199,7 +203,8 @@ before the process terminates.")
 (defvar mds-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mds-showstat-buffer nil "Buffer that displays showstat info.")
-;;(defvar mds-tq-buffer nil "Buffer used by tq.")
+
+(defvar mds-number-pending-clients 0)
 
 ;;}}}
 ;;{{{ Variables
@@ -295,22 +300,20 @@ Generate new buffers for the showstat and Maple output."
 (defun mds-sentinel (proc msg)
   (unless (eq msg "")
     (cond
-     ((and (< 0 mds-pending-clients)
-	   (mds-check-in-client proc msg))
-     ((eq 't (compare-strings msg 0 10 "open from " 0 10))
+     ((string-match mds--client-attach-re msg)
       ;; A Maple client has attached.
-      (setq mds-pending-clients (1+ mds-pending-clients)))
+      (let ((conn (match-string 1 msg)))
+	(mds-log proc (format "client has attached: %s" msg))))
      ((string= msg "connection broken by remote peer\n")
       ;; A Maple client has closed.
       (mds-delete-client proc))
      ((string= msg "deleted\n"))
-     (t (error "unexpected sentinel message: %s" msg))))))
+     (t (error "unexpected sentinel message: %s" msg)))))
 
 
 (defun mds-check-in-client (proc id)
-  (and (string-match mdc-server-client-id-re id)
+  (and (string-match mds-client-id-re id)
        (mds-add-client proc id)))
-
 
 ;;}}}
 ;;{{{ Filter
@@ -332,7 +335,8 @@ MSG is written to `mds-buffer'."
   (let ((status (mds-get-proc-status proc)))
     (cond
      ((eq status 'pending)
-      (mds-login proc msg))
+      ;;(mds-login proc msg)
+      )
      ((eq status 'accepted)
       ;; route MSG to proper buffer
       (with-current-buffer (mds--get-showstat-buffer
@@ -342,47 +346,50 @@ MSG is written to `mds-buffer'."
 	   ((string-match mds--debugger-status-re msg)
 	    ;;{{{ msg contains debugger status
 
-	(let ((cmd-output (substring msg 0 (match-beginning 1)))
-	      (procname (match-string 1 msg))
-	      (state    (match-string 2 msg))
-	      (rest (substring msg (match-end 2)))
-	      ;;(exec (nth 0 closure))
-	      ;;(func (nth 1 closure))
-	      ;;(proc (nth 2 closure)))
-	      )
+	    (let ((cmd-output (substring msg 0 (match-beginning 1)))
+		  (procname (match-string 1 msg))
+		  (state    (match-string 2 msg))
+		  (rest (substring msg (match-end 2)))
+		  ;;(exec (nth 0 closure))
+		  ;;(func (nth 1 closure))
+		  ;;(proc (nth 2 closure)))
+		  )
 
-	  ;; Assign global variables.
-	  (mds-showstat-set-debugging-flag t)
+	      ;; Assign global variables.
+	      (mds-showstat-set-debugging-flag t)
 
-	  ;; (if exec
-	  ;;     ;; A statement was executed in showstat;
-	  ;;     ;; update the showstat buffer.
-	  (mds-showstat-update procname state)
+	      ;; (if exec
+	      ;;     ;; A statement was executed in showstat;
+	      ;;     ;; update the showstat buffer.
+	      (mds-showstat-update procname state)
 
-	  ;; Move focus to showstat buffer.
-	  ;; (switch-to-buffer mds-showstat-buffer)
-	  ;; Display the Maple output, stored in cmd-output.  If func is
-	  ;; assigned, then first apply it to the string in cmd-output.
-	  ;; The proc procedure, if assigned, will be applied to the
-	  ;; generated output region.
-	  (mds-showstat-display-debugger-output
-	   ;; (if func
-	   ;;     (funcall func cmd-output)
-	   ;;   cmd-output)
-	   ;; proc
-	   cmd-output))
+	      ;; Move focus to showstat buffer.
+	      ;; (switch-to-buffer mds-showstat-buffer)
+	      ;; Display the Maple output, stored in cmd-output.  If func is
+	      ;; assigned, then first apply it to the string in cmd-output.
+	      ;; The proc procedure, if assigned, will be applied to the
+	      ;; generated output region.
+	      (mds-showstat-display-debugger-output
+	       ;; (if func
+	       ;;     (funcall func cmd-output)
+	       ;;   cmd-output)
+	       ;; proc
+	       cmd-output))
 
-	;;}}}
+	    ;;}}}
 	    )
 	   ((string-match mds--showstat-re msg)
 	    ;; handle showstat output
 	    (mds-showstat-display-proc msg))
 	   ;; otherwise print to debugger output buffer
-	   ('t (mds-showstat-display-debugger-output msg))))))
+	   (t (mds-showstat-display-debugger-output msg))))))
      ((eq status 'rejected)
-      (mds-log proc (format ("ignoring msg from rejected client")))))))
+      (mds-log proc "ignoring msg from rejected client")))))
 
 ;;}}}
+
+
+(defun mds-get-proc-status (proc) 'pending)
 
 ;;{{{ Login
 
@@ -449,18 +456,22 @@ MSG is written to `mds-buffer'."
 (defun mds-log (proc msg)
   (with-current-buffer mds-buffer
     (goto-char (point-max))
-    (let* ((client (assoc proc mds-clients))
-	   (id (mds--get-id client)))
-      (insert (format "client %d: %s\n" id msg)))
+    (insert (format "%s: %s\n" proc msg))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
+
+(defun mds-kill-buffer (buf)
+  "Kill buffer BUF; verify that it is a live buffer."
+  (and (bufferp buf)
+       (not (buffer-name buf))
+       (kill-buffer buf)))
+
 
 (provide 'mds)
 
 ;;{{{ Manual Tests
 ;;
-;; (load "/home/joe/emacs/mdcs/lisp/mds.el")
 ;; (load "/home/joe/emacs/mdcs/lisp/mds-showstat.el")
 ;; (load "/home/joe/emacs/mdcs/lisp/mds.el")
 ;; (mds-start)
