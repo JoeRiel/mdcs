@@ -52,7 +52,7 @@ MAPLE_INSTALL_DIR = $(HOME)/maple/lib
 
 # {{{ doc
 
-PKG := "mds"
+PKG := mds
 
 TEXIFILES = doc/$(PKG).texi
 INFOFILES = doc/$(PKG)

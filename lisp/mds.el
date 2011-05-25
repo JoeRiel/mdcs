@@ -304,7 +304,7 @@ Generate new buffers for the showstat and Maple output."
       ;; A Maple client has closed.
       (mds-delete-client proc))
      ((string= msg "deleted\n"))
-     (t (error "unexpected sentinel message: %s" msg))))
+     (t (error "unexpected sentinel message: %s" msg))))))
 
 
 (defun mds-check-in-client (proc id)
