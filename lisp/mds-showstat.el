@@ -159,7 +159,7 @@ to display the new procedure."
     ;; 		(cons mds-showstat-buffer statement)
     ;; 		#'mds-showstat-display-proc
     ;; 		'delay)
-    (mds-showstat-send (format "mds:-Format:-showstat(\"%s\")" procname)))
+    (mds-showstat-send (format "mdc:-Format:-showstat(\"%s\")" procname)))
 
 
 (defun mds-showstat-display-proc (proc)
@@ -419,7 +419,7 @@ If not debugging, pop to the `mds-buffer'."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-eval-expr (format "mds:-Format:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-expr (format "mdc:-Format:-stopat(\"%s\",%s)" mds-showstat-procname state)))
 	(ding)
 	(message "no previous state in buffer")))))
 
@@ -501,12 +501,12 @@ If the state does not have a breakpoint, print a message."
 
 (defun mds-eval-and-prettyprint (expr)
   "Pretty-print EXPR.  This calls the Maple procedure 
-mds:-Format:-PrettyPrint to convert EXPR into a more useful display.
+mdc:-Format:-PrettyPrint to convert EXPR into a more useful display.
 With optional prefix, clear debugger output before displaying."
   (interactive (list (mds-ident-around-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mds-debugger-clear-output))
-  (mds-showstat-send (format "mds:-Format:-PrettyPrint(%s)\n" expr)
+  (mds-showstat-send (format "mdc:-Format:-PrettyPrint(%s)\n" expr)
 		     nil ; not advancing the debugger
 		     (propertize (format "%s:\n" expr)
 				 'face 'mds-face-prompt ; FIXME: create appropriate face
@@ -553,7 +553,7 @@ The result is returned in the message area."
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
-  (mds-showstat-send (format "mds:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
+  (mds-showstat-send (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 			     (mds-thisproc))
 		     nil
 		     (propertize "args:\n" 'face 'mds-face-prompt)
