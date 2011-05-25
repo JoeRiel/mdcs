@@ -57,7 +57,7 @@
   "Send MSG to the associated Maple process.
 REST arguments are ignored; see `mds-send-string' for
 what was expected."
-  (mds-server-send-client mds-showstat-server-proc msg))
+  (mds-send-client mds-showstat-server-proc msg))
 
 ;; Each of these functions send a string to the maple engine,
 ;; using mds-showstat-send.  The second argument is a flag;
