@@ -187,10 +187,10 @@ before the process terminates.")
 (defconst mds-port 10000
   "Port used by mds server")
 
-(defvar mds-proc nil "process for the server")
+(defvar mds-proc nil "process for the server.")
 
-(defconst mds-buffer "*mds*"
-  "Buffer associated with mds server")
+(defconst mds-log-buffer-name "*mds-log*"
+  "Name of buffer used to log connections.")
 
 (defconst mds-max-number-clients 4
   "Maximum number of clients allowed.")
@@ -208,6 +208,7 @@ before the process terminates.")
 (defvar mds-showstat-buffer nil "Buffer that displays showstat info.")
 
 (defvar mds-number-pending-clients 0)
+(defvar mds-log-buffer nil)
 
 ;;}}}
 ;;{{{ Variables
@@ -263,10 +264,7 @@ If none, then return nil."
 (defun mds-alist-entry (proc id)
   "Create an entry for the `mds-clients' alist.
 Generate new buffers for the showstat and Maple output."
-  (cons (mds-showstat-generate-buffer proc) id))
-
-
-
+  (cons (mds-showstat-generate-buffers proc) id))
 
 
 ;;}}}
@@ -276,17 +274,17 @@ Generate new buffers for the showstat and Maple output."
 (defun mds-start ()
   "Start an mds server; return the process."
   (interactive)
-  (get-buffer-create mds-buffer)
+  (setq mds-log-buffer (get-buffer-create mds-log-buffer-name))
   (unless (process-status "mds")
     (setq mds-clients '()
 	  mds-proc (make-network-process 
-			   :name "mds" 
-			   :buffer mds-buffer
-			   :family 'ipv4 
-			   :service mds-port 
-			   :sentinel 'mds-sentinel 
-			   :filter 'mds-filter
-			   :server 't))))
+		    :name "mds" 
+		    :buffer mds-log-buffer
+		    :family 'ipv4 
+		    :service mds-port 
+		    :sentinel 'mds-sentinel 
+		    :filter 'mds-filter
+		    :server 't))))
 
 (defun mds-stop nil
   "Stop the Emacs mds server."
@@ -295,12 +293,12 @@ Generate new buffers for the showstat and Maple output."
   (while mds-clients
     (let ((entry (car mds-clients)))
       (delete-process (mds--get-proc entry))
-      (mds-kill-buffer (mds--get-showstat-buffer entry)))
+      (mds-showstat-kill-buffers (mds--get-showstat-buffer entry)))
     (setq mds-clients (cdr mds-clients)))
   ;; Kill the server process and buffer
   (if (process-status mds-proc)
       (delete-process mds-proc))
-  (mds-kill-buffer mds-buffer))
+  (mds-kill-buffer mds-log-buffer))
 
 ;;}}}
 ;;{{{ Sentinel
@@ -319,6 +317,7 @@ Generate new buffers for the showstat and Maple output."
 	   ((eq status 'login)    (mds-log proc "begin login"))))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
+      ;; Delete associated buffers.
       (mds-log proc
 	       (format "%sclient has unattached"
 		       (if (mds-delete-client proc)
@@ -435,12 +434,10 @@ MSG is written to `mds-buffer'."
 	 (progn
 	   (mds-log proc "removing client")
 	   ;; kill the showstat buffer
-	   (mds-kill-buffer (mds--get-showstat-buffer entry))
+	   (mds-showstat-kill-buffers (mds--get-showstat-buffer entry))
 	   (setq mds-clients (delq entry mds-clients)
 		 mds-number-clients (1- mds-number-clients))))))
 				   
-	   
-
 ;;}}}
 
 ;;{{{ talk to client
@@ -455,13 +452,14 @@ MSG is written to `mds-buffer'."
 (defun mds-kill-buffer (buf)
   "Kill buffer BUF; verify that it is a live buffer."
   (and (bufferp buf)
-       (not (buffer-name buf))
+       (buffer-name buf)
        (kill-buffer buf)))
+
 
 ;;{{{ log stuff
 
 (defun mds-log (proc msg)
-  (with-current-buffer mds-buffer
+  (with-current-buffer mds-log-buffer-name
     (goto-char (point-max))
     (insert (format "%s: %s\n" (prin1-to-string proc) msg))
     (set-window-point (get-buffer-window) (point))))

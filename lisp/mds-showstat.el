@@ -211,7 +211,7 @@ POINT is moved to the indentation of the current line."
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window) (point)))
 
-(defun mds-showstat-generate-buffer (proc)
+(defun mds-showstat-generate-buffers (proc)
   "Generate and return a new `mds-showstat-buffer' buffer
 and an `mds-showstat-output-buffer'."
   (let ((buf (generate-new-buffer "*mds-showstat*")))
@@ -224,11 +224,15 @@ and an `mds-showstat-output-buffer'."
 	    mds-showstat-procname-inactive nil
 	    mds-showstat-state "1"
 	    mds-showstat-state-active nil
-	    mds-showstat-server-proc proc)
-      (add-hook 'kill-buffer
-		(lambda () (mdsc-kill-buffer mds-showstat-output-buffer))
-		nil 'local))
+	    mds-showstat-server-proc proc))
     buf))
+
+(defun mds-showstat-kill-buffers (buf)
+  "Kill showstat buffer BUF and its associated output buffer."
+  (when (and (bufferp buf) (buffer-name buf))
+    (with-current-buffer buf
+      (mds-kill-buffer mds-showstat-output-buffer))
+    (mds-kill-buffer buf)))
 
 ;;}}}
 
