@@ -34,7 +34,7 @@
 ##opt(label,string)
 ##  Label passed to server for convenient identication
 ##  of this client.
-##  The default is the return value of _kernelopts('user')_.
+##  The default is the return value of _kernelopts('username')_.
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client will transmit.
 ##  If a string is longer than that, it is replaced
@@ -58,6 +58,7 @@
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`
 $define MDS_PORT 10\000
 
+unprotect('mdc'):
 module mdc()
 
 global DEBUGGER_PROCS;
@@ -72,6 +73,7 @@ $include <src/Format.mm>
 #{{{ local declarations
 
 local Connect
+    , Disconnect
     , ModuleUnload
     , createID
     , debugger_procs := 'DEBUGGER_PROCS' # macro
@@ -87,7 +89,7 @@ local Connect
     , replaced := false
     , replaceProcs
     , restoreProcs
-    , sid
+    , sid := NULL
     , view_flag := false
     ;
 
@@ -97,16 +99,14 @@ local Connect
 
 ##DEFINE PROC Connect
 ##PROCEDURE \MOD[\PROC]
-##HALFLINE initiate a connecton to a Maple debugger server
-##AUTHOR   Joe Riel
-##DATE     May 2011
+##HALFLINE initiate a connection to a Maple debugger server
 
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
                     , $)
         if sid <> NULL then
-            Close(sid);
+            Sockets:-Close(sid);
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
@@ -115,17 +115,30 @@ local Connect
         return NULL;
     end proc;
 #}}}
+#{{{ Disconnect
+
+##DEFINE PROC Disconnect
+##PROCEDURE \MOD[\PROC]
+##HALFLINE terminate connection to Maple debugger server
+
+    Disconnect := proc()
+        if sid <> NULL then
+            Sockets:-Close(sid);
+            sid := NULL;
+        end if;
+    end proc;
+
+#}}}
+
 #{{{ createID
 
 ##DEFINE PROC createID
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE create a formatted ID that identifies the client
-##AUTHOR   Joe Riel
-##DATE     May 2011
 ##CALLINGSEQUENCE
 ##- \PROC('label')
 ##PARAMETERS
-##- 'label' : ::string::; user friendly label
+##- 'label' : ::string::; user-friendly label
 ##RETURNS
 ##- ::string::
 ##DESCRIPTION
@@ -189,7 +202,7 @@ local Connect
                          , { password :: string := "" }
                          , { port :: posint := Port }
                          #, { timeout :: nonnegint := 0 }
-                         , { label :: truefalse := kernelopts('user') }
+                         , { label :: string := kernelopts('username') }
                          , { view :: truefalse := view_flag }
                          , { exit :: truefalse := false }
                          , $ )
@@ -204,7 +217,8 @@ local Connect
 
         if exit then
             restoreProcs();
-            return
+            Disconnect();
+            return NULL;
         end if;
 
         view_flag := view;
@@ -217,7 +231,7 @@ local Connect
         replaceProcs();
 
         try
-            Connect(host, port, creatID(label) );
+            Connect(host, port, createID(label) );
         catch:
             restoreProcs();
             error;
@@ -672,5 +686,7 @@ local Connect
 #}}}
 
 end module:
+
+protect('mdc'):
 
 #savelib('mdc'):
