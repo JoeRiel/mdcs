@@ -1,7 +1,8 @@
+# -*- mpldoc -*-
 ##INCLUDE ../include/mpldoc_macros.mi
-##DEFINE MOD Client
-##MODULE \PKG[\MOD]
-##HALFLINE appliable module for communicating with the Maple Debugger Server
+##DEFINE MOD mdc
+##MODULE \MOD
+##HALFLINE appliable module for communicating with a Maple Debugger Server
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##CALLINGSEQUENCE
@@ -11,8 +12,9 @@
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- `Client` is an appliable module for communicating
-##  with the Maple Debugger Server.
+##- The `\MOD` module is an appliable module
+##  that implements a *Maple Debugger Client*.
+##  It communicates with a *Maple Debugger Server*.
 ##OPTIONS
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
@@ -29,8 +31,19 @@
 ##opt(host,string)
 ##  The name of the host.
 ##  The default is _"localhost"_.
+##opt(label,string)
+##  Label passed to server for convenient identication
+##  of this client.
+##  The default is the return value of _kernelopts('user')_.
+##opt(maxlength,nonnegint)
+##  Limits the length of string the client will transmit.
+##  If a string is longer than that, it is replaced
+##  with a message indicating the problem and the original length.
+##  0 means no limit.
+##  The default is 10000.
 ##opt(port,posint)
-##  The port (socket) to used when _connection=socket_.
+##  The port (socket) used when _connection=socket_.
+##  The default is 10000.
 ##opt(timeout,nonnegint)
 ##  Specifies ...
 ##opt(view,truefalse)
@@ -43,24 +56,31 @@
 
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`
-$define MDCS_PORT 10\000
+$define MDS_PORT 10\000
 
-module Client()
+module mdc()
 
 global DEBUGGER_PROCS;
 
-export ModuleApply;
+export ModuleApply
+    ,  Format
+    ,  Authenticate
+    ;
+
+$include <src/Format.mm>
 
 #{{{ local declarations
 
 local Connect
     , ModuleUnload
+    , createID
     , debugger_procs := 'DEBUGGER_PROCS' # macro
     , _debugger
     , debugger_printf
     , debugger_readline
 
-    , Port := MDCS_PORT
+    , max_length := 10\000 # too small?
+    , Port := MDS_PORT
     , Host := "localhost"
 
     , printf_to_server
@@ -75,14 +95,76 @@ local Connect
 
 #{{{ Connect
 
-    Connect := proc(host :: string, port :: posint, $)
+##DEFINE PROC Connect
+##PROCEDURE \MOD[\PROC]
+##HALFLINE initiate a connecton to a Maple debugger server
+##AUTHOR   Joe Riel
+##DATE     May 2011
+
+    Connect := proc(host :: string
+                    , port :: posint
+                    , id :: string
+                    , $)
         if sid <> NULL then
             Close(sid);
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
+        Sockets:-Write(sid, id);
         return NULL;
+    end proc;
+#}}}
+#{{{ createID
+
+##DEFINE PROC createID
+##PROCEDURE \MOD[\PROC]
+##HALFLINE create a formatted ID that identifies the client
+##AUTHOR   Joe Riel
+##DATE     May 2011
+##CALLINGSEQUENCE
+##- \PROC('label')
+##PARAMETERS
+##- 'label' : ::string::; user friendly label
+##RETURNS
+##- ::string::
+##DESCRIPTION
+##- The `\PROC` procedure
+##  returns a string that can be used by the server
+##  to identify this client.
+##
+##- Currently the format is ~:label:platform:pid:~,
+##  where label is the argument, and `platform` and `pid`
+##  are the corresponding outputs of "kernelopts".
+##
+##NOTES
+##- The format will probably be expanded once this is in place.
+##  Note that a different machine could generate the same ID.
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdc:-createID):
+## VerifyTools:-AddVerification(
+##      label=proc(s1,s2) evalb( s1 = sprintf("%s%d:",s2,kernelopts('pid')) )
+##   end proc):
+## macro(LA='verify,label', NLA='verify,Not(label)', TE=testerror);
+## Try[LA]("1.1", FUNC("label"), ":label:unix:");
+## Try[LA]("1.2", FUNC("abc12"), ":abc12:unix:");
+## Try[LA]("1.3", FUNC("abc-1_2_"), ":abc-1_2_:unix:");
+## Try[NLA]("2.1", FUNC("abc-1_2_"), ":abc-1_2_:unix:0");
+## Try[TE]("10.0", FUNC(""), "label cannot be empty");
+## msg := "invalid characters in label":
+## Try[TE]("10.1", FUNC("+"), msg);
+## Try[TE]("10.2", FUNC(" "), msg);
+## Try[TE]("10.3", FUNC("\n"), msg);
+
+
+    createID := proc(label :: string,$)
+        if length(label) = 0 then
+            error "label cannot be empty";
+        elif not StringTools:-RegMatch("^[A-Za-z0-9_-]+$", label) then
+            error "invalid characters in label '%1'", label;
+        end if;
+        return sprintf(":%s:%s:%d:", label, kernelopts('platform,pid') );
     end proc;
 
 #}}}
@@ -103,11 +185,16 @@ local Connect
                          { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
                          , { host :: string := Host }
+                         , { maxlength :: nonnegint := max_length }
+                         , { password :: string := "" }
                          , { port :: posint := Port }
                          #, { timeout :: nonnegint := 0 }
+                         , { label :: truefalse := kernelopts('user') }
                          , { view :: truefalse := view_flag }
                          , { exit :: truefalse := false }
                          , $ )
+
+    global `debugger/width`;
 
         if connection <> 'socket' then
             error "currently only a socket connection is supported"
@@ -121,11 +208,16 @@ local Connect
         end if;
 
         view_flag := view;
+        max_length := maxlength;
+
+        if max_length > 0 then
+            `debugger/width` := max_length;
+        end if;
 
         replaceProcs();
 
         try
-            Connect(host, port);
+            Connect(host, port, creatID(label) );
         catch:
             restoreProcs();
             error;
@@ -196,7 +288,7 @@ local Connect
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        `debugger/printf`("\n");
+        # `debugger/printf`("\n");
 
         #{{{ Get response (from emacs)
         do
@@ -562,8 +654,14 @@ local Connect
 #{{{ printf_to_server
 
     printf_to_server := proc()
-    local msg;
+    local msg,len;
         msg := sprintf(_passed);
+        if 0 < max_length then
+            len := length(msg);
+            if max_length < len then
+                msg := sprintf("---output too long (%d bytes)---\n", len);
+            end if;
+        end if;
         Sockets:-Write(sid, msg);
         if view_flag then
             fprintf('INTERFACE_DEBUG',_passed);
@@ -575,3 +673,4 @@ local Connect
 
 end module:
 
+#savelib('mdc'):

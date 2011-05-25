@@ -1,14 +1,14 @@
 \input texinfo
 @c %***start of header
-@setfilename mdcs
-@settitle The Mdcs Manual
+@setfilename mds
+@settitle The Mds Manual
 
 @set VERSION 1.2b
 @set DATE May 2010
 
 @dircategory Emacs
 @direntry
-* Mdcs mode: (mdcs).      Source-code debugger for Maple
+* Mds mode: (mds).      Source-code debugger for Maple
 @end direntry
 
 @c Version and Contact Info
@@ -21,10 +21,10 @@
 @finalout
 
 @copying
-Mdcs is a GNU Emacs major mode for debugging Maple code.
+Mds is a GNU Emacs major mode for debugging Maple code.
 Maple is a computer algebra system from Maplesoft Inc.
 
-This manual is for Mdcs version @value{VERSION}.
+This manual is for Mds version @value{VERSION}.
 
 Copyright @copyright{} 2009, Joseph S. Riel
 
@@ -39,7 +39,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The Mdcs Manual
+@title The Mds Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -55,15 +55,15 @@ Texts.  A copy of the license is included in the section entitled
 
 @ifnottex
 @node Top, Introduction, (dir), (dir)
-@top Mdcs Mode Manual
+@top Mds Mode Manual
 
 @insertcopying
 @end ifnottex
 
 @menu
 * Introduction::                Getting started
-* Launching Mdcs::               
-* Mdcs Buffer::                  Launching Mdcs
+* Launching Mds::               
+* Mds Buffer::                  Launching Mds
 * Showstat Buffer::             Stepping through code
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
@@ -74,12 +74,12 @@ Texts.  A copy of the license is included in the section entitled
 
 Introduction
 
-* Summary::                     Summary of what Mdcs does
-* Requirements::                What is needed to run Mdcs
-* Building::                    How to build Mdcs
-* Installation::                How to install Mdcs
-* Configuration::               How to configure Mdcs
-* Customization::               Customize Mdcs variables
+* Summary::                     Summary of what Mds does
+* Requirements::                What is needed to run Mds
+* Building::                    How to build Mds
+* Installation::                How to install Mds
+* Configuration::               How to configure Mds
+* Customization::               Customize Mds variables
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
@@ -87,9 +87,9 @@ Configuration
 * Emacs::                       Updating @file{.emacs}
 * Environment::                 Environmental variables
 
-Mdcs Buffer
+Mds Buffer
 
-* Usage::                       Intended usage of the mdcs buffer
+* Usage::                       Intended usage of the mds buffer
 * History::                     Saving entries
 * Key Bindings::                
 
@@ -111,17 +111,17 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Launching Mdcs, Top, Top
+@node Introduction, Launching Mds, Top, Top
 @chapter Introduction
 @cindex introduction
 
 @menu
-* Summary::                     Summary of what Mdcs does
-* Requirements::                What is needed to run Mdcs
-* Building::                    How to build Mdcs
-* Installation::                How to install Mdcs
-* Configuration::               How to configure Mdcs
-* Customization::               Customize Mdcs variables
+* Summary::                     Summary of what Mds does
+* Requirements::                What is needed to run Mds
+* Building::                    How to build Mds
+* Installation::                How to install Mds
+* Configuration::               How to configure Mds
+* Customization::               Customize Mds variables
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -132,7 +132,7 @@ Command and Variable Index
 @section Summary
 @cindex summary
 
-Mdcs is an Emacs front-end to the Maple command-line debugger.
+Mds is an Emacs front-end to the Maple command-line debugger.
 It acts as a source code debugger for Maple procedures.
 It is not a true source code debugger in that it steps through
 the interpreted Maple code, which does not include comments
@@ -175,16 +175,16 @@ Breakpoints can be set or cleared directly in the buffer.
 
 @table @r
 @item GNU Emacs 22.2.1+
-Mdcs may work with earlier versions, but I have not tested it.
+Mds may work with earlier versions, but I have not tested it.
 @item Maple 14+  
-Mdcs will work with earlier versions of Maple, however,
+Mds will work with earlier versions of Maple, however,
 some features may not be available, or work as well.  In particular,
 the prettyprinting of a procedure's arguments can not be done robustly
 in earlier versions.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
-regardless whether you use Mdcs.
+regardless whether you use Mds.
 See 
 @url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}
 for a recent version.
@@ -199,7 +199,7 @@ package, but it may be dated.
 @section Building
 @cindex building
 
-This section describes how to build Mdcs.
+This section describes how to build Mds.
 The readme files included with the distribution,
 @file{README} and @file{c/README} give further details.
 In all likelihood they take precedence over this document;
@@ -208,8 +208,8 @@ contact the author (@ref{Feedback}) if in doubt.
 There are two makefiles included with the distribution,
 @file{Makefile} and @file{c/Makefile}.
 The former creates
-the documentation (@file{doc/mdcs})
-and the Maple archive (@file{maple/mdcs.mla}).
+the documentation (@file{doc/mds})
+and the Maple archive (@file{maple/mds.mla}).
 It calls the latter to build the binary executable (@file{c/pmaple}).
 
 @vindex MAPLE_ROOT
@@ -219,8 +219,8 @@ must be assigned.  It is also needed for execution,
 so the assignment should go in a startup file.
 @xref{Environment}.
 
-To build Mdcs, 
-execute the following command in the @file{mdcs} directory,
+To build Mds, 
+execute the following command in the @file{mds} directory,
 
 @example
 make build
@@ -231,7 +231,7 @@ make build
 @section Installation
 @cindex installation
 
-To install Mdcs, the environmental variables described
+To install Mds, the environmental variables described
 in the following table must be properly assigned.
 
 @table @env
@@ -258,8 +258,8 @@ The default is @file{$HOME/maple/lib}.
 
 @end table
 
-To install Mdcs,
-execute the following command in the @file{mdcs} directory.
+To install Mds,
+execute the following command in the @file{mds} directory.
 
 @example
 make install
@@ -281,7 +281,7 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @cindex configuration
 
 This section describes how to configure your system
-to run Mdcs.  
+to run Mds.  
 
 
 @menu
@@ -295,11 +295,11 @@ to run Mdcs.
 @cindex emacs
 @cindex .emacs
 
-To permit @kbd{M-x mdcs} to launch mdcs, 
+To permit @kbd{M-x mds} to launch mds, 
 add the following line to your @file{.emacs} file:
 
 @example
-(autoload 'mdcs "mdcs" "Maple debugger" t)
+(autoload 'mds "mds" "Maple debugger" t)
 @end example
 
 @node Environment,  , Emacs, Configuration
@@ -346,46 +346,46 @@ end proc:
 @section Customization
 @cindex customization
 
-Mdcs mode has a number of variables that can be customized.
-To access them load Mdcs (@code{M-x mdcs}) then run 
-@code{M-x customize-group} and enter @code{mdcs-group}.
+Mds mode has a number of variables that can be customized.
+To access them load Mds (@code{M-x mds}) then run 
+@code{M-x customize-group} and enter @code{mds-group}.
 Most of the variables are not significant, and some should
 not be changed without also recompiling @command{pmaple}.
 
 If you are using a Maple release earlier than
-Maple 14, set @code{mdcs-pre-Maple-14} to non-nil.
+Maple 14, set @code{mds-pre-Maple-14} to non-nil.
 
 @node Feedback,  , Customization, Introduction
 @section Feedback
 @cindex feedback
 
-If you find problems with Mdcs, or if you have questions,
+If you find problems with Mds, or if you have questions,
 comments, or ideas, please mail them to Joe Riel, @email{jriel@@maplesoft.com}.
 
 For bug reports, please provide as much information as possible,
 including the version information of Emacs (@kbd{C-h v emacs-version}),
-Mdcs, (@kbd{C-h v mdcs-version}), and Maple (@code{version()}).
+Mds, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
 
 
-@node Launching Mdcs, Mdcs Buffer, Introduction, Top
-@chapter Launching Mdcs
-@cindex launching mdcs
+@node Launching Mds, Mds Buffer, Introduction, Top
+@chapter Launching Mds
+@cindex launching mds
 
-@findex mdcs
-The @kbd{M-x mdcs} command launches an Mdcs buffer (@ref{Mdcs Buffer}).
-If an Mdcs buffer already exists, it pops to it.
-If called with an optional prefix argument (@kbd{C-u M-x mdcs})
+@findex mds
+The @kbd{M-x mds} command launches an Mds buffer (@ref{Mds Buffer}).
+If an Mds buffer already exists, it pops to it.
+If called with an optional prefix argument (@kbd{C-u M-x mds})
 and the current buffer is a Maple source buffer,
 then a Maple @code{read @var{filename}:} command is inserted into
-the Mdcs buffer, where @var{filename} is the filename associated
+the Mds buffer, where @var{filename} is the filename associated
 with the buffer.
 
 
-@node Mdcs Buffer, Showstat Buffer, Launching Mdcs, Top
-@chapter Mdcs Buffer
-@cindex mdcs buffer
+@node Mds Buffer, Showstat Buffer, Launching Mds, Top
+@chapter Mds Buffer
+@cindex mds buffer
 
-When Mdcs is launched (@ref{Launching Mdcs}), a buffer opens in @code{mdcs-mode}.
+When Mds is launched (@ref{Launching Mds}), a buffer opens in @code{mds-mode}.
 This buffer is an interface to the Maple engine.
 It is a rudimentary form of the tty interface @command{cmaple}.
 
@@ -403,16 +403,16 @@ y := x^2
 
 
 @menu
-* Usage::                       Intended usage of the mdcs buffer
+* Usage::                       Intended usage of the mds buffer
 * History::                     Saving entries
 * Key Bindings::                
 @end menu
 
-@node Usage, History, Mdcs Buffer, Mdcs Buffer
+@node Usage, History, Mds Buffer, Mds Buffer
 @section Usage
 @cindex usage
 
-The purpose of Mdcs mode is to start the debugger.
+The purpose of Mds mode is to start the debugger.
 The Maple @code{stopat} command can be used to set a breakpoint
 in the procedure to debug.
 For example,
@@ -430,56 +430,56 @@ and
 the @emph{debugger output buffer}, 
 which displays Maple output during debugging.
 
-When debugging is finished, control returns to the Mdcs buffer
+When debugging is finished, control returns to the Mds buffer
 and the output of the program is displayed in the buffer.
 
 
 
-@node History, Key Bindings, Usage, Mdcs Buffer
+@node History, Key Bindings, Usage, Mds Buffer
 @section History
-@cindex history, mdcs-mode
+@cindex history, mds-mode
 
-@code{Mdcs-mode} maintains a 50-line command history
-(the maximum size can be configured by customizing @code{mdcs-history-size}).
+@code{Mds-mode} maintains a 50-line command history
+(the maximum size can be configured by customizing @code{mds-history-size}).
 It is accessed with @kbd{M-p} and @kbd{M-n}.
 
-@findex mdcs-write-history-file
+@findex mds-write-history-file
 @cindex history file
-@vindex mdcs-history-file
+@vindex mds-history-file
 
-@code{Mdcs-mode} uses a history file to store the history between sessions.
+@code{Mds-mode} uses a history file to store the history between sessions.
 The name of the history file is stored in the customizable variable
-@code{mdcs-history-file}, whose default value is @file{~/.mdcs_history}.
-The command @command{mdcs-write-history-file}
-writes the current content of the history to @code{mdcs-history-file}.
+@code{mds-history-file}, whose default value is @file{~/.mds_history}.
+The command @command{mds-write-history-file}
+writes the current content of the history to @code{mds-history-file}.
 
-@vindex mdcs-history-size
+@vindex mds-history-size
 
-@node Key Bindings,  , History, Mdcs Buffer
+@node Key Bindings,  , History, Mds Buffer
 @section Key Bindings
 @cindex key bindings
 @comment  node-name,  next,  previous,  up
 
-The following table lists the key bindings defined by @code{mdcs-mode}.
+The following table lists the key bindings defined by @code{mds-mode}.
 
 @table @asis
 @kindex M-p
 @kindex up
-@findex mdcs-history-prev
+@findex mds-history-prev
 @item Up
-@itemx M-p (@code{mdcs-history-prev})
+@itemx M-p (@code{mds-history-prev})
 Recall previous input.
 
 @kindex down
 @kindex M-n
-@findex mdcs-history-next
+@findex mds-history-next
 @item Down
-@itemx M-n (@code{mdcs-history-next})
+@itemx M-n (@code{mds-history-next})
 Recall next input.
 
 @kindex C-a
 @kindex C-u C-a
-@item C-a (@code{mdcs-bol})
+@item C-a (@code{mds-bol})
 Move to beginning of line (right of the prompt).
 @kbd{C-u C-a} moves to the left margin.
 
@@ -488,11 +488,11 @@ Move to beginning of line (right of the prompt).
 
 
 
-@node Showstat Buffer, Main Index, Mdcs Buffer, Top
+@node Showstat Buffer, Main Index, Mds Buffer, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
-The showstat buffer, which uses @code{mdcs-showstat-mode},
+The showstat buffer, which uses @code{mds-showstat-mode},
 becomes active when an instrumented Maple procedure activates a breakpoint or watchpoint.
 The buffer displays the output of the Maple @code{showstat} command, that is,
 the current procedure being debugged.
@@ -536,7 +536,7 @@ end proc
 @example
 @end example
 
-@code{Mdcs-showstat-mode} binds keys to the common debugging commands. 
+@code{Mds-showstat-mode} binds keys to the common debugging commands. 
 It also provides commands that are not available in the Maple debugger.
 The following sections describe these bindings and commands.
 They are grouped according to function.
@@ -555,7 +555,7 @@ They are grouped according to function.
 @section Execution
 @cindex execution
 
-Mdcs supports all the Maple debugger commands for executing the statements of
+Mds supports all the Maple debugger commands for executing the statements of
 a procedure.  These commands are bound to single keystrokes in the Showstat buffer.
 Output from these commands is written to the @emph{debugger output buffer}.
 
@@ -567,22 +567,22 @@ When Maple responds the cursor moves to the next statement to be executed
 and the cursor returns to a filled box.
 
 The cursor types can be customized via
-the variables @code{mdcs-cursor-waiting} and @code{mdcs-cursor-ready}.
-@vindex mdcs-cursor-waiting
-@vindex mdcs-cursor-ready
+the variables @code{mds-cursor-waiting} and @code{mds-cursor-ready}.
+@vindex mds-cursor-waiting
+@vindex mds-cursor-ready
 
 The following table describes each of the execution commands.
 
 @table @asis
 
 @kindex c
-@findex mdcs-cont
-@item c (@code{mdcs-cont})
+@findex mds-cont
+@item c (@code{mds-cont})
 Continue: run until the next breakpoint or watchpoint, or until the program terminates.
 
 @kindex i
-@findex mdcs-into
-@item i (@code{mdcs-into})
+@findex mds-into
+@item i (@code{mds-into})
 Into: halfway between @code{next} (@code{n}) and @code{step}
 (@code{s}).  Executes the next statement.  Execution stops before the
 following statement within the current function, regardless of whether
@@ -590,8 +590,8 @@ it is at the current nesting level or in the body of a control
 structure. Execution does not stop in a called function.
 
 @kindex n
-@findex mdcs-next
-@item n (@code{mdcs-next})
+@findex mds-next
+@item n (@code{mds-next})
 Next: execute the next statement.  If the statement
 is a control structure (for example, @code{if} or @code{for}), it is
 executed in its entirety before execution stops again. Likewise, if
@@ -600,8 +600,8 @@ entirety.  After executing the statement, control returns to the
 Debugger as though a breakpoint had been set.
 
 @kindex o
-@findex mdcs-outfrom
-@item o (@code{mdcs-outfrom})
+@findex mds-outfrom
+@item o (@code{mds-outfrom})
 Outfrom: execute until the current statement sequence has finished, or
 until a breakpoint or watchpoint is encountered. If this command is
 executed while stopped in a loop, execution continues until just
@@ -613,34 +613,34 @@ stopped in the body of an @code{if} statement, execution continues until just
 before the first statement to be executed after the closing @code{end if}.
 
 @kindex q
-@findex mdcs-quit
-@item q (@code{mdcs-quit})
+@findex mds-quit
+@item q (@code{mds-quit})
 Quit: terminate execution immediately.
 
 @kindex r
-@findex mdcs-return
-@item r (@code{mdcs-return})
+@findex mds-return
+@item r (@code{mds-return})
 Return: execute statements until the first statement to be executed
 after the currently executing procedure returns.
 
 @kindex s
-@findex mdcs-step
-@item s (@code{mdcs-step})
+@findex mds-step
+@item s (@code{mds-step})
 Step: execute the next statement at any level.  Execution stops before
 the following statement, regardless of whether it is at the current
 nesting level, in the body of a control structure (for example,
 @code{if}), or in a called function.
 
 @kindex @key{SPACE}
-@findex mdcs-send-last-command
-@item @key{SPACE} (@code{mdcs-send-last-command})
+@findex mds-send-last-command
+@item @key{SPACE} (@code{mds-send-last-command})
 Re-execute the last command.
 This only applies to the commands in this table.
 
 @kindex @kbd{C-c C-c}
-@findex mdcs-kill-maple
-@item C-c C-c (@code{mdcs-kill-maple})
-Kill the maple process, switch to the @code{Mdcs Buffer}, and restart the Maple process.
+@findex mds-kill-maple
+@item C-c C-c (@code{mds-kill-maple})
+Kill the maple process, switch to the @code{Mds Buffer}, and restart the Maple process.
 This can be used to stop a runaway Maple computation (say an infinite loop).
 OpenMaple does not properly service interrupts, so it is currently not possible to
 interrupt it and regain control, as can be done with the builtin Maple debugger.
@@ -651,21 +651,21 @@ interrupt it and regain control, as can be done with the builtin Maple debugger.
 @section Status
 @cindex status
 
-Mdcs supports the following debugger commands for querying the status
+Mds supports the following debugger commands for querying the status
 of the debugger.
 
 @table @asis
 
 @kindex k
-@findex mdcs-showstack
-@item k (@code{mdcs-showstack})
+@findex mds-showstack
+@item k (@code{mds-showstack})
 Showstack: display an abbreviated form of the calling stack.
 Only the names of the procedures are shown.  The name of the current
 procedure is not shown.
 
 @kindex K
-@findex mdcs-where
-@item K (@code{mdcs-where})
+@findex mds-where
+@item K (@code{mds-where})
 Where: display the stack. 
 The top-most level is shown first.
 For each entry in the stack,
@@ -677,7 +677,7 @@ For example @kbd{C-u 2 K} displays the lowest two levels.
 The procedure names are active links.  Clicking on a link opens the
 procedure in the showstat buffer, at the callling line.  
 Breakpoints can be set in the opened procedure.
-Use @code{M-x mdcs-goto-current-state} (@kbd{l})
+Use @code{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
 
 For this to work with module exports, the modules must be @emph{named},
@@ -689,20 +689,20 @@ and then load it.
 
 @kindex p
 @findex showstop
-@item p (@code{mdcs-showstop})
+@item p (@code{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
 @kindex x
 @findex showexception
-@item x (@code{mdcs-showexception})
+@item x (@code{mds-showexception})
 Showexception: display the value of @code{lastexception}.
 The output is formatted;
 to see the raw exception, use @kbd{C-u x}.
 
 @kindex X
 @findex showerror
-@item X (@code{mdcs-showerror})
+@item X (@code{mds-showerror})
 Showerror: display the value of @code{lasterror}.
 The output is formatted;
 to see the raw exception, use @kbd{C-u X}.
@@ -715,7 +715,7 @@ to see the raw exception, use @kbd{C-u X}.
 @section Breakpoints
 @cindex breakpoints
 
-Mdcs can set and clear breakpoints, watchpoints, and error watchpoints.
+Mds can set and clear breakpoints, watchpoints, and error watchpoints.
 Breakpoints can be set and cleared as is done in the Maple debugger, that is, 
 by evaluating the expression @code{stopat <statement-number>}, 
 however, the more convenient way is to move the cursor to the statement 
@@ -726,30 +726,30 @@ A statement with a breakpoint has an asterisk to the right of the statement numb
 @table @asis
 
 @kindex b
-@findex mdcs-breakpoint
-@item b (@code{mdcs-breakpoint})
+@findex mds-breakpoint
+@item b (@code{mds-breakpoint})
 Stopat:  Set a breakpoint at the start of the statement at the cursor.
 An asterisk appears to the right of the statement number.
 The debugger is halted each time it reaches the statement.
 
 @kindex B
-@findex mdcs-breakpoint-cond
-@item B (@code{mdcs-breakpoint-cond})
+@findex mds-breakpoint-cond
+@item B (@code{mds-breakpoint-cond})
 Stopat-cond:  Set a conditional breakpoint at the start of the statement at the cursor.
 The condition is entered in the mini-buffer.  It must be a Maple boolean expression.
 A question mark appears to the right of the statement number.
 The debugger is halted each time it reaches the statement and the condition evaluates to true.
 
 @kindex p
-@findex mdcs-showstop
-@item p (@code{mdcs-showstop})
+@findex mds-showstop
+@item p (@code{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.  Conditional breakpoints are
 not included.
 
 @kindex u
-@findex mdcs-unstopat
-@item u (@code{mdcs-unstopat})
+@findex mds-unstopat
+@item u (@code{mds-unstopat})
 Unstopat: Clear a breakpoint at the start of the statement at the cursor.
 
 @end table
@@ -781,30 +781,30 @@ Note that a global watchpoint must be reset each time the procedure is debugged.
 @table @asis
 
 @kindex I
-@findex mdcs-stopwhenif
-@item I (@code{mdcs-stopwhenif})
+@findex mds-stopwhenif
+@item I (@code{mds-stopwhenif})
 stopwhenif:  Set a conditional watchpoint on the specified global variable.
 The variable name and conditional value are entered separately in the mini-buffer.
 Use @kbd{C-u W} to clear a conditional watchpoint.
 
 @kindex p
-@findex mdcs-showstop
-@item p (@code{mdcs-showstop})
+@findex mds-showstop
+@item p (@code{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
 @kindex w
 @kindex C-u w
-@findex mdcs-stopwhen-local
-@item w (@code{mdcs-stopwhen-local})
+@findex mds-stopwhen-local
+@item w (@code{mds-stopwhen-local})
 stopwhen: Set a local watchpoint.   
 The variable name is entered in the mini-buffer.
 Use @kbd{C-u w} to clear a local watchpoint.
 
 
 @kindex W
-@findex mdcs-stopwhen-global
-@item W (@code{mdcs-stopwhen-global})
+@findex mds-stopwhen-global
+@item W (@code{mds-stopwhen-global})
 stopwhen: Set a global watchpoint. 
 The variable name is entered in the mini-buffer.
 Use @kbd{C-u W} to clear a global watchpoint.
@@ -818,39 +818,39 @@ Use @kbd{C-u W} to clear a global watchpoint.
 @section Evaluation
 @cindex evaluation, expression
 
-Mdcs can evaluate expressions using the current context of Maple.
+Mds can evaluate expressions using the current context of Maple.
 
 @table @asis
 
 @kindex a
-@findex mdcs-args
-@item a (@code{mdcs-args})
+@findex mds-args
+@item a (@code{mds-args})
 Display the arguments of the current procedure as a vertical list of values.
 
 @kindex A
-@findex mdcs-show-args-as-equations
-@item A (@code{mdcs-show-args-as-equations})
+@findex mds-show-args-as-equations
+@item A (@code{mds-show-args-as-equations})
 Display the arguments of the current procedure as a vertical list of equations.
 The left-side of each equation is the formal parameter, 
 the right-side is the value.
 
 @kindex e
-@findex mdcs-eval-and-display-expr
-@item e (@code{mdcs-eval-and-display-expr})
+@findex mds-eval-and-display-expr
+@item e (@code{mds-eval-and-display-expr})
 Evaluate an expression in the current context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
 
 @kindex E
-@findex mdcs-eval-and-display-expr-global
-@item E (@code{mdcs-eval-and-display-expr-global})
+@findex mds-eval-and-display-expr-global
+@item E (@code{mds-eval-and-display-expr-global})
 Evaluate an expression in the global context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
 
 @kindex .
-@findex mdcs-eval-and-prettyprint
-@item . (@code{mdcs-eval-and-prettyprint})
+@findex mds-eval-and-prettyprint
+@item . (@code{mds-eval-and-prettyprint})
 Evaluate an expression and prettyprint the result.
 The pretty-printing depends on the type of the evaluated expression.
 The first line of the display (after the echoing of the expression)
@@ -882,13 +882,13 @@ c = NULL
 @table @asis
 
 @kindex T
-@findex mdcs-toggle-truncate-lines
-@item T (@code{mdcs-toggle-truncate-lines})
+@findex mds-toggle-truncate-lines
+@item T (@code{mds-toggle-truncate-lines})
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
-@findex mdcs-toggle-show-args
-@item @code{mdcs-toggle-show-args}
+@findex mds-toggle-show-args
+@item @code{mds-toggle-show-args}
 Toggle the display of arguments upon entering a procedure.
 
 @end table
@@ -900,8 +900,8 @@ Toggle the display of arguments upon entering a procedure.
 @table @asis
 
 @kindex h
-@findex mdcs-help-debugger
-@item h (@code{mdcs-help-debugger})
+@findex mds-help-debugger
+@item h (@code{mds-help-debugger})
 Display the Maple help page for the Maple debugger.
 
 @kindex C-h m
@@ -909,9 +909,9 @@ Display the Maple help page for the Maple debugger.
 Display the help for this mode.
 
 @kindex H
-@findex mdcs-info
-@item H (@code{mdcs-info})
-Open the @command{info} document for Mdcs mode.
+@findex mds-info
+@item H (@code{mds-info})
+Open the @command{info} document for Mds mode.
 
 @kindex C-?
 @findex maplev-help-at-point

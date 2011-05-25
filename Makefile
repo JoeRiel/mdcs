@@ -10,7 +10,6 @@ include help-system.mak
 
 .PHONY: byte-compile build default
 
-PKG := mdcs
 comma := ,
 
 default: $(call print-help,default,Byte-compile the elisp)
@@ -53,6 +52,8 @@ MAPLE_INSTALL_DIR = $(HOME)/maple/lib
 
 # {{{ doc
 
+PKG := "mds"
+
 TEXIFILES = doc/$(PKG).texi
 INFOFILES = doc/$(PKG)
 
@@ -93,8 +94,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mdcs-server \
-      mdcs-showstat
+ELS = mds mds-showstat
 
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
@@ -109,7 +109,7 @@ byte-compile: $(ELCFILES)
 # {{{ mla
 
 .PHONY: mla 
-mla := $(PKG).mla
+mla := mdc.mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
@@ -152,7 +152,7 @@ install-el: $(el-files)
 
 PHONY: dist
 
-dist = $(ELS) $(TEXIFILE) $(INFOFILES)  Makefile README
+dist = $(ELS) $(TEXIFILE) $(INFOFILES) Makefile README
 
 dist: $(PKG).zip
 
@@ -168,7 +168,7 @@ $(PKG).zip: $(dist)
 clean: $(call print-help,clean,Remove files)
 clean:
 	-$(RM) lisp/*.elc
-	-$(RM) -f $(filter-out doc/mdcs.texi,$(wildcard doc/$(PKG)*))
+	-$(RM) -f $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla)
 	$(MAKE) --directory=c $@
 
