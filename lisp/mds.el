@@ -192,6 +192,9 @@ before the process terminates.")
 (defconst mds-buffer "*mds*"
   "Buffer associated with mds server")
 
+(defconst mds-max-number-clients 4
+  "Maximum number of clients allowed.")
+
 ;;}}}
 ;;{{{ variables
 
@@ -220,8 +223,13 @@ Status is either `accepted', `pending', or `rejected'.")
   "Alist containing info of accepted clients.
 An entry consists of (proc buffer . id).")
 
+(defvar mds-number-clients 0
+  "Current number of clients.
+Maximum is given by `mds-max-number-clients'.")
+
 
 ;;}}}
+
 
 ;;{{{ Access fields in client entry of alist
 
@@ -249,7 +257,7 @@ If none, then return nil."
 			    (assq-delete-all oldproc mds-clients))))
 
 (defun mds-add-client-to-alist (proc id)
-  (setq mds-clients (cons (cons proc (mds-server-alist-entry proc id)) mds-clients)))
+  (setq mds-clients (cons (cons proc (mds-alist-entry proc id)) mds-clients)))
 
 
 (defun mds-alist-entry (proc id)
@@ -301,19 +309,33 @@ Generate new buffers for the showstat and Maple output."
   (unless (eq msg "")
     (cond
      ((string-match mds--client-attach-re msg)
-      ;; A Maple client has attached.
+      ;; A client has attached.
       (let ((conn (match-string 1 msg)))
-	(mds-log proc (format "client has attached: %s" msg))))
+	(mds-log proc (format "client has attached: %s" (substring msg 0 -2)))
+	(let ((status (mds-get-client-status proc)))
+	  (cond
+	   ((eq status 'accepted) (mds-log proc "accepted client"))
+	   ((eq status 'rejected) (mds-log proc "rejected client"))
+	   ((eq status 'login)    (mds-log proc "begin login"))))))
      ((string= msg "connection broken by remote peer\n")
-      ;; A Maple client has closed.
-      (mds-delete-client proc))
+      ;; A client has unattached.
+      (mds-log proc
+	       (format "%sclient has unattached"
+		       (if (mds-delete-client proc)
+			   "accepted " ""))))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
 
 
-(defun mds-check-in-client (proc id)
-  (and (string-match mds-client-id-re id)
-       (mds-add-client proc id)))
+(defun mds-get-client-status (proc)
+  (if (assoc proc mds-clients)
+      'accepted
+    (if (>= mds-number-clients mds-max-number-clients)
+	'rejected
+      (mds-add-client-to-alist proc "dummy id")
+      (setq mds-number-clients (1+ mds-number-clients))
+      'accepted)))
+
 
 ;;}}}
 ;;{{{ Filter
@@ -332,11 +354,8 @@ FUNC (if non-nil), then written to `mds-debugger-output-buffer',
 and the new region is processed by PROC (if non-nil); otherwise
 MSG is written to `mds-buffer'."
 
-  (let ((status (mds-get-proc-status proc)))
+  (let ((status (mds-get-client-status proc)))
     (cond
-     ((eq status 'pending)
-      ;;(mds-login proc msg)
-      )
      ((eq status 'accepted)
       ;; route MSG to proper buffer
       (with-current-buffer (mds--get-showstat-buffer
@@ -383,21 +402,13 @@ MSG is written to `mds-buffer'."
 	    (mds-showstat-display-proc msg))
 	   ;; otherwise print to debugger output buffer
 	   (t (mds-showstat-display-debugger-output msg))))))
+     ((eq status 'pending)
+      ;;(mds-login proc msg)
+      )
      ((eq status 'rejected)
       (mds-log proc "ignoring msg from rejected client")))))
 
 ;;}}}
-
-
-(defun mds-get-proc-status (proc) 'pending)
-
-;;{{{ Login
-
-
-
-
-;;}}}
-
 
 
 ;;{{{ Handle Clients
@@ -420,46 +431,26 @@ MSG is written to `mds-buffer'."
 
 (defun mds-delete-client (proc)
   (let ((entry (assoc proc mds-clients)))
-    (if (null entry)
-	(error "client does not exist")
-      (mds-log proc "removing client")
-      ;; kill the showstat buffer
-      (mds-kill-buffer (mds--get-showstat-buffer entry))
-      (setq mds-clients (delq entry mds-clients)))))
+    (and entry
+	 (progn
+	   (mds-log proc "removing client")
+	   ;; kill the showstat buffer
+	   (mds-kill-buffer (mds--get-showstat-buffer entry))
+	   (setq mds-clients (delq entry mds-clients)
+		 mds-number-clients (1- mds-number-clients))))))
+				   
+	   
 
 ;;}}}
 
 ;;{{{ talk to client
 
 (defun mds-send-client (proc msg)
-  "Send MSG to Maple client with process PROC."
+  "Send MSG to client with process PROC."
   (process-send-string proc msg))
 
-(defun mds-send-client-id (id msg)
-  "Send MSG to the Maple client with ID."
-  (interactive)
-  (let ((clients mds-clients)
-	client proc)
-    (while (and clients (null proc))
-      (setq client (car clients))
-      (if (eq id (mds--get-id client))
-    	  (setq proc (car client))
-    	(setq clients (cdr clients))))
-    (if proc
-    	(mds-send-client proc msg)
-      (error "no client with id: %d" id))))
-
 ;;}}}
 
-;;{{{ log stuff
-
-(defun mds-log (proc msg)
-  (with-current-buffer mds-buffer
-    (goto-char (point-max))
-    (insert (format "%s: %s\n" proc msg))
-    (set-window-point (get-buffer-window) (point))))
-
-;;}}}
 
 (defun mds-kill-buffer (buf)
   "Kill buffer BUF; verify that it is a live buffer."
@@ -467,17 +458,25 @@ MSG is written to `mds-buffer'."
        (not (buffer-name buf))
        (kill-buffer buf)))
 
+;;{{{ log stuff
+
+(defun mds-log (proc msg)
+  (with-current-buffer mds-buffer
+    (goto-char (point-max))
+    (insert (format "%s: %s\n" (prin1-to-string proc) msg))
+    (set-window-point (get-buffer-window) (point))))
+
+;;}}}
+
 
 (provide 'mds)
 
 ;;{{{ Manual Tests
 ;;
-;; (load "/home/joe/emacs/mdcs/lisp/mds-showstat.el")
-;; (load "/home/joe/emacs/mdcs/lisp/mds.el")
+;; (load "mds-showstat.el")
+;; (load "mds.el")
 ;; (mds-start)
 ;; (mds-stop)
-;; 
-;; (mds-send-client-id 1 "cont")
 
 ;;}}}
 
