@@ -11,6 +11,9 @@ include help-system.mak
 .PHONY: byte-compile build default
 
 comma := ,
+OS := $(shell uname -o)
+
+$(info $(OS))
 
 default: $(call print-help,default,Byte-compile the elisp)
 default: byte-compile
@@ -37,16 +40,23 @@ TEXI2PDF = texi2pdf
 # {{{ Directories
 
 # where executables go
-export BIN_INSTALL_DIR = $(HOME)/bin
+export BIN_INSTALL_DIR := $(HOME)/bin
 
 # where lisp files go
-LISP_DIR = $(HOME)/.emacs.d
+LISP_DIR := $(HOME)/.emacs.d
 
 # where info files go
-INFO_DIR = $(HOME)/share/info
+INFO_DIR := $(HOME)/share/info
 
 # where the maple archive goes
-MAPLE_INSTALL_DIR = $(HOME)/maple/lib
+MAPLE_INSTALL_DIR := $(HOME)/maple/lib
+
+ifeq ($(OS),Cygwin)
+ LISP_DIR := $(shell cygpath --mixed "$(LISP_DIR)")
+ INFO_DIR := $(shell cygpath --mixed "$(INFO_DIR)")
+ MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
+endif
+
 
 # }}}
 
@@ -85,7 +95,6 @@ i:
 
 # {{{ emacs
 
-#LISP_DIR_DOS := $(shell cygpath --mixed "$(LISP_DIR)")
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
