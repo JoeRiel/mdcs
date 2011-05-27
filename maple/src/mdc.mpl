@@ -16,6 +16,11 @@
 ##  that implements a *Maple Debugger Client*.
 ##  It communicates with a *Maple Debugger Server*.
 ##OPTIONS
+##opt(beep,truefalse)
+##  If `true`, emit a tri-tone beep
+##  when succesfully connecting.
+##  Calls the system function `beep`.
+##  The default is `true`.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
 ##  If a string, then the configuration is read
@@ -104,9 +109,14 @@ local Connect
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
-                    , $)
+                    , { beep :: truefalse := true }
+                    , $
+                   )
         if sid <> NULL then
             Sockets:-Close(sid);
+        end if;
+        if beep then
+            ssystem("beep");
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
@@ -114,6 +124,7 @@ local Connect
         Sockets:-Write(sid, id);
         return NULL;
     end proc;
+
 #}}}
 #{{{ Disconnect
 
@@ -195,7 +206,8 @@ local Connect
 #{{{ ModuleApply
 
     ModuleApply := proc( (* no positional parameters *)
-                         { config :: {string,identical(maplet)} := NULL }
+                         { beep :: truefalse := true }
+                         , { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
                          , { host :: string := Host }
                          , { maxlength :: nonnegint := max_length }
@@ -231,7 +243,7 @@ local Connect
         replaceProcs();
 
         try
-            Connect(host, port, createID(label) );
+            Connect(host, port, createID(label), _options['beep'] );
         catch:
             restoreProcs();
             error;
