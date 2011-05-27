@@ -170,7 +170,6 @@ clean:
 	-$(RM) lisp/*.elc
 	-$(RM) -f $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla)
-	$(MAKE) --directory=c $@
 
 # }}}
 
