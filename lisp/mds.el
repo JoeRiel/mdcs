@@ -395,7 +395,7 @@ is positive, otherwise stop the server."
 	  ;; FIXME
 	  ;; hack to workaround an empty queue.
 	  (tq-queue-add tq nil mds-end-of-msg-re proc #'mds-handle-stream))
-	(mds-tq-filter tq msg)))
+	(mds-tq-filter tq msg proc)))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -412,16 +412,16 @@ is positive, otherwise stop the server."
     (buffer-disable-undo (tq-buffer tq))
     tq))
 
-(defun mds-tq-filter (tq string)
+(defun mds-tq-filter (tq string proc)
   "Append STRING to the TQ's buffer; then process the new data."
   (let ((buffer (tq-buffer tq)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
 	(goto-char (point-max))
 	(insert string)
-	(mds-tq-process-buffer tq)))))
+	(mds-tq-process-buffer tq proc)))))
 
-(defun mds-tq-process-buffer (tq)
+(defun mds-tq-process-buffer (tq proc)
   "Check TQ's buffer for the regexp at the head of the queue.
 If found, pass it to the function in the queue."
   (let ((buffer (tq-buffer tq)))
@@ -431,12 +431,15 @@ If found, pass it to the function in the queue."
 	(goto-char (point-min))
 	(if (tq-queue-empty tq)
 	    ;; unrequested response; send to maple output buffer
+	    ;; if terminated.
 	    (if (re-search-forward mds-end-of-msg-re nil t)
 		(let ((msg (buffer-substring (point-min) (point))))
 		  (delete-region (point-min) (point))
 		  ;; need to send to debugger output,
 		  ;; but tq is nil, so don't know where that is
-		  ))
+		  (let ((client (mds-get-client proc)))
+		    (with-current-buffer (mds--get-showstat-buffer client)
+		      (mds-showstat-display-debugger-output msg)))))
 	  (if (re-search-forward (tq-queue-head-regexp tq) nil t)
 	      (let ((answer (buffer-substring (point-min) (point))))
 		(delete-region (point-min) (point))
@@ -447,7 +450,7 @@ If found, pass it to the function in the queue."
 				 answer)
 		      (error nil))
 		  (tq-queue-pop tq))
-		(mds-tq-process-buffer tq))))))))
+		(mds-tq-process-buffer tq proc))))))))
 
 
 ;;}}}
