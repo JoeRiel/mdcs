@@ -283,7 +283,8 @@ Generate new buffers for the showstat and Maple output."
 		    :service mds-port 
 		    :sentinel 'mds-sentinel 
 		    :filter 'mds-filter
-		    :server 't))))
+		    :server 't))
+    (message "Maple Debugger Server started")))
 
 (defun mds-stop nil
   "Stop the Emacs mds server."
@@ -294,7 +295,24 @@ Generate new buffers for the showstat and Maple output."
   ;; Kill the server process and buffer
   (if (process-status mds-proc)
       (delete-process mds-proc))
-  (mds-kill-buffer mds-log-buffer))
+  (mds-kill-buffer mds-log-buffer)
+  (message "Maple Debugger Server stopped"))
+
+(defun toggle-mds (&optional arg)
+  "Toggle the Maple Debugger Server on or off.
+With prefix argument ARG, start the server if ARG
+is positive, otherwise stop the server."
+  (interactive "P")
+  (let ((up (process-status "mds")))
+    (if (and arg
+	   (if (> (prefix-numeric-value arg) 0)
+	       up
+	     (not up)))
+	(message (format "Maple Debugger Server already %s"
+			 (if up "started" "stopped")))
+      (if up
+	  (mds-stop)
+	(mds-start)))))
 
 ;;}}}
 ;;{{{ Sentinel
@@ -309,6 +327,7 @@ Generate new buffers for the showstat and Maple output."
 	(let ((status (mds-get-client-status proc)))
 	  (cond
 	   ((eq status 'accepted)
+	    (ding)
 	    (mds-writeto-log proc "accepted client"))
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
