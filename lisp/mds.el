@@ -47,6 +47,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'tq)
 (require 'mds-showstat)
 (require 'maplev)
 (eval-when-compile
@@ -164,7 +165,7 @@ This is the prompt as output from the maple process.")
 (defconst mds--debugger-status-re
   (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
   "Regexp that matches the status output of the debugger.
-The first group matches the procedure name, the second group the
+3The first group matches the procedure name, the second group the
 state number.")
 
 (defconst mds--maple-output-re
@@ -194,6 +195,8 @@ before the process terminates.")
 
 (defconst mds-max-number-clients 4
   "Maximum number of clients allowed.")
+
+(defconst mds-end-of-msg-re "---EOM---")
 
 ;;}}}
 ;;{{{ variables
@@ -233,12 +236,19 @@ Maximum is given by `mds-max-number-clients'.")
 
 ;;{{{ Access fields in client entry of alist
 
-;; Access elements of a client (entry in `mds-clients')
-;; Don't forget the entry, which comes from (assoc ...),
-;; includes the key, which is the proc.
+;; Each entry in the alist, including the key (proc),
+;; has the structure
+;;
+;;    (proc . (ss-buf id . tq))
+;;
+;; Access elements of a client (entry in `mds-clients').
+
 (defsubst mds--get-proc            (entry) (car entry))
 (defsubst mds--get-showstat-buffer (entry) (cadr entry))
-(defsubst mds--get-id              (entry) (cddr entry))
+(defsubst mds--get-id              (entry) (cadr (cdr entry)))
+(defsubst mds--get-tq              (entry) (cddr (cdr entry)))
+
+(defsubst mds-get-client (proc) (assoc proc mds-clients))
 
 (defun mds-find-client-with-id (id)
   "Return entry in `mds-clients' with matching ID.
@@ -257,14 +267,20 @@ If none, then return nil."
 			    (assq-delete-all oldproc mds-clients))))
 
 (defun mds-add-client-to-alist (proc id)
-  (setq mds-clients (cons (cons proc (mds-alist-entry proc id)) mds-clients)))
-
+  (setq mds-clients (cons (mds-alist-entry proc id) mds-clients)))
 
 (defun mds-alist-entry (proc id)
   "Create an entry for the `mds-clients' alist.
 Generate new buffers for the showstat and Maple output."
-  (cons (mds-showstat-generate-buffers proc) id))
+  (let ((buf (mds-showstat-generate-buffers proc))
+	(tq (mds-create-tq proc)))
+    (cons proc 
+	  (cons buf (cons id tq)))))
 
+;;(setq client1 (car mds-clients))
+;;(mds--get-showstat-buffer client1)
+;;(mds--get-id client1)
+;;(mds--get-tq client1)
 
 ;;}}}
 
@@ -283,10 +299,11 @@ Generate new buffers for the showstat and Maple output."
 		    :service mds-port 
 		    :sentinel 'mds-sentinel 
 		    :filter 'mds-filter
+		    ;; :log 'mds-log
 		    :server 't))
     (message "Maple Debugger Server started")))
 
-(defun mds-stop nil
+(defun mds-stop ()
   "Stop the Emacs mds server."
   (interactive)
   ;; Delete each entry, killing process and buffers
@@ -313,6 +330,15 @@ is positive, otherwise stop the server."
       (if up
 	  (mds-stop)
 	(mds-start)))))
+
+(defun mds-restart ()
+  "Restart the Maple Debugger Server."
+  (interactive)
+  (if (process-status "mds")
+      (mds-stop))
+  (mds-start))
+    
+
 
 ;;}}}
 ;;{{{ Sentinel
@@ -354,30 +380,134 @@ is positive, otherwise stop the server."
       'accepted)))
 
 
+
 ;;}}}
 ;;{{{ Filter
 
 (defun mds-filter (proc msg)
-  "CLOSURE is a list, \(EXEC FUNC PROC\), MSG is a Maple output string.
-This procedure is a filter passed to `tq-enqueue'.  If MSG
-contains debugger status, the `mds-showstat-buffer' is updated.
-
-The EXEC element of CLOSURE is a flag; if non-nil then the output
-is from executing statements in the debugged code (rather than
-evaluating expressions entered by the user).
-
-If `mds-showstat-debugging-flag' is non-nil, MSG is first processed by
-FUNC (if non-nil), then written to `mds-debugger-output-buffer',
-and the new region is processed by PROC (if non-nil); otherwise
-MSG is written to `mds-buffer'."
-
   (let ((status (mds-get-client-status proc)))
     (cond
      ((eq status 'accepted)
-      ;; route MSG to proper buffer
-      ;; (mds-writeto-log proc msg)
-      (with-current-buffer (mds--get-showstat-buffer
-			    (assoc proc mds-clients))
+      ;; route MSG to TQ
+      (mds-writeto-log proc msg)
+      (let ((tq (mds--get-tq (mds-get-client proc))))
+	(unless (tq-queue tq)
+	  ;; FIXME
+	  ;; hack to workaround an empty queue.
+	  (tq-queue-add tq nil mds-end-of-msg-re proc #'mds-handle-stream))
+	(mds-tq-filter tq msg)))
+     ((eq status 'rejected)
+      (mds-writeto-log proc "ignoring msg from rejected client")))))
+
+;;}}}
+
+;;{{{ Transaction Queue
+
+(defun mds-create-tq (process)
+  "Create and return a transaction queue for PROCESS."
+  (let ((tq (cons nil (cons process
+			    (generate-new-buffer
+			     (concat " mds-tq-temp-"
+				     (process-name process)))))))
+    (buffer-disable-undo (tq-buffer tq))
+    tq))
+
+(defun mds-tq-filter (tq string)
+  "Append STRING to the TQ's buffer; then process the new data."
+  (let ((buffer (tq-buffer tq)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+	(goto-char (point-max))
+	(insert string)
+	(mds-tq-process-buffer tq)))))
+
+(defun mds-tq-process-buffer (tq)
+  "Check TQ's buffer for the regexp at the head of the queue.
+If found, pass it to the function in the queue."
+  (let ((buffer (tq-buffer tq)))
+    (when (buffer-live-p buffer)
+      (set-buffer buffer)
+      (if (= 0 (buffer-size)) ()
+	(goto-char (point-min))
+	(if (tq-queue-empty tq)
+	    ;; unrequested response; send to maple output buffer
+	    (if (re-search-forward mds-end-of-msg-re nil t)
+		(let ((msg (buffer-substring (point-min) (point))))
+		  (delete-region (point-min) (point))
+		  ;; need to send to debugger output,
+		  ;; but tq is nil, so don't know where that is
+		  ))
+	  (if (re-search-forward (tq-queue-head-regexp tq) nil t)
+	      (let ((answer (buffer-substring (point-min) (point))))
+		(delete-region (point-min) (point))
+		(unwind-protect
+		    (condition-case nil
+			(funcall (tq-queue-head-fn tq)
+				 (tq-queue-head-closure tq)
+				 answer)
+		      (error nil))
+		  (tq-queue-pop tq))
+		(mds-tq-process-buffer tq))))))))
+
+
+;;}}}
+
+;;{{{ Handle Clients
+
+(defun mds-add-client (proc id)
+  "Add a Maple client.  Buffers are created and added to the `mds-clients' alist."
+  (if (assoc proc mds-clients)
+      (error "client already exists in list")
+    ;; Look for a matching id in the atable.
+    ;; If it exists, then associate this proc with it
+    (let ((entry (mds-find-client-with-id id)))
+      (if entry
+	  (progn 
+	    (mds-swap-proc-in-clients (mds--get-proc entry) proc)
+	    (mds-writeto-log proc "moved client"))
+	;; Create and add mds buffers, add to
+	(mds-add-client-to-alist proc id)
+	(mds-writeto-log proc "added client")))))
+
+
+(defun mds-delete-client (proc)
+  "If PROC is a client process, delete PROC it associated buffers, 
+remove the entry from the alist, and decrement `mds-number-clients'."
+  (let ((entry (assoc proc mds-clients)))
+    (and entry
+	 (progn
+	   (mds-writeto-log proc "removing client")
+	   ;; kill the process and buffers
+	   (delete-process proc)
+	   (mds-showstat-kill-buffers (mds--get-showstat-buffer entry))
+	   (setq mds-clients (delq entry mds-clients)
+		 mds-number-clients (1- mds-number-clients))))))
+
+;;}}}
+
+;;{{{ talk to client
+
+(defun mds-send-client (proc msg)
+  "Send MSG to client with process PROC."
+  (let* ((client (mds-get-client proc))
+	 (tq (mds--get-tq client)))
+    (tq-enqueue tq 
+		msg
+		mds-end-of-msg-re
+		proc   ;; closure
+		#'mds-handle-stream
+		'delay)))
+
+;;}}}
+
+;;{{{ mds-handle-stream
+
+(defun mds-handle-stream (closure msg)
+  (let* ((proc closure)
+	 (client (mds-get-client proc))
+	 (buf (mds--get-showstat-buffer client))) 
+    ;; route MSG to proper buffer
+      (with-current-buffer buf
 	(with-syntax-table maplev--symbol-syntax-table
 	  (cond
 	   ((string-match mds--debugger-status-re msg)
@@ -419,55 +549,10 @@ MSG is written to `mds-buffer'."
 	    ;; handle showstat output
 	    (mds-showstat-display-proc msg))
 	   ;; otherwise print to debugger output buffer
-	   (t (mds-showstat-display-debugger-output msg))))))
-     ((eq status 'pending)
-      ;;(mds-writeto-login proc msg)
-      )
-     ((eq status 'rejected)
-      (mds-writeto-log proc "ignoring msg from rejected client")))))
+	   (t (mds-showstat-display-debugger-output msg)))))))
 
 ;;}}}
 
-;;{{{ Handle Clients
-
-(defun mds-add-client (proc id)
-  "Add a Maple client.  Buffers are created and added to the `mds-clients' alist."
-  (if (assoc proc mds-clients)
-      (error "client already exists in list")
-    ;; Look for a matching id in the atable.
-    ;; If it exists, then associate this proc with it
-    (let ((entry (mds-find-client-with-id id)))
-      (if entry
-	  (progn 
-	    (mds-swap-proc-in-clients (mds--get-proc entry) proc)
-	    (mds-writeto-log proc "moved client"))
-	;; Create and add mds buffers, add to
-	(mds-add-client-to-alist proc id)
-	(mds-writeto-log proc "added client")))))
-
-
-(defun mds-delete-client (proc)
-  "If PROC is a client process, delete PROC it associated buffers, 
-remove the entry from the alist, and decrement `mds-number-clients'."
-  (let ((entry (assoc proc mds-clients)))
-    (and entry
-	 (progn
-	   (mds-writeto-log proc "removing client")
-	   ;; kill the process and buffers
-	   (delete-process proc)
-	   (mds-showstat-kill-buffers (mds--get-showstat-buffer entry))
-	   (setq mds-clients (delq entry mds-clients)
-		 mds-number-clients (1- mds-number-clients))))))
-				   
-;;}}}
-
-;;{{{ talk to client
-
-(defun mds-send-client (proc msg)
-  "Send MSG to client with process PROC."
-  (process-send-string proc msg))
-
-;;}}}
 
 ;;{{{ mds-kill-buffer
 
