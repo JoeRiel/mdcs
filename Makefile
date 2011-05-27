@@ -144,8 +144,8 @@ install-info: $(INFOFILES)
 
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(call print-help,install-el,Install el files but not elc files)
-install-el: $(el-files)
-	$(CP) --archive $+ $(installdir)
+install-el: $(LISPFILES)
+	$(CP) --archive $+ $(LISP_DIR)
 
 # }}}
 # {{{ distribution
