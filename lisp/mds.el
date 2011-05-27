@@ -389,7 +389,9 @@ is positive, otherwise stop the server."
     (cond
      ((eq status 'accepted)
       ;; route MSG to TQ
+      (mds-writeto-log proc "{{{")
       (mds-writeto-log proc msg)
+      (mds-writeto-log proc "}}}")
       (let ((tq (mds--get-tq (mds-get-client proc))))
 	(unless (tq-queue tq)
 	  ;; FIXME
