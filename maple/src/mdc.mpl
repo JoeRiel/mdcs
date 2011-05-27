@@ -62,6 +62,7 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`
 $define MDS_PORT 10\000
+$define END_OF_MSG "---EOM---"
 
 unprotect('mdc'):
 module mdc()
@@ -110,6 +111,7 @@ local Connect
                     , port :: posint
                     , id :: string
                     , { beep :: truefalse := true }
+                    , { greeting :: string := "" }
                     , $
                    )
         if sid <> NULL then
@@ -121,7 +123,9 @@ local Connect
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
-        Sockets:-Write(sid, id);
+        if greeting <> "" then
+            printf_to_server(greeting);
+        end if;
         return NULL;
     end proc;
 
@@ -209,6 +213,7 @@ local Connect
                          { beep :: truefalse := true }
                          , { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
+                         , { greeting :: string := "" }
                          , { host :: string := Host }
                          , { maxlength :: nonnegint := max_length }
                          , { password :: string := "" }
@@ -243,7 +248,7 @@ local Connect
         replaceProcs();
 
         try
-            Connect(host, port, createID(label), _options['beep'] );
+            Connect(host, port, createID(label), _options['beep','greeting'] );
         catch:
             restoreProcs();
             error;
@@ -689,6 +694,7 @@ local Connect
             end if;
         end if;
         Sockets:-Write(sid, msg);
+        Sockets:-Write(sid, END_OF_MSG);
         if view_flag then
             fprintf('INTERFACE_DEBUG',_passed);
         end if;
