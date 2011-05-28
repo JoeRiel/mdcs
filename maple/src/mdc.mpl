@@ -807,7 +807,7 @@ $include <src/Format.mm>
                 msg := sprintf("---output too long (%d bytes)---\n", len);
             end if;
         end if;
-        # Sockets:-Write(sid, sprintf("<%a>",tag));
+        Sockets:-Write(sid, sprintf("<%a>",tag));
         Sockets:-Write(sid, msg);
         Sockets:-Write(sid, sprintf("</%a>",tag));
         Sockets:-Write(sid, END_OF_MSG);

@@ -175,6 +175,11 @@ state number.")
 (defconst mds--showstat-re
   (concat "^\n\\(" maplev--name-re "\\) := proc("))
 
+(defconst mds-start-tag-re "^<\\([^>]+\\)>"
+  "Regular expression that matches start tag.
+The tag has format <tag-name>.  Group 0 matches the tag,
+group 1 matches tag-name.")
+
 (defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
   "Regexp to match message when a client attaches.
 The first group identifies SOMETHING.")
@@ -488,18 +493,33 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 
 ;;}}}
 
+(defun mds-extract-tag (msg) 
+  "Return (tag . MSG), where the tags have been removed from MSG.
+The format of MSG must be \"<tag>msg</tag>\"."
+  (if (string-match mds-start-tag-re msg)
+      (let* ((tag (match-string 1 msg))
+	     (len (match-end 0)))
+	(cons tag (substring msg len (- (1+ len)))))
+    ;; FIXME: this error gets caught and not displayed
+    (error "no tag in message: '%s...'" (substring msg 0 (min 10 (length msg))))))
+
 ;;{{{ mds-handle-stream
 
 (defun mds-handle-stream (proc msg)
   (let* ((client (mds-get-client proc))
-	 (buf (mds--get-showstat-buffer client))) 
+	 (buf (mds--get-showstat-buffer client))
+	 (tag-msg (mds-extract-tag msg))
+	 (tag (car tag-msg))  ; name of tag
+	 (msg (cdr tag-msg))) ; msg with no tags
+		  
     ;; route MSG to proper buffer
       (with-current-buffer buf
 	(with-syntax-table maplev--symbol-syntax-table
 	  (cond
-	   ((string-match mds--debugger-status-re msg)
+	   ((string= tag "DBG_STATE")
 	    ;;{{{ msg contains debugger status
-
+	    
+	    (string-match mds--debugger-status-re msg)
 	    (let ((cmd-output (substring msg 0 (match-beginning 1)))
 		  (procname (match-string 1 msg))
 		  (state    (match-string 2 msg))
@@ -532,7 +552,8 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 
 	    ;;}}}
 	    )
-	   ((string-match mds--showstat-re msg)
+	   ((string= tag "DBG_SHOW")
+	    ;; (string-match mds--showstat-re msg)
 	    ;; handle showstat output
 	    (mds-showstat-display-proc msg))
 	   ;; otherwise print to debugger output buffer
