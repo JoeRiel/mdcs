@@ -28,9 +28,9 @@ build: byte-compile compile doc mla
 # specify values on the command line.
 
 EMACS := emacs
-MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
+#MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
 #MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
-#MAPLE := cmaple
+MAPLE := maple
 
 CP = cp
 INSTALL_INFO = install-info
@@ -53,6 +53,7 @@ INFO_DIR := $(HOME)/share/info
 # where the maple archive goes
 MAPLE_INSTALL_DIR := $(HOME)/maple/lib
 
+# Cypathify, as needed
 ifeq ($(OS),Cygwin)
  LISP_DIR := $(shell cygpath --mixed "$(LISP_DIR)")
  INFO_DIR := $(shell cygpath --mixed "$(INFO_DIR)")
@@ -100,8 +101,8 @@ i:
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
-	--eval "(add-to-list (quote load-path) (expand-file-name \"./lisp\"))" \
-	--eval "(add-to-list (quote load-path) \"$(LISP_DIR)\")"
+	  --eval "(add-to-list (quote load-path) (expand-file-name \"./lisp\"))" \
+	  --eval "(add-to-list (quote load-path) \"$(LISP_DIR)\")"
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
