@@ -27,8 +27,10 @@ build: byte-compile compile doc mla
 # Modify these to something appropriate, or
 # specify values on the command line.
 
-EMACS = emacs
-MAPLE = $(MAPLE_ROOT)/bin/smaple -B
+EMACS := emacs
+MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
+#MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
+#MAPLE := cmaple
 
 CP = cp
 INSTALL_INFO = install-info
@@ -55,8 +57,8 @@ ifeq ($(OS),Cygwin)
  LISP_DIR := $(shell cygpath --mixed "$(LISP_DIR)")
  INFO_DIR := $(shell cygpath --mixed "$(INFO_DIR)")
  MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
+ MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
-
 
 # }}}
 
@@ -123,7 +125,8 @@ mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
 %.mla: maple/src/%.mpl maple/src/*.mm
-	mload -I maple -m $@ $^
+	$(RM) $@
+	"$(MAPLE)" -I maple $^
 
 # }}}
 
@@ -136,17 +139,20 @@ install: install-lisp install-info install-maple
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
+	$(MKDIR) $(MAPLE_INSTALL_DIR)
 	$(CP) --archive $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
 	@if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
-	@$(CP) $+ $(LISP_DIR)
+	$(MKDIR) $(LISP_DIR)
+	$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
 install-info: $(INFOFILES)
 	@if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
-	@$(CP) $(INFOFILES) $(INFO_DIR)
+	$(MKDIR) $(INFO_DIR)
+	$(CP) $(INFOFILES) $(INFO_DIR)
 	@if [ -f $(INFO_DIR)/dir ]; then \
 		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
 	fi
@@ -154,6 +160,7 @@ install-info: $(INFOFILES)
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(call print-help,install-el,Install el files but not elc files)
 install-el: $(LISPFILES)
+	$(MKDIR) $(LISP_DIR)
 	$(CP) --archive $+ $(LISP_DIR)
 
 # }}}
