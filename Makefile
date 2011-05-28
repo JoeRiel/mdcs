@@ -13,7 +13,7 @@ include help-system.mak
 comma := ,
 OS := $(shell uname -o)
 
-$(info $(OS))
+$(info Building Maple Debugger for $(OS))
 
 default: $(call print-help,default,Byte-compile the elisp)
 default: byte-compile
@@ -27,10 +27,16 @@ build: byte-compile compile doc mla
 # Modify these to something appropriate, or
 # specify values on the command line.
 
-EMACS := emacs
-#MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
-#MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
-MAPLE := maple
+ifeq ($(OS),Cygwin)
+  EMACS := emacs
+  MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
+  #MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
+  #MAPLE := maple
+else
+  EMACS := emacs
+  #MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
+  MAPLE := maple
+endif
 
 CP = cp
 INSTALL_INFO = install-info
