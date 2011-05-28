@@ -47,7 +47,6 @@
 
 ;;{{{ Lisp Requirements
 
-(require 'tq)
 (require 'mds-showstat)
 (require 'maplev)
 (eval-when-compile
@@ -239,14 +238,14 @@ Maximum is given by `mds-max-number-clients'.")
 ;; Each entry in the alist, including the key (proc),
 ;; has the structure
 ;;
-;;    (proc . (ss-buf id . tq))
+;;    (proc . (ss-buf id . queue))
 ;;
 ;; Access elements of a client (entry in `mds-clients').
 
 (defsubst mds--get-proc            (entry) (car entry))
 (defsubst mds--get-showstat-buffer (entry) (cadr entry))
 (defsubst mds--get-id              (entry) (cadr (cdr entry)))
-(defsubst mds--get-tq              (entry) (cddr (cdr entry)))
+(defsubst mds--get-queue           (entry) (cddr (cdr entry)))
 
 (defsubst mds-get-client (proc) (assoc proc mds-clients))
 
@@ -273,14 +272,14 @@ If none, then return nil."
   "Create an entry for the `mds-clients' alist.
 Generate new buffers for the showstat and Maple output."
   (let ((buf (mds-showstat-generate-buffers proc))
-	(tq (mds-create-tq proc)))
+	(queue (mds-queue-create proc)))
     (cons proc 
-	  (cons buf (cons id tq)))))
+	  (cons buf (cons id queue)))))
 
 ;;(setq client1 (car mds-clients))
 ;;(mds--get-showstat-buffer client1)
 ;;(mds--get-id client1)
-;;(mds--get-tq client1)
+;;(mds--get-queue client1)
 
 ;;}}}
 
@@ -388,72 +387,62 @@ is positive, otherwise stop the server."
   (let ((status (mds-get-client-status proc)))
     (cond
      ((eq status 'accepted)
-      ;; route MSG to TQ
+      ;; route msg to queue
       (mds-writeto-log proc "{{{")
       (mds-writeto-log proc msg)
       (mds-writeto-log proc "}}}")
-      (let ((tq (mds--get-tq (mds-get-client proc))))
-	(unless (tq-queue tq)
-	  ;; FIXME
-	  ;; hack to workaround an empty queue.
-	  (tq-queue-add tq nil mds-end-of-msg-re proc #'mds-handle-stream))
-	(mds-tq-filter tq msg proc)))
+      (let ((queue (mds--get-queue (mds-get-client proc))))
+	(mds-queue-filter queue msg)))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
 ;;}}}
 
-;;{{{ Transaction Queue
+;;{{{ Queue
 
-(defun mds-create-tq (process)
-  "Create and return a transaction queue for PROCESS."
-  (let ((tq (cons nil (cons process
-			    (generate-new-buffer
-			     (concat " mds-tq-temp-"
-				     (process-name process)))))))
-    (buffer-disable-undo (tq-buffer tq))
-    tq))
+;; A queue structure consists of a single cons cell,
+;; ( proc . buffer ), where proc is the process
+;; and buffer is the temporary buffer used for the queue.
 
-(defun mds-tq-filter (tq string proc)
-  "Append STRING to the TQ's buffer; then process the new data."
-  (let ((buffer (tq-buffer tq)))
+(defsubst mds-queue-proc   (queue) (car queue))
+(defsubst mds-queue-buffer (queue) (cdr queue))
+
+(defun mds-queue-create (proc)
+  "Create and return a queue for PROC.
+The structure has the form (proc . buf)."
+  (let ((buf (get-buffer-create (concat " mds-queue-temp-"
+					(process-name proc)))))
+    (buffer-disable-undo buf)
+    (cons proc buf)))
+
+(defun mds-queue-filter (queue string)
+  "Append STRING to QUEUE's buffer; then process the new data."
+  (let ((buffer (mds-queue-buffer queue)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
 	(goto-char (point-max))
 	(insert string)
-	(mds-tq-process-buffer tq proc)))))
+	(mds-queue-process-buffer queue)))))
 
-(defun mds-tq-process-buffer (tq proc)
-  "Check TQ's buffer for the regexp at the head of the queue.
+
+(defun mds-queue-process-buffer (queue)
+  "Check QUEUE's buffer for the regexp at the head of the queue.
 If found, pass it to the function in the queue."
-  (let ((buffer (tq-buffer tq)))
+  (let ((buffer (mds-queue-buffer queue)))
     (when (buffer-live-p buffer)
       (set-buffer buffer)
-      (if (= 0 (buffer-size)) ()
+      (unless (= 0 (buffer-size))
 	(goto-char (point-min))
-	(if (tq-queue-empty tq)
-	    ;; unrequested response; send to maple output buffer
-	    ;; if terminated.
-	    (if (re-search-forward mds-end-of-msg-re nil t)
-		(let ((msg (buffer-substring (point-min) (point))))
-		  (delete-region (point-min) (point))
-		  ;; need to send to debugger output,
-		  ;; but tq is nil, so don't know where that is
-		  (let ((client (mds-get-client proc)))
-		    (with-current-buffer (mds--get-showstat-buffer client)
-		      (mds-showstat-display-debugger-output msg)))))
-	  (if (re-search-forward (tq-queue-head-regexp tq) nil t)
-	      (let ((answer (buffer-substring (point-min) (point))))
-		(delete-region (point-min) (point))
-		(unwind-protect
-		    (condition-case nil
-			(funcall (tq-queue-head-fn tq)
-				 (tq-queue-head-closure tq)
-				 answer)
-		      (error nil))
-		  (tq-queue-pop tq))
-		(mds-tq-process-buffer tq proc))))))))
-
+	(while (re-search-forward mds-end-of-msg-re nil t)
+	  ;; get the complete message, minus the eom,
+	  (let ((msg (buffer-substring (point-min) (match-beginning 0))))
+	    ;; delete msg, including eom
+	    (delete-region (point-min) (point))
+	    ;; send msg to correspond showstat filter
+	    (let* ((proc (mds-queue-proc queue))
+		   (client (mds-get-client proc)))
+	      (with-current-buffer (mds--get-showstat-buffer client)
+		(mds-handle-stream proc msg)))))))))
 
 ;;}}}
 
@@ -494,22 +483,15 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 
 (defun mds-send-client (proc msg)
   "Send MSG to client with process PROC."
-  (let* ((client (mds-get-client proc))
-	 (tq (mds--get-tq client)))
-    (tq-enqueue tq 
-		msg
-		mds-end-of-msg-re
-		proc   ;; closure
-		#'mds-handle-stream
-		'delay)))
+  (let ((client (mds-get-client proc)))
+    (process-send-string proc msg)))
 
 ;;}}}
 
 ;;{{{ mds-handle-stream
 
-(defun mds-handle-stream (closure msg)
-  (let* ((proc closure)
-	 (client (mds-get-client proc))
+(defun mds-handle-stream (proc msg)
+  (let* ((client (mds-get-client proc))
 	 (buf (mds--get-showstat-buffer client))) 
     ;; route MSG to proper buffer
       (with-current-buffer buf
