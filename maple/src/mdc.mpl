@@ -460,11 +460,11 @@ local Connect
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_A, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_CALL, "%a\n",_passed[i][j])
                         else
-                            debugger_printf(DBG_A,"%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_CALL, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
                             if `debugger/no_output` <> true then
-                                debugger_printf(DBG_B,"\t%a\n",_passed[i][j-1])
+                                debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
                         fi;
                         j := j - 3
@@ -487,9 +487,9 @@ local Connect
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
-                    debugger_printf(DBG_D, "%a,\n",_passed[i])
+                    debugger_printf(DBG_EVAL, "%a,\n",_passed[i])
                 else
-                    debugger_printf(DBG_D, "%a\n",_passed[i])
+                    debugger_printf(DBG_EVAL, "%a\n",_passed[i])
                 fi
             fi
         od;
@@ -501,7 +501,7 @@ local Connect
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             fi;
-            debugger_printf(DBG_STAT,"%s",debugopts('procdump'=[procName,0..statNumber]))
+            debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
         fi;
         #}}}
         #{{{ command loop
@@ -708,7 +708,7 @@ local Connect
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
 
-            map[3]( debugger_printf, DBG_STAT, "\n%s", [res]);
+            map[3](debugger_printf, DBG_SHOW, "\n%s", [res]);
             if procname <> 'showstat[nonl]' then
                 debugger_printf(DBG_NULL, "\n" )
             fi
@@ -807,9 +807,10 @@ local Connect
                 msg := sprintf("---output too long (%d bytes)---\n", len);
             end if;
         end if;
-        Sockets:-Write(sid, sprintf("<%a>",tag));
+        # Sockets:-Write(sid, sprintf("<%a>",tag));
         Sockets:-Write(sid, msg);
         Sockets:-Write(sid, sprintf("</%a>",tag));
+        Sockets:-Write(sid, END_OF_MSG);
         if view_flag then
             fprintf('INTERFACE_DEBUG',_passed);
         end if;
