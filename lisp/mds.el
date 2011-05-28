@@ -164,7 +164,7 @@ This is the prompt as output from the maple process.")
 (defconst mds--debugger-status-re
   (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
   "Regexp that matches the status output of the debugger.
-3The first group matches the procedure name, the second group the
+The first group matches the procedure name, the second group the
 state number.")
 
 (defconst mds--maple-output-re
@@ -493,6 +493,7 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 
 ;;}}}
 
+
 (defun mds-extract-tag (msg) 
   "Return (tag . MSG), where the tags have been removed from MSG.
 The format of MSG must be \"<tag>msg</tag>\"."
@@ -506,6 +507,11 @@ The format of MSG must be \"<tag>msg</tag>\"."
 ;;{{{ mds-handle-stream
 
 (defun mds-handle-stream (proc msg)
+  "Handle tagged message MSG from the client process PROC.
+The end of message marker has been removed.  Strip the tags,
+and use them to determine where to send the message and how
+to format it."
+
   (let* ((client (mds-get-client proc))
 	 (buf (mds--get-showstat-buffer client))
 	 (tag-msg (mds-extract-tag msg))
@@ -517,45 +523,20 @@ The format of MSG must be \"<tag>msg</tag>\"."
 	(with-syntax-table maplev--symbol-syntax-table
 	  (cond
 	   ((string= tag "DBG_STATE")
-	    ;;{{{ msg contains debugger status
-	    
-	    (string-match mds--debugger-status-re msg)
-	    (let ((cmd-output (substring msg 0 (match-beginning 1)))
-		  (procname (match-string 1 msg))
-		  (state    (match-string 2 msg))
-		  (rest (substring msg (match-end 2)))
-		  ;;(exec (nth 0 closure))
-		  ;;(func (nth 1 closure))
-		  ;;(proc (nth 2 closure)))
-		  )
-
-	      ;; Assign global variables.
+	    ;; msg is the state output from debugger.  
+	    ;; Extract the procname and state number
+	    ;; and update the showstat buffer
+	    (if (not (string-match mds--debugger-status-re msg))
+		(error "cannot parse current state")
+	      ;; FIXME: eliminate this
 	      (mds-showstat-set-debugging-flag t)
-
-	      ;; (if exec
-	      ;;     ;; A statement was executed in showstat;
-	      ;;     ;; update the showstat buffer.
-	      (mds-showstat-update procname state)
-
-	      ;; Move focus to showstat buffer.
-	      ;; (switch-to-buffer mds-showstat-buffer)
-	      ;; Display the Maple output, stored in cmd-output.  If func is
-	      ;; assigned, then first apply it to the string in cmd-output.
-	      ;; The proc procedure, if assigned, will be applied to the
-	      ;; generated output region.
-	      (mds-showstat-display-debugger-output
-	       ;; (if func
-	       ;;     (funcall func cmd-output)
-	       ;;   cmd-output)
-	       ;; proc
-	       cmd-output))
-
-	    ;;}}}
-	    )
+	      (mds-showstat-update (match-string 1 msg)    ; procname
+				   (match-string 2 msg)))) ; state
 	   ((string= tag "DBG_SHOW")
-	    ;; (string-match mds--showstat-re msg)
-	    ;; handle showstat output
+	    ;; msg is showstat output (printout of procedure).
+	    ;; Display in showstat buffer.
 	    (mds-showstat-display-proc msg))
+
 	   ;; otherwise print to debugger output buffer
 	   (t (mds-showstat-display-debugger-output msg)))))))
 
