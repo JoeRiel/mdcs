@@ -529,13 +529,16 @@ to format it."
 	    (if (not (string-match mds--debugger-status-re msg))
 		(error "cannot parse current state")
 	      ;; FIXME: eliminate this
-	      (mds-showstat-set-debugging-flag t)
+	      ;; (mds-showstat-set-debugging-flag t)
 	      (mds-showstat-update (match-string 1 msg)    ; procname
 				   (match-string 2 msg)))) ; state
 	   ((string= tag "DBG_SHOW")
 	    ;; msg is showstat output (printout of procedure).
 	    ;; Display in showstat buffer.
 	    (mds-showstat-display-proc msg))
+
+	   ((string= tag "DBG_CALL")
+	    (mds-showstat-display-debugger-output msg)) ;; #'mds-activate-procname-at-point))
 
 	   ;; otherwise print to debugger output buffer
 	   (t (mds-showstat-display-debugger-output msg)))))))

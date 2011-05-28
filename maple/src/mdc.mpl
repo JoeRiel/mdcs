@@ -351,6 +351,7 @@ $include <src/Format.mm>
         else
             `debugger/default` := res;
         fi;
+
         #}}}
         #{{{ Remove leading blanks, trailing comments, and colons.
         startp := 1;
@@ -480,16 +481,16 @@ $include <src/Format.mm>
                     debugger_printf(DBG_WATCH, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
-                        debugger_printf(DBG_C, "%a,\n",_passed[i])
+                        debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
                     else
-                        debugger_printf(DBG_C, "%a\n",_passed[i])
+                        debugger_printf(DBG_EVAL2, "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
-                    debugger_printf(DBG_EVAL, "%a,\n",_passed[i])
+                    debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
-                    debugger_printf(DBG_EVAL, "%a\n",_passed[i])
+                    debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
                 fi
             fi
         od;

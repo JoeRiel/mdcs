@@ -115,12 +115,12 @@ call (maple) showstat to display the new procedure."
       ;; entered procname or are continuing (this may not be robust).
       
       ;; Print procname (just the name) with appropriate face.
-      (mds-showstat-display-debugger-output 
-       (format "%s:\n"
-	       (propertize procname
-			   'face (if at-first-state
-				     'mds-face-procname-entered
-				   'mds-face-procname-cont))))
+      (mds-showstat-display-debugger-output
+       (format "%s:\n" procname))
+	       ;; (propertize procname
+	       ;; 		   'face (if at-first-state
+	       ;; 			     'mds-face-procname-entered
+	       ;; 			   'mds-face-procname-cont))))
       ;; Display arguments if we just entered the procedure.
       ;;(if (and mds-show-args-on-entry at-first-state)
       ;;      (mds-show-args-as-equations))
@@ -237,7 +237,7 @@ and an `mds-showstat-output-buffer'."
 ;;}}}
 
 
-(defun mds-showstat-display-debugger-output (msg &optional func)
+(defun mds-showstat-display-debugger-output (msg &optional func )
   "Display MSG in `mds-debugger-output-buffer'."
   (unless (string= msg "")
     (let ((buf mds-showstat-output-buffer))
@@ -247,12 +247,18 @@ and an `mds-showstat-output-buffer'."
 	  (goto-char (point-max))
 	  (let ((beg (point)))
 	    (insert msg)
-	    (if func
-		(funcall func beg (point)))))
-	;; Move point (end of buffer) to bottom of window.
-	(recenter -1)))))
-
-			    
+	    (when func
+	      (goto-char beg)
+	      (func)))
+	  (recenter -1))))))
+    
+(defun mds-debugger-clear-output ()
+  "Clear the debugger output buffer."
+  (interactive)
+  (let ((buf mds-showstat-output-buffer))
+    (when (bufferp buf)
+      (with-current-buffer buf
+	(delete-region (point-min) (point-max))))))
 
 (defun mds-showstat-set-debugging-flag (debugging)
   "Compare DEBUGGING with `mds-showstat-debugging-flag'.
@@ -271,10 +277,10 @@ A difference indicates that debugging has started/stopped.  Reassign
 
 (defun mds-showstat-start-debugging ()
   "Called when the debugger starts."
-  (mds-showstat-display-debugger-output
-   (propertize mds-debugger-break
-	       'face 'mds-face-prompt
-	       'rear-nonsticky t)))
+  (mds-showstat-display-debugger-output mds-debugger-break))
+   ;; (propertize mds-debugger-break
+   ;; 	       'face 'mds-face-prompt
+   ;; 	       'rear-nonsticky t)))
 
 (defun mds-showstat-finish-debugging ()
   "Called when the debugger finishes."
@@ -669,6 +675,11 @@ the number of activation levels to display."
 		       #'mds-highlight-where-output)))
 
 (defconst mds-showstat-procname-re "^\\([^ \t\n]+\\): ")
+
+(defun mds-activate-procname-at-point ()
+  (if (looking-at mds-showstat-procname-re)
+      (make-text-button (match-beginning 1) (match-end 1) :type 'mds-showstat-open-button)))
+     
 
 (defun mds-highlight-where-output (beg end)
   "Font lock the names of called functions in the region from BEG to END,
