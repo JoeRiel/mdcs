@@ -128,7 +128,7 @@ local Connect
         Host := host;
         Port := port;
         if greeting <> "" then
-            printf_to_server(greeting);
+            printf_to_server(GREET, greeting);
         end if;
         return NULL;
     end proc;
