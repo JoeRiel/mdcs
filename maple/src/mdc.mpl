@@ -62,7 +62,7 @@
 
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
-$define MDS_PORT 10\000
+$define MDS_DEFAULT_PORT 10\000
 $define END_OF_MSG "---EOM---"
 
 unprotect('mdc'):
@@ -90,7 +90,7 @@ local Connect
     , _where
 
     , max_length := 10\000 # too small?
-    , Port := MDS_PORT
+    , Port := MDS_DEFAULT_PORT
     , Host := "localhost"
 
     , printf_to_server
