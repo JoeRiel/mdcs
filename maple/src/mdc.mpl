@@ -75,8 +75,6 @@ export ModuleApply
     ,  Authenticate
     ;
 
-$include <src/Format.mm>
-
 #{{{ local declarations
 
 local Connect
@@ -104,6 +102,8 @@ local Connect
     ;
 
 #}}}
+
+$include <src/Format.mm>
 
 #{{{ Connect
 
@@ -823,5 +823,4 @@ end module:
 
 protect('mdc'):
 
-#savelib('mdc'):
-
+LibraryTools:-Save('mdc',"mdc.mla");

@@ -18,7 +18,11 @@ export ArgsToEqs
     ,  Try
     ;
 
-local prettyprint,T;
+local convert
+	, indexed2slashed
+    , prettyprint
+    , T
+    ;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
 
@@ -112,7 +116,7 @@ local prettyprint,T;
                       , rargs :: list
                       , oargs :: list
                      )
-    local defparams, opacity, params, p, pos, i, m, n;
+    local defparams, opacity, params, p, pos, i, m, n, ppargs;
 
         # Assign params the procedure's formal parameters.
         if prc :: procedure then
@@ -155,15 +159,15 @@ local prettyprint,T;
         m := nops(defparams);
         n := nops(pargs) - m;
 
-    local ppargs := ( NULL
-                      , seq(params[i] = pargs[i][], i=1..n)       # required positional
-                      , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
-                      , oargs[]                                   # optional args
-                      , `if`( rargs = []                          # _rest
-                              , NULL
-                              , ':-_rest' = rargs[]
-                            )
-                    );
+        ppargs := ( NULL
+                    , seq(params[i] = pargs[i][], i=1..n)       # required positional
+                    , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
+                    , oargs[]                                   # optional args
+                    , `if`( rargs = []                          # _rest
+                            , NULL
+                            , ':-_rest' = rargs[]
+                          )
+                  );
 
         # return ppargs;
         return prettyprint(false, ppargs);
@@ -225,7 +229,7 @@ local prettyprint,T;
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr, fld, ix, typ;
+    local eqs, ex, expr, fld, ix, typ, opacity;
         if nargs > 2 then
             seq(procname(false,ex), ex in [_rest]);
         else
@@ -269,7 +273,7 @@ local prettyprint,T;
                         if top then
                             printf("(*object*)\n");
                         end if;
-                        local opacity := kernelopts('opaquemodules'=false);
+                        opacity := kernelopts('opaquemodules'=false);
                         expr:-ModulePrint;
                         return ModulePrint(expr);
                     catch:
@@ -407,8 +411,8 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
-    local
-        pn, opacity, pnm;
+
+    local pn, opacity, pnm;
 
         try
             opacity := kernelopts('opaquemodules'=false);
@@ -483,7 +487,6 @@ $endif
 ## Try[TE]("10.1", FUNC(a[]), err);
 ## Try[TE]("10.2", FUNC(a[1,2]), err);
 
-local
     indexed2slashed := proc(nm :: name, $)
         if nm :: indexed then
             if nops(nm) <> 1 then
