@@ -127,7 +127,7 @@ mla: $(mla)
 
 %.mla: maple/src/%.mpl maple/src/*.mm
 	$(RM) $@
-	"$(MAPLE)" -I maple $^
+	"$(MAPLE)" -q -I maple $^
 
 # }}}
 
