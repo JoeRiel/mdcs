@@ -58,9 +58,10 @@
 ##  but becomes whatever was last used.
 ##opt(exit,truefalse)
 ##  If `true`, then
+##NOTES
 
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 $define MDS_PORT 10\000
 $define END_OF_MSG "---EOM---"
 
@@ -86,6 +87,9 @@ local Connect
     , _debugger
     , debugger_printf
     , debugger_readline
+    , _showstat
+    , _showstop
+    , _where
 
     , max_length := 10\000 # too small?
     , Port := MDS_PORT
@@ -266,9 +270,12 @@ local Connect
         if not replaced then
             # Reassign library debugger procedures
             unprotect(debugger_procs);
-            debugger := eval(_debugger);
-            `debugger/printf` := eval(debugger_printf);
+            debugger            := eval(_debugger);
+            `debugger/printf`   := eval(debugger_printf);
             `debugger/readline` := eval(debugger_readline);
+            showstat            := eval(_showstat);
+            showstop            := eval(_showstop);
+            where               := eval(_where);
             protect(debugger_procs);
             replaced := true;
         end if;
@@ -291,10 +298,10 @@ local Connect
 
 #{{{ debugger_printf
 
-    debugger_printf := proc( )
+    debugger_printf := proc( tag )
     local argList, rts;
     description `Used by debugger to produce output.`;
-        argList := [_passed];
+        argList := [_rest];
 
         # suppress large rtables
         rts := map(x->x=`debugger/describe_rtable`(x)
@@ -302,7 +309,7 @@ local Connect
                   );
         if rts <> {} then argList := subs(rts,argList) end if;
 
-        printf_to_server(op(argList));
+        printf_to_server(tag, op(argList));
 
         return NULL;
     end proc:
@@ -319,7 +326,7 @@ local Connect
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        # `debugger/printf`("\n");
+        # `debugger_printf`("\n");
 
         #{{{ Get response (from emacs)
         do
@@ -337,9 +344,10 @@ local Connect
         # issued last time. If there is no previous command, return a command to
         # print a message pointing the user to the on-line help.
         if `debugger/isspace`( res ) then
-            res := `if`(assigned(`debugger/default`),
-                        `debugger/default`,
-                        "`debugger/printf`(""See ?debugger for available commands\n"")")
+            res := `if`(assigned(`debugger/default`)
+                        , `debugger/default`
+                        , "debugger_printf(DBG_INFO, \"See ?debugger for available commands\n\")"
+                       );
         else
             `debugger/default` := res;
         fi;
@@ -384,7 +392,7 @@ local Connect
         if i < len and res[i] <> "#" then
             for i from i to len do
                 if i <> " " then
-                    `debugger/printf`("Warning, extra characters at end of parsed string\n");
+                    debugger_printf(DBG_WARN,"Warning, extra characters at end of parsed string\n");
                     break
                 fi
             od
@@ -399,7 +407,7 @@ local Connect
         # Means the user typed something which still ended up being nothing, such
         # as a single semicolon, just a comment, etc.
         if res = "" then
-            res := "`debugger/printf`(""See ?debugger for available commands\n"")"
+            res := "`debugger/printf`(\"See ?debugger for available commands\n\")"
         fi;
         #}}}
 
@@ -445,43 +453,43 @@ local Connect
 
         for i from 1 to n do
             if _passed[i] = lasterror then
-                `debugger/printf`("Error, %s\n",
-                                  StringTools:-FormatMessage(lastexception[2..]))
+                debugger_printf(MPL_ERR, "Error, %s\n"
+                                , StringTools:-FormatMessage(lastexception[2..]))
             elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
                 if _passed[i][1] = 'DEBUGSTACK' then
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            `debugger/printf`("%a\n",_passed[i][j])
+                            debugger_printf(DBG_A, "%a\n",_passed[i][j])
                         else
-                            `debugger/printf`("%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_A,"%a: %s\n",_passed[i][j],_passed[i][j+1]);
                             if `debugger/no_output` <> true then
-                                `debugger/printf`("\t%a\n",_passed[i][j-1])
+                                debugger_printf(DBG_B,"\t%a\n",_passed[i][j-1])
                             fi
                         fi;
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    `debugger/printf`("Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(DBG_ERR, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
                     then
                         return
                     fi;
-                    `debugger/printf`("%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf(DBG_WATCH, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
-                        `debugger/printf`("%a,\n",_passed[i])
+                        debugger_printf(DBG_C, "%a,\n",_passed[i])
                     else
-                        `debugger/printf`("%a\n",_passed[i])
+                        debugger_printf(DBG_C, "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
-                    `debugger/printf`("%a,\n",_passed[i])
+                    debugger_printf(DBG_D, "%a,\n",_passed[i])
                 else
-                    `debugger/printf`("%a\n",_passed[i])
+                    debugger_printf(DBG_D, "%a\n",_passed[i])
                 fi
             fi
         od;
@@ -490,10 +498,10 @@ local Connect
         #{{{ handle negative statement number
         if procName <> 0 then
             if statNumber < 0 then
-                `debugger/printf`("Warning, statement number may be incorrect\n");
+                debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             fi;
-            `debugger/printf`("%s",debugopts('procdump'=[procName,0..statNumber]))
+            debugger_printf(DBG_STAT,"%s",debugopts('procdump'=[procName,0..statNumber]))
         fi;
         #}}}
         #{{{ command loop
@@ -601,7 +609,7 @@ local Connect
                 if err <> lasterror then return err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
-                    `debugger/printf`("Error, not currently in a procedure\n");
+                    debugger_printf(DBG_WARN,"Error, not currently in a procedure\n");
                 elif nops(line) = 1 and cmd = "list" then
                     i := statNumber - 5;
                     if i < 1 then i := 1 fi;
@@ -671,7 +679,7 @@ local Connect
             #{{{ handle error
 
             if err = lasterror then
-                `debugger/printf`("Error, %s\n"
+                debugger_printf(DBG_ERR, "Error, %s\n"
                                   , StringTools:-FormatMessage(lastexception[2..])
                                  );
             fi
@@ -682,19 +690,126 @@ local Connect
     end proc:
 
 #}}}
+
+#{{{ showstat
+
+    _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
+    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
+    description `Displays a procedure with statement numbers and breakpoints.`;
+    local res;
+    global showstat;
+        if _npassed = 0 then map(procname,stopat())
+        else
+            if _npassed = 1 then
+                res := debugopts('procdump'=p)
+            elif _npassed = 2 then
+                res := debugopts('procdump'=[p,statnumoroverload])
+            elif _npassed = 3 then
+                res := debugopts('procdump'=[p,statnumoroverload,statnum])
+            fi;
+
+            map[3]( debugger_printf, DBG_STAT, "\n%s", [res]);
+            if procname <> 'showstat[nonl]' then
+                debugger_printf(DBG_NULL, "\n" )
+            fi
+        fi;
+        NULL
+    end proc:
+
+#}}}
+#{{{ showstop
+
+    _showstop := proc( $ )
+    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
+    description `Display a summary of all break points and watch points.`;
+    local i, ls, val;
+    global showstop;
+        ls := stopat();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo breakpoints set.\n")
+        else
+            debugger_printf(DBG_INFO, "\nBreakpoints in:\n");
+            for i in ls do debugger_printf(DBG_INFO, "   %a\n",i) od
+        fi;
+        ls := stopwhen();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo variables being watched.\n")
+        else
+            debugger_printf(DBG_INFO, "\nWatched variables:\n");
+            for i in ls do
+                if type(i,list) then
+                    debugger_printf(DBG_INFO, "   %a in procedure %a\n",i[2],i[1])
+                elif assigned(`debugger/watch_condition`[i]) then
+                    val := sprintf(DBG_INFO, "%a",`debugger/watch_condition`[i]);
+                    if length(val) > interface('screenwidth') / 2 then
+                        val := cat(val[1..round(interface('screenwidth')/2)]," ...")
+                    fi;
+                    debugger_printf(DBG_INFO, "   %a = %s\n",i,val)
+                else
+                    debugger_printf(DBG_INFO, "   %a\n",i)
+                fi
+            od
+        fi;
+        ls := stoperror();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo errors being watched.\n")
+        else
+            debugger_printf(DBG_WATCH, "\nWatched errors:\n");
+            if member('all',ls) then
+                if member('traperror',ls) then
+                    debugger_printf(DBG_INFO, "   All errors\n")
+                else
+                    debugger_printf(DBG_INFO, "   All untrapped errors\n")
+                fi
+            else
+                if member('traperror',ls) then
+                    debugger_printf(DBG_INFO, "   All trapped errors\n")
+                fi;
+                for i in ls do
+                    if i <> 'traperror' then debugger_printf(DBG_INFO, "   %a\n",i) fi
+                od
+            fi
+        fi;
+        if procname <> 'showstop[nonl]' then debugger_printf(DBG_INFO, "\n") fi;
+        NULL
+    end proc:
+
+#}}}
+#{{{ where
+
+    _where := proc( n::integer, $ )
+    local stack, i;
+    option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
+        if _npassed = 1 then
+            if n < 1 then debugopts('callstack'=-1) fi;	# To force an error.
+            stack := debugopts('callstack'=n+1)
+        else
+            stack := debugopts('callstack')
+        fi;
+        for i from nops(stack)-2 to 8 by -3 do
+            debugger_printf(DBG_STACK, "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
+        od;
+        if stack[5] = 'TopLevel' then
+            debugger_printf(DBG_STACK,"Currently at TopLevel.\n")
+        else
+            debugger_printf(DBG_STACK,"Currently in %a.\n",stack[5])
+        fi;
+        NULL
+    end proc:
+
+#}}}
+
 #{{{ printf_to_server
 
-    printf_to_server := proc()
+    printf_to_server := proc(tag)
     local msg,len;
-        msg := sprintf(_passed);
+        msg := sprintf(_rest);
         if 0 < max_length then
             len := length(msg);
             if max_length < len then
                 msg := sprintf("---output too long (%d bytes)---\n", len);
             end if;
         end if;
+        Sockets:-Write(sid, sprintf("<%a>",tag));
         Sockets:-Write(sid, msg);
-        Sockets:-Write(sid, END_OF_MSG);
+        Sockets:-Write(sid, sprintf("</%a>",tag));
         if view_flag then
             fprintf('INTERFACE_DEBUG',_passed);
         end if;
@@ -708,3 +823,4 @@ end module:
 protect('mdc'):
 
 #savelib('mdc'):
+
