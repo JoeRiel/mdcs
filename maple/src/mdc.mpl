@@ -461,9 +461,9 @@ $include <src/Format.mm>
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_CALL, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK, "%a\n",_passed[i][j])
                         else
-                            debugger_printf(DBG_CALL, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
                             if `debugger/no_output` <> true then
                                 debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
