@@ -172,7 +172,9 @@ call (maple) showstat to display the new procedure."
       ;; Print procname (just the name) with appropriate face.
       (mds-output-display 
        (format "%s:\n" procname)
-       mds-output-buffer)
+       mds-output-buffer
+       'PROCNAME
+       )
 	       ;; (propertize procname
 	       ;; 		   'face (if at-first-state
 	       ;; 			     'mds-face-procname-entered
