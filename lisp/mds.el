@@ -215,7 +215,7 @@ is positive, otherwise stop the server."
 	  (mds-stop)
 	(mds-start)))))
 
-(defun mds-restart ()
+(defun mds ()
   "Restart the Maple Debugger Server."
   (interactive)
   (if (process-status "mds")
@@ -418,7 +418,7 @@ to format it."
 	    (mds-output-display msg mds-output-buffer 'where))
 
 	   ((string= tag "DBG_STACK")
-	    (mds-output-display msg mds-output-buffer "stack"))
+	    (mds-output-display msg mds-output-buffer 'stack))
 
 	   ((string= tag "DBG_WARN")
 	    (mds-output-display msg mds-output-buffer 'warn))
