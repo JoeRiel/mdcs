@@ -414,9 +414,11 @@ to format it."
 	    ;; Display in showstat buffer.
 	    (mds-showstat-display-proc msg))
 
-	   ((string= tag "DBG_CALL")
-	    ;;(mds-output-display msg #'mds-activate-procname-at-point tag))
-	    (mds-output-display msg mds-output-buffer tag))
+	   ((string= tag "DBG_WHERE")
+	    (mds-output-display msg mds-output-buffer 'where))
+
+	   ((string= tag "DBG_STACK")
+	    (mds-output-display msg mds-output-buffer "stack"))
 
 	   ((string= tag "DBG_WARN")
 	    (mds-output-display msg mds-output-buffer 'warn))

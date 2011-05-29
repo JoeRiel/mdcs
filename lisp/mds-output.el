@@ -18,6 +18,11 @@
   "Face for warning messages in output buffer."
   :group 'mds-faces)
 
+(defface mds-inactive-link-face
+  '((((class color) (background dark)) (:foreground "cyan1")))
+  "Face for inactive links in output buffer."
+  :group 'mds-faces)
+
 (defun mds-output-clear ()
   "Clear the debugger output buffer."
   (interactive)
@@ -34,23 +39,41 @@
       (with-current-buffer buf
 	(goto-char (point-max))
 	(let ((beg (point)))
-	  (if tag
-	      (cond
-	       ((stringp tag)
-		;; temporary
-		(insert (format "%s: " tag)))
-	       ((eq tag 'warn)
-		(mds-put-warn-face msg))))
-	  (insert msg))
+	  (if (not tag)
+	      (insert msg)
+	    (cond
+	     ((stringp tag)
+	      ;; string tag (temporary)
+	      (mds-insert-tag tag) (setq beg (point))
+	      (insert msg))
+	     ((eq tag 'where)
+	      ;; where
+	      (mds-insert-tag tag) (setq beg (point))
+	      (insert msg)
+	      (goto-char beg)
+	      (let ((toplev (looking-at "TopLevel")))
+		(unless (re-search-forward ":\\( \\|$\\)" nil 't)
+		  (error "no delimiter"))
+		(if toplev
+		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
+		  (make-text-button  beg (- (point) 2) :type 'mds-showstat-open-button))))
+	     ;; warning
+	     ((eq tag 'warn)
+	      (mds-insert-tag tag) (setq beg (point))
+	      (insert msg)
+	      (mds-put-face beg (1- (point-max)) 'mds-warning-face)))))
 	(recenter -1)))))
 
 
-(defun mds-put-warn-face (msg)
-  (put-text-property 0 (1- (length msg)) 'font-lock-face 'mds-warning-face msg))
+(defun mds-put-face (beg end face)
+  (put-text-property beg end 'font-lock-face face))
 
-(defun mds-activate-proc-call (msg)
-  (if (string-match ": " msg)
-      (put-text-property 0 (match-end 0) 'face 
+(defun mds-insert-tag (tag)
+  (let ((beg (point)))
+    (insert (format "<%s>" (prin1-to-string tag)))
+    (mds-put-face beg (point) 'font-lock-string-face)
+    (insert ": ")))
+
 
 (defun mds-output-create-buffer ()
   "Create and return an `mds-output-buffer'."
