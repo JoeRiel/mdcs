@@ -26,7 +26,7 @@
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
 
-(defun mds-output-display (msg buf &rest ignore-for-now)
+(defun mds-output-display (msg buf &optional tag)
   "Display MSG in `mds-output-buffer'."
   (unless (string= msg "")
     (display-buffer buf)
@@ -34,11 +34,23 @@
       (with-current-buffer buf
 	(goto-char (point-max))
 	(let ((beg (point)))
+	  (if tag
+	      (cond
+	       ((stringp tag)
+		;; temporary
+		(insert (format "%s: " tag)))
+	       ((eq tag 'warn)
+		(mds-put-warn-face msg))))
 	  (insert msg))
 	(recenter -1)))))
 
+
 (defun mds-put-warn-face (msg)
   (put-text-property 0 (1- (length msg)) 'font-lock-face 'mds-warning-face msg))
+
+(defun mds-activate-proc-call (msg)
+  (if (string-match ": " msg)
+      (put-text-property 0 (match-end 0) 'face 
 
 (defun mds-output-create-buffer ()
   "Create and return an `mds-output-buffer'."

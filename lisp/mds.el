@@ -419,8 +419,8 @@ to format it."
 	    (mds-output-display msg mds-output-buffer tag))
 
 	   ((string= tag "DBG_WARN")
-	    (mds-put-warn-face msg)
-	    (mds-output-display msg mds-output-buffer))
+	    (mds-output-display msg mds-output-buffer 'warn))
+
 	   ;; otherwise print to debugger output buffer
 	   (t (mds-output-display msg mds-output-buffer tag)))))))
 
