@@ -606,7 +606,8 @@ otherwise hyperlink the raw message."
   (save-excursion
     (goto-char beg)
     (if (looking-at mds-link-error-re)
-	(make-text-button (match-beginning 1) (match-end 1) :type 'mds-showstat-open-button))))
+	(make-text-button (match-beginning 1) (match-end 1) 
+			  :type 'mds-showstat-open-button))))
 
 (define-button-type 'mds-showerror-open-button
   'help-echo "Open procedure"
@@ -674,7 +675,8 @@ the number of activation levels to display."
 
 (defun mds-activate-procname-at-point ()
   (if (looking-at mds-showstat-procname-re)
-      (make-text-button (match-beginning 1) (match-end 1) :type 'mds-showstat-open-button)))
+      (make-text-button (match-beginning 1) (match-end 1) 
+			:type 'mds-showstat-open-button)))
      
 
 (defun mds-highlight-where-output (beg end)
@@ -684,7 +686,8 @@ which is the output of `mds-where'."
   (save-excursion
     (goto-char beg)
     (while (re-search-forward mds-showstat-procname-re end t)
-      (make-text-button (match-beginning 1) (match-end 1) :type 'mds-showstat-open-button))))
+      (make-text-button (match-beginning 1) (match-end 1) 
+			:type 'mds-showstat-open-button))))
 
 (define-button-type 'mds-showstat-open-button
   'help-echo "Open procedure"
@@ -693,6 +696,7 @@ which is the output of `mds-where'."
   'face 'link)
 
 (defun mds-showstat-open-procedure (button)
+  "Open the procedure"
   (save-excursion
     (beginning-of-line)
     (unless (looking-at "TopLevel")

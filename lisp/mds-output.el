@@ -13,6 +13,7 @@
 
 ;;;
 
+;;{{{ faces
 (defface mds-warning-face
   '((((class color) (background dark)) (:foreground "pink")))
   "Face for warning messages in output buffer."
@@ -22,6 +23,15 @@
   '((((class color) (background dark)) (:foreground "cyan1")))
   "Face for inactive links in output buffer."
   :group 'mds-faces)
+;;}}}
+;;{{{ variables
+
+(defvar mds-output-showstat-buffer nil
+  "Stores the associated showstat buffer.")
+
+(make-variable-buffer-local 'mds-output-showstat-buffer)
+
+;;}}}
 
 (defun mds-output-clear ()
   "Clear the debugger output buffer."
@@ -46,6 +56,13 @@
 	      ;; string tag (temporary)
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
+	     ((eq tag 'stack)
+	      ;; stack
+	      (mds-insert-tag tag) (setq beg (point))
+	      (insert msg)
+	      (if (string= msg "TopLevel\n")
+		  (mds-put-face beg (point) 'mds-inactive-link-face)
+		(make-text-button beg (1- (point)) :type 'mds-output-open-proc-button)))
 	     ((eq tag 'where)
 	      ;; where
 	      (mds-insert-tag tag) (setq beg (point))
@@ -56,12 +73,16 @@
 		  (error "no delimiter"))
 		(if toplev
 		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
-		  (make-text-button  beg (- (point) 2) :type 'mds-showstat-open-button))))
+		  (make-text-button beg (- (point) 2) :type 'mds-output-open-proc-button))))
 	     ;; warning
 	     ((eq tag 'warn)
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg)
-	      (mds-put-face beg (1- (point-max)) 'mds-warning-face)))))
+	      (mds-put-face beg (1- (point-max)) 'mds-warning-face))
+	     ((and tag (symbolp tag))
+	      (mds-insert-tag tag) (setq beg (point))
+	      (insert msg))
+	     )))
 	(recenter -1)))))
 
 
@@ -74,12 +95,41 @@
     (mds-put-face beg (point) 'font-lock-string-face)
     (insert ": ")))
 
+(define-button-type 'mds-output-open-proc-button
+  'help-echo "Open procedure"
+  'action 'mds-output-open-procedure
+  'follow-link t
+  'face 'link)
+
+(defconst mds-output-procname-re "\\([^ \t\n]+\\)\\(: \\|$\\)")
+
+(defun mds-output-open-procedure (button)
+  (save-excursion
+    (beginning-of-line)
+    ;; temporary to jump over tag
+    (search-forward " ")
+    (unless (looking-at "TopLevel")
+      (looking-at mds-output-procname-re)
+      (let ((procname (match-string-no-properties 1))
+	    (statement (buffer-substring-no-properties
+			(match-end 0) (line-end-position))))
+	(with-current-buffer mds-output-showstat-buffer
+	  (mds-showstat-display-inactive procname statement))))))
+
+
+
 
 (defun mds-output-create-buffer ()
-  "Create and return an `mds-output-buffer'."
-  (let ((buf (generate-new-buffer "*mds-output*")))
+  "Create and return an `mds-output-buffer'.
+This must be called with the associated showstat buffer
+as the current buffer.  It saves the showstat buffer
+in the buffer-local variable `mds-output-showstat-buffer'."
+
+  (let ((buf (generate-new-buffer "*mds-output*"))
+	(ss-buf (current-buffer)))
     (with-current-buffer buf
-      (font-lock-mode 't))
+      (font-lock-mode 't)
+      (setq mds-output-showstat-buffer ss-buf))
     buf))
     
 
