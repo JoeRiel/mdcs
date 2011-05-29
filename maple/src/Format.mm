@@ -365,7 +365,10 @@ $endif
         try
             opacity := kernelopts('opaquemodules' = false);
             prc := parse(p);
-            bind(prc);
+            try
+                bind(prc);
+            catch:
+            end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
             debugger_printf('DBG_SHOW_INACTIVE', "%s", prc);
         finally
