@@ -339,7 +339,7 @@ $endif
 ##CALLINGSEQUENCE
 ##- \CMD('p')
 ##PARAMETERS
-##- 'p' : ::string::
+##- 'p' : ::string::; string corresponding to procedure name
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
@@ -363,7 +363,9 @@ $endif
     local opacity;
         try
             opacity := kernelopts('opaquemodules' = false);
-            map2(`debugger/printf`, "\n%s", debugopts('procdump' = parse(p)));
+            #msg := sprintf("%s", debugopts('procdump' = eval(parse(p))));
+            msg := sprintf("%A", debugopts('procdump' = eval(parse(p))));
+            debugger_printf('DBG_SHOW_INACTIVE', "%s", msg);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
