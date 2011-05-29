@@ -124,7 +124,6 @@
 This must be called with the associated showstat buffer
 as the current buffer.  It saves the showstat buffer
 in the buffer-local variable `mds-output-showstat-buffer'."
-
   (let ((buf (generate-new-buffer "*mds-output*"))
 	(ss-buf (current-buffer)))
     (with-current-buffer buf

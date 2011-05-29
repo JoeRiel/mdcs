@@ -156,7 +156,7 @@ If none, then return nil."
 (defun mds-alist-entry (proc id)
   "Create an entry for the `mds-clients' alist.
 Generate new buffers for the showstat and Maple output."
-  (let ((buf (mds-showstat-generate-buffers proc))
+  (let ((buf (mds-showstat-generate-buffer proc))
 	(queue (mds-queue-create proc)))
     (cons proc 
 	  (cons buf (cons id queue)))))
@@ -411,6 +411,11 @@ to format it."
 				   (match-string 2 msg)))) ; state
 	   ((string= tag "DBG_SHOW")
 	    ;; msg is showstat output (printout of procedure).
+	    ;; Display in showstat buffer.
+	    (mds-showstat-display-proc msg 'active))
+
+	   ((string= tag "DBG_SHOW_INACTIVE")
+	    ;; msg is an inactive showstat output.
 	    ;; Display in showstat buffer.
 	    (mds-showstat-display-proc msg))
 
