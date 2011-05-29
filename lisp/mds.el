@@ -415,10 +415,16 @@ to format it."
 	    (mds-showstat-display-proc msg))
 
 	   ((string= tag "DBG_CALL")
-	    (mds-output-display msg)) ;; #'mds-activate-procname-at-point))
+	    ;;(mds-output-display msg #'mds-activate-procname-at-point tag))
+	    (mds-output-display msg mds-output-buffer tag))
 
+	   ((string= tag "DBG_WARN")
+	    (mds-put-warn-face msg)
+	    (mds-output-display msg mds-output-buffer))
 	   ;; otherwise print to debugger output buffer
-	   (t (mds-output-display msg)))))))
+	   (t (mds-output-display msg mds-output-buffer tag)))))))
+
+(defun mds-nullary (&optional args))
 
 ;;}}}
 

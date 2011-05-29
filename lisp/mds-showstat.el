@@ -72,7 +72,7 @@
 (defvar mds-showstat-arrow-position	nil "Marker for state arrow.")
 (defvar mds-showstat-debugging-flag nil "Non-nil when debugging.")
 (defvar mds-showstat-last-debug-cmd "" "Stores the last debugger command.")
-(defvar mds-showstat-output-buffer	nil "Buffer that displays output")
+(defvar mds-output-buffer	nil "Buffer that displays output")
 (defvar mds-showstat-procname		""  "Name of current showstat procedure.")
 (defvar mds-showstat-procname-active	""  "Name of active showstat procedure.")
 (defvar mds-showstat-procname-inactive	nil "Name of inactive showstat procedure.")
@@ -88,7 +88,7 @@
 	mds-showstat-arrow-position
 	mds-showstat-debugging-flag
 	mds-showstat-last-debug-cmd
-	mds-showstat-output-buffer
+	mds-output-buffer
 	mds-showstat-procname
 	mds-showstat-procname-active
 	mds-showstat-procname-inactive
@@ -166,8 +166,9 @@ call (maple) showstat to display the new procedure."
       ;; entered procname or are continuing (this may not be robust).
       
       ;; Print procname (just the name) with appropriate face.
-      (mds-output-display
-       (format "%s:\n" procname))
+      (mds-output-display 
+       (format "%s:\n" procname)
+       mds-output-buffer)
 	       ;; (propertize procname
 	       ;; 		   'face (if at-first-state
 	       ;; 			     'mds-face-procname-entered
@@ -257,12 +258,12 @@ POINT is moved to the indentation of the current line."
 
 (defun mds-showstat-generate-buffers (proc)
   "Generate and return a new `mds-showstat-buffer' buffer
-and an `mds-showstat-output-buffer'."
+and an `mds-output-buffer'."
   (let ((buf (generate-new-buffer "*mds-showstat*")))
     (with-current-buffer buf
       (mds-showstat-mode)
       (setq mds-showstat-arrow-position nil
-	    mds-showstat-output-buffer (generate-new-buffer "*mds-output*")
+	    mds-output-buffer (mds-output-create-buffer)
 	    mds-showstat-procname ""
 	    mds-showstat-procname-active ""
 	    mds-showstat-procname-inactive nil
@@ -275,7 +276,7 @@ and an `mds-showstat-output-buffer'."
   "Kill showstat buffer BUF and its associated output buffer."
   (when (and (bufferp buf) (buffer-name buf))
     (with-current-buffer buf
-      (mds-kill-buffer mds-showstat-output-buffer))
+      (mds-kill-buffer mds-output-buffer))
     (mds-kill-buffer buf)))
 
 ;;}}}
@@ -642,11 +643,11 @@ STATE is a string corresponding to an integer."
 
 (defun mds-toggle-truncate-lines (output-buffer)
   "Toggle the truncation of long lines.  If OUTPUT-BUFFER is
-non-nil, do so in the `mds-showstat-output-buffer', otherwise do so in 
+non-nil, do so in the `mds-output-buffer', otherwise do so in 
 the `mds-showstat-buffer'."
   (interactive "P")
   (if output-buffer
-      (with-current-buffer mds-showstat-output-buffer
+      (with-current-buffer mds-output-buffer
 	(toggle-truncate-lines))
     (toggle-truncate-lines)))
 
