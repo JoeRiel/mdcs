@@ -4,3 +4,4 @@
 *.mla
 /lisp/*.elc
 /ChangeLog
+_preview_.mm
