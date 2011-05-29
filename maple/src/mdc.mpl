@@ -97,7 +97,7 @@ local Connect
     , replaced := false
     , replaceProcs
     , restoreProcs
-    , sid := NULL
+    , sid := -1
     , view_flag := false
     ;
 
@@ -118,7 +118,7 @@ $include <src/Format.mm>
                     , { greeting :: string := "" }
                     , $
                    )
-        if sid <> NULL then
+        if sid <> -1 then
             Sockets:-Close(sid);
         end if;
         if beep then
@@ -141,9 +141,9 @@ $include <src/Format.mm>
 ##HALFLINE terminate connection to Maple debugger server
 
     Disconnect := proc()
-        if sid <> NULL then
+        if sid <> -1 then
             Sockets:-Close(sid);
-            sid := NULL;
+            sid := -1;
         end if;
     end proc;
 
@@ -203,10 +203,12 @@ $include <src/Format.mm>
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
-        try
-            Sockets:-Close( sid );
-        catch:
-        end try;
+        if sid <> -1 then
+            try
+                Sockets:-Close( sid );
+            catch:
+            end try;
+        end if;
         restoreProcs();
     end proc;
 
@@ -298,7 +300,7 @@ $include <src/Format.mm>
 
 #{{{ debugger_printf
 
-    debugger_printf := proc( tag )
+    debugger_printf := proc( tag :: name )
     local argList, rts;
     description `Used by debugger to produce output.`;
         argList := [_rest];
@@ -410,6 +412,7 @@ $include <src/Format.mm>
         if res = "" then
             res := "`debugger/printf`(\"See ?debugger for available commands\n\")"
         fi;
+
         #}}}
 
         return res;
@@ -681,8 +684,8 @@ $include <src/Format.mm>
 
             if err = lasterror then
                 debugger_printf(DBG_ERR, "Error, %s\n"
-                                  , StringTools:-FormatMessage(lastexception[2..])
-                                 );
+                                , StringTools:-FormatMessage(lastexception[2..])
+                               );
             fi
 
             #}}}
@@ -808,10 +811,15 @@ $include <src/Format.mm>
                 msg := sprintf("---output too long (%d bytes)---\n", len);
             end if;
         end if;
-        Sockets:-Write(sid, sprintf("<%a>",tag));
-        Sockets:-Write(sid, msg);
-        Sockets:-Write(sid, sprintf("</%a>",tag));
-        Sockets:-Write(sid, END_OF_MSG);
+        # hack for now
+    local Write := `if`(sid=-1
+                        , (sid) -> printf("%s", _rest)
+                        , Sockets:-Write
+                       );
+        Write(sid, sprintf("<%a>",tag));
+        Write(sid, msg);
+        Write(sid, sprintf("</%a>",tag));
+        Write(sid, END_OF_MSG);
         if view_flag then
             fprintf('INTERFACE_DEBUG',_passed);
         end if;
