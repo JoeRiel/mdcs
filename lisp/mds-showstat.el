@@ -14,11 +14,61 @@
 ;;; Code:
 
 (require 'maplev)
+(require 'mds-output)
 (eval-when-compile
   (require 'hl-line))
 
+;;{{{ customization
+
+(defgroup mds nil
+  "Maple Debugger Server."
+  :group 'tools)
+
+;;{{{ (*) faces
+
+(defgroup mds-faces nil
+  "Faces for mds and related modes."
+  :group 'mds)
+
+(defface mds-face-arg
+  '((((class color) (background dark)) (:foreground "magenta")))
+  "Face for arguments in a showstat buffer."
+  :group 'mds-faces)
+
+(defface mds-face-prompt
+  '((((class color) (background dark)) (:foreground "Green")))
+  "Face for the prompt in an mds buffer."
+  :group 'mds-faces)
+
+(defface mds-face-procname-entered
+  '((((class color) (background dark)) (:foreground "Cyan")))
+  "Face for the procname at entry in a debugger output buffer."
+  :group 'mds-faces)
+
+(defface mds-face-procname-cont
+  '((((class color) (background dark)) (:foreground "LightBlue")))
+  "Face for the procname when continued in a debugger output buffer."
+  :group 'mds-faces)
+
+  ;;}}}
+;;{{{ (*) cursors
+
+(defcustom mds-cursor-waiting 'hollow
+  "Cursor used in showstat buffer when waiting for Maple to respond."
+  :type 'symbol
+  :group 'mds)
+
+(defcustom mds-cursor-ready 'box
+  "Cursor used in showstat buffer when ready for a user input."
+  :type 'symbol
+  :group 'mds)
+
+  ;;}}}
+
+;;}}}
 ;;{{{ variables
 
+(defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
 (defvar mds-showstat-arrow-position	nil "Marker for state arrow.")
 (defvar mds-showstat-debugging-flag nil "Non-nil when debugging.")
 (defvar mds-showstat-last-debug-cmd "" "Stores the last debugger command.")
@@ -34,6 +84,7 @@
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(
+	mds-show-args-on-entry
 	mds-showstat-arrow-position
 	mds-showstat-debugging-flag
 	mds-showstat-last-debug-cmd
@@ -51,7 +102,7 @@
 
 ;;}}}
 
-;;{{{ send strings to maple
+;;{{{ send strings to maple client
 
 (defun mds-showstat-send (msg &rest rest)
   "Send MSG to the associated Maple process.
@@ -115,7 +166,7 @@ call (maple) showstat to display the new procedure."
       ;; entered procname or are continuing (this may not be robust).
       
       ;; Print procname (just the name) with appropriate face.
-      (mds-showstat-display-debugger-output
+      (mds-output-display
        (format "%s:\n" procname))
 	       ;; (propertize procname
 	       ;; 		   'face (if at-first-state
@@ -152,13 +203,6 @@ to display the new procedure."
 
     (setq mds-showstat-procname-inactive  procname
 	  mds-showstat-procname           procname)
-
-    ;; Send the showstat command to the debugger;
-    ;; (tq-enqueue mds-tq (format "mds:-showstat(\"%s\")\n" procname)
-    ;; 		mds--prompt-with-cr-re
-    ;; 		(cons mds-showstat-buffer statement)
-    ;; 		#'mds-showstat-display-proc
-    ;; 		'delay)
     (mds-showstat-send (format "mdc:-Format:-showstat(\"%s\")" procname)))
 
 
@@ -236,70 +280,13 @@ and an `mds-showstat-output-buffer'."
 
 ;;}}}
 
-
-(defun mds-showstat-display-debugger-output (msg &optional func )
-  "Display MSG in `mds-debugger-output-buffer'."
-  (unless (string= msg "")
-    (let ((buf mds-showstat-output-buffer))
-      (display-buffer buf)
-      (with-selected-window (get-buffer-window buf)
-	(with-current-buffer buf
-	  (goto-char (point-max))
-	  (let ((beg (point)))
-	    (insert msg)
-	    (when func
-	      (goto-char beg)
-	      (func)))
-	  (recenter -1))))))
-    
-(defun mds-debugger-clear-output ()
-  "Clear the debugger output buffer."
-  (interactive)
-  (let ((buf mds-showstat-output-buffer))
-    (when (bufferp buf)
-      (with-current-buffer buf
-	(delete-region (point-min) (point-max))))))
-
-(defun mds-showstat-set-debugging-flag (debugging)
-  "Compare DEBUGGING with `mds-showstat-debugging-flag'.
-A difference indicates that debugging has started/stopped.  Reassign
-`mds-debugging-flag' and run either `mds-showstat-start-debugging' or
-`mds-showstat-finish-debugging'."
-  (if mds-showstat-debugging-flag
-      (unless debugging
-	;; turn-off debugging.
-	(setq mds-showstat-debugging-flag nil)
-	(mds-showstat-finish-debugging))
-    (when debugging
-      ;; turn-on debugging
-      (mds-showstat-start-debugging)
-      (setq mds-showstat-debugging-flag t))))
-
-(defun mds-showstat-start-debugging ()
-  "Called when the debugger starts."
-  (mds-showstat-display-debugger-output mds-debugger-break))
-   ;; (propertize mds-debugger-break
-   ;; 	       'face 'mds-face-prompt
-   ;; 	       'rear-nonsticky t)))
-
-(defun mds-showstat-finish-debugging ()
-  "Called when the debugger finishes."
-  (ding)
-  (message "finished debugging")
-  ;; Clear overlay in showstat buffer.
-  ;; Does this handle hl-line?
-  (set-marker mds-showstat-arrow-position nil)
-  ;; Reset the showstat variables.
-  (setq mds-showstat-procname ""
-	mds-showstat-state "1"))
-
-
+;;{{{ mds-thisproc
 (defun mds-thisproc ()
   "Return string corresponding to current procedure."
   (if mds-pre-Maple-14
       "procname"
     "thisproc"))
-
+;;}}}
 
 ;;{{{ select maple expressions
 
@@ -515,7 +502,7 @@ mdc:-Format:-PrettyPrint to convert EXPR into a more useful display.
 With optional prefix, clear debugger output before displaying."
   (interactive (list (mds-ident-around-point-interactive
 		      "prettyprint: " "")))
-  (if current-prefix-arg (mds-debugger-clear-output))
+  (if current-prefix-arg (mds-output-clear))
   (mds-showstat-send (format "mdc:-Format:-PrettyPrint(%s)\n" expr)
 		     nil ; not advancing the debugger
 		     (propertize (format "%s:\n" expr)
@@ -529,7 +516,7 @@ With optional prefix, clear debugger output before displaying."
 If called interactively, EXPR is queried."
   (interactive (list (mds-ident-around-point-interactive
 		      "eval: " "")))
-  (if current-prefix-arg (mds-debugger-clear-output))
+  (if current-prefix-arg (mds-output-clear))
   (mds-showstat-send (concat expr "\n")
 		     nil
 		     (propertize (format "%s:\n" expr)
@@ -544,7 +531,7 @@ If called interactively, EXPR is queried.
 The result is returned in the message area."
   (interactive (list (mds-ident-around-point-interactive
 		      "global eval: " "")))
-  (if current-prefix-arg (mds-debugger-clear-output))
+  (if current-prefix-arg (mds-output-clear))
   (mds-eval-and-display-expr (concat "statement " expr)))
 
 ;;}}}
@@ -559,7 +546,7 @@ The result is returned in the message area."
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
-  (if current-prefix-arg (mds-debugger-clear-output))
+  (if current-prefix-arg (mds-output-clear))
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
@@ -736,7 +723,7 @@ which is the output of `mds-where'."
 	   ("b" . mds-breakpoint)
 	   ("B" . mds-breakpoint-cond)
 	   ("c" . mds-cont)
-	   ("C" . mds-debugger-clear-output)
+	   ("C" . mds-output-clear)
 	   ("d" . self-insert-command)
 	   ("e" . mds-eval-and-display-expr)
 	   ("E" . mds-eval-and-display-expr-global)
@@ -822,7 +809,7 @@ which is the output of `mds-where'."
 
       ("Miscellaneous"
        ;;["Pop to Mds buffer"        mds-pop-to-mds-buffer t]
-       ["Clear debugger output"    mds-debugger-clear-output t]
+       ["Clear debugger output"    mds-output-clear t]
        ["Toggle truncate lines"    mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t] )
       
@@ -890,7 +877,7 @@ C-u \\[mds-eval-and-prettyprint] clear output then evaluate and prettyprint a Ma
 Miscellaneous
 -------------
 \\[mds-goto-current-state] move (return) cursor to current state
-\\[mds-debugger-clear-output] clear the debugger output buffer
+\\[mds-output-clear] clear the debugger output buffer
 \\[mds-help-debugger] display help page for the Maple debugger
 \\[mds-info] display info pages for the Maple debugger
 \\[maplev-help-at-point] display a Maple help page
