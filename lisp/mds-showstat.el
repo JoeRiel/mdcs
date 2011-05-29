@@ -24,6 +24,10 @@
   "Maple Debugger Server."
   :group 'tools)
 
+(defcustom mds-truncate-lines 't
+  "When non-nil, lines in showstat buffer are initially truncated."
+  :group 'mds)
+
 ;;{{{ (*) faces
 
 (defgroup mds-faces nil
@@ -269,7 +273,9 @@ and an `mds-output-buffer'."
 	    mds-showstat-procname-inactive nil
 	    mds-showstat-state "1"
 	    mds-showstat-state-active nil
-	    mds-showstat-server-proc proc))
+	    mds-showstat-server-proc proc)
+      (if mds-truncate-lines
+	  (toggle-truncate-lines 1)))
     buf))
 
 (defun mds-showstat-kill-buffers (buf)

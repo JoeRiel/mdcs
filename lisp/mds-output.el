@@ -41,10 +41,11 @@
   (put-text-property 0 (1- (length msg)) 'font-lock-face 'mds-warning-face msg))
 
 (defun mds-output-create-buffer ()
-  "Return an `mds-output-buffer'."
+  "Create and return an `mds-output-buffer'."
   (let ((buf (generate-new-buffer "*mds-output*")))
     (with-current-buffer buf
-      (font-lock-mode 't))))
+      (font-lock-mode 't))
+    buf))
     
 
 
