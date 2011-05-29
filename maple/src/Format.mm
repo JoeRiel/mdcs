@@ -344,7 +344,8 @@ $endif
 ##- `NULL`
 ##DESCRIPTION
 ##- The `\CMD` command
-##  displays a procedure with statement numbers.
+##  formats a procedure with statement numbers
+##  and sends the string to the server.
 ##
 ##- It is essentially equivalent to "showstat",
 ##  but (currently) only takes one argument and
@@ -360,12 +361,13 @@ $endif
 ##> \MOD:-\CMD("int");
 
     showstat := proc(p :: string)
-    local opacity;
+    local opacity,prc;
         try
             opacity := kernelopts('opaquemodules' = false);
-            #msg := sprintf("%s", debugopts('procdump' = eval(parse(p))));
-            msg := sprintf("%A", debugopts('procdump' = eval(parse(p))));
-            debugger_printf('DBG_SHOW_INACTIVE', "%s", msg);
+            prc := parse(p);
+            bind(prc);
+            prc := sprintf("%A", debugopts('procdump' = prc));
+            debugger_printf('DBG_SHOW_INACTIVE', "%s", prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
