@@ -479,7 +479,7 @@ If the state does not have a breakpoint, print a message."
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t))
 	  (replace-match " " nil nil nil 2)
-	  (mds-showstat-eval-expr (concat "unstopat " state)))
+	  (mds-showstat-eval-expr (format "unstopat %s %s" mds-showstat-procname state)))
       (ding)
       (message "no breakpoint at this state"))))
 
