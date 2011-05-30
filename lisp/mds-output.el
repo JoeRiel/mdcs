@@ -1,5 +1,4 @@
 ;;; mds-output.el
-;;; -*- mode emacs-lisp; mode: folding -*-
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -26,22 +25,28 @@
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-output-showstat-buffer nil
-  "Stores the associated showstat buffer.")
+(defvar mds-client nil
+  "Client associated with the output buffer.")
 
-(make-variable-buffer-local 'mds-output-showstat-buffer)
+(make-variable-buffer-local 'mds-client)
 
 ;;}}}
+
+(defsubst mds--get-client-out-buf  (client) (nth 4 client))
+
+
+(defun mds-output-get-buffer ()
+  (mds--get-client-out-buf mds-client))
 
 (defun mds-output-clear ()
   "Clear the debugger output buffer."
   (interactive)
-  (let ((buf mds-output-buffer))
+  (let ((buf (mds-output-get-buffer)))
     (when (bufferp buf)
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
 
-(defun mds-output-display (msg buf &optional tag)
+(defun mds-output-display (buf msg &optional tag)
   "Display MSG in `mds-output-buffer'."
   (unless (string= msg "")
     (display-buffer buf)
@@ -62,7 +67,7 @@
 	      (insert msg)
 	      (if (string= msg "TopLevel\n")
 		  (mds-put-face beg (point) 'mds-inactive-link-face)
-		(make-text-button beg (1- (point)) :type 'mds-output-open-proc-button)))
+		(make-text-button beg (1- (point)) :type 'mds-output-view-proc-button)))
 	     ((eq tag 'where)
 	      ;; where
 	      (mds-insert-tag tag) (setq beg (point))
@@ -73,7 +78,7 @@
 		  (error "no delimiter"))
 		(if toplev
 		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
-		  (make-text-button beg (- (point) 2) :type 'mds-output-open-proc-button))))
+		  (make-text-button beg (- (point) 2) :type 'mds-output-view-proc-button))))
 	     ;; warning
 	     ((eq tag 'warn)
 	      (mds-insert-tag tag) (setq beg (point))
@@ -95,15 +100,15 @@
     (mds-put-face beg (point) 'font-lock-string-face)
     (insert ": ")))
 
-(define-button-type 'mds-output-open-proc-button
+(define-button-type 'mds-output-view-proc-button
   'help-echo "Open procedure"
-  'action 'mds-output-open-procedure
+  'action 'mds-output-view-procedure
   'follow-link t
   'face 'link)
 
 (defconst mds-output-procname-re "\\([^ \t\n]+\\)\\(: \\|$\\)")
 
-(defun mds-output-open-procedure (button)
+(defun mds-output-view-procedure (button)
   (save-excursion
     (beginning-of-line)
     ;; temporary to jump over tag
@@ -113,10 +118,7 @@
       (let ((procname (match-string-no-properties 1))
 	    (statement (buffer-substring-no-properties
 			(match-end 0) (line-end-position))))
-	(with-current-buffer mds-output-showstat-buffer
-	  (mds-showstat-display-inactive procname statement))))))
-
-
+	(mds-showstat-display-inactive procname statement)))))
 
 
 (defun mds-output-create-buffer ()
@@ -124,17 +126,13 @@
 This must be called with the associated showstat buffer
 as the current buffer.  It saves the showstat buffer
 in the buffer-local variable `mds-output-showstat-buffer'."
-  (let ((buf (generate-new-buffer "*mds-output*"))
-	(ss-buf (current-buffer)))
+  (let ((buf (generate-new-buffer "*mds-output*")))
     (with-current-buffer buf
-      (font-lock-mode 't)
-      (setq mds-output-showstat-buffer ss-buf))
+      (setq mds-client nil)
+      (font-lock-mode 't))
     buf))
     
 
-
-;;(mds-output-warn "watch out")
-
-
 (provide 'mds-output)
 
+;; mds-output.el ends here
