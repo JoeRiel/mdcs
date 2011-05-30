@@ -162,7 +162,7 @@ call (maple) showstat to display the new procedure."
 	(mds-output-display 
 	 (mds--get-client-out-buf mds-client)
 	 (format "%s:\n" procname)
-	 'DAMN-PROCNAME
+	 'PROCNAME
 	 )
 
 
