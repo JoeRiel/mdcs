@@ -145,9 +145,9 @@ The constructors of the comoponents are `mds-queue-create',
 	(out-buf  (mds-output-create-buffer))
 	client)
     (setq client (list proc queue id live-buf dead-buf out-buf))
-    (with-current-buffer live-buf (setq mds-showstat-client (copy-sequence client)))
-    (with-current-buffer dead-buf (setq mds-showstat-client (copy-sequence client)))
-    (with-current-buffer out-buf  (setq mds-output-client   (copy-sequence client)))
+    (with-current-buffer live-buf (setq mds-client (copy-sequence client)))
+    (with-current-buffer dead-buf (setq mds-client (copy-sequence client)))
+    (with-current-buffer out-buf  (setq mds-client (copy-sequence client)))
     client))
 
 (defun mds-destroy-client (client)
@@ -371,7 +371,7 @@ to format it."
   (let* ((client (mds-get-client proc))
 	 (live-buf (mds--get-client-live-buf client))
 	 (dead-buf (mds--get-client-dead-buf client))
-	 (out-buf (mds--get-client-out-buf client))
+	 (out-buf  (mds--get-client-out-buf client))
 	 (tag-msg (mds-extract-tag msg))
 	 (tag (car tag-msg))  ; name of tag
 	 (msg (cdr tag-msg))) ; msg with no tags

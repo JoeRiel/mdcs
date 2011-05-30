@@ -79,6 +79,7 @@
 (defvar mds-showstat-live	    nil "Store current state of active procedure")
 (defvar mds-showstat-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-showstat-state          "1" "Current state of procedure.")
+(defvar mds-showstat-statement      ""  "String matching a statement; used by dead buffer")
 (defvar mds-showstat-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names,the values are additional alists.")
 
 ;; Make variables buffer-local
@@ -104,7 +105,7 @@
 ;; in the debugged code.
 
 (defun mds-showstat-send-client (msg)
-  (mds-send-client mds-showstat-client msg))
+  (mds-send-client mds-client msg))
 
 (defun mds-showstat-send-command (cmd)
   "Send CMD, with appended newline, to the Maple process.
@@ -132,7 +133,7 @@ STATE is the current state; both are strings.  If the buffer is
 already displaying PROCNAME, then just move the arrow; otherwise
 call (maple) showstat to display the new procedure."
 
-  ;; save the active procname, clear the inactive, and set the state
+  ;; save the procname and the state
   (setq mds-showstat-procname procname
 	mds-showstat-state state)
 
@@ -156,11 +157,14 @@ call (maple) showstat to display the new procedure."
       ;; entered procname or are continuing (this may not be robust).
       
       ;; Print procname (just the name) with appropriate face.
+      ;;(tmp-update procname)
       (mds-output-display 
-       (mds--get-client-out-buf mds-showstat-client)
+       (mds--get-client-out-buf mds-client)
        (format "%s:\n" procname)
-       'PROCNAME
+       'DAMN-PROCNAME
        )
+
+
       ;; (propertize procname
       ;; 		   'face (if at-first-state
       ;; 			     'mds-face-procname-entered
@@ -181,7 +185,16 @@ call (maple) showstat to display the new procedure."
       
       (mds-showstat-send-client "showstat"))))
 
+(defun tmp-update (procname)
+  (mds-output-display (mds--get-client-out-buf mds-client)
+		      (format "%s:\n" procname)
+		      'DAMN-PROCNAME))
+
+
 (defun mds-showstat-display-inactive (procname statement)
+  (with-current-buffer (mds--get-client-dead-buf mds-client)
+    (setq mds-showstat-procname procname
+	  mds-showstat-statement statement))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
 
 
@@ -198,9 +211,10 @@ PROC is the output of a call to showstat."
       (if (looking-at "\n")
 	  (delete-char 1))
       ;; Goto current state
-      ;; (when statement
-      ;;   (search-forward (concat " " statement) nil t)
-      ;;   (setq mds-showstat-state (mds-showstat-get-state)))
+      (unless (or mds-showstat-live (string= "" mds-showstat-statement))
+	(if (search-forward (concat " " mds-showstat-statement) nil t)
+	    (setq mds-showstat-state (mds-showstat-get-state))
+	  (error "cannot find statement in procedure body")))
       ;; Set the state arrow
       (mds-showstat-display-state)
       (display-buffer buf))))
@@ -248,7 +262,8 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
 	    mds-showstat-state "1"
-	    buffer-read-only nil)  ; FIXME 
+	    ;buffer-read-only nil  ; FIXME 
+	    )
       (if mds-truncate-lines
 	  (toggle-truncate-lines 1)))
     buf))
@@ -589,7 +604,7 @@ otherwise run through StringTools:-FormatMessage."
   (interactive) 
   (if mds-showstat-live
       (mds-showstat-update mds-showstat-procname mds-showstat-state)
-    (pop-to-buffer (mds--get-client-live-buf mds-showstat-client))
+    (pop-to-buffer (mds--get-client-live-buf mds-client))
     (mds-goto-current-state)))
 
 (defun mds-goto-state (state)
@@ -607,7 +622,7 @@ non-nil, do so in the `mds-output-buffer', otherwise do so in
 the `mds-showstat-buffer'."
   (interactive "P")
   (if output-buffer
-      (with-current-buffer (mds--get-client-out-buf mds-showstat-client)
+      (with-current-buffer (mds--get-client-out-buf mds-client)
 	(toggle-truncate-lines))
     (toggle-truncate-lines)))
 
