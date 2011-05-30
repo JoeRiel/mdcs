@@ -47,6 +47,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-output)
 (require 'mds-showstat)
 (require 'maplev)
 (eval-when-compile
@@ -54,168 +55,55 @@
 
 ;;}}}
 
-;;{{{ customization
-
-(defgroup mds nil
-  "Major mode for debugging Maple."
-  :group 'tools)
-
-(defcustom mds-maple-cmd "emaple"
-  "*Shell command to launch command-line maple.
-The default, emaple, is a customizable script that calls a
-binary, pmaple.  It does not use cmaple, which does not properly
-handle prompts in a pipe."
-  :type 'string
-  :group 'mds)
-
-(defcustom mds-maple-setup-switches  nil
-  "*List of command-line switches passed to `mds-maple-cmd'."
-  :type '(repeat string)
-  :group 'mds)
-
-(defcustom mds-pre-Maple-14 nil
-  "*Boolean flag.  Set to non-nil if Maple is a release earlier than Maple 14."
-  :type 'boolean
-  :group 'mds)
-
-;;{{{   prompts and cursors
-
-(defcustom mds-prompt "(**) "
-  "*eMaple prompt.
-Changing this, alas, does not currently change the prompt because the
-prompt is defined as a C-preprocessor-macro in the emaple source."
-  :type 'string
-  :group 'mds)
-
-(defcustom mds-debug-prompt "(*DBG*) "
-  "*eMaple debug prompt.
-Changing this, alas, does not currently change the prompt because the
-prompt is defined as a C-preprocessor-macro in the emaple source."
-  :type 'string
-  :group 'mds)
-
-(defcustom mds-cursor-waiting 'hollow
-  "Cursor used in showstat buffer when waiting for Maple to respond."
-  :type 'symbol
-  :group 'mds)
-
-(defcustom mds-cursor-ready 'box
-  "Cursor used in showstat buffer when ready for a user input."
-  :type 'symbol
-  :group 'mds)
-
-;;}}}
-
-(defcustom mds-history-size 50
-  "Number of inputs the input-ring can hold."
-  :type 'integer ; ensure positive
-  :group 'mds)
-
-(defcustom mds-debugger-break (format "\n%s\n" (make-string 40 ?-))
-  "String inserted into `mds-debugger-output-buffer' when debugging starts."
-  :type 'string
-  :group 'mds)
-
-;;{{{   faces
-
-(defgroup mds-faces nil
-  "Faces for mds and related modes."
-  :group 'mds)
-
-(defface mds-face-arg
-  '((((class color) (background dark)) (:foreground "magenta")))
-  "Face for arguments in a showstat buffer."
-  :group 'mds-faces)
-
-(defface mds-face-prompt
-  '((((class color) (background dark)) (:foreground "Green")))
-  "Face for the prompt in an mds buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-entered
-  '((((class color) (background dark)) (:foreground "Cyan")))
-  "Face for the procname at entry in a debugger output buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-cont
-  '((((class color) (background dark)) (:foreground "LightBlue")))
-  "Face for the procname when continued in a debugger output buffer."
-  :group 'mds-faces)
-
-;;}}}
-
-
-;;}}}
-
 ;;{{{ Constants
 
 (defconst mds-version "1.0" "Version number the mds.")
+(defconst mds-port 10000  "Port used by mds server")
+(defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
-(defconst mds--prompt-re (format "^\\(?:\\(%s\\)\\|%s\\)"
-				 (regexp-quote mds-debug-prompt)
-				 (regexp-quote mds-prompt))
-  "Regexp matching Maple prompt.  If the first group matches,
-then this is a debug-prompt.")
+(defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
-(defconst mds--prompt-with-cr-re (concat mds--prompt-re "$")
-  "Regexp matching Maple prompt with preceding carriage return.
-This is the prompt as output from the maple process.")
+;;{{{ Regular Expressions
 
 (defconst mds--debugger-status-re
   (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
   "Regexp that matches the status output of the debugger.
-3The first group matches the procedure name, the second group the
+The first group matches the procedure name, the second group the
 state number.")
 
-(defconst mds--maple-output-re
-  (concat "^\\([^ \n][^\n]*\\):\n\\s-*\\([1-9][0-9]*\\)\ " ; (1,2) procname: state
-	  "\\(?:[^\r]*\\)"                                 ; next line
-	  "\\(" mds--prompt-re "\\)$"))                    ; (3) prompt
-
-(defconst mds--showstat-re
-  (concat "^\n\\(" maplev--name-re "\\) := proc("))
+(defconst mds-start-tag-re "^<\\([^>]+\\)>"
+  "Regular expression that matches start tag.
+The tag has format <tag-name>.  Group 0 matches the tag,
+group 1 matches tag-name.")
 
 (defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
   "Regexp to match message when a client attaches.
 The first group identifies SOMETHING.")
-  
-
-(defconst mds--emaple-done-re "That's all, folks.\n"
-  "Regexp that matches the final message send by emaple
-before the process terminates.")
-
-(defconst mds-port 10000
-  "Port used by mds server")
-
-(defvar mds-proc nil "process for the server.")
-
-(defconst mds-log-buffer-name "*mds-log*"
-  "Name of buffer used to log connections.")
-
-(defconst mds-max-number-clients 4
-  "Maximum number of clients allowed.")
 
 (defconst mds-end-of-msg-re "---EOM---")
 
 ;;}}}
-;;{{{ variables
 
-(defvar mds-debugging-flag nil "Non-nil when debugging.")
-(defvar mds-last-debug-cmd "" "Stores the last debugger command.")
-(defvar mds-maple-buffer nil "Temporary buffer associated with maple process.")
-(defvar mds-pmark nil "Prompt mark in `mds-buffer'.")
-(defvar mds-process nil "Maple process used by mds")
-(defvar mds-show-args-on-entry t "Non-nil means print the arguments to a procedure when entering it.")
-(defvar mds-showstat-arrow-position nil "Marker for state arrow.")
-(defvar mds-showstat-buffer nil "Buffer that displays showstat info.")
+(defvar mds-proc nil "process for the server.")
 
-(defvar mds-number-pending-clients 0)
-(defvar mds-log-buffer nil)
 
 ;;}}}
+
 ;;{{{ Variables
 
-;;; data structures
+(defvar mds-log-buffer nil
+  "Buffer used to record log entries. 
+Name given by `mds-log-buffer-name'.")
+
+(defvar mds-pre-Maple-14 nil
+  "Boolean flag indicating the Maple client is a release earlier
+  than Maple 14.")
+
+(defvar mds-number-clients 0
+  "Current number of clients.
+Maximum is given by `mds-max-number-clients'.")
+
+;; data structures
 
 (defvar mds-proc-status '()
   "Alist containing status of each known proc.
@@ -226,9 +114,6 @@ Status is either `accepted', `pending', or `rejected'.")
   "Alist containing info of accepted clients.
 An entry consists of (proc buffer . id).")
 
-(defvar mds-number-clients 0
-  "Current number of clients.
-Maximum is given by `mds-max-number-clients'.")
 
 
 ;;}}}
@@ -271,7 +156,7 @@ If none, then return nil."
 (defun mds-alist-entry (proc id)
   "Create an entry for the `mds-clients' alist.
 Generate new buffers for the showstat and Maple output."
-  (let ((buf (mds-showstat-generate-buffers proc))
+  (let ((buf (mds-showstat-generate-buffer proc))
 	(queue (mds-queue-create proc)))
     (cons proc 
 	  (cons buf (cons id queue)))))
@@ -330,14 +215,12 @@ is positive, otherwise stop the server."
 	  (mds-stop)
 	(mds-start)))))
 
-(defun mds-restart ()
+(defun mds ()
   "Restart the Maple Debugger Server."
   (interactive)
   (if (process-status "mds")
       (mds-stop))
   (mds-start))
-    
-
 
 ;;}}}
 ;;{{{ Sentinel
@@ -488,55 +371,67 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 
 ;;}}}
 
+
+(defun mds-extract-tag (msg) 
+  "Return (tag . MSG), where the tags have been removed from MSG.
+The format of MSG must be \"<tag>msg</tag>\"."
+  (if (string-match mds-start-tag-re msg)
+      (let* ((tag (match-string 1 msg))
+	     (len (match-end 0)))
+	(cons tag (substring msg len (- (1+ len)))))
+    ;; FIXME: this error gets caught and not displayed
+    (error "no tag in message: '%s...'" (substring msg 0 (min 10 (length msg))))))
+
 ;;{{{ mds-handle-stream
 
 (defun mds-handle-stream (proc msg)
+  "Handle tagged message MSG from the client process PROC.
+The end of message marker has been removed.  Strip the tags,
+and use them to determine where to send the message and how
+to format it."
+
   (let* ((client (mds-get-client proc))
-	 (buf (mds--get-showstat-buffer client))) 
+	 (buf (mds--get-showstat-buffer client))
+	 (tag-msg (mds-extract-tag msg))
+	 (tag (car tag-msg))  ; name of tag
+	 (msg (cdr tag-msg))) ; msg with no tags
+		  
     ;; route MSG to proper buffer
       (with-current-buffer buf
 	(with-syntax-table maplev--symbol-syntax-table
 	  (cond
-	   ((string-match mds--debugger-status-re msg)
-	    ;;{{{ msg contains debugger status
+	   ((string= tag "DBG_STATE")
+	    ;; msg is the state output from debugger.  
+	    ;; Extract the procname and state number
+	    ;; and update the showstat buffer
+	    (if (not (string-match mds--debugger-status-re msg))
+		(error "cannot parse current state")
+	      ;; FIXME: eliminate this
+	      (mds-showstat-update (match-string 1 msg)    ; procname
+				   (match-string 2 msg)))) ; state
+	   ((string= tag "DBG_SHOW")
+	    ;; msg is showstat output (printout of procedure).
+	    ;; Display in showstat buffer.
+	    (mds-showstat-display-proc msg 'active))
 
-	    (let ((cmd-output (substring msg 0 (match-beginning 1)))
-		  (procname (match-string 1 msg))
-		  (state    (match-string 2 msg))
-		  (rest (substring msg (match-end 2)))
-		  ;;(exec (nth 0 closure))
-		  ;;(func (nth 1 closure))
-		  ;;(proc (nth 2 closure)))
-		  )
-
-	      ;; Assign global variables.
-	      (mds-showstat-set-debugging-flag t)
-
-	      ;; (if exec
-	      ;;     ;; A statement was executed in showstat;
-	      ;;     ;; update the showstat buffer.
-	      (mds-showstat-update procname state)
-
-	      ;; Move focus to showstat buffer.
-	      ;; (switch-to-buffer mds-showstat-buffer)
-	      ;; Display the Maple output, stored in cmd-output.  If func is
-	      ;; assigned, then first apply it to the string in cmd-output.
-	      ;; The proc procedure, if assigned, will be applied to the
-	      ;; generated output region.
-	      (mds-showstat-display-debugger-output
-	       ;; (if func
-	       ;;     (funcall func cmd-output)
-	       ;;   cmd-output)
-	       ;; proc
-	       cmd-output))
-
-	    ;;}}}
-	    )
-	   ((string-match mds--showstat-re msg)
-	    ;; handle showstat output
+	   ((string= tag "DBG_SHOW_INACTIVE")
+	    ;; msg is an inactive showstat output.
+	    ;; Display in showstat buffer.
 	    (mds-showstat-display-proc msg))
+
+	   ((string= tag "DBG_WHERE")
+	    (mds-output-display msg mds-output-buffer 'where))
+
+	   ((string= tag "DBG_STACK")
+	    (mds-output-display msg mds-output-buffer 'stack))
+
+	   ((string= tag "DBG_WARN")
+	    (mds-output-display msg mds-output-buffer 'warn))
+
 	   ;; otherwise print to debugger output buffer
-	   (t (mds-showstat-display-debugger-output msg)))))))
+	   (t (mds-output-display msg mds-output-buffer tag)))))))
+
+(defun mds-nullary (&optional args))
 
 ;;}}}
 
@@ -565,6 +460,7 @@ remove the entry from the alist, and decrement `mds-number-clients'."
 (provide 'mds '(mds-start))
 
 ;;{{{ Manual Tests
+
 ;;
 ;; (load "mds-showstat.el")
 ;; (load "mds.el")
