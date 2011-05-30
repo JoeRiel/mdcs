@@ -301,8 +301,12 @@ Do not touch `mds-log-buffer'."
 (defsubst mds-queue-buffer (queue) (cdr queue))
 
 (defun mds-queue-create (proc)
-  "Create and return a queue for PROC.
-The structure has the form (proc . buf)."
+  "Create and return a queue associated with process PROC.
+A temporary (hidden) buffer is created and used, not surprisngly,
+to buffer the incoming data. The returned queue has the
+form (PROC . buf).  PROC identifies the process; the queue
+functions do not directly communicate with the process. Data is
+sent to the queue via `mds-queue-filter'."
   (let ((buf (get-buffer-create (concat " mds-queue-temp-"
 					(process-name proc)))))
     (buffer-disable-undo buf)
