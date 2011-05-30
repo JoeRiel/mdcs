@@ -263,7 +263,7 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
 	    mds-showstat-state "1"
-	    buffer-read-only nil  ; FIXME 
+	    ;;buffer-read-only nil  ; FIXME 
 	    )
       (if mds-truncate-lines
 	  (toggle-truncate-lines 1)))
