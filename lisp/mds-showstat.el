@@ -1,9 +1,9 @@
 ;;; mds-showstat.el --- mds-showstat-mode
 
-;; Copyright (C) 2009 Joseph S. Riel, all rights reserved
+;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
-;; Created:    Jan 2009
+;; Created:    May 2011
 ;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
@@ -158,13 +158,11 @@ call (maple) showstat to display the new procedure."
 	;; entered procname or are continuing (this may not be robust).
 	
 	;; Print procname (just the name) with appropriate face.
-	;;(tmp-update procname)
-	(mds-output-display 
+	(mds-output-display
 	 (mds--get-client-out-buf mds-client)
 	 (format "%s:\n" procname)
 	 'PROCNAME
 	 )
-
 
 	;; (propertize procname
 	;; 		   'face (if at-first-state
@@ -174,16 +172,8 @@ call (maple) showstat to display the new procedure."
 	;;(if (and mds-show-args-on-entry at-first-state)
 	;;      (mds-show-args-as-equations))
 	
-	
 	;; Save procname, then update the showstat buffer.
 	(setq mds-showstat-procname procname)
-	;; Send the showstat command to the debugger;
-	;; (tq-enqueue mds-tq (format "showstat\n")
-	;; 		mds--prompt-with-cr-re
-	;; 		(cons mds-showstat-buffer nil)
-	;; 		#'mds-showstat-display
-	;; 		'delay)
-	
 	(mds-showstat-send-client "showstat")))))
 
 (defun tmp-update (procname)
