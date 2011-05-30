@@ -368,9 +368,8 @@ The format of MSG must be \"<tag>msg</tag>\"."
 
 (defun mds-handle-stream (proc msg)
   "Handle tagged message MSG from the client process PROC.
-The end of message marker has been removed.  Strip the tags,
-and use them to determine where to send the message and how
-to format it."
+The end of message marker has been removed.  Strip the tags and
+use them to route the message."
 
   (let* ((client (mds-get-client proc))
 	 (live-buf (mds--get-client-live-buf client))
@@ -379,46 +378,48 @@ to format it."
 	 (tag-msg (mds-extract-tag msg))
 	 (tag (car tag-msg))  ; name of tag
 	 (msg (cdr tag-msg))) ; msg with no tags
-
-    (if (null live-buf) (error "live-buf is null"))
-    (if (null dead-buf) (error "dead-buf is null"))
-    (if (null out-buf)  (error "out-buf is null"))
-    (if (not (stringp tag)) (error "tag %1 is not a tag" tag))
     
     ;; route MSG to proper buffer
     ;;    (with-syntax-table maplev--symbol-syntax-table
     (cond
+     ;; msg is the state output from debugger.  
+     ;; Extract the procname and state number
+     ;; and update the showstat buffer
      ((string= tag "DBG_STATE")
-      ;; msg is the state output from debugger.  
-      ;; Extract the procname and state number
-      ;; and update the showstat buffer
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
 	(mds-showstat-update live-buf 
 			     (match-string 1 msg)    ; procname
 			     (match-string 2 msg)))) ; state
+     ;; msg is showstat output (printout of procedure).
+     ;; Display in showstat buffer.
      ((string= tag "DBG_SHOW")
-      ;; msg is showstat output (printout of procedure).
-      ;; Display in showstat buffer.
       (mds-showstat-display live-buf msg))
+     ;; msg is an inactive showstat output.
+     ;; Display in showstat buffer.
      ((string= tag "DBG_SHOW_INACTIVE")
-      ;; msg is an inactive showstat output.
-      ;; Display in showstat buffer.
       (mds-showstat-display dead-buf msg))
      
      ((string= tag "DBG_WHERE")
       (mds-output-display out-buf msg 'where))
+
+     ((string= tag "DBG_ARGS")
+      (mds-output-display out-buf msg 'args))
      
      ((string= tag "DBG_STACK")
       (mds-output-display out-buf msg 'stack))
      
      ((string= tag "DBG_WARN")
       (mds-output-display out-buf msg 'warn))
+
+     ((string= tag "DBG_ERR2")
+      (mds-output-display out-buf msg 'parser-err))
+
+     ((string= tag "MPL_ERR")
+      (mds-output-display out-buf msg 'maple-err))
      
      ;; otherwise print to debugger output buffer
      (t (mds-output-display out-buf msg tag)))))
-
-(defun mds-nullary (&optional args))
 
 ;;}}}
 

@@ -13,14 +13,26 @@
 ;;;
 
 ;;{{{ faces
-(defface mds-warning-face
-  '((((class color) (background dark)) (:foreground "pink")))
-  "Face for warning messages in output buffer."
+
+(defface mds-args-face
+  '((((class color) (background dark)) (:foreground "lawn green")))
+  "Face for stack arguments."
+  :group 'mds-faces)
+
+(defface mds-maple-error-face
+  '((((class color) (background dark)) (:foreground "orange red")))
+  "Face for Maple errors."
   :group 'mds-faces)
 
 (defface mds-inactive-link-face
   '((((class color) (background dark)) (:foreground "cyan1")))
   "Face for inactive links in output buffer."
+  :group 'mds-faces)
+
+
+(defface mds-warning-face
+  '((((class color) (background dark)) (:foreground "pink")))
+  "Face for warning messages in output buffer."
   :group 'mds-faces)
 ;;}}}
 ;;{{{ variables
@@ -56,6 +68,12 @@ This must be called from a buffer-local variable `mds-client' appropriately assi
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
 
+(defun mds-insert-and-font-lock (msg beg face)
+  (mds-insert-tag tag) 
+  (setq beg (point))
+  (insert msg)
+  (mds-put-face beg (1- (point-max)) face))
+
 ;;{{{ mds-output-diisplay
 
 (defun mds-output-display (buf msg &optional tag)
@@ -73,15 +91,15 @@ This must be called from a buffer-local variable `mds-client' appropriately assi
 	      ;; string tag (temporary)
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
+	     ;; stack
 	     ((eq tag 'stack)
-	      ;; stack
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg)
 	      (if (string= msg "TopLevel\n")
 		  (mds-put-face beg (point) 'mds-inactive-link-face)
 		(make-text-button beg (1- (point)) :type 'mds-output-view-proc-button)))
+	     ;; where
 	     ((eq tag 'where)
-	      ;; where
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg)
 	      (goto-char beg)
@@ -91,11 +109,15 @@ This must be called from a buffer-local variable `mds-client' appropriately assi
 		(if toplev
 		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
 		  (make-text-button beg (- (point) 2) :type 'mds-output-view-proc-button))))
+	     ;; args
+	     ((eq tag 'args) (mds-insert-and-font-lock msg beg 'mds-args-face))
 	     ;; warning
-	     ((eq tag 'warn)
-	      (mds-insert-tag tag) (setq beg (point))
-	      (insert msg)
-	      (mds-put-face beg (1- (point-max)) 'mds-warning-face))
+	     ((eq tag 'warn) (mds-insert-and-font-lock msg beg 'mds-warning-face))
+	     ;; maple error
+	     ((eq tag 'maple-err) (mds-insert-and-font-lock msg beg 'mds-maple-error-face))
+	     ;; maple parser error
+	     ((eq tag 'parser-err) (mds-insert-and-font-lock msg beg 'mds-maple-error-face))
+	     ;; unknown tag
 	     ((and tag (symbolp tag))
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))

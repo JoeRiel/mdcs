@@ -348,7 +348,7 @@ $include <src/Format.mm>
         if `debugger/isspace`( res ) then
             res := `if`(assigned(`debugger/default`)
                         , `debugger/default`
-                        , "debugger_printf(DBG_INFO, \"See ?debugger for available commands\n\")"
+                        , "debugger_printf(DBG_HELP, \"See ?debugger for available commands\n\")"
                        );
         else
             `debugger/default` := res;
@@ -384,9 +384,11 @@ $include <src/Format.mm>
         od;
         #}}}
         #{{{ Record whether or not the command ended in a colon.
+
         if _npassed > 0 and type(_passed[1],name) then
             assign(_passed[1],endcolon)
         fi;
+
         #}}}
         #{{{ Check for characters after comment
 
@@ -474,7 +476,7 @@ $include <src/Format.mm>
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf(DBG_ERR, "Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(DBG_ERR1, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
@@ -500,6 +502,7 @@ $include <src/Format.mm>
 
         #}}}
         #{{{ handle negative statement number
+
         if procName <> 0 then
             if statNumber < 0 then
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
@@ -507,6 +510,7 @@ $include <src/Format.mm>
             fi;
             debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
         fi;
+
         #}}}
         #{{{ command loop
         do
@@ -683,7 +687,7 @@ $include <src/Format.mm>
             #{{{ handle error
 
             if err = lasterror then
-                debugger_printf(DBG_ERR, "Error, %s\n"
+                debugger_printf(DBG_ERR2, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             fi
@@ -713,6 +717,8 @@ $include <src/Format.mm>
             fi;
 
             map[3](debugger_printf, DBG_SHOW, "\n%s", [res]);
+
+            # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
                 debugger_printf(DBG_NULL, "\n" )
             fi
@@ -788,12 +794,12 @@ $include <src/Format.mm>
             stack := debugopts('callstack')
         fi;
         for i from nops(stack)-2 to 8 by -3 do
-            debugger_printf(DBG_STACK, "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
+            debugger_printf(DBG_STACK1, "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
         od;
         if stack[5] = 'TopLevel' then
-            debugger_printf(DBG_STACK,"Currently at TopLevel.\n")
+            debugger_printf(DBG_STACK2,"Currently at TopLevel.\n")
         else
-            debugger_printf(DBG_STACK,"Currently in %a.\n",stack[5])
+            debugger_printf(DBG_STACK3,"Currently in %a.\n",stack[5])
         fi;
         NULL
     end proc:
