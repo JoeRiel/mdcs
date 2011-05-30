@@ -253,7 +253,7 @@ Do not touch `mds-log-buffer'."
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
 	    (mds-writeto-log proc "rejected client"))
-	   ((eq status 'login)    (mds-writeto-log proc "begin login"))))))
+	   ((eq status 'login) (mds-writeto-log proc "begin login"))))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
       ;; Delete associated buffers.
@@ -375,40 +375,44 @@ to format it."
 	 (tag-msg (mds-extract-tag msg))
 	 (tag (car tag-msg))  ; name of tag
 	 (msg (cdr tag-msg))) ; msg with no tags
-		  
+
+    (if (null live-buf) (error "live-buf is null"))
+    (if (null dead-buf) (error "dead-buf is null"))
+    (if (null out-buf)  (error "out-buf is null"))
+    (if (not (stringp tag)) (error "tag %1 is not a tag" tag))
+    
     ;; route MSG to proper buffer
-    (with-syntax-table maplev--symbol-syntax-table
-      (cond
-       ((string= tag "DBG_STATE")
-	;; msg is the state output from debugger.  
-	;; Extract the procname and state number
-	;; and update the showstat buffer
-	(if (not (string-match mds--debugger-status-re msg))
-	    (error "cannot parse current state")
-	  ;; FIXME: eliminate this
-	  (with-current-buffer live-buf
-	    (mds-showstat-update (match-string 1 msg)     ; procname
-				 (match-string 2 msg))))) ; state
-	((string= tag "DBG_SHOW")
-	 ;; msg is showstat output (printout of procedure).
-	 ;; Display in showstat buffer.
-	 (mds-showstat-display live-buf msg))
-	((string= tag "DBG_SHOW_INACTIVE")
-	 ;; msg is an inactive showstat output.
-	 ;; Display in showstat buffer.
-	 (mds-showstat-display dead-buf msg))
-      
-       ((string= tag "DBG_WHERE")
-	  (mds-output-display out-buf msg 'where))
-       
-       ((string= tag "DBG_STACK")
-	  (mds-output-display out-buf msg 'stack))
-       
-       ((string= tag "DBG_WARN")
-	  (mds-output-display out-buf msg 'warn))
-       
-       ;; otherwise print to debugger output buffer
-       (t (mds-output-display out-buf msg tag))))))
+    ;;    (with-syntax-table maplev--symbol-syntax-table
+    (cond
+     ((string= tag "DBG_STATE")
+      ;; msg is the state output from debugger.  
+      ;; Extract the procname and state number
+      ;; and update the showstat buffer
+      (if (not (string-match mds--debugger-status-re msg))
+	  (error "cannot parse current state")
+	(mds-showstat-update live-buf 
+			     (match-string 1 msg)    ; procname
+			     (match-string 2 msg)))) ; state
+     ((string= tag "DBG_SHOW")
+      ;; msg is showstat output (printout of procedure).
+      ;; Display in showstat buffer.
+      (mds-showstat-display live-buf msg))
+     ((string= tag "DBG_SHOW_INACTIVE")
+      ;; msg is an inactive showstat output.
+      ;; Display in showstat buffer.
+      (mds-showstat-display dead-buf msg))
+     
+     ((string= tag "DBG_WHERE")
+      (mds-output-display out-buf msg 'where))
+     
+     ((string= tag "DBG_STACK")
+      (mds-output-display out-buf msg 'stack))
+     
+     ((string= tag "DBG_WARN")
+      (mds-output-display out-buf msg 'warn))
+     
+     ;; otherwise print to debugger output buffer
+     (t (mds-output-display out-buf msg tag)))))
 
 (defun mds-nullary (&optional args))
 

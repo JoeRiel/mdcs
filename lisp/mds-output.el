@@ -32,7 +32,7 @@
 
 ;;}}}
 
-(defsubst mds--get-client-out-buf  (client) (nth 4 client))
+;;(defsubst mds--get-client-out-buf  (client) (nth 4 client))
 
 
 (defun mds-output-get-buffer ()

@@ -126,64 +126,65 @@ appropriate `mds-showstat-buffer'."
 
 ;;{{{ showstat buffer creation and update
 
-(defun mds-showstat-update (procname state)
+(defun mds-showstat-update (buf procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
 `mds-showstat-state'.  PROCNAME is the name of the procedure,
 STATE is the current state; both are strings.  If the buffer is
 already displaying PROCNAME, then just move the arrow; otherwise
 call (maple) showstat to display the new procedure."
 
-  ;; save the procname and the state
-  (setq mds-showstat-procname procname
-	mds-showstat-state state)
+  (with-current-buffer buf
+      ;; save the procname and the state
+      (setq mds-showstat-procname procname
+	    mds-showstat-state state)
 
-  ;; Revert cursor-type to ready status.
-  (setq cursor-type mds-cursor-ready)
-  (let ((at-first-state (string= state "1")))
-    (if (and (equal procname mds-showstat-procname)
-	     (not at-first-state))
-	
-	;; procname has not changed.
+    ;; Revert cursor-type to ready status.
+    (setq cursor-type mds-cursor-ready)
+    (let ((at-first-state (string= state "1")))
+      (if (and (equal procname mds-showstat-procname)
+	       (not at-first-state))
+	  
+	  ;; procname has not changed.
+	  ;;
+	  ;; Assume we are in the same procedure (not robust).
+	  ;; Move the arrow.
+	  (mds-showstat-display-state)
+
+	;; procname has changed.
+
 	;;
-	;; Assume we are in the same procedure (not robust).
-	;; Move the arrow.
-	(mds-showstat-display-state)
-
-      ;; procname has changed.
-
-      ;;
-      ;; Update the buffer with procname and, if entering procname,
-      ;; the values of its arguments. First determine whether we just
-      ;; entered procname or are continuing (this may not be robust).
-      
-      ;; Print procname (just the name) with appropriate face.
-      ;;(tmp-update procname)
-      (mds-output-display 
-       (mds--get-client-out-buf mds-client)
-       (format "%s:\n" procname)
-       'DAMN-PROCNAME
-       )
+	;; Update the buffer with procname and, if entering procname,
+	;; the values of its arguments. First determine whether we just
+	;; entered procname or are continuing (this may not be robust).
+	
+	;; Print procname (just the name) with appropriate face.
+	;;(tmp-update procname)
+	(mds-output-display 
+	 (mds--get-client-out-buf mds-client)
+	 (format "%s:\n" procname)
+	 'DAMN-PROCNAME
+	 )
 
 
-      ;; (propertize procname
-      ;; 		   'face (if at-first-state
-      ;; 			     'mds-face-procname-entered
-      ;; 			   'mds-face-procname-cont))))
-      ;; Display arguments if we just entered the procedure.
-      ;;(if (and mds-show-args-on-entry at-first-state)
-      ;;      (mds-show-args-as-equations))
-      
-      
-      ;; Save procname, then update the showstat buffer.
-      (setq mds-showstat-procname procname)
-      ;; Send the showstat command to the debugger;
-      ;; (tq-enqueue mds-tq (format "showstat\n")
-      ;; 		mds--prompt-with-cr-re
-      ;; 		(cons mds-showstat-buffer nil)
-      ;; 		#'mds-showstat-display
-      ;; 		'delay)
-      
-      (mds-showstat-send-client "showstat"))))
+	;; (propertize procname
+	;; 		   'face (if at-first-state
+	;; 			     'mds-face-procname-entered
+	;; 			   'mds-face-procname-cont))))
+	;; Display arguments if we just entered the procedure.
+	;;(if (and mds-show-args-on-entry at-first-state)
+	;;      (mds-show-args-as-equations))
+	
+	
+	;; Save procname, then update the showstat buffer.
+	(setq mds-showstat-procname procname)
+	;; Send the showstat command to the debugger;
+	;; (tq-enqueue mds-tq (format "showstat\n")
+	;; 		mds--prompt-with-cr-re
+	;; 		(cons mds-showstat-buffer nil)
+	;; 		#'mds-showstat-display
+	;; 		'delay)
+	
+	(mds-showstat-send-client "showstat")))))
 
 (defun tmp-update (procname)
   (mds-output-display (mds--get-client-out-buf mds-client)
@@ -262,7 +263,7 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
 	    mds-showstat-state "1"
-	    ;buffer-read-only nil  ; FIXME 
+	    buffer-read-only nil  ; FIXME 
 	    )
       (if mds-truncate-lines
 	  (toggle-truncate-lines 1)))
@@ -600,12 +601,11 @@ otherwise run through StringTools:-FormatMessage."
 ;;{{{ (*) Miscellaneous
 
 (defun mds-goto-current-state ()
-  "Move cursor to the current state in the active showstat buffer."
-  (interactive) 
-  (if mds-showstat-live
-      (mds-showstat-update mds-showstat-procname mds-showstat-state)
-    (pop-to-buffer (mds--get-client-live-buf mds-client))
-    (mds-goto-current-state)))
+  (interactive)
+  "Move cursor to the current state in the showstat buffer."
+  (pop-to-buffer (mds--get-client-live-buf mds-client))
+  (mds-showstat-update (current-buffer) mds-showstat-procname mds-showstat-state))
+   
 
 (defun mds-goto-state (state)
   "Move POINT to STATE.
