@@ -623,7 +623,7 @@ the number of activation levels to display."
   (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d\n" depth)
-	       "where:\n")))
+	       "where\n")))
     (mds-showstat-send-client cmd)))
 
 (defconst mds-showstat-procname-re "^\\([^ \t\n]+\\): ")
