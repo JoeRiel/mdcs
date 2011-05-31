@@ -68,11 +68,11 @@ This must be called from a buffer-local variable `mds-client' appropriately assi
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
 
-(defun mds-insert-and-font-lock (msg beg face)
-  (mds-insert-tag tag) 
-  (setq beg (point))
-  (insert msg)
-  (mds-put-face beg (1- (point-max)) face))
+(defun mds-insert-and-font-lock (msg face &optional tag)
+  (and tag (mds-insert-tag tag))
+  (let ((beg (point)))
+    (insert msg)
+    (mds-put-face beg (1- (point-max)) face)))
 
 ;;{{{ mds-output-diisplay
 
@@ -110,13 +110,13 @@ This must be called from a buffer-local variable `mds-client' appropriately assi
 		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
 		  (make-text-button beg (- (point) 2) :type 'mds-output-view-proc-button))))
 	     ;; args
-	     ((eq tag 'args) (mds-insert-and-font-lock msg beg 'mds-args-face))
+	     ((eq tag 'args) (mds-insert-and-font-lock msg 'mds-args-face tag))
 	     ;; warning
-	     ((eq tag 'warn) (mds-insert-and-font-lock msg beg 'mds-warning-face))
+	     ((eq tag 'warn) (mds-insert-and-font-lock msg 'mds-warning-face tag))
 	     ;; maple error
-	     ((eq tag 'maple-err) (mds-insert-and-font-lock msg beg 'mds-maple-error-face))
+	     ((eq tag 'maple-err) (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
 	     ;; maple parser error
-	     ((eq tag 'parser-err) (mds-insert-and-font-lock msg beg 'mds-maple-error-face))
+	     ((eq tag 'parser-err) (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
 	     ;; unknown tag
 	     ((and tag (symbolp tag))
 	      (mds-insert-tag tag) (setq beg (point))
