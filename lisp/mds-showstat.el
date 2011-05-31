@@ -135,8 +135,8 @@ call (maple) showstat to display the new procedure."
 
   (with-current-buffer buf
       ;; save the procname and the state
-      (setq mds-showstat-procname procname
-	    mds-showstat-state state)
+
+    (setq mds-showstat-state state)
 
     ;; Revert cursor-type to ready status.
     (setq cursor-type mds-cursor-ready)
@@ -152,7 +152,8 @@ call (maple) showstat to display the new procedure."
 
 	;; procname has changed.
 
-	;;
+	(setq mds-showstat-procname procname)
+
 	;; Update the buffer with procname and, if entering procname,
 	;; the values of its arguments. First determine whether we just
 	;; entered procname or are continuing (this may not be robust).
