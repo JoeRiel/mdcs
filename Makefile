@@ -24,15 +24,17 @@ build: byte-compile compile doc mla
 
 # Assign local variables for needed binaries
 
-# Modify these to something appropriate, or
-# specify values on the command line.
+# Modify these to something appropriate, or specify values on the
+# command line.  
 
 EMACS := emacs
-#MAPLE := "c:/Program Files/Maple 15/bin.X86_64_WINDOWS/cmaple"
-#MAPLE := "$(MAPLE_ROOT)/bin.X86_64_WINDOWS/cmaple.exe"
-MAPLE := maple
+ifeq ($(OS),Cygwin)
+  MAPLE := cmaple 
+else
+  MAPLE := maple
+endif
 
-CP = cp
+CP = cp --archive
 INSTALL_INFO = install-info
 MAKEINFO = makeinfo
 MKDIR = mkdir -p
@@ -58,7 +60,7 @@ ifeq ($(OS),Cygwin)
  LISP_DIR := $(shell cygpath --mixed "$(LISP_DIR)")
  INFO_DIR := $(shell cygpath --mixed "$(INFO_DIR)")
  MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
- MAPLE := $(shell cygpath --mixed "$(MAPLE)")
+# MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
 
 # }}}
@@ -111,6 +113,7 @@ ELS = mds mds-showstat mds-output
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
 
+byte-compile: $(print-help,byte-compile,Byte compile $(LISPFILES))
 byte-compile: $(ELCFILES)
 
 %.elc : %.el
@@ -127,7 +130,8 @@ mla: $(mla)
 
 %.mla: maple/src/%.mpl maple/src/*.mm
 	$(RM) $@
-	"$(MAPLE)" -q -I maple $^
+	echo $(MAPLE)
+	$(MAPLE) -q -I maple -D BUILD_MLA $^
 
 # }}}
 
@@ -145,13 +149,11 @@ install-maple: $(mla)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
-	@if [ ! -d $(LISP_DIR) ]; then $(MKDIR) $(LISPDIR); else true; fi ;
 	$(MKDIR) $(LISP_DIR)
 	$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
 install-info: $(INFOFILES)
-	@if [ ! -d $(INFO_DIR) ]; then $(MKDIR) $(INFODIR); else true; fi ;
 	$(MKDIR) $(INFO_DIR)
 	$(CP) $(INFOFILES) $(INFO_DIR)
 	@if [ -f $(INFO_DIR)/dir ]; then \
