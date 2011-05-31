@@ -65,14 +65,12 @@
 
 #}}}
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
+$define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 $define END_OF_MSG "---EOM---"
 
 unprotect('mdc'):
 module mdc()
-
-global DEBUGGER_PROCS;
 
 export ModuleApply
     ,  Debugger
@@ -84,21 +82,28 @@ export ModuleApply
 
 local Connect
     , Disconnect
+    , CreateID
     , ModuleUnload
-    , createID
+    , Read
+    , WriteTagf
+
+    # Module-local variables.  Seems unlikely that the debugger
+    # will ever be thread-safe, so this is not serious.
+
     , max_length := 10\000 # too small?
     , Port := MDS_DEFAULT_PORT
     , Host := "localhost"
 
-    , printf_to_server
     , sid := -1
     , view_flag := false
     ;
 
 #}}}
 
-#$include <src/Format.mm>
-#$include <src/Debugger.mm>
+$ifdef BUILD_MLA
+$include <src/Format.mm>
+$include <src/Debugger.mm>
+$endif
 
 #{{{ ModuleApply
 
@@ -118,7 +123,8 @@ local Connect
                          , { traperror :: truefalse := false }
                          , { view :: truefalse := view_flag }
                          , { exit :: truefalse := false }
-                         , $ )
+                         , $
+        )
 
     global `debugger/width`;
 
@@ -129,7 +135,7 @@ local Connect
         end if;
 
         if exit then
-            Debugger:-restoreProcs();
+            Debugger:-Restore();
             Disconnect();
             return NULL;
         end if;
@@ -141,12 +147,12 @@ local Connect
             `debugger/width` := max_length;
         end if;
 
-        replaceProcs();
+        Debugger:-Replace();
 
         try
-            Connect(host, port, createID(label), _options['beep','greeting'] );
+            Connect(host, port, CreateID(label), _options['beep','greeting'] );
         catch:
-            Debugger:-restoreProcs();
+            Debugger:-Restore();
             error;
         end try;
 
@@ -190,13 +196,16 @@ local Connect
             Sockets:-Close(sid);
         end if;
         if beep then
-            ssystem("beep");
+            try
+                ssystem("beep");
+            catch:
+            end try;
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
         if greeting <> "" then
-            printf_to_server(GREET, greeting);
+            Debugger:-Printf(GREET, greeting);
         end if;
         return NULL;
     end proc;
@@ -217,9 +226,38 @@ local Connect
 
 #}}}
 
-#{{{ createID
+#{{{ Read
 
-##DEFINE PROC createID
+    Read := proc()
+        Sockets:-Read(sid);
+    end proc;
+
+#{{{ WriteTagf
+
+    WriteTagf := proc(tag)
+    uses Write = Sockets:-Write;
+    local msg,len;
+        msg := sprintf(_rest);
+        if 0 < max_length then
+            len := length(msg);
+            if max_length < len then
+                msg := sprintf("---output too long (%d bytes)---\n", len);
+            end if;
+        end if;
+        # hack for now
+        Write(sid, sprintf("<%a>",tag));
+        Write(sid, msg);
+        Write(sid, sprintf("</%a>",tag));
+        Write(sid, END_OF_MSG);
+        if view_flag then
+            fprintf('INTERFACE_DEBUG',_rest);
+        end if;
+        return NULL;
+    end proc;
+
+#{{{ CreateID
+
+##DEFINE PROC CreateID
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE create a formatted ID that identifies the client
 ##CALLINGSEQUENCE
@@ -242,7 +280,7 @@ local Connect
 ##  Note that a different machine could generate the same ID.
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-createID):
+## AssignFUNC(mdc:-CreateID):
 ## VerifyTools:-AddVerification(
 ##      label=proc(s1,s2) evalb( s1 = sprintf("%s%d:",s2,kernelopts('pid')) )
 ##   end proc):
@@ -258,7 +296,7 @@ local Connect
 ## Try[TE]("10.3", FUNC("\n"), msg);
 
 
-    createID := proc(label :: string,$)
+    CreateID := proc(label :: string,$)
         if length(label) = 0 then
             error "label cannot be empty";
         elif not StringTools:-RegMatch("^[A-Za-z0-9_-]+$", label) then

@@ -1,4 +1,29 @@
+##INCLUDE ../include/mpldoc_macros.mi
+##DEFINE MOD Debugger
+##MODULE \MOD
+##HALFLINE replacement functions for Maple debugger
+##AUTHOR   Joe Riel
+##DATE     May 2011
+##DESCRIPTION
+##- The `\MOD` module exports two methods, "Replace" and "Restore",
+##  that replace and restore, respectively, the (thankfully) global
+##  procedures that are the library side of the Maple debugger.
+##
+##- The new procedures use the "Sockets" package to communicate with a
+##  "Maple Debug Server".  They also insert tags into the stream that
+##  indicate the purpose of each packet.  This simplifies the
+##  parsing requirements of the server.
+
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
+
 Debugger := module()
+
+export Replace
+    ,  Restore
+    ,  Printf
+    ;
+
+global DEBUGGER_PROCS;
 
 local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _debugger
@@ -8,15 +33,15 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _showstop
     , _where
 
-    , replaceProcs
-    , restoreProcs
     , replaced := false
 
     ;
 
-#{{{ replaceProcs
+# module local: sid
 
-    replaceProcs := proc()
+#{{{ Replace
+
+    Replace := proc()
         if not replaced then
             # Reassign library debugger procedures
             unprotect(debugger_procs);
@@ -33,9 +58,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     end proc;
 
 #}}}
-#{{{ restoreProcs
+#{{{ Restore
 
-    restoreProcs := proc()
+    Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced then
             map( p -> kernelopts('unread' = p), [debugger_procs] );
@@ -45,6 +70,28 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     end proc;
 
 #}}}
+
+#{{{ Printf
+
+    Printf := proc(tag)
+    local msg,len;
+        msg := sprintf(_rest);
+        if 0 < max_length then
+            len := length(msg);
+            if max_length < len then
+                msg := sprintf("---output too long (%d bytes)---\n", len);
+            end if;
+        end if;
+        # hack for now
+        Write(sprintf("<%a>",tag));
+        Write(msg);
+        Write(sprintf("</%a>",tag), 'eom');
+        return NULL;
+    end proc;
+
+#}}}
+
+# Debugger replacements
 
 #{{{ debugger_printf
 
@@ -59,7 +106,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                   );
         if rts <> {} then argList := subs(rts,argList) end if;
 
-        printf_to_server(tag, op(argList));
+        WriteTagf(tag, op(argList));
 
         return NULL;
     end proc:
@@ -82,7 +129,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         do
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
-            res := traperror(Sockets:-Read(sid));
+            res := traperror(Read());
             if res <> lasterror then break fi;
             printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
         od;
@@ -309,7 +356,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 debugopts('steplevel'=evalLevel-statLevel*5);
                 return
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-                printf_to_server("stopping\n");
+                debugger_printf(DBG_STOP,"stopping\n");
                 debugopts('interrupt'=true)
             elif cmd = "where" then
                 if nops(line) = 1 then
@@ -554,32 +601,5 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
 #}}}
 
-#{{{ printf_to_server
-
-    printf_to_server := proc(tag)
-    local msg,len;
-        msg := sprintf(_rest);
-        if 0 < max_length then
-            len := length(msg);
-            if max_length < len then
-                msg := sprintf("---output too long (%d bytes)---\n", len);
-            end if;
-        end if;
-        # hack for now
-    local Write := `if`(sid=-1
-                        , (sid) -> printf("%s", _rest)
-                        , Sockets:-Write
-                       );
-        Write(sid, sprintf("<%a>",tag));
-        Write(sid, msg);
-        Write(sid, sprintf("</%a>",tag));
-        Write(sid, END_OF_MSG);
-        if view_flag then
-            fprintf('INTERFACE_DEBUG',_passed);
-        end if;
-        return NULL;
-    end proc;
-
-#}}}
 
 end module;

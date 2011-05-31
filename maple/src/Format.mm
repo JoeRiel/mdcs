@@ -18,8 +18,7 @@ export ArgsToEqs
     ,  Try
     ;
 
-local convert
-	, indexed2slashed
+local indexed2slashed
     , prettyprint
     , T
     ;
@@ -370,7 +369,7 @@ $endif
             catch:
             end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
-            debugger_printf('DBG_SHOW_INACTIVE', "%s", prc);
+            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
