@@ -12,6 +12,14 @@
 
 ;;;
 
+;;{{{ declarations
+
+;; avoid compiler warnings
+
+(declare-function mds--get-client-out-buf "mds")
+(declare-function mds-showstat-display-inactive "mds-showstat")
+
+;;}}}
 ;;{{{ faces
 
 (defface mds-args-face

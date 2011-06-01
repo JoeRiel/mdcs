@@ -17,6 +17,17 @@
 (eval-when-compile
   (require 'hl-line))
 
+;;{{{ declarations
+
+;; avoid compiler warnings
+
+(declare-function mds--get-client-out-buf "mds")
+(declare-function mds--get-client-live-buf "mds")
+(declare-function mds--get-client-dead-buf "mds")
+(declare-function mds-send-client "mds")
+
+;;}}}
+
 ;;{{{ customization
 
 (defgroup mds nil
@@ -26,6 +37,7 @@
 (defcustom mds-truncate-lines 't
   "When non-nil, lines in showstat buffer are initially truncated."
   :group 'mds)
+
 
 ;;{{{ (*) faces
 
@@ -71,6 +83,8 @@
 ;;}}}
 ;;{{{ variables
 
+(defvar mds-thisproc "thisproc" "Set to procname if Maple version < 14")
+
 (defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
 
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
@@ -91,6 +105,7 @@
 	mds-showstat-procname
 	mds-showstat-state
 	mds-showstat-watch-alist
+	mds-this-proc
 	))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-showstat-arrow-position)
@@ -262,16 +277,6 @@ If ALIVE is non-nil, create a live buffer."
 
 ;;}}}
 
-;;{{{ mds-thisproc
-
-(defun mds-thisproc ()
-  "Return string corresponding to current procedure."
-  (if mds-pre-Maple-14
-      "procname"
-    "thisproc"))
-
-;;}}}
-
 ;;{{{ select maple expressions
 
 (defun mds-ident-around-point-interactive (prompt &optional default complete)
@@ -412,7 +417,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	      (inhibit-read-only t)
 	      (cond (mds--query-stop-var "stopat-cond" "condition" 'mds-showstat-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mds-showstat-eval-expr (format "debugopts('stopat'=[%s,%s,%s])" (mds-thisproc) state cond)))
+	  (mds-showstat-eval-expr (format "debugopts('stopat'=[%s,%s,%s])" mds-thisproc state cond)))
       (ding)
       (message "no previous state in buffer"))))
 
@@ -521,7 +526,7 @@ The result is returned in the message area."
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
   (mds-showstat-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
-				  (mds-thisproc))))
+				  mds-thisproc)))
 
 (defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
 
