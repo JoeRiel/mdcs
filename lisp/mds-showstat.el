@@ -589,6 +589,15 @@ otherwise run through StringTools:-FormatMessage."
     (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
 
 ;;}}}
+;;{{{ (*) View
+
+(defun mds-view ()
+  (interactive)
+  (beep)
+  (message "viewing currently not supported"))
+
+;;}}}
+
 ;;{{{ (*) Miscellaneous
 
 (defun mds-goto-current-state ()
@@ -713,6 +722,7 @@ which is the output of `mds-where'."
 	   ("s" . mds-step)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
+	   ("v" . mds-view)
 	   ("w" . mds-stopwhen-local)
 	   ("W" . mds-stopwhen-global)
 	   ("x" . mds-showexception)
