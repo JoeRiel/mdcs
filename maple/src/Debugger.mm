@@ -270,7 +270,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_STACK, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK0, "%a\n",_passed[i][j])
                         else
                             debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
                             if `debugger/no_output` <> true then
@@ -287,7 +287,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     then
                         return
                     fi;
-                    debugger_printf(DBG_WATCH, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf(DBG_WATCHED_CONDS, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
                         debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
@@ -565,7 +565,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         ls := stoperror();
         if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo errors being watched.\n")
         else
-            debugger_printf(DBG_WATCH, "\nWatched errors:\n");
+            debugger_printf(DBG_WATCHED_ERRS, "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
                     debugger_printf(DBG_INFO, "   All errors\n")
