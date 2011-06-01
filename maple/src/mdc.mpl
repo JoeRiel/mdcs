@@ -118,7 +118,7 @@ $endif
                          , { password :: string := "" }
                          , { port :: posint := Port }
                          #, { timeout :: nonnegint := 0 }
-                         , { stopat :: string := "" }
+                         , { stopat :: {string,name} := "" }
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
                          , { view :: truefalse := view_flag }
@@ -157,6 +157,7 @@ $endif
         end try;
 
         if stopat <> "" then
+            Debugger:-stopat(stopat);
         end if;
 
 
@@ -232,6 +233,7 @@ $endif
         Sockets:-Read(sid);
     end proc;
 
+#}}}
 #{{{ WriteTagf
 
     WriteTagf := proc(tag)
@@ -255,6 +257,7 @@ $endif
         return NULL;
     end proc;
 
+#}}}
 #{{{ CreateID
 
 ##DEFINE PROC CreateID

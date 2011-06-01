@@ -21,6 +21,7 @@ Debugger := module()
 export Replace
     ,  Restore
     ,  Printf
+    ,  stopat
     ;
 
 global DEBUGGER_PROCS;
@@ -597,6 +598,91 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             debugger_printf(DBG_STACK3,"Currently in %a.\n",stack[5])
         fi;
         NULL
+    end proc:
+
+#}}}
+
+#{{{ stopat
+
+##DEFINE CMD stopat
+##PROCEDURE \PKG[\MOD]\MOD[\CMD]
+##HALFLINE a fast method to instrument a procedure
+##AUTHOR   Erik Postma
+##DATE     May 2010
+##CALLINGSEQUENCE
+##- \CMD('p', 'n', 'cond')
+##PARAMETERS
+##- 'p'    : ::{name,string}::; procedure to instrument
+##- 'n'    : (optional) ::posint::; statement number
+##- 'cond' : (optional) ::uneval::; condition
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  is a fast version of  ":-stopat", with a few modifications.
+##  It sets a breakpoint at a statement number of a procedure.
+##
+##- The 'p' parameter is the procedure to instrument.
+##-- If 'p' is indexed it is converted to a *slashed* name.
+##-- If 'p' is a string it is parsed.
+##  This provides a means to enter a module local procedure without assigning
+##   _kernelopts('opaquemodules'=false)_.
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(Format:-stopat);
+## $define NE testnoerror
+##
+## Try[NE]("1.0", FUNC("int:-ModuleApply"));
+## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
+## Try    ("2.1", FUNC(f,1,i>3));
+## Try    ("2.2", f());
+
+    stopat := proc(p :: {name,string}
+                   , n :: posint
+                   , cond :: uneval
+                   , $ )
+
+    local pn, opacity, pnm;
+
+        try
+            opacity := kernelopts('opaquemodules'=false);
+
+            if p :: indexed then
+                # Convert indexed to slashed name;
+                # e.g. pkg[func] --> `pkg/func`
+                pn := indexed2slashed(p);
+                if not eval(pn)::procedure
+                or (eval(p)::procedure and not has(eval(p),pn)) then
+                    pn := p;
+                fi;
+            elif p :: string then
+                pn := parse(p);
+                try
+                    bind(pn);
+                catch:
+                end try;
+            else
+                pn := p;
+            end if;
+
+            # eval in order to make sure everything is loaded from the
+            # library.
+            pnm := eval(pn);
+            while assigned(pnm[':-ModuleApply']) do
+                pnm := eval(pnm:-ModuleApply);
+            end do;
+        finally
+            kernelopts('opaquemodules'=opacity);
+        end try;
+
+        if   _npassed = 1 then debugopts('stopat'=[pn,1])
+        elif _npassed = 2 then debugopts('stopat'=[pn,n])
+        else                   debugopts('stopat'=[pn,n,'cond'])
+        end if;
+
+        return NULL;
+
     end proc:
 
 #}}}
