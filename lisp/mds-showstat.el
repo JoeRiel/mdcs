@@ -397,7 +397,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-eval-expr (format "mdc:-Format:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-expr (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
 	(ding)
 	(message "no previous state in buffer")))))
 
