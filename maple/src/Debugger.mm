@@ -663,7 +663,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 if not eval(pn)::procedure
                 or (eval(p)::procedure and not has(eval(p),pn)) then
                     pn := p;
-                fi;
+                end if;
             elif p :: string then
                 pn := parse(p);
                 try
@@ -684,9 +684,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             kernelopts('opaquemodules'=opacity);
         end try;
 
-        if   _npassed = 1 then debugopts('stopat'=[pn,1])
-        elif _npassed = 2 then debugopts('stopat'=[pn,n])
-        else                   debugopts('stopat'=[pn,n,'cond'])
+        if   _npassed = 1 then debugopts('stopat'=[pnm,1])
+        elif _npassed = 2 then debugopts('stopat'=[pnm,n])
+        else                   debugopts('stopat'=[pnm,n,'cond'])
         end if;
 
         return NULL;
