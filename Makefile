@@ -15,8 +15,6 @@ OS := $(shell uname -o)
 
 $(info $(OS))
 
-default: $(call print-help,default,Byte-compile the elisp)
-default: byte-compile
 build: $(call print-help,build,Byte-compile$(comma) doc$(comma) and mla)
 build: byte-compile compile doc mla
 
@@ -113,11 +111,12 @@ ELS = mds mds-showstat mds-output
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
 
-byte-compile: $(print-help,byte-compile,Byte compile $(LISPFILES))
+byte-compile: $(call print-help,byte-compile,Byte compile $(LISPFILES))
 byte-compile: $(ELCFILES)
 
 %.elc : %.el
-	$(ELC) $<
+	@echo Byte-compiling $+
+	@$(ELC) $<
 
 # }}}
 
@@ -145,7 +144,7 @@ install: install-lisp install-info install-maple
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
 	$(MKDIR) $(MAPLE_INSTALL_DIR)
-	$(CP) --archive $+ $(MAPLE_INSTALL_DIR)
+	$(CP) $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
@@ -164,7 +163,7 @@ install-info: $(INFOFILES)
 install-el: $(call print-help,install-el,Install el files but not elc files)
 install-el: $(LISPFILES)
 	$(MKDIR) $(LISP_DIR)
-	$(CP) --archive $+ $(LISP_DIR)
+	$(CP) $+ $(LISP_DIR)
 
 # }}}
 # {{{ distribution
@@ -187,7 +186,7 @@ $(PKG).zip: $(dist)
 clean: $(call print-help,clean,Remove files)
 clean:
 	-$(RM) lisp/*.elc
-	-$(RM) -f $(filter-out doc/mds.texi,$(wildcard doc/*))
+	-$(RM) $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla)
 
 # }}}
