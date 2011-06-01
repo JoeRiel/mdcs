@@ -14,7 +14,7 @@
 ##  indicate the purpose of each packet.  This simplifies the
 ##  parsing requirements of the server.
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where, print, printf
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where #, print, printf
 
 Debugger := module()
 
@@ -57,8 +57,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             showstat            := eval(_showstat);
             showstop            := eval(_showstop);
             where               := eval(_where);
-            print               := eval(_print);
-            printf              := eval(_printf);
+            #print               := eval(_print);
+            #printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
         end if;
@@ -92,7 +92,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
     _print := proc()
         origprint(_passed);
-        debugger_printf(DBG_WARN, "print output may not show up in debugger\n");
+        debugger_printf(DBG_WARN, "print output does not display in debugger\n");
     end proc;
 
 #}}}
