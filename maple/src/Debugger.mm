@@ -14,13 +14,12 @@
 ##  indicate the purpose of each packet.  This simplifies the
 ##  parsing requirements of the server.
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where, print, printf
 
 Debugger := module()
 
 export Replace
     ,  Restore
-    ,  Printf
     ,  stopat
     ;
 
@@ -33,6 +32,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _showstat
     , _showstop
     , _where
+    , _print
+    , _printf
+    , origprint
 
     , replaced := false
 
@@ -44,6 +46,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
     Replace := proc()
         if not replaced then
+            # Save these
+            origprint := eval(print);
+
             # Reassign library debugger procedures
             unprotect(debugger_procs);
             debugger            := eval(_debugger);
@@ -52,6 +57,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             showstat            := eval(_showstat);
             showstop            := eval(_showstop);
             where               := eval(_where);
+            print               := eval(_print);
+            printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
         end if;
@@ -72,22 +79,20 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
 #}}}
 
-#{{{ Printf
+#{{{ _print and _printf
 
-    Printf := proc(tag)
-    local msg,len;
-        msg := sprintf(_rest);
-        if 0 < max_length then
-            len := length(msg);
-            if max_length < len then
-                msg := sprintf("---output too long (%d bytes)---\n", len);
-            end if;
-        end if;
-        # hack for now
-        Write(sprintf("<%a>",tag));
-        Write(msg);
-        Write(sprintf("</%a>",tag), 'eom');
-        return NULL;
+# These are not quite right.  The globals are replaced when
+# mdc is executed, which is before debugging starts.  These
+# should only be replaced while inside the debugger.
+# Is there a way to detect when inside the debugger?
+
+    _printf := proc()
+        debugger_printf(PRINTF, _rest);
+    end proc;
+
+    _print := proc()
+        origprint(_passed);
+        debugger_printf(DBG_WARN, "print output may not show up in debugger\n");
     end proc;
 
 #}}}
@@ -152,6 +157,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
         #}}}
         #{{{ Remove leading blanks, trailing comments, and colons.
+
         startp := 1;
         len := length(res);
         endp := len;
@@ -178,6 +184,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 fi
             fi
         od;
+
         #}}}
         #{{{ Record whether or not the command ended in a colon.
 
@@ -192,8 +199,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         #characters after the end of the typed command.
         if i < len and res[i] <> "#" then
             for i from i to len do
-                if i <> " " then
+                if res[i] <> " " then
                     debugger_printf(DBG_WARN,"Warning, extra characters at end of parsed string\n");
+                    debugger_printf(DBG_WARN,"Extra stuff: %q\n", res[i]);
                     break
                 fi
             od

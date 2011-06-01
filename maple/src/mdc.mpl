@@ -111,6 +111,7 @@ $endif
                          { beep :: truefalse := true }
                          , { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
+                         , { enter :: truefalse := false }
                          , { greeting :: string := "" }
                          , { host :: string := Host }
                          , { label :: string := kernelopts('username') }
@@ -160,6 +161,17 @@ $endif
             Debugger:-stopat(stopat);
         end if;
 
+        if stoperror then
+            :-stoperror('all');
+        end if;
+
+        if traperror then
+            :-stoperror(':-traperror');
+        end if;
+
+        if enter then
+            DEBUG();
+        end if;
 
         return NULL;
 
