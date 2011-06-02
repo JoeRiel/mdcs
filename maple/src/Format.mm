@@ -357,14 +357,22 @@ $endif
 ##
 ##EXAMPLES
 ##> \MOD:-\CMD("int");
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdc:-Format:-showstat):
+##
+##
+## Try("1.0", FUNC("simplify"));
 
     showstat := proc(p :: string)
     local opacity,prc;
+    global _prc;
         try
             opacity := kernelopts('opaquemodules' = false);
             prc := parse(p);
             try
-                bind(prc);
+                eval(prc);
             catch:
             end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
