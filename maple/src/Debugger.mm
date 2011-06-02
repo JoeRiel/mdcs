@@ -317,6 +317,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
         #}}}
         #{{{ command loop
+
         do
             line := `debugger/readline`('`debugger/no_output`');
             # If there's an assignment, make sure it is delimited by spaces.
@@ -498,6 +499,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
             #}}}
         od;
+
         #}}}
     end proc:
 
@@ -666,16 +668,14 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 end if;
             elif p :: string then
                 pn := parse(p);
-                try
-                    bind(pn);
-                catch:
-                end try;
             else
                 pn := p;
             end if;
 
-            # eval in order to make sure everything is loaded from the
-            # library.
+            # Use eval in order to make sure everything is loaded from
+            # the library. pnm is not actually used (below) because
+            # debugopts(stopat) needs a name if it is to return the
+            # name on the lhs of the assignment in the string.
             pnm := eval(pn);
             while assigned(pnm[':-ModuleApply']) do
                 pnm := eval(pnm:-ModuleApply);
@@ -684,9 +684,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             kernelopts('opaquemodules'=opacity);
         end try;
 
-        if   _npassed = 1 then debugopts('stopat'=[pnm,1])
-        elif _npassed = 2 then debugopts('stopat'=[pnm,n])
-        else                   debugopts('stopat'=[pnm,n,'cond'])
+        if   _npassed = 1 then debugopts('stopat'=[pn,1])
+        elif _npassed = 2 then debugopts('stopat'=[pn,n])
+        else                   debugopts('stopat'=[pn,n,'cond'])
         end if;
 
         return NULL;
