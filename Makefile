@@ -74,7 +74,8 @@ doc/$(PKG).pdf: doc/$(PKG).texi
 	(cd doc; $(TEXI2PDF) $(PKG).texi)
 
 doc/$(PKG): doc/$(PKG).texi
-	(cd doc; $(MAKEINFO) --no-split $(PKG).texi --output=$(PKG))
+	@echo "Creating info file $@"
+	@(cd doc; $(MAKEINFO) --no-split $(PKG).texi --output=$(PKG))
 
 
 doc: $(call print-help,doc,Create info and pdf)
@@ -128,9 +129,9 @@ mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
 %.mla: maple/src/%.mpl maple/src/*.mm
-	$(RM) $@
-	echo $(MAPLE)
-	$(MAPLE) -q -I maple -D BUILD_MLA $^
+	@$(RM) $@
+	@echo "Building Maple archive $@"
+	@$(MAPLE) -q -I maple -D BUILD_MLA $^
 
 # }}}
 
@@ -144,17 +145,20 @@ install: install-lisp install-info install-maple
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
 	$(MKDIR) $(MAPLE_INSTALL_DIR)
-	$(CP) $+ $(MAPLE_INSTALL_DIR)
+	@echo "Installing Maple archive into $(MAPLE_INSTALL_DIR)"
+	@$(CP) $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
-	$(MKDIR) $(LISP_DIR)
-	$(CP) $+ $(LISP_DIR)
+	@echo "Installing lisp files into $(LISP_DIR)"
+	@$(MKDIR) $(LISP_DIR)
+	@$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
 install-info: $(INFOFILES)
-	$(MKDIR) $(INFO_DIR)
-	$(CP) $(INFOFILES) $(INFO_DIR)
+	@echo "Installing info file(s) into $(INFO_DIR)"
+	@$(MKDIR) $(INFO_DIR)
+	@$(CP) $(INFOFILES) $(INFO_DIR)
 	@if [ -f $(INFO_DIR)/dir ]; then \
 		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
 	fi
