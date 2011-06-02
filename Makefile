@@ -33,7 +33,7 @@ else
 endif
 
 CP = cp --archive
-INSTALL_INFO = install-info
+INSTALL_INFO = ginstall-info
 MAKEINFO = makeinfo
 MKDIR = mkdir -p
 TEXI2PDF = texi2pdf
@@ -132,7 +132,6 @@ mla: $(mla)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
 	@$(MAPLE) -q -I maple -D BUILD_MLA $^
-
 # }}}
 
 # {{{ install
@@ -144,24 +143,23 @@ install: install-lisp install-info install-maple
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
-	$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple archive into $(MAPLE_INSTALL_DIR)"
+	@$(MKDIR) $(MAPLE_INSTALL_DIR)
+	@echo "Installing Maple archive into $(MAPLE_INSTALL_DIR)/"
 	@$(CP) $+ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
-	@echo "Installing lisp files into $(LISP_DIR)"
+	@echo "Installing lisp files into $(LISP_DIR)/"
 	@$(MKDIR) $(LISP_DIR)
 	@$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
 install-info: $(INFOFILES)
-	@echo "Installing info file(s) into $(INFO_DIR)"
+	@echo "Installing info file(s) into $(INFO_DIR)/ and updating $(INFO_DIR)/dir"
 	@$(MKDIR) $(INFO_DIR)
 	@$(CP) $(INFOFILES) $(INFO_DIR)
-	@if [ -f $(INFO_DIR)/dir ]; then \
-		for file in $(INFOFILES); do $(INSTALL_INFO) --info-dir=$(INFO_DIR) $${file}; done \
-	fi
+	@for file in $(INFOFILES); \
+		do $(INSTALL_INFO) --dir-file=$(INFO_DIR)/dir $${file}; done
 
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(call print-help,install-el,Install el files but not elc files)
