@@ -587,6 +587,16 @@ otherwise run through StringTools:-FormatMessage."
     (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
 
 ;;}}}
+;;{{{ (*) Short cuts
+
+(defun mds-send-last-command ()
+  (interactive)
+  ;; This uses the debugger history and only works when we haven't
+  ;; done anything behind the scenes.  Need to save last command.
+  (mds-showstat-send-client "\n"))
+  
+
+;;}}}
 ;;{{{ (*) View
 
 (defun mds-view ()
@@ -692,7 +702,7 @@ which is the output of `mds-where'."
 (defvar mds-showstat-mode-map
   (let ((map (make-sparse-keymap))
 	(bindings
-	 '(;(" " . mds-send-last-command)
+	 '(
 	   (" " . mds-send-last-command)
 	   ("A" . mds-show-args-as-equations)
 	   ("a" . mds-args)
