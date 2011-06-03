@@ -192,18 +192,11 @@ call (maple) showstat to display the new procedure."
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
 
-(defun tmp-update (procname)
-  (mds-output-display (mds--get-client-out-buf mds-client)
-		      (format "%s:\n" procname)
-		      'DAMN-PROCNAME))
-
-
 (defun mds-showstat-display-inactive (procname statement)
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
 	  mds-showstat-statement statement))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
-
 
 (defun mds-showstat-display (buf proc)
   "Insert Maple procedure PROC into the showstat buffer.
@@ -257,7 +250,7 @@ POINT is moved to the indentation of the current line."
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window) (point)))
 
-(defun mds-showstat-create-buffer (&optional alive)
+(defun mds-showstat-create-buffer (client &optional alive)
   "Create and return a `mds-showstat-buffer' buffer for CLIENT.
 If ALIVE is non-nil, create a live buffer."
   (let ((buf (generate-new-buffer (if alive
@@ -265,12 +258,12 @@ If ALIVE is non-nil, create a live buffer."
 				    "*mds-showstat-dead*"))))
     (with-current-buffer buf
       (mds-showstat-mode)
-      (setq mds-showstat-arrow-position nil
+      (setq mds-client client
+	    mds-showstat-arrow-position nil
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
 	    mds-showstat-state "1"
-	    ;;buffer-read-only nil  ; FIXME 
-	    )
+	    buffer-read-only 't)
       (if mds-truncate-lines
 	  (toggle-truncate-lines 1)))
     buf))
