@@ -139,16 +139,16 @@ See `mds-create-client' for the form of each entry.")
 
 (defun mds-create-client (proc id)
   "Create a client that is associated with process PROC and has identity ID.
-A list is returned with the form (PROC queue ID live-buf dead-buf out-buf).
-The constructors of the comoponents are `mds-queue-create', 
-`mds-showstat-create-buffer', and `mds-output-create-buffer'."
-  (let* ((client    (list proc))
-	 (queue    (mds-queue-create proc))
-	 (live-buf (mds-showstat-create-buffer client 'live))
-	 (dead-buf (mds-showstat-create-buffer client))
-	 (out-buf  (mds-output-create-buffer   client))
-	 (status   'silent))
-    (setcdr client (list status queue id live-buf dead-buf out-buf))
+The returned client structure is a list (PROC status queue ID
+live-buf dead-buf out-buf), where status is initialized to 'new'."
+  (let ((client (list proc)))
+    (setcdr client (list
+		    'new
+		    (mds-queue-create proc)
+		    id
+		    (mds-showstat-create-buffer client 'live)
+		    (mds-showstat-create-buffer client)
+		    (mds-output-create-buffer   client)))
     client))
   
 (defun mds-destroy-client (client)
@@ -298,7 +298,7 @@ Do not touch `mds-log-buffer'."
       ;; route msg to queue
       (let ((queue (mds--get-client-queue (mds-get-client proc))))
 	(mds-queue-filter queue msg)))
-     ((eq status 'silent)
+     ((eq status 'new)
       (beep)
       (mds-set-client-status proc 'accepted)
       (mds-filter proc msg))
