@@ -33,7 +33,7 @@ else
 endif
 
 CP = cp --archive
-INSTALL_INFO = ginstall-info
+INSTALL_INFO = install-info
 MAKEINFO = makeinfo
 MKDIR = mkdir -p
 TEXI2PDF = texi2pdf
