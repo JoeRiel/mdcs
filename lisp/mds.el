@@ -113,10 +113,13 @@ Status is either `accepted', `pending', or `rejected'.")
   "Alist containing info of accepted clients, indexed by the associated process.
 See `mds-create-client' for the form of each entry.")
 
+(defvar mds-log-messages nil
+  "When true, write all messages to `mds-log-buffer'.")
+
 
 ;;}}}
 
-;;{{{ Client structure and creation/destrution
+;;{{{ Client structure and creation/destruction
 
 ;; Each entry in the alist, including the key (proc),
 ;; has the structure
@@ -127,29 +130,27 @@ See `mds-create-client' for the form of each entry.")
 ;; Access elements of a client (entry in `mds-clients').
 
 (defsubst mds--get-client-proc     (client) (car client))
-(defsubst mds--get-client-queue    (client) (nth 1 client))
-(defsubst mds--get-client-id       (client) (nth 2 client))
-(defsubst mds--get-client-live-buf (client) (nth 3 client))
-(defsubst mds--get-client-dead-buf (client) (nth 4 client))
-(defsubst mds--get-client-out-buf  (client) (nth 5 client))
+(defsubst mds--get-client-status   (client) (nth 1 client))
+(defsubst mds--get-client-queue    (client) (nth 2 client))
+(defsubst mds--get-client-id       (client) (nth 3 client))
+(defsubst mds--get-client-live-buf (client) (nth 4 client))
+(defsubst mds--get-client-dead-buf (client) (nth 5 client))
+(defsubst mds--get-client-out-buf  (client) (nth 6 client))
 
 (defun mds-create-client (proc id)
   "Create a client that is associated with process PROC and has identity ID.
-A list is returned with the form (PROC queue ID live-buf dead-buf out-buf).
-The constructors of the comoponents are `mds-queue-create', 
-`mds-showstat-create-buffer', and `mds-output-create-buffer'."
-
-  (let ((queue    (mds-queue-create proc))
-	(live-buf (mds-showstat-create-buffer 'live))
-	(dead-buf (mds-showstat-create-buffer))
-	(out-buf  (mds-output-create-buffer))
-	client)
-    (setq client (list proc queue id live-buf dead-buf out-buf))
-    (with-current-buffer live-buf (setq mds-client (copy-sequence client)))
-    (with-current-buffer dead-buf (setq mds-client (copy-sequence client)))
-    (with-current-buffer out-buf  (setq mds-client (copy-sequence client)))
+The returned client structure is a list (PROC status queue ID
+live-buf dead-buf out-buf), where status is initialized to 'new'."
+  (let ((client (list proc)))
+    (setcdr client (list
+		    'new
+		    (mds-queue-create proc)
+		    id
+		    (mds-showstat-create-buffer client 'live)
+		    (mds-showstat-create-buffer client)
+		    (mds-output-create-buffer   client)))
     client))
-
+  
 (defun mds-destroy-client (client)
   "Destroy a client."
   ;; kill the process and buffers
@@ -157,7 +158,6 @@ The constructors of the comoponents are `mds-queue-create',
   (mds-kill-buffer (mds--get-client-live-buf client))
   (mds-kill-buffer (mds--get-client-dead-buf client))
   (mds-kill-buffer (mds--get-client-out-buf client)))
-  
 
 (defun mds-find-client-with-id (id)
   "Return entry in `mds-clients' with matching ID.
@@ -175,6 +175,18 @@ If none, then return nil."
     (setq mds-clients (cons (cons newproc (cdr (assoc oldproc mds-clients)))
 			    (assq-delete-all oldproc mds-clients))))
 
+(defun mds-get-client-status (proc)
+  (let ((client (assoc proc mds-clients)))
+    (if client (cadr client))))
+	
+    ;; (if (>= mds-number-clients mds-max-number-clients)
+    ;; 	'rejected
+    ;;   (mds-add-client (mds-create-client proc "dummy id"))
+    ;;   'accepted)))
+
+(defun mds-set-client-status (proc status)
+  (let ((client (assoc proc mds-clients)))
+    (if client (setcar (cdr client) status))))
 
 ;;}}}
 ;;{{{ Client association list
@@ -204,6 +216,8 @@ kill the buffers, and decrement `mds-number-clients'."
 ;;}}}
 
 ;;{{{ Start and stop server
+
+;; (setq mds-clients nil)
 
 (defun mds ()
   "Start an mds server; return the process.
@@ -250,10 +264,14 @@ Do not touch `mds-log-buffer'."
 	   ((eq status 'accepted)
 	    (ding)
 	    (mds-writeto-log proc "accepted client"))
+	   ((null status)
+	    ;; not yet registered
+	    (mds-add-client (mds-create-client proc "dummy id")))
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
 	    (mds-writeto-log proc "rejected client"))
-	   ((eq status 'login) (mds-writeto-log proc "begin login"))))))
+	   ((eq status 'login) (mds-writeto-log proc "begin login"))
+	   ))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
       ;; Delete associated buffers.
@@ -265,27 +283,25 @@ Do not touch `mds-log-buffer'."
      (t (error "unexpected sentinel message: %s" msg)))))
 
 
-(defun mds-get-client-status (proc)
-  (if (assoc proc mds-clients)
-      'accepted
-    (if (>= mds-number-clients mds-max-number-clients)
-	'rejected
-      (mds-add-client (mds-create-client proc "dummy id"))
-      'accepted)))
-
 ;;}}}
 ;;{{{ Filter
 
 (defun mds-filter (proc msg)
+  "Dispatch message MSG.  If PROC is an accepted client, send the message to its queue."
   (let ((status (mds-get-client-status proc)))
     (cond
      ((eq status 'accepted)
+      (when mds-log-messages
+	(mds-writeto-log proc "{{{")
+	(mds-writeto-log proc msg)
+	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (mds-writeto-log proc "{{{")
-      (mds-writeto-log proc msg)
-      (mds-writeto-log proc "}}}")
       (let ((queue (mds--get-client-queue (mds-get-client proc))))
 	(mds-queue-filter queue msg)))
+     ((eq status 'new)
+      (beep)
+      (mds-set-client-status proc 'accepted)
+      (mds-filter proc msg))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -343,8 +359,7 @@ If found, pass it to the function in the queue."
 
 ;;}}}
 
-
-;;{{{ talk to client
+;;{{{ mds-send-client
 
 (defun mds-send-client (client msg)
   "Send MSG to CLIENT."
@@ -353,16 +368,20 @@ If found, pass it to the function in the queue."
 
 ;;}}}
 
+;;{{{ mds-extract-tag
 
 (defun mds-extract-tag (msg) 
-  "Return (tag . MSG), where the tags have been removed from MSG.
-The format of MSG must be \"<tag>msg</tag>\"."
+  "Return (tag . msg), where the tags have been been removed from MSG.
+The format of MSG must be \"<tag>msg</tag>\", however, the closing tag
+is not checked and will likely be removed from the protocol."
   (if (string-match mds-start-tag-re msg)
       (let* ((tag (match-string 1 msg))
 	     (len (match-end 0)))
 	(cons tag (substring msg len (- (1+ len)))))
     ;; FIXME: this error gets caught and not displayed
     (error "no tag in message: '%s...'" (substring msg 0 (min 10 (length msg))))))
+
+;;}}}
 
 ;;{{{ mds-handle-stream
 
@@ -422,7 +441,6 @@ use them to route the message."
      (t (mds-output-display out-buf msg tag)))))
 
 ;;}}}
-
 
 ;;{{{ mds-kill-buffer
 

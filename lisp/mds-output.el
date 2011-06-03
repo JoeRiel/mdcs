@@ -55,11 +55,11 @@
 ;;(defsubst mds--get-client-out-buf  (client) (nth 4 client))
 
 
-(defun mds-output-create-buffer ()
-  "Create and return an `mds-output-buffer'."
+(defun mds-output-create-buffer (client)
+  "Create and return an `mds-output-buffer' with client CLIENT."
   (let ((buf (generate-new-buffer "*mds-output*")))
     (with-current-buffer buf
-      (setq mds-client nil)
+      (setq mds-client client)
       (font-lock-mode 't))
     buf))
 

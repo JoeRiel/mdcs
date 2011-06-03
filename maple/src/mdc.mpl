@@ -255,7 +255,7 @@ $endif
         if 0 < max_length then
             len := length(msg);
             if max_length < len then
-                msg := sprintf("---output too long (%d bytes)---\n", len);
+                msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
             end if;
         end if;
         # hack for now
