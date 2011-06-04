@@ -76,6 +76,7 @@ export ModuleApply
     ,  Debugger
     ,  Format
     ,  Authenticate
+    ,  Version
     ;
 
 #{{{ local declarations
@@ -328,6 +329,11 @@ $endif
 
 #}}}
 
+#{{{ Version
+
+    Version := "0.0";
+
+#}}}
 
 end module:
 
