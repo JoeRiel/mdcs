@@ -139,8 +139,30 @@ appropriate `mds-showstat-buffer'."
 
 ;;}}}
 
-;;{{{ showstat buffer creation and update
+;;{{{ Buffer creation and update
 
+;;{{{ mds-showstat-create-buffer
+
+(defun mds-showstat-create-buffer (client &optional alive)
+  "Create and return a `mds-showstat-buffer' buffer for CLIENT.
+If ALIVE is non-nil, create a live buffer."
+  (let ((buf (generate-new-buffer (if alive
+				      "*mds-showstat-live*"
+				    "*mds-showstat-dead*"))))
+    (with-current-buffer buf
+      (mds-showstat-mode)
+      (setq mds-client client
+	    mds-showstat-arrow-position nil
+	    mds-showstat-live alive
+	    mds-showstat-procname ""
+	    mds-showstat-state "1"
+	    buffer-read-only 't)
+      (if mds-truncate-lines
+	  (toggle-truncate-lines 1)))
+    buf))
+
+;;}}}
+;;{{{ mds-showstat-update
 (defun mds-showstat-update (buf procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
 `mds-showstat-state'.  PROCNAME is the name of the procedure,
@@ -191,13 +213,16 @@ call (maple) showstat to display the new procedure."
 	;; Save procname, then update the showstat buffer.
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
+;;}}}
+;;{{{ mds-showstat-display-inactive
 
 (defun mds-showstat-display-inactive (procname statement)
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
 	  mds-showstat-statement statement))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
-
+;;}}}
+;;{{{ mds-showstat-display
 (defun mds-showstat-display (buf proc)
   "Insert Maple procedure PROC into the showstat buffer.
 PROC is the output of a call to showstat."
@@ -218,7 +243,8 @@ PROC is the output of a call to showstat."
       ;; Set the state arrow
       (mds-showstat-display-state)
       (display-buffer buf))))
-
+;;}}}
+;;{{{ mds-showstat-display-state
 (defun mds-showstat-display-state ()
   "Move the overlay arrow in the showstat buffer to current state
 and ensure that the buffer and line are visible.  The current
@@ -249,25 +275,7 @@ POINT is moved to the indentation of the current line."
     (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window) (point)))
-
-(defun mds-showstat-create-buffer (client &optional alive)
-  "Create and return a `mds-showstat-buffer' buffer for CLIENT.
-If ALIVE is non-nil, create a live buffer."
-  (let ((buf (generate-new-buffer (if alive
-				      "*mds-showstat-live*"
-				    "*mds-showstat-dead*"))))
-    (with-current-buffer buf
-      (mds-showstat-mode)
-      (setq mds-client client
-	    mds-showstat-arrow-position nil
-	    mds-showstat-live alive
-	    mds-showstat-procname ""
-	    mds-showstat-state "1"
-	    buffer-read-only 't)
-      (if mds-truncate-lines
-	  (toggle-truncate-lines 1)))
-    buf))
-
+;;}}}
 ;;}}}
 
 ;;{{{ select maple expressions
