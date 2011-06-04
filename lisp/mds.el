@@ -56,7 +56,7 @@
 
 ;;{{{ Constants
 
-(defconst mds-version "0.0" "Version number of mds.")
+(defconst mds-version "0.1" "Version number of mds.")
 (defconst mds-port 10000  "Port used by mds server")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
