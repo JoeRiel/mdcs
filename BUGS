@@ -1,6 +1,6 @@
 -*- org -*-
 
-* DONE mds-eval-and-prettyprint writes procedure to live-buf, which screws up operation
+* DONE SCR1: mds-eval-and-prettyprint writes procedure to live-buf, which screws up operation
   CLOSED: [2011-06-04 Sat 09:07]
   1. Problem occurs because [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][prettyprint]] calls ':-showstat'.  Changed
      to showstat (which is mdc:-Format:-showstat).
@@ -13,9 +13,15 @@
      it buffer-local (I don't believe it is intended to communicate
      between live and dead buffers.  That seems to fix the problem.
 
-* DONE [[file:lisp/mds-showstat.el::defun%20mds%20eval%20and%20prettyprint%20expr][mds-eval-and-prettyprint]] writes <type> to client, not server
+* DONE SRC2: [[file:lisp/mds-showstat.el::defun%20mds%20eval%20and%20prettyprint%20expr][mds-eval-and-prettyprint]] writes <type> to client, not server
   CLOSED: [2011-06-04 Sat 09:07]
   1. The actual culprit is [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][mdc:-Format:-prettyprint]], which calls printf.
   2. Fixed by renaming mdc:-Debugger:-_print to [[file:maple/src/Debugger.mm::Printf%20proc][mdc:-Debugger:-Printf]],
      making it an export of mdc:-Debugger, and then replacing all printf
      statements with it.
+
+* TODO SCR3: Try (in showstat buffer) ". int:-ModuleApply". 
+  The procedure doesn't display, and the error is "module does not
+  export %1".  Contrast this with the error in tty, "the name
+  ModuleApply in 'int' is declared local..."
+

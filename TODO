@@ -3,7 +3,19 @@
 * Short Term
 
 ** TODO 
+   1. Decide how the output buffer should look.  
 
+      * Should it mimic what is done in mdb, that is, when an input is
+        entered by user (using 'e' or '.'), it echos the command, then
+        displays the output.
+
+      * Alternately, should it show a prompt and allow the user to
+	enter commands there?  Essentially mimicing the tty debugger
+	interface, but with the current state suppressed. That seems
+	more difficult to implement but potentially more useful.  I
+	would still want the ability to evaluate stuff from the
+	showstat buffer and have it appear in the output buffer,
+	otherwise a lot of buffer changing would be required.
 
 * Long Term
  
