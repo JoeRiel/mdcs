@@ -122,6 +122,7 @@ $endif
                          , { stopat :: {string,name} := "" }
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
+                         , { unstopat :: {string,name} := "" }
                          , { view :: truefalse := view_flag }
                          , { exit :: truefalse := false }
                          , $
@@ -160,6 +161,11 @@ $endif
         if stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
+
+        if unstopat <> "" then
+            Debugger:-unstopat(unstopat);
+        end if;
+
 
         if stoperror then
             :-stoperror('all');

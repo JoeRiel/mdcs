@@ -21,6 +21,7 @@ Debugger := module()
 export Replace
     ,  Restore
     ,  stopat
+    ,  unstopat
     ;
 
 global DEBUGGER_PROCS;
@@ -36,6 +37,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _printf
     , origprint
 
+    , getname
     , replaced := false
 
     ;
@@ -653,8 +655,38 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                    , cond :: uneval
                    , $ )
 
-    local pn, opacity, pnm;
+    local pnam,st;
+        pnam := getname(p);
+        st := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, st])
+        else                  debugopts('stopat'=[pnam, st, 'cond'])
+        end if;
+        return NULL;
+    end proc:
 
+#}}}
+#{{{ unstopat
+
+    unstopat := proc(p :: {name,string}
+                     , n :: posint
+                     , cond :: uneval
+                     , $ )
+
+    local pnam,st;
+        pnam := getname(p);
+        st := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
+        else                  debugopts('stopat'=[pnam, -st, 'cond'])
+        end if;
+        return NULL;
+    end proc:
+
+#}}}
+
+#{{{ getname
+
+    getname := proc(p :: {name,string}, $)
+    local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
 
@@ -684,14 +716,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             kernelopts('opaquemodules'=opacity);
         end try;
 
-        if   _npassed = 1 then debugopts('stopat'=[pn,1])
-        elif _npassed = 2 then debugopts('stopat'=[pn,n])
-        else                   debugopts('stopat'=[pn,n,'cond'])
-        end if;
+        return pn;
 
-        return NULL;
-
-    end proc:
+    end proc;
 
 #}}}
 
