@@ -113,8 +113,8 @@ Status is either `accepted', `pending', or `rejected'.")
   "Alist containing info of accepted clients, indexed by the associated process.
 See `mds-create-client' for the form of each entry.")
 
-(defvar mds-log-messages nil
-  "When true, write all messages to `mds-log-buffer'.")
+(defvar mds-log-messages 't
+  "When non-nil, write all messages to `mds-log-buffer'.")
 
 
 ;;}}}
