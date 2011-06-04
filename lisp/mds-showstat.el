@@ -104,6 +104,7 @@
 	mds-showstat-live
 	mds-showstat-procname
 	mds-showstat-state
+	mds-showstat-statement
 	mds-showstat-watch-alist
 	mds-this-proc
 	))
@@ -141,7 +142,7 @@ appropriate `mds-showstat-buffer'."
 
 ;;{{{ Buffer creation and update
 
-;;{{{ mds-showstat-create-buffer
+;;{{{ (*) mds-showstat-create-buffer
 
 (defun mds-showstat-create-buffer (client &optional alive)
   "Create and return a `mds-showstat-buffer' buffer for CLIENT.
@@ -162,7 +163,7 @@ If ALIVE is non-nil, create a live buffer."
     buf))
 
 ;;}}}
-;;{{{ mds-showstat-update
+;;{{{ (*) mds-showstat-update
 (defun mds-showstat-update (buf procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
 `mds-showstat-state'.  PROCNAME is the name of the procedure,
@@ -214,15 +215,16 @@ call (maple) showstat to display the new procedure."
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
 ;;}}}
-;;{{{ mds-showstat-display-inactive
+;;{{{ (*) mds-showstat-display-inactive
 
 (defun mds-showstat-display-inactive (procname statement)
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
 	  mds-showstat-statement statement))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
+
 ;;}}}
-;;{{{ mds-showstat-display
+;;{{{ (*) mds-showstat-display
 (defun mds-showstat-display (buf proc)
   "Insert Maple procedure PROC into the showstat buffer.
 PROC is the output of a call to showstat."
@@ -238,13 +240,15 @@ PROC is the output of a call to showstat."
       ;; Goto current state
       (unless (or mds-showstat-live (string= "" mds-showstat-statement))
 	(if (search-forward (concat " " mds-showstat-statement) nil t)
-	    (setq mds-showstat-state (mds-showstat-get-state))
+	    (setq mds-showstat-state (mds-showstat-get-state)
+		  ;; clear variable so next time we do not search.
+		  mds-showstat-statement "")
 	  (error "cannot find statement in procedure body")))
       ;; Set the state arrow
       (mds-showstat-display-state)
       (display-buffer buf))))
 ;;}}}
-;;{{{ mds-showstat-display-state
+;;{{{ (*) mds-showstat-display-state
 (defun mds-showstat-display-state ()
   "Move the overlay arrow in the showstat buffer to current state
 and ensure that the buffer and line are visible.  The current
@@ -276,6 +280,7 @@ POINT is moved to the indentation of the current line."
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window) (point)))
 ;;}}}
+
 ;;}}}
 
 ;;{{{ select maple expressions

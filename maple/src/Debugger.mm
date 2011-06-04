@@ -14,11 +14,12 @@
 ##  indicate the purpose of each packet.  This simplifies the
 ##  parsing requirements of the server.
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where #, print, printf
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
 Debugger := module()
 
-export Replace
+export Printf
+    ,  Replace
     ,  Restore
     ,  stopat
     ,  unstopat
@@ -34,7 +35,6 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _showstop
     , _where
     , _print
-    , _printf
     , origprint
 
     , getname
@@ -81,17 +81,13 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
 #}}}
 
-#{{{ _print and _printf
+#{{{ Print and _printf
 
-# These are not quite right.  The globals are replaced when
-# mdc is executed, which is before debugging starts.  These
-# should only be replaced while inside the debugger.
-# Is there a way to detect when inside the debugger?
-
-    _printf := proc()
+    Printf := proc()
         debugger_printf(PRINTF, _rest);
     end proc;
 
+    # currently not used
     _print := proc()
         origprint(_passed);
         debugger_printf(DBG_WARN, "print output does not display in debugger\n");

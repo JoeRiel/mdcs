@@ -234,18 +234,18 @@ local indexed2slashed
             expr := _rest;
 
             if expr :: set then
-                if top then printf("(*set: %d*)\n", nops(expr));
+                if top then Debugger:-Printf("(*set: %d*)\n", nops(expr));
                     return `if`(expr = []
-                                , printf("NULL\n")
+                                , Debugger:-Printf("NULL\n")
                                 , expr[]
                                );
                 else
                     return expr;
                 end if;
             elif expr :: list then
-                if top then printf("(*list: %d*)\n", nops(expr));
+                if top then Debugger:-Printf("(*list: %d*)\n", nops(expr));
                     return `if`(expr = []
-                                , printf("NULL\n")
+                                , Debugger:-Printf("NULL\n")
                                 , expr[]
                                );
                 else
@@ -259,7 +259,7 @@ local indexed2slashed
                                )
                            , fld in [exports(expr)]);
                 if top then
-                    return printf("(*record*)\n"), eqs;
+                    return Debugger:-Printf("(*record*)\n"), eqs;
                 else
                     return 'record'(eqs);
                 end if;
@@ -269,19 +269,19 @@ local indexed2slashed
                 if attributes(expr)='object' then
                     try
                         if top then
-                            printf("(*object*)\n");
+                            Debugger:-Printf("(*object*)\n");
                         end if;
                         opacity := kernelopts('opaquemodules'=false);
                         expr:-ModulePrint;
                         return ModulePrint(expr);
                     catch:
-                        printf("object(...)\n");
+                        Debugger:-Printf("object(...)\n");
                     finally
                         kernelopts('opaquemodules'=opacity);
                     end try;
                     return NULL;
                 elif top then
-                    printf("(*module*)\n");
+                    Debugger:-Printf("(*module*)\n");
                     return seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 else
                     return `module() ... end module`; # questionable
@@ -291,16 +291,18 @@ local indexed2slashed
                 typ := op(0,eval(expr));
                 eqs := seq(ix = procname(false, expr[ix[]]), ix in [indices(expr)]);
                 if top then
-                    return (printf("(*%a*)\n", typ), eqs);
+                    return (Debugger:-Printf("(*%a*)\n", typ), eqs);
                 else
                     return (typ -> 'typ'(eqs))(typ);
                 end if;
+
             elif expr :: procedure then
                 if top then
-                    :-showstat(expr);
+                    Format:-showstat(convert(expr,string));
                     return NULL;
                 else
-                    `proc() ... end proc`;
+                    # this can be improved.
+                    return `proc() ... end proc`;
                 end if;
             elif expr = NULL then
                 return "NULL";
@@ -311,20 +313,6 @@ local indexed2slashed
             end if;
         end if;
     end proc:
-
-#}}}
-#{{{ PrintProc
-
-# Experimental.
-
-$ifdef SKIP
-    PrintProc := proc(nm, prc)
-    local listing;
-        #listing := debugopts('procdump' = prc);
-        #printf("\n%a := %s\n", nm, listing);
-        printf("\n%", showstat(nm));
-    end proc;
-$endif
 
 #}}}
 #{{{ showstat

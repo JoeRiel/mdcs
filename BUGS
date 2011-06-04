@@ -1,31 +1,21 @@
 -*- org -*-
 
-* TODO SCR 1: debugopts does not instrument correctly
+* DONE mds-eval-and-prettyprint writes procedure to live-buf, which screws up operation
+  CLOSED: [2011-06-04 Sat 09:07]
+  1. Problem occurs because [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][prettyprint]] calls ':-showstat'.  Changed
+     to showstat (which is mdc:-Format:-showstat).
+  2. That fails because `mds-showstat-statement' is not being set correctly.
+     It cannot be, since we are calling from Maple.  Two obvious solutions:
+     1. Handle the error (simple);
+     2. Clear [[file:lisp/mds-showstat.el::clear%20variable%20so%20next%20time%20we%20do%20not%20search][mds-showstat-statement]] after use.
+  3. Try 2 first.  It can probably be made to work, however,
+     mds-showstat-statement is currently not buffer-local.  Making
+     it buffer-local (I don't believe it is intended to communicate
+     between live and dead buffers.  That seems to fix the problem.
 
-  Submitter: [[mailto:epostma@maplesoft.com][Erik Postma]]
-  Priority:  Low
-  Time:  <2010-05-10 Mon 23:08>
-
-  If debugopts(stopat=[func,1]) is used to instrument the procedure func,
-  the first time it is called any tracing command (next, into, etc)
-  acts like a continue.  Stop points are ignored.  
-
-  This is a strange error.  Note that debugopts is *not* intended
-  for users, so this has a low priority.   It works find in smaple
-  and emaple.  I've recorded the input sent to the engine and it
-  seems fine.   
-
-  As a workaround added Erik's quickstop routine (renamed stopat)
-  as an export to mdb.  That evaluates the procedure being debugged
-  but avoids the complexity of stopat.
-
-* DONE SCR 2:  argument display is wrong with optional arguments that default to NULL
-  CLOSED: [2010-05-15 Sat 10:40]
-
-  Submitter: Joe Riel
-  Priority:  High
-
-  Resolution: use seq instead of map to extract _params; the downside
-  is that a global variable must be used, so must pick a safe one (_k).
-  
-  
+* DONE [[file:lisp/mds-showstat.el::defun%20mds%20eval%20and%20prettyprint%20expr][mds-eval-and-prettyprint]] writes <type> to client, not server
+  CLOSED: [2011-06-04 Sat 09:07]
+  1. The actual culprit is [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][mdc:-Format:-prettyprint]], which calls printf.
+  2. Fixed by renaming mdc:-Debugger:-_print to [[file:maple/src/Debugger.mm::Printf%20proc][mdc:-Debugger:-Printf]],
+     making it an export of mdc:-Debugger, and then replacing all printf
+     statements with it.
