@@ -21,10 +21,10 @@
 @finalout
 
 @copying
-Mds is a GNU Emacs package for debugging Maple code.
+EMDS is an Emacs package for debugging Maple code.
 Maple is a computer algebra system from Maplesoft Inc.
 
-This manual is for Mds version @value{VERSION}.
+This manual is for EMDS version @value{VERSION}.
 
 Copyright @copyright{} 2011, Joseph S. Riel
 
@@ -39,7 +39,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The Mds Manual
+@title The EMDCS Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -133,27 +133,30 @@ Command and Variable Index
 @cindex summary
 
 EMDS, the ``Emacs Maple Debug Server'', is an Emacs frontend
-to the Maple debugger.  It includes the following features:
+to the Maple debugger.  It is a successor to `mdb'.  
+The primary difference is that it communicates to the 
+Maple engine via TCP rather than through pipes, and
+can handle concurrent debug sessions.  These
+two changes enable useful new functionality:
 
 @itemize @bullet
 @item
-Communicates with Maple clients via TCP.
-This permits remote debugging.
+debugs Maple code run on the standard GUI as well as the tty interface.
 @item
-Works with Standard GUI as well as tty Maple.
-@item
-Handles multiple clients concurrently.
-@item
-Works with the Grid and Threads Maple packages.
+works with the Grid and Threads Maple packages.
 Separate processes/threads can be stepped through
 individually.
 @item
-Debugging is done in an Emacs window.  The cursor
-moves through the displayed procedure.  Breakpoints
-and watchpoints are set directly on the chosen statements.
-
+installs easily on Windows, Macs, and Linux.
+No compilation necessary.
+@item
+permits differential debugging, that is, comparing
+the output of two code bases, or the same code base
+run on different machines.
 @end itemize
 
+The user interface to EMDS is similar to that of mdb.
+It provides the following features.
 
 @itemize @bullet
 @item
