@@ -27,13 +27,17 @@ build: byte-compile compile doc mla
 
 EMACS := emacs
 ifeq ($(OS),Cygwin)
-  MAPLE := cmaple 
+  MAPLE := cmaple
 else
   MAPLE := maple
+ifeq ($(OS),GNU/Linux)
+  INSTALL_INFO = ginstall-info
+else
+  INSTALL_INFO = install-info
+endif
 endif
 
 CP = cp --archive
-INSTALL_INFO = install-info
 MAKEINFO = makeinfo
 MKDIR = mkdir -p
 TEXI2PDF = texi2pdf
@@ -128,18 +132,32 @@ mla := mdc.mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
+txtbold   := $(shell tput bold)
+txtred    := $(shell tput setaf 1)
+txtnormal := $(shell tput sgr0)
+warn = "$(txtred)$(textbold)$1$(txtnormal)"
+
 %.mla: maple/src/%.mpl maple/src/*.mm
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@$(MAPLE) -q -I maple -D BUILD_MLA $^
+	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $^ ) ; \
+		if [ ! -z "$$err" ]; then \
+			echo $(call warn,$$err); \
+		fi
+
 # }}}
 
 # {{{ install
 
-.PHONY: install-el install-maple install-lisp install-info install
+.PHONY: install-el install-maple install-lisp install-info install install-dev
+
+INSTALLED_EL_FILES = $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
 
 install: $(call print-help,install,Install everything)
 install: install-lisp install-info install-maple
+
+install-dev: $(call print-help,install-dev,Install everything but link el files to source)
+install-dev: install-elc install-info install-maple
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
@@ -151,6 +169,7 @@ install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
 	@echo "Installing lisp files into $(LISP_DIR)/"
 	@$(MKDIR) $(LISP_DIR)
+	@$(RM) $(INSTALLED_EL_FILES)
 	@$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
@@ -166,6 +185,16 @@ install-el: $(call print-help,install-el,Install el files but not elc files)
 install-el: $(LISPFILES)
 	$(MKDIR) $(LISP_DIR)
 	$(CP) $+ $(LISP_DIR)
+
+
+# Install elc files but not elc files; instead create symm links to the source
+install-elc: $(call print-help,install-elc,Install elc files and link el files)
+install-elc: $(ELCFILES)
+	@echo "Installing elc files, and symbolic links to el files, into $(LISP_DIR)"
+	@$(MKDIR) $(LISP_DIR)
+	@$(CP) $+ $(LISP_DIR)
+	@$(RM) $(INSTALLED_EL_FILES)
+	@ln --symbolic --target-directory=$(LISP_DIR) $(LISPFILES)
 
 # }}}
 # {{{ distribution
