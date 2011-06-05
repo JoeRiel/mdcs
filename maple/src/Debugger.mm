@@ -21,6 +21,8 @@ Debugger := module()
 export Printf
     ,  Replace
     ,  Restore
+    ,  ShowError
+    ,  ShowException
     ,  stopat
     ,  unstopat
     ;
@@ -80,7 +82,6 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     end proc;
 
 #}}}
-
 #{{{ Print and _printf
 
     Printf := proc()
@@ -91,6 +92,32 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     _print := proc()
         origprint(_passed);
         debugger_printf(DBG_WARN, "print output does not display in debugger\n");
+    end proc;
+
+#}}}
+#{{{ ShowError
+
+    ShowError := proc()
+    local err;
+        err := debugopts('lasterror');
+        if err = '`(none)`' then
+            debugger_printf(DBG_ERROR, "%a\n", err);
+        else
+            debugger_printf(DBG_ERROR, "%s\n", StringTools:-FormatMessage(err[2..]));
+        end if;
+    end proc;
+
+#}}}
+#{{{ ShowException
+
+    ShowException := proc()
+    local exception;
+        exception := debugopts('lastexception');
+        if exception = '`(none)`' then
+            debugger_printf(DBG_EXCEPTION, "%a\n", exception);
+        else
+            debugger_printf(DBG_EXCEPTION, "%s\n", StringTools:-FormatMessage(exception[2..]));
+        end if;
     end proc;
 
 #}}}
@@ -204,6 +231,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 fi
             od
         fi;
+
         #}}}
         #{{{ Strip trailing whitespace.
         while endp >= startp and res[endp] <= " " do endp := endp -1 od;
@@ -297,7 +325,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 if i < n then
                     debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
-                    debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
+                    debugger_printf(DBG_EVAL4, "<%a>\n",_passed[i])
                 fi
             fi
         od;
