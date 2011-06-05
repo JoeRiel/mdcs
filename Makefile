@@ -27,13 +27,17 @@ build: byte-compile compile doc mla
 
 EMACS := emacs
 ifeq ($(OS),Cygwin)
-  MAPLE := cmaple 
+  MAPLE := cmaple
 else
   MAPLE := maple
+ifeq ($(OS),GNU/Linux)
+  INSTALL_INFO = ginstall-info
+else
+  INSTALL_INFO = install-info
+endif
 endif
 
 CP = cp --archive
-INSTALL_INFO = install-info
 MAKEINFO = makeinfo
 MKDIR = mkdir -p
 TEXI2PDF = texi2pdf
@@ -178,8 +182,9 @@ install-el: $(LISPFILES)
 # Install elc files but not elc files; instead create symm links to the source
 install-elc: $(call print-help,install-elc,Install elc files and link el files)
 install-elc: $(ELCFILES)
-	$(MKDIR) $(LISP_DIR)
-	$(CP) $+ $(LISP_DIR)
+	@echo "Installing elc files, and symbolic links to el files, into $(LISP_DIR)"
+	@$(MKDIR) $(LISP_DIR)
+	@$(CP) $+ $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
 	@ln --symbolic --target-directory=$(LISP_DIR) $(LISPFILES)
 
