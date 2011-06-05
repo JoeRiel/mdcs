@@ -81,6 +81,29 @@
 ;;}}}
 
 ;;}}}
+;;{{{ constants
+
+
+(defconst mds-showstat-mode-line-format
+  '("%12b"  ; buffer name
+    "   "
+    "%s"    ; status of process
+    "(%m)"  ; mode name
+    ))
+
+;; regular expressions
+(defconst mds-showstat-where-procname-re "^\\([^ \t\n]+\\): "
+  "Match the procname printed by the where command.
+It is flush-left, presumably contains no spaces, and is terminated
+with a colon.  The colon is omitted from the group-one match.
+A more precise regular expression would allow spaces inside backquotes,
+however, such an abomination should break something.")
+
+(defconst mds-showstat-procname-assignment-re "^\\([^ \t\n]+\\) :="
+  "Match an assignment to a procedure in the showstat buffer.
+The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
+
+;;}}}
 ;;{{{ variables
 
 (defvar mds-thisproc "thisproc" "Set to procname if Maple version < 14")
@@ -164,6 +187,7 @@ If ALIVE is non-nil, create a live buffer."
 
 ;;}}}
 ;;{{{ (*) mds-showstat-update
+
 (defun mds-showstat-update (buf procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
 `mds-showstat-state'.  PROCNAME is the name of the procedure,
@@ -191,12 +215,14 @@ call (maple) showstat to display the new procedure."
 	;; procname has changed.
 
 	(setq mds-showstat-procname procname)
+	(mds-showstat-set-mode-line procname)
 
 	;; Update the buffer with procname and, if entering procname,
 	;; the values of its arguments. First determine whether we just
 	;; entered procname or are continuing (this may not be robust).
 	
-	;; Print procname (just the name) with appropriate face.
+	;; Send procname (just the name) with appropriate face
+	;; to the output buffer
 	(mds-output-display
 	 (mds--get-client-out-buf mds-client)
 	 (format "%s:\n" procname)
@@ -217,6 +243,7 @@ call (maple) showstat to display the new procedure."
 ;;}}}
 ;;{{{ (*) mds-showstat-display-inactive
 
+;; RENAME; this doesn't 'display' (directly)...
 (defun mds-showstat-display-inactive (procname statement)
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
@@ -225,10 +252,12 @@ call (maple) showstat to display the new procedure."
 
 ;;}}}
 ;;{{{ (*) mds-showstat-display
+
 (defun mds-showstat-display (buf proc)
   "Insert Maple procedure PROC into the showstat buffer.
 PROC is the output of a call to showstat."
   (with-current-buffer buf
+
     (let ((buffer-read-only nil))
       ;; Delete old contents then insert the new.
       (delete-region (point-min) (point-max))
@@ -237,6 +266,19 @@ PROC is the output of a call to showstat."
       (goto-char (point-min))
       (if (looking-at "\n")
 	  (delete-char 1))
+
+      ;; Update `mds-showstat-procname' by extracting the value from
+      ;; the inserted text. It is frequently already correct, because
+      ;; was assigned in mds-showstat-display-inactive, however, it
+      ;; will not be assigned if the update was via
+      ;; `mds-eval-and-prettyprint'.
+
+      (if (looking-at mds-showstat-procname-assignment-re)
+	  (setq mds-showstat-procname (match-string 1)))
+
+      ;; Update the mode-line; this adds the procname to the mode-line
+      (mds-showstat-set-mode-line mds-showstat-procname)
+
       ;; Goto current state
       (unless (or mds-showstat-live (string= "" mds-showstat-statement))
 	(if (search-forward (concat " " mds-showstat-statement) nil t)
@@ -249,6 +291,7 @@ PROC is the output of a call to showstat."
       (display-buffer buf))))
 ;;}}}
 ;;{{{ (*) mds-showstat-display-state
+
 (defun mds-showstat-display-state ()
   "Move the overlay arrow in the showstat buffer to current state
 and ensure that the buffer and line are visible.  The current
@@ -279,6 +322,7 @@ POINT is moved to the indentation of the current line."
     (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
   ;; Ensure marker is visible in buffer.
   (set-window-point (get-buffer-window) (point)))
+
 ;;}}}
 
 ;;}}}
@@ -657,21 +701,19 @@ the number of activation levels to display."
 	       "where\n")))
     (mds-showstat-send-client cmd)))
 
-(defconst mds-showstat-procname-re "^\\([^ \t\n]+\\): ")
-
 (defun mds-activate-procname-at-point ()
-  (if (looking-at mds-showstat-procname-re)
+  (if (looking-at mds-showstat-where-procname-re)
       (make-text-button (match-beginning 1) (match-end 1) 
 			:type 'mds-showstat-open-button)))
 
 
 (defun mds-highlight-where-output (beg end)
-  "Font lock the names of called functions in the region from BEG to END,
+  "Font-lock the names of called functions in the region from BEG to END,
 which is the output of `mds-where'."
   (interactive "r")
   (save-excursion
     (goto-char beg)
-    (while (re-search-forward mds-showstat-procname-re end t)
+    (while (re-search-forward mds-showstat-where-procname-re end t)
       (make-text-button (match-beginning 1) (match-end 1) 
 			:type 'mds-showstat-open-button))))
 
@@ -686,7 +728,7 @@ which is the output of `mds-where'."
   (save-excursion
     (beginning-of-line)
     (unless (looking-at "TopLevel")
-      (looking-at mds-showstat-procname-re)
+      (looking-at mds-showstat-where-procname-re)
       (let ((procname (match-string-no-properties 1))
 	    (statement (buffer-substring-no-properties
 			(match-end 0) (line-end-position))))
@@ -755,6 +797,23 @@ which is the output of `mds-where'."
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
     map))
+
+;;}}}
+
+;;{{{ mode-line
+
+(defun mds-showstat-set-mode-line (proc)
+  "Set the mode-line of an mds-showstat buffer.
+PROC is a string corresponding to the displayed procedure, 
+it is displayed in bold after the mode name."
+  (setq mode-line-format
+	(list
+	 "  [%s]  "   ;
+	 mode-line-buffer-identification
+	 "   "
+	 mode-line-modes
+	 (propertize (format "(%s)" proc) 'face 'bold)
+	 "-%-")))
 
 ;;}}}
 

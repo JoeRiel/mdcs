@@ -1,11 +1,12 @@
 #!/bin/bash
 # -*- mode:shell-script; mode:folding -*-
 
-# Assign a version number to the mdcs files
+# Assign a version number to the mdcs source files
 
 script="$0"
 
-# Regular expression to match 
+# Regular expression that matches version number
+
 regex="[0-9]+\.[0-9]+"
 
 #{{{ Functions
@@ -58,6 +59,7 @@ else
 fi
 
 #}}}
+#{{{ Update source files
 
 # Update lisp
 
@@ -76,5 +78,7 @@ sed $sed_opt "/Version := /$sed_cmd" "$file"
 file="doc/mds.texi"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/^@set VERSION /$sed_cmd" "$file"
+
+#}}}
 
 exit 0

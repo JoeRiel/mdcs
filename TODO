@@ -2,8 +2,7 @@
 
 * Short Term
 
-** TODO 
-   1. Decide how the output buffer should look.  
+** TODO  Decide how the output buffer should look.  
 
       * Should it mimic what is done in mdb, that is, when an input is
         entered by user (using 'e' or '.'), it echos the command, then
@@ -16,6 +15,28 @@
 	would still want the ability to evaluate stuff from the
 	showstat buffer and have it appear in the output buffer,
 	otherwise a lot of buffer changing would be required.
+
+** DONE Insert procedure name in mode-line of showstat buffer
+   CLOSED: [2011-06-04 Sat 21:31]
+
+   * Wrote [[file:lisp/mds-showstat.el::defun%20mds%20showstat%20set%20mode%20line%20proc][mds-showstat-set-mode-line]] to do this.
+
+   * There is a snag; it needs the name of the procedure.
+     That is supposed to be stored in the `mds-showstat-procname'
+     variable, however, when the dead buffer is updated via
+     a call to `mds-eval-and-prettyprint', procname is never
+     directly available.  Two possible fixes:
+
+     1. Extract the name from the buffer after printing.
+     2. Implement a protocol for returning the procedure name.
+
+   * The latter seems better, but is a bit of work for a one-off fix.
+     However, it could be useful for other enhancements.
+     For the nonce I'll go with the former.
+
+   * Method 1 is now implemented. 
+
+
 
 * Long Term
  
