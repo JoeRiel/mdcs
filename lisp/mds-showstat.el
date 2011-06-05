@@ -598,8 +598,7 @@ If FMT (prefix arg) is non-nil, display the formatted message,
 otherwise hyperlink the raw message."
   (interactive "P")
   (if fmt
-      (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")
-    ;;(mds-showstat-eval-expr "showerror")
+      (mds-showstat-eval-expr "mdc:-Debugger:-ShowError()")
     (mds-showstat-send-client "showerror\n")
     ))
 
@@ -633,7 +632,7 @@ otherwise run through StringTools:-FormatMessage."
   (if raw
       ;;(mds-showstat-eval-expr "showexception")
       (mds-showstat-send-client "showexception\n")
-    (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
+    (mds-showstat-eval-expr "mdc:-Debugger:-ShowException()")))
 
 ;;}}}
 ;;{{{ (*) Short cuts
