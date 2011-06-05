@@ -1,151 +1,66 @@
 ##INCLUDE ../include/mpldoc_macros.mi
-##DEFINE MOD Client
-##MODULE \PKG[\MOD]
-##HALFLINE appliable module for communicating with the Maple Debugger Server
+##DEFINE MOD Debugger
+##MODULE \MOD
+##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
-##CALLINGSEQUENCE
-##- \MOD('opts')
-##PARAMETERS
-##param_opts(\MOD)
-##RETURNS
-##- `NULL`
 ##DESCRIPTION
-##- `Client` is an appliable module for communicating
-##  with the Maple Debugger Server.
-##OPTIONS
-##opt(config,maplet or string)
-##  Specifies a method for configuring the client.
-##  If a string, then the configuration is read
-##  from that filename.  If the symbol is `maplet`,
-##  then a "Maplet" is launched that queries
-##  for the configuration.
-##  If 'config' is not specified, then all defaults
-##  are used.
-##opt(connection,socket|pipe|ptty)
-##  Specifies the connection type.
-##  Currently only `socket` is supported.
-##  The default is `socket`.
-##opt(host,string)
-##  The name of the host.
-##  The default is _"localhost"_.
-##opt(port,posint)
-##  The port (socket) to used when _connection=socket_.
-##opt(timeout,nonnegint)
-##  Specifies ...
-##opt(view,truefalse)
-##  If `true`, then the remote debugging session
-##  is echoed on the local machine.
-##  The default is originally`false`,
-##  but becomes whatever was last used.
-##opt(exit,truefalse)
-##  If `true`, then
+##- The `\MOD` module exports two methods, "Replace" and "Restore",
+##  that replace and restore, respectively, the (thankfully) global
+##  procedures that are the library side of the Maple debugger.
+##
+##- The new procedures use the "Sockets" package to communicate with a
+##  "Maple Debug Server".  They also insert tags into the stream that
+##  indicate the purpose of each packet.  This simplifies the
+##  parsing requirements of the server.
 
+$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`
-$define MDCS_PORT 10\000
+Debugger := module()
 
-module Client()
+export Printf
+    ,  Replace
+    ,  Restore
+    ,  stopat
+    ,  unstopat
+    ;
 
 global DEBUGGER_PROCS;
 
-export ModuleApply;
-
-#{{{ local declarations
-
-local Connect
-    , ModuleUnload
-    , debugger_procs := 'DEBUGGER_PROCS' # macro
+local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _debugger
     , debugger_printf
     , debugger_readline
+    , _showstat
+    , _showstop
+    , _where
+    , _print
+    , origprint
 
-    , Port := MDCS_PORT
-    , Host := "localhost"
-
-    , printf_to_server
+    , getname
     , replaced := false
-    , replaceProcs
-    , restoreProcs
-    , sid
-    , view_flag := false
+
     ;
 
-#}}}
+# module local: sid
 
-#{{{ Connect
+#{{{ Replace
 
-    Connect := proc(host :: string, port :: posint, $)
-        if sid <> NULL then
-            Close(sid);
-        end if;
-        sid := Sockets:-Open(host, port);
-        Host := host;
-        Port := port;
-        return NULL;
-    end proc;
-
-#}}}
-#{{{ ModuleUnload
-
-    ModuleUnload := proc()
-        try
-            Sockets:-Close( sid );
-        catch:
-        end try;
-        restoreProcs();
-    end proc;
-
-#}}}
-#{{{ ModuleApply
-
-    ModuleApply := proc( (* no positional parameters *)
-                         { config :: {string,identical(maplet)} := NULL }
-                         , { connection :: identical(socket,pipe,ptty) := 'socket' }
-                         , { host :: string := Host }
-                         , { port :: posint := Port }
-                         #, { timeout :: nonnegint := 0 }
-                         , { view :: truefalse := view_flag }
-                         , { exit :: truefalse := false }
-                         , $ )
-
-        if connection <> 'socket' then
-            error "currently only a socket connection is supported"
-        elif config <> NULL then
-            error "currently the 'config' option is disabled.  Use optional parameters."
-        end if;
-
-        if exit then
-            restoreProcs();
-            return
-        end if;
-
-        view_flag := view;
-
-        replaceProcs();
-
-        try
-            Connect(host, port);
-        catch:
-            restoreProcs();
-            error;
-        end try;
-
-        return NULL;
-
-    end proc;
-
-#}}}
-
-#{{{ replaceProcs
-
-    replaceProcs := proc()
+    Replace := proc()
         if not replaced then
+            # Save these
+            origprint := eval(print);
+
             # Reassign library debugger procedures
             unprotect(debugger_procs);
-            debugger := eval(_debugger);
-            `debugger/printf` := eval(debugger_printf);
+            debugger            := eval(_debugger);
+            `debugger/printf`   := eval(debugger_printf);
             `debugger/readline` := eval(debugger_readline);
+            showstat            := eval(_showstat);
+            showstop            := eval(_showstop);
+            where               := eval(_where);
+            #print               := eval(_print);
+            #printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
         end if;
@@ -153,9 +68,9 @@ local Connect
     end proc;
 
 #}}}
-#{{{ restoreProcs
+#{{{ Restore
 
-    restoreProcs := proc()
+    Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced then
             map( p -> kernelopts('unread' = p), [debugger_procs] );
@@ -166,12 +81,28 @@ local Connect
 
 #}}}
 
+#{{{ Print and _printf
+
+    Printf := proc()
+        debugger_printf(PRINTF, _rest);
+    end proc;
+
+    # currently not used
+    _print := proc()
+        origprint(_passed);
+        debugger_printf(DBG_WARN, "print output does not display in debugger\n");
+    end proc;
+
+#}}}
+
+# Debugger replacements
+
 #{{{ debugger_printf
 
-    debugger_printf := proc( )
+    debugger_printf := proc( tag :: name )
     local argList, rts;
     description `Used by debugger to produce output.`;
-        argList := [_passed];
+        argList := [_rest];
 
         # suppress large rtables
         rts := map(x->x=`debugger/describe_rtable`(x)
@@ -179,7 +110,7 @@ local Connect
                   );
         if rts <> {} then argList := subs(rts,argList) end if;
 
-        printf_to_server(op(argList));
+        WriteTagf(tag, op(argList));
 
         return NULL;
     end proc:
@@ -196,13 +127,13 @@ local Connect
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        `debugger/printf`("\n");
+        # `debugger_printf`("\n");
 
         #{{{ Get response (from emacs)
         do
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
-            res := traperror(Sockets:-Read(sid));
+            res := traperror(Read());
             if res <> lasterror then break fi;
             printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
         od;
@@ -214,14 +145,17 @@ local Connect
         # issued last time. If there is no previous command, return a command to
         # print a message pointing the user to the on-line help.
         if `debugger/isspace`( res ) then
-            res := `if`(assigned(`debugger/default`),
-                        `debugger/default`,
-                        "`debugger/printf`(""See ?debugger for available commands\n"")")
+            res := `if`(assigned(`debugger/default`)
+                        , `debugger/default`
+                        , "debugger_printf(DBG_HELP, \"See ?debugger for available commands\n\")"
+                       );
         else
             `debugger/default` := res;
         fi;
+
         #}}}
         #{{{ Remove leading blanks, trailing comments, and colons.
+
         startp := 1;
         len := length(res);
         endp := len;
@@ -248,11 +182,14 @@ local Connect
                 fi
             fi
         od;
+
         #}}}
         #{{{ Record whether or not the command ended in a colon.
+
         if _npassed > 0 and type(_passed[1],name) then
             assign(_passed[1],endcolon)
         fi;
+
         #}}}
         #{{{ Check for characters after comment
 
@@ -260,8 +197,9 @@ local Connect
         #characters after the end of the typed command.
         if i < len and res[i] <> "#" then
             for i from i to len do
-                if i <> " " then
-                    `debugger/printf`("Warning, extra characters at end of parsed string\n");
+                if res[i] <> " " then
+                    debugger_printf(DBG_WARN,"Warning, extra characters at end of parsed string\n");
+                    debugger_printf(DBG_WARN,"Extra stuff: %q\n", res[i]);
                     break
                 fi
             od
@@ -276,8 +214,9 @@ local Connect
         # Means the user typed something which still ended up being nothing, such
         # as a single semicolon, just a comment, etc.
         if res = "" then
-            res := "`debugger/printf`(""See ?debugger for available commands\n"")"
+            res := "`debugger/printf`(\"See ?debugger for available commands\n\")"
         fi;
+
         #}}}
 
         return res;
@@ -322,58 +261,61 @@ local Connect
 
         for i from 1 to n do
             if _passed[i] = lasterror then
-                `debugger/printf`("Error, %s\n",
-                                  StringTools:-FormatMessage(lastexception[2..]))
+                debugger_printf(MPL_ERR, "Error, %s\n"
+                                , StringTools:-FormatMessage(lastexception[2..]))
             elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
                 if _passed[i][1] = 'DEBUGSTACK' then
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            `debugger/printf`("%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK0, "%a\n",_passed[i][j])
                         else
-                            `debugger/printf`("%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
                             if `debugger/no_output` <> true then
-                                `debugger/printf`("\t%a\n",_passed[i][j-1])
+                                debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
                         fi;
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    `debugger/printf`("Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(DBG_ERR1, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
                     then
                         return
                     fi;
-                    `debugger/printf`("%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf(DBG_WATCHED_CONDS, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
-                        `debugger/printf`("%a,\n",_passed[i])
+                        debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
                     else
-                        `debugger/printf`("%a\n",_passed[i])
+                        debugger_printf(DBG_EVAL2, "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
-                    `debugger/printf`("%a,\n",_passed[i])
+                    debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
-                    `debugger/printf`("%a\n",_passed[i])
+                    debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
                 fi
             fi
         od;
 
         #}}}
         #{{{ handle negative statement number
+
         if procName <> 0 then
             if statNumber < 0 then
-                `debugger/printf`("Warning, statement number may be incorrect\n");
+                debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             fi;
-            `debugger/printf`("%s",debugopts('procdump'=[procName,0..statNumber]))
+            debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
         fi;
+
         #}}}
         #{{{ command loop
+
         do
             line := `debugger/readline`('`debugger/no_output`');
             # If there's an assignment, make sure it is delimited by spaces.
@@ -422,7 +364,7 @@ local Connect
                 debugopts('steplevel'=evalLevel-statLevel*5);
                 return
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-                printf_to_server("stopping\n");
+                debugger_printf(DBG_STOP,"stopping\n");
                 debugopts('interrupt'=true)
             elif cmd = "where" then
                 if nops(line) = 1 then
@@ -478,7 +420,7 @@ local Connect
                 if err <> lasterror then return err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
-                    `debugger/printf`("Error, not currently in a procedure\n");
+                    debugger_printf(DBG_WARN,"Error, not currently in a procedure\n");
                 elif nops(line) = 1 and cmd = "list" then
                     i := statNumber - 5;
                     if i < 1 then i := 1 fi;
@@ -548,30 +490,233 @@ local Connect
             #{{{ handle error
 
             if err = lasterror then
-                `debugger/printf`("Error, %s\n"
-                                  , StringTools:-FormatMessage(lastexception[2..])
-                                 );
+                debugger_printf(DBG_ERR2, "Error, %s\n"
+                                , StringTools:-FormatMessage(lastexception[2..])
+                               );
             fi
 
             #}}}
         od;
+
         #}}}
     end proc:
 
 #}}}
-#{{{ printf_to_server
 
-    printf_to_server := proc()
-    local msg;
-        msg := sprintf(_passed);
-        Sockets:-Write(sid, msg);
-        if view_flag then
-            fprintf('INTERFACE_DEBUG',_passed);
+#{{{ showstat
+
+    _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
+    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
+    description `Displays a procedure with statement numbers and breakpoints.`;
+    local res;
+    global showstat;
+        if _npassed = 0 then map(procname,stopat())
+        else
+            if _npassed = 1 then
+                res := debugopts('procdump'=p)
+            elif _npassed = 2 then
+                res := debugopts('procdump'=[p,statnumoroverload])
+            elif _npassed = 3 then
+                res := debugopts('procdump'=[p,statnumoroverload,statnum])
+            fi;
+
+            map[3](debugger_printf, DBG_SHOW, "\n%s", [res]);
+
+            # nonl probably means "no newline"
+            if procname <> 'showstat[nonl]' then
+                debugger_printf(DBG_NULL, "\n" )
+            fi
+        fi;
+        NULL
+    end proc:
+
+#}}}
+#{{{ showstop
+
+    _showstop := proc( $ )
+    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
+    description `Display a summary of all break points and watch points.`;
+    local i, ls, val;
+    global showstop;
+        ls := stopat();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo breakpoints set.\n")
+        else
+            debugger_printf(DBG_INFO, "\nBreakpoints in:\n");
+            for i in ls do debugger_printf(DBG_INFO, "   %a\n",i) od
+        fi;
+        ls := stopwhen();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo variables being watched.\n")
+        else
+            debugger_printf(DBG_INFO, "\nWatched variables:\n");
+            for i in ls do
+                if type(i,list) then
+                    debugger_printf(DBG_INFO, "   %a in procedure %a\n",i[2],i[1])
+                elif assigned(`debugger/watch_condition`[i]) then
+                    val := sprintf(DBG_INFO, "%a",`debugger/watch_condition`[i]);
+                    if length(val) > interface('screenwidth') / 2 then
+                        val := cat(val[1..round(interface('screenwidth')/2)]," ...")
+                    fi;
+                    debugger_printf(DBG_INFO, "   %a = %s\n",i,val)
+                else
+                    debugger_printf(DBG_INFO, "   %a\n",i)
+                fi
+            od
+        fi;
+        ls := stoperror();
+        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo errors being watched.\n")
+        else
+            debugger_printf(DBG_WATCHED_ERRS, "\nWatched errors:\n");
+            if member('all',ls) then
+                if member('traperror',ls) then
+                    debugger_printf(DBG_INFO, "   All errors\n")
+                else
+                    debugger_printf(DBG_INFO, "   All untrapped errors\n")
+                fi
+            else
+                if member('traperror',ls) then
+                    debugger_printf(DBG_INFO, "   All trapped errors\n")
+                fi;
+                for i in ls do
+                    if i <> 'traperror' then debugger_printf(DBG_INFO, "   %a\n",i) fi
+                od
+            fi
+        fi;
+        if procname <> 'showstop[nonl]' then debugger_printf(DBG_INFO, "\n") fi;
+        NULL
+    end proc:
+
+#}}}
+#{{{ where
+
+    _where := proc( n::integer, $ )
+    local stack, i;
+    option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
+        if _npassed = 1 then
+            if n < 1 then debugopts('callstack'=-1) fi;	# To force an error.
+            stack := debugopts('callstack'=n+1)
+        else
+            stack := debugopts('callstack')
+        fi;
+        for i from nops(stack)-2 to 8 by -3 do
+            debugger_printf(DBG_STACK1, "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
+        od;
+        if stack[5] = 'TopLevel' then
+            debugger_printf(DBG_STACK2,"Currently at TopLevel.\n")
+        else
+            debugger_printf(DBG_STACK3,"Currently in %a.\n",stack[5])
+        fi;
+        NULL
+    end proc:
+
+#}}}
+
+#{{{ stopat
+
+##DEFINE CMD stopat
+##PROCEDURE \PKG[\MOD]\MOD[\CMD]
+##HALFLINE a fast method to instrument a procedure
+##AUTHOR   Erik Postma
+##DATE     May 2010
+##CALLINGSEQUENCE
+##- \CMD('p', 'n', 'cond')
+##PARAMETERS
+##- 'p'    : ::{name,string}::; procedure to instrument
+##- 'n'    : (optional) ::posint::; statement number
+##- 'cond' : (optional) ::uneval::; condition
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  is a fast version of  ":-stopat", with a few modifications.
+##  It sets a breakpoint at a statement number of a procedure.
+##
+##- The 'p' parameter is the procedure to instrument.
+##-- If 'p' is indexed it is converted to a *slashed* name.
+##-- If 'p' is a string it is parsed.
+##  This provides a means to enter a module local procedure without assigning
+##   _kernelopts('opaquemodules'=false)_.
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(Format:-stopat);
+## $define NE testnoerror
+##
+## Try[NE]("1.0", FUNC("int:-ModuleApply"));
+## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
+## Try    ("2.1", FUNC(f,1,i>3));
+## Try    ("2.2", f());
+
+    stopat := proc(p :: {name,string}
+                   , n :: posint
+                   , cond :: uneval
+                   , $ )
+
+    local pnam,st;
+        pnam := getname(p);
+        st := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, st])
+        else                  debugopts('stopat'=[pnam, st, 'cond'])
         end if;
         return NULL;
+    end proc:
+
+#}}}
+#{{{ unstopat
+
+    unstopat := proc(p :: {name,string}
+                     , n :: posint
+                     , cond :: uneval
+                     , $ )
+
+    local pnam,st;
+        pnam := getname(p);
+        st := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
+        else                  debugopts('stopat'=[pnam, -st, 'cond'])
+        end if;
+        return NULL;
+    end proc:
+
+#}}}
+
+#{{{ getname
+
+    getname := proc(p :: {name,string}, $)
+    local opacity, pn, pnm;
+        try
+            opacity := kernelopts('opaquemodules'=false);
+
+            if p :: indexed then
+                # Convert indexed to slashed name;
+                # e.g. pkg[func] --> `pkg/func`
+                pn := indexed2slashed(p);
+                if not eval(pn)::procedure
+                or (eval(p)::procedure and not has(eval(p),pn)) then
+                    pn := p;
+                end if;
+            elif p :: string then
+                pn := parse(p);
+            else
+                pn := p;
+            end if;
+
+            # Use eval in order to make sure everything is loaded from
+            # the library. pnm is not actually used (below) because
+            # debugopts(stopat) needs a name if it is to return the
+            # name on the lhs of the assignment in the string.
+            pnm := eval(pn);
+            while assigned(pnm[':-ModuleApply']) do
+                pnm := eval(pnm:-ModuleApply);
+            end do;
+        finally
+            kernelopts('opaquemodules'=opacity);
+        end try;
+
+        return pn;
+
     end proc;
 
 #}}}
 
-end module:
 
+end module;

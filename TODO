@@ -1,88 +1,45 @@
 -*- org -*-
 
 * Short Term
-** DONE Make prefix, etc., variables in [[file:Makefile::prefix%20usr%20local][Makefile]] overwritable by environment.
-  CLOSED: [2010-05-11 Tue 09:11]
-  This will allow Erik to avoid resolving when pulling in changes.
-  Decided to just capitalize and document how to change them on CL.
-  Using ?= seems dangerous.  Why?
-** DONE SCR 1: debugopts doesn't work 
-  CLOSED: [2010-05-12 Wed 10:21]
-       mdb-next 'continues' when breakpoint is set with debugopts(stopat=[func,1]]).
-       For example
 
-       restart:  debugopts(stopat=[int,1]): int(x,x);
-       # then type 'n';
+** TODO  Decide how the output buffer should look.  
 
-       The problem is a binding issue; not sure why it occurs.
-       Erik wrote quickstop; I added it to mdb.
+      * Should it mimic what is done in mdb, that is, when an input is
+        entered by user (using 'e' or '.'), it echos the command, then
+        displays the output.
 
-** TODO Document customizations
+      * Alternately, should it show a prompt and allow the user to
+	enter commands there?  Essentially mimicing the tty debugger
+	interface, but with the current state suppressed. That seems
+	more difficult to implement but potentially more useful.  I
+	would still want the ability to evaluate stuff from the
+	showstat buffer and have it appear in the output buffer,
+	otherwise a lot of buffer changing would be required.
 
-** TODO Create an Instrument command/package.
-  This would permit instrumenting any command in a package.
-  Maybe this should be done with a Maplet, and be a stand-alone
-  Maple package. 
+** DONE Insert procedure name in mode-line of showstat buffer
+   CLOSED: [2011-06-04 Sat 21:31]
+
+   * Wrote [[file:lisp/mds-showstat.el::defun%20mds%20showstat%20set%20mode%20line%20proc][mds-showstat-set-mode-line]] to do this.
+
+   * There is a snag; it needs the name of the procedure.
+     That is supposed to be stored in the `mds-showstat-procname'
+     variable, however, when the dead buffer is updated via
+     a call to `mds-eval-and-prettyprint', procname is never
+     directly available.  Two possible fixes:
+
+     1. Extract the name from the buffer after printing.
+     2. Implement a protocol for returning the procedure name.
+
+   * The latter seems better, but is a bit of work for a one-off fix.
+     However, it could be useful for other enhancements.
+     For the nonce I'll go with the former.
+
+   * Method 1 is now implemented. 
 
 
-** DONE Fix installation problem; getlibpath does not work
-  CLOSED: [2010-05-12 Wed 10:19]
-  Use scriptdir="$0" in scripts to find the other executables;
-  that avoids dependency on user's PATH and allows getlibpath
-  to work during installation.
-
-** TODO Write mpldoc and create mdb.hdb.
-** DONE Make work with Maple 13
-  CLOSED: [2010-05-16 Sun 15:26]
-  Added mdb-pre-Maple-14 customizable boolean variable.
-** DONE Add menu to mdb-mode
-   CLOSED: [2010-05-24 Mon 11:59]
-   1. A simple menu has been added.
-** TODO Font-lock the code output of mdb-where
-   1. Alas, maplev doesn't provide a maplev-font-lock-region
-      function.  May have to ask.  How to do that without
-      assigning font-lock-defaults to the buffer?
-   2. With hypelinks implemented this is less urgent as it is
-      generally more useful to jump back to the calling procedure.
-
-** TODO Fix munged up display of inactive procedure in showstat
-   * When using the mdb-hyperlinks, the current line of the active
-     procedure will occasionally be printed after the inactive procedure.
-     One solution is to use a separate buffer for the inactive procedure;
-     that has the advantage that both are then displayed concurrently.
-     But it also clutters the screen.
 
 * Long Term
  
-** TODO Handle large Maple output faster.
-   This may require eliminating the transaction queue.
-** TODO Allow concurrent debuggers
-   Once operational, extend to allow relative debugging.
-   
-** TODO Implement tracking
-** TODO Associate output with statement   
-** DONE Set breakpoints in calling procedure(s)
-   CLOSED: [2010-05-24 Mon 11:55]
-   * Using "where:" returns the name of the procedures on the stack
-     and the corresponding lines (but not the statement numbers).
-   * It wouldn't be hard to search for the line
-   * As a preliminary, provide a means to open a non-current procedure
-     in a showstat buffer.  Maybe a separate showstat-buffer.
-     Breakpoints could then be set manually.
-
-** PENDING Display non-debugged procedures in showstat
-   1. This isn't hard to do; it can be done manually by calling
-      mdb-update-showstat
-   2. Debugger commands that execute code in the debugged procedure
-     will still refer to the original procedure; consequently, they
-     should be blocked while it is not being displayed.  Possibly they
-     should just return to the original buffer.
-   3. Is it better to reuse the buffer, or open another?  Reusing is
-      easier and may cause less confusion, though there is some
-      advantage to having multiple buffer open.  Hmm.  If Emacs
-      had floating windows it might make sense, but ...
-   4. It is now operational; need to provide a friendly user-interface.
-
 ** TODO Handle exports of unnamed modules.
    1. The problem occurs when a module is assigned as
       M := module() ... end module.  Unless the module is

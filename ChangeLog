@@ -1,8 +1,0 @@
-2011-05-24  Joe Riel  <joer@san.rr.com>
-
-	* maple/src/Client.mm: (ModuleApply): add try/catch and restore procs if connection.
-
-	* maple/src/Format.mm (Format): Renamed (was mdb).
-
-	* maple/src/Client.mm: Renamed (from EmacsDebugger).  Added options, some might work.
-

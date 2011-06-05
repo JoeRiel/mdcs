@@ -1,8 +1,0 @@
-echo Build
-echo -----
-make build 
-echo
-echo Install
-echo -------
-make install
-

@@ -3,3 +3,5 @@
 !/doc/*.texi
 *.mla
 /lisp/*.elc
+/ChangeLog
+_preview_.mm
