@@ -132,10 +132,18 @@ mla := mdc.mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: $(mla)
 
+txtbold   := $(shell tput bold)
+txtred    := $(shell tput setaf 1)
+txtnormal := $(shell tput sgr0)
+warn = "$(txtred)$(textbold)$1$(txtnormal)"
+
 %.mla: maple/src/%.mpl maple/src/*.mm
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@$(MAPLE) -q -I maple -D BUILD_MLA $^
+	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $^ ) ; \
+		if [ ! -z "$$err" ]; then \
+			echo $(call warn,$$err); \
+		fi
 
 # }}}
 
