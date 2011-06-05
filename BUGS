@@ -25,3 +25,6 @@
   export %1".  Contrast this with the error in tty, "the name
   ModuleApply in 'int' is declared local..."
 
+* TODO SCR3: Display formatted error messages
+  * The 'x' key (mds-showexception) has no effect on the output buffer.
+

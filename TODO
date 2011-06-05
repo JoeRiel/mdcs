@@ -16,6 +16,14 @@
 	showstat buffer and have it appear in the output buffer,
 	otherwise a lot of buffer changing would be required.
 
+      * Current plan, for "single thread" debugging,
+	is to display two windows, showstat-lve and output.
+	Showstat-dead, when active, will replace output
+	since those two rarely need to be seen concurrently,
+	I think.  New data to the output buffer will cause
+	it to pop forward.
+
+
 ** DONE Insert procedure name in mode-line of showstat buffer
    CLOSED: [2011-06-04 Sat 21:31]
 
@@ -36,13 +44,16 @@
 
    * Method 1 is now implemented. 
 
-** TODO The first field in the mode-line always shows "no-proces".
+** DONE The first field in the mode-line always shows "no-process".
+   CLOSED: [2011-06-05 Sun 06:54]
    
    * The simple fix is to just delete it.  That will also open up more
      room, which will help on the laptop with a split screen.
 
    * A field that needs to be added to the mode-line is the 
      a label identifying the user/job.  
+
+
 
 
 
