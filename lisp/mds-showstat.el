@@ -83,14 +83,6 @@
 ;;}}}
 ;;{{{ constants
 
-
-(defconst mds-showstat-mode-line-format
-  '("%12b"  ; buffer name
-    "   "
-    "%s"    ; status of process
-    "(%m)"  ; mode name
-    ))
-
 ;; regular expressions
 (defconst mds-showstat-where-procname-re "^\\([^ \t\n]+\\): "
   "Match the procname printed by the where command.
@@ -808,11 +800,11 @@ PROC is a string corresponding to the displayed procedure,
 it is displayed in bold after the mode name."
   (setq mode-line-format
 	(list
-	 "  [%s]  "   ;
 	 mode-line-buffer-identification
 	 "   "
 	 mode-line-modes
-	 (propertize (format "(%s)" proc) 'face 'bold)
+	 "---"
+	 (propertize (format "[%s]" proc) 'face 'bold)
 	 "-%-")))
 
 ;;}}}
