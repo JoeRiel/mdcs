@@ -132,14 +132,20 @@ mla: $(mla)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
 	@$(MAPLE) -q -I maple -D BUILD_MLA $^
+
 # }}}
 
 # {{{ install
 
-.PHONY: install-el install-maple install-lisp install-info install
+.PHONY: install-el install-maple install-lisp install-info install install-dev
+
+INSTALLED_EL_FILES = $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
 
 install: $(call print-help,install,Install everything)
 install: install-lisp install-info install-maple
+
+install-dev: $(call print-help,install-dev,Install everything but link el files to source)
+install-dev: install-elc install-info install-maple
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
@@ -151,6 +157,7 @@ install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)
 	@echo "Installing lisp files into $(LISP_DIR)/"
 	@$(MKDIR) $(LISP_DIR)
+	@$(RM) $(INSTALLED_EL_FILES)
 	@$(CP) $+ $(LISP_DIR)
 
 install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
@@ -166,6 +173,15 @@ install-el: $(call print-help,install-el,Install el files but not elc files)
 install-el: $(LISPFILES)
 	$(MKDIR) $(LISP_DIR)
 	$(CP) $+ $(LISP_DIR)
+
+
+# Install elc files but not elc files; instead create symm links to the source
+install-elc: $(call print-help,install-elc,Install elc files and link el files)
+install-elc: $(ELCFILES)
+	$(MKDIR) $(LISP_DIR)
+	$(CP) $+ $(LISP_DIR)
+	@$(RM) $(INSTALLED_EL_FILES)
+	@ln --symbolic --target-directory=$(LISP_DIR) $(LISPFILES)
 
 # }}}
 # {{{ distribution
