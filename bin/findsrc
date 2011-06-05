@@ -1,0 +1,8 @@
+#!/bin/sh
+
+script="$0"
+proc="$1"
+
+MACH="geddes2"
+
+ssh "$MACH" rwhere "$1"

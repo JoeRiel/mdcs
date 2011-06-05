@@ -83,14 +83,6 @@
 ;;}}}
 ;;{{{ constants
 
-
-(defconst mds-showstat-mode-line-format
-  '("%12b"  ; buffer name
-    "   "
-    "%s"    ; status of process
-    "(%m)"  ; mode name
-    ))
-
 ;; regular expressions
 (defconst mds-showstat-where-procname-re "^\\([^ \t\n]+\\): "
   "Match the procname printed by the where command.
@@ -606,8 +598,7 @@ If FMT (prefix arg) is non-nil, display the formatted message,
 otherwise hyperlink the raw message."
   (interactive "P")
   (if fmt
-      (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lasterror')))")
-    ;;(mds-showstat-eval-expr "showerror")
+      (mds-showstat-eval-expr "mdc:-Debugger:-ShowError()")
     (mds-showstat-send-client "showerror\n")
     ))
 
@@ -641,7 +632,7 @@ otherwise run through StringTools:-FormatMessage."
   (if raw
       ;;(mds-showstat-eval-expr "showexception")
       (mds-showstat-send-client "showexception\n")
-    (mds-showstat-eval-expr "printf(\"%s\\n\",StringTools:-FormatMessage(debugopts('lastexception')[2..]))")))
+    (mds-showstat-eval-expr "mdc:-Debugger:-ShowException()")))
 
 ;;}}}
 ;;{{{ (*) Short cuts
@@ -808,11 +799,11 @@ PROC is a string corresponding to the displayed procedure,
 it is displayed in bold after the mode name."
   (setq mode-line-format
 	(list
-	 "  [%s]  "   ;
 	 mode-line-buffer-identification
 	 "   "
 	 mode-line-modes
-	 (propertize (format "(%s)" proc) 'face 'bold)
+	 "---"
+	 (propertize (format "[%s]" proc) 'face 'bold)
 	 "-%-")))
 
 ;;}}}

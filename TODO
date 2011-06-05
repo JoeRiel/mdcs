@@ -36,6 +36,14 @@
 
    * Method 1 is now implemented. 
 
+** TODO The first field in the mode-line always shows "no-proces".
+   
+   * The simple fix is to just delete it.  That will also open up more
+     room, which will help on the laptop with a split screen.
+
+   * A field that needs to be added to the mode-line is the 
+     a label identifying the user/job.  
+
 
 
 * Long Term
