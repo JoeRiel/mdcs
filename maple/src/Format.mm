@@ -14,11 +14,13 @@ export ArgsToEqs
     ,  PrettyPrint
     ,  PrintProc
     ,  showstat
-    ,  stopat
     ,  Try
     ;
 
-local prettyprint,T;
+local indexed2slashed
+    , prettyprint
+    , T
+    ;
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
 
@@ -112,7 +114,7 @@ local prettyprint,T;
                       , rargs :: list
                       , oargs :: list
                      )
-    local defparams, opacity, params, p, pos, i, m, n;
+    local defparams, opacity, params, p, pos, i, m, n, ppargs;
 
         # Assign params the procedure's formal parameters.
         if prc :: procedure then
@@ -155,15 +157,15 @@ local prettyprint,T;
         m := nops(defparams);
         n := nops(pargs) - m;
 
-    local ppargs := ( NULL
-                      , seq(params[i] = pargs[i][], i=1..n)       # required positional
-                      , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
-                      , oargs[]                                   # optional args
-                      , `if`( rargs = []                          # _rest
-                              , NULL
-                              , ':-_rest' = rargs[]
-                            )
-                    );
+        ppargs := ( NULL
+                    , seq(params[i] = pargs[i][], i=1..n)       # required positional
+                    , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
+                    , oargs[]                                   # optional args
+                    , `if`( rargs = []                          # _rest
+                            , NULL
+                            , ':-_rest' = rargs[]
+                          )
+                  );
 
         # return ppargs;
         return prettyprint(false, ppargs);
@@ -225,25 +227,25 @@ local prettyprint,T;
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr, fld, ix, typ;
+    local eqs, ex, expr, fld, ix, typ, opacity;
         if nargs > 2 then
             seq(procname(false,ex), ex in [_rest]);
         else
             expr := _rest;
 
             if expr :: set then
-                if top then printf("(*set: %d*)\n", nops(expr));
+                if top then Debugger:-Printf("(*set: %d*)\n", nops(expr));
                     return `if`(expr = []
-                                , printf("NULL\n")
+                                , Debugger:-Printf("NULL\n")
                                 , expr[]
                                );
                 else
                     return expr;
                 end if;
             elif expr :: list then
-                if top then printf("(*list: %d*)\n", nops(expr));
+                if top then Debugger:-Printf("(*list: %d*)\n", nops(expr));
                     return `if`(expr = []
-                                , printf("NULL\n")
+                                , Debugger:-Printf("NULL\n")
                                 , expr[]
                                );
                 else
@@ -257,7 +259,7 @@ local prettyprint,T;
                                )
                            , fld in [exports(expr)]);
                 if top then
-                    return printf("(*record*)\n"), eqs;
+                    return Debugger:-Printf("(*record*)\n"), eqs;
                 else
                     return 'record'(eqs);
                 end if;
@@ -267,19 +269,19 @@ local prettyprint,T;
                 if attributes(expr)='object' then
                     try
                         if top then
-                            printf("(*object*)\n");
+                            Debugger:-Printf("(*object*)\n");
                         end if;
-                        local opacity := kernelopts('opaquemodules'=false);
+                        opacity := kernelopts('opaquemodules'=false);
                         expr:-ModulePrint;
                         return ModulePrint(expr);
                     catch:
-                        printf("object(...)\n");
+                        Debugger:-Printf("object(...)\n");
                     finally
                         kernelopts('opaquemodules'=opacity);
                     end try;
                     return NULL;
                 elif top then
-                    printf("(*module*)\n");
+                    Debugger:-Printf("(*module*)\n");
                     return seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
                 else
                     return `module() ... end module`; # questionable
@@ -289,16 +291,18 @@ local prettyprint,T;
                 typ := op(0,eval(expr));
                 eqs := seq(ix = procname(false, expr[ix[]]), ix in [indices(expr)]);
                 if top then
-                    return (printf("(*%a*)\n", typ), eqs);
+                    return (Debugger:-Printf("(*%a*)\n", typ), eqs);
                 else
                     return (typ -> 'typ'(eqs))(typ);
                 end if;
+
             elif expr :: procedure then
                 if top then
-                    :-showstat(expr);
+                    Format:-showstat(convert(expr,string));
                     return NULL;
                 else
-                    `proc() ... end proc`;
+                    # this can be improved.
+                    return `proc() ... end proc`;
                 end if;
             elif expr = NULL then
                 return "NULL";
@@ -311,20 +315,6 @@ local prettyprint,T;
     end proc:
 
 #}}}
-#{{{ PrintProc
-
-# Experimental.
-
-$ifdef SKIP
-    PrintProc := proc(nm, prc)
-    local listing;
-        #listing := debugopts('procdump' = prc);
-        #printf("\n%a := %s\n", nm, listing);
-        printf("\n%", showstat(nm));
-    end proc;
-$endif
-
-#}}}
 #{{{ showstat
 
 ##DEFINE CMD showstat
@@ -335,12 +325,13 @@ $endif
 ##CALLINGSEQUENCE
 ##- \CMD('p')
 ##PARAMETERS
-##- 'p' : ::string::
+##- 'p' : ::string::; string corresponding to procedure name
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
 ##- The `\CMD` command
-##  displays a procedure with statement numbers.
+##  formats a procedure with statement numbers
+##  and sends the string to the server.
 ##
 ##- It is essentially equivalent to "showstat",
 ##  but (currently) only takes one argument and
@@ -354,97 +345,31 @@ $endif
 ##
 ##EXAMPLES
 ##> \MOD:-\CMD("int");
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdc:-Format:-showstat):
+##
+##
+## Try("1.0", FUNC("simplify"));
 
     showstat := proc(p :: string)
-    local opacity;
+    local opacity,prc;
+    global _prc;
         try
             opacity := kernelopts('opaquemodules' = false);
-            map2(`debugger/printf`, "\n%s", debugopts('procdump' = parse(p)));
+            prc := parse(p);
+            try
+                eval(prc);
+            catch:
+            end try;
+            prc := sprintf("%A", debugopts('procdump' = prc));
+            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
         return NULL;
     end proc;
-
-#}}}
-#{{{ stopat
-
-##DEFINE CMD stopat
-##PROCEDURE \MOD[\CMD]
-##HALFLINE a fast method to instrument a procedure
-##AUTHOR   Erik Postma
-##DATE     May 2010
-##CALLINGSEQUENCE
-##- \CMD('p', 'n', 'cond')
-##PARAMETERS
-##- 'p'    : ::{name,string}::; procedure to instrument
-##- 'n'    : (optional) ::posint::; statement number
-##- 'cond' : (optional) ::uneval::; condition
-##RETURNS
-##- `NULL`
-##DESCRIPTION
-##- The `\CMD` command
-##  is a fast version of  ":-stopat", with a few modifications.
-##  It sets a breakpoint at a statement number of a procedure.
-##
-##- The 'p' parameter is the procedure to instrument.
-##-- If 'p' is indexed it is converted to a *slashed* name.
-##-- If 'p' is a string it is parsed.
-##  This provides a means to enter a module local procedure without assigning
-##   _kernelopts('opaquemodules'=false)_.
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(Format:-stopat);
-## $define NE testnoerror
-##
-## Try[NE]("1.0", FUNC("int:-ModuleApply"));
-## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
-## Try    ("2.1", FUNC(f,1,i>3));
-## Try    ("2.2", f());
-
-    stopat := proc(p :: {name,string}
-                   , n :: posint
-                   , cond :: uneval
-                   , $ )
-    local
-        pn, opacity, pnm;
-
-        try
-            opacity := kernelopts('opaquemodules'=false);
-
-            if p :: indexed then
-                # Convert indexed to slashed name;
-                # e.g. pkg[func] --> `pkg/func`
-                pn := indexed2slashed(p);
-                if not eval(pn)::procedure
-                or (eval(p)::procedure and not has(eval(p),pn)) then
-                    pn := p;
-                fi;
-            elif p :: string then
-                pn := parse(p);
-            else
-                pn := p;
-            end if;
-
-            # eval in order to make sure everything is loaded from the
-            # library.
-            pnm := eval(pn);
-            while assigned(pnm[':-ModuleApply']) do
-                pnm := eval(pnm:-ModuleApply);
-            end do;
-        finally
-            kernelopts('opaquemodules'=opacity);
-        end try;
-
-        if   _npassed = 1 then debugopts('stopat'=[pn,1])
-        elif _npassed = 2 then debugopts('stopat'=[pn,n])
-        else                   debugopts('stopat'=[pn,n,'cond'])
-        end if;
-
-        return NULL;
-
-    end proc:
 
 #}}}
 #{{{ indexed2slashed
@@ -483,7 +408,6 @@ $endif
 ## Try[TE]("10.1", FUNC(a[]), err);
 ## Try[TE]("10.2", FUNC(a[1,2]), err);
 
-local
     indexed2slashed := proc(nm :: name, $)
         if nm :: indexed then
             if nops(nm) <> 1 then

@@ -1,9 +1,9 @@
 \input texinfo
 @c %***start of header
 @setfilename mds
-@settitle The Mds Manual
+@settitle The Emacs Maple Debug Server Manual
 
-@set VERSION 1.2b
+@set VERSION 0.1
 @set DATE May 2010
 
 @dircategory Emacs
@@ -15,18 +15,18 @@
 @c @set MAINTAINERSITE @uref{http://orgmode.org,maintainers webpage}
 @set AUTHOR Joe Riel
 @set MAINTAINER Joe Riel
-@set MAINTAINEREMAIL @email{joer at san dot rr dot com}
-@set MAINTAINERCONTACT @uref{mailto:joer at san dot rr dot com,contact the maintainer}
+@set MAINTAINEREMAIL @email{jriel at san dot rr dot com}
+@set MAINTAINERCONTACT @uref{mailto:jriel at maplesoft dot com,contact the maintainer}
 @c %**end of header
 @finalout
 
 @copying
-Mds is a GNU Emacs major mode for debugging Maple code.
+EMDS is an Emacs package for debugging Maple code.
 Maple is a computer algebra system from Maplesoft Inc.
 
-This manual is for Mds version @value{VERSION}.
+This manual is for EMDS version @value{VERSION}.
 
-Copyright @copyright{} 2009, Joseph S. Riel
+Copyright @copyright{} 2011, Joseph S. Riel
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -39,7 +39,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The Mds Manual
+@title The EMDCS Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -132,12 +132,31 @@ Command and Variable Index
 @section Summary
 @cindex summary
 
-Mds is an Emacs front-end to the Maple command-line debugger.
-It acts as a source code debugger for Maple procedures.
-It is not a true source code debugger in that it steps through
-the interpreted Maple code, which does not include comments
-and other non-executed Maple statements,
-rather than the actual source.
+EMDS, the ``Emacs Maple Debug Server'', is an Emacs frontend
+to the Maple debugger.  It is a successor to `mdb'.  
+The primary difference is that it communicates to the 
+Maple engine via TCP rather than through pipes, and
+can handle concurrent debug sessions.  These
+two changes enable useful new functionality:
+
+@itemize @bullet
+@item
+debugs Maple code run on the standard GUI as well as the tty interface.
+@item
+works with the Grid and Threads Maple packages.
+Separate processes/threads can be stepped through
+individually.
+@item
+installs easily on Windows, Macs, and Linux.
+No compilation necessary.
+@item
+permits differential debugging, that is, comparing
+the output of two code bases, or the same code base
+run on different machines.
+@end itemize
+
+The user interface to EMDS is similar to that of mdb.
+It provides the following features.
 
 @itemize @bullet
 @item
