@@ -1,7 +1,14 @@
 *~
 /doc/*
 !/doc/*.texi
+
+# for now
+/maple/tst
+/maple/Browser
+
 *.mla
+
 /lisp/*.elc
+/lisp/tst
 /ChangeLog
 _preview_.mm
