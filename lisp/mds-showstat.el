@@ -202,28 +202,22 @@ call (maple) showstat to display the new procedure."
 	       (not at-first-state))
 	  
 	  ;; procname has not changed.
-	  ;;
-	  ;; Assume we are in the same procedure (not robust).
-	  ;; Move the arrow.
+	  ;; Move the arrow
 	  (mds-showstat-display-state state)
 
-	;; procname has changed.
-
+	;; procname has changed (or we entered it recursively).
+	;; Update the variable and set the mode-line
 	(setq mds-showstat-procname procname)
 	(mds-showstat-set-mode-line procname)
 
-	;; Update the buffer with procname and, if entering procname,
-	;; the values of its arguments. First determine whether we just
-	;; entered procname or are continuing (this may not be robust).
-	
-	;; Send procname (just the name) with appropriate face
-	;; to the output buffer
+	;; Send procname to the output buffer
 	(mds-output-display
 	 (mds--get-client-out-buf mds-client)
 	 (format "%s:\n" procname)
 	 'PROCNAME
 	 )
 
+	;; Update the output buffer with procname.
 	;; (propertize procname
 	;; 		   'face (if at-first-state
 	;; 			     'mds-face-procname-entered
@@ -387,25 +381,21 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "cont"))
 
 (defun mds-into ()
   "Send the 'into' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "into"))
 
 (defun mds-next ()
   "Send the 'next' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "next"))
 
 (defun mds-outfrom ()
   "Send the 'outfrom' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "outfrom"))
 
 (defun mds-quit ()
@@ -416,13 +406,11 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mds-return ()
   "Send the 'return' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "return"))
 
 (defun mds-step ()
   "Send the 'step' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "step"))
 
 ;;}}}
