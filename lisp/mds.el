@@ -406,6 +406,8 @@ use them to route the message."
      ;; msg is the state output from debugger.  
      ;; Extract the procname and state number
      ;; and update the showstat buffer
+     ((string= tag "DBG_PROMPT")
+      (mds-output-display out-buf nil 'prompt))
      ((string= tag "DBG_STATE")
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")

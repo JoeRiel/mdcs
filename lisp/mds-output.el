@@ -104,6 +104,8 @@ If optional TAG is present, insert it into the buffer before MSG."
 
 ;;{{{ mds-output-display
 
+(defvar mds-output-prompt "(**) ")
+
 (defun mds-output-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
@@ -120,6 +122,8 @@ Optional TAG identifies the message type."
 	      ;; string tag (temporary)
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
+	     ;; prompt
+	     ((eq tag 'prompt) (insert mds-output-prompt))
 	     ;; stack
 	     ((eq tag 'stack)
 	      (mds-insert-tag tag) (setq beg (point))
