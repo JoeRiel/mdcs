@@ -112,7 +112,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds mds-showstat mds-output
+ELS = mds mds-showstat mds-output mds-windows
 
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
@@ -152,7 +152,8 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 
 .PHONY: install-el install-maple install-lisp install-info install install-dev
 
-INSTALLED_EL_FILES = $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
+INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
+INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELCFILES)))
 
 install: $(call print-help,install,Install everything)
 install: install-lisp install-info install-maple
@@ -189,9 +190,9 @@ install-el: $(LISPFILES)
 
 
 # Install elc files but not elc files; instead create symm links to the source
-install-elc: $(call print-help,install-elc,Install elc files and link el files)
+install-elc: $(call print-help,install-elc,Install elc files and link *.el files)
 install-elc: $(ELCFILES)
-	@echo "Installing elc files, and symbolic links to el files, into $(LISP_DIR)"
+	@echo "Installing elc files, and symbolic links to *.el files, into $(LISP_DIR)"
 	@$(MKDIR) $(LISP_DIR)
 	@$(CP) $+ $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
@@ -213,13 +214,19 @@ $(PKG).zip: $(dist)
 
 # {{{ clean
 
-.PHONY: clean
+.PHONY: clean cleanall
 
-clean: $(call print-help,clean,Remove files)
+clean: $(call print-help,clean,Remove built files)
 clean:
 	-$(RM) lisp/*.elc
 	-$(RM) $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla)
+
+cleanall: $(call print-help,cleanall,Remove installed files and built files)
+cleanall: clean
+	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
+	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla)
+	-$(RM) $(INFO_DIR)/$(INFOFILES)
 
 # }}}
 
