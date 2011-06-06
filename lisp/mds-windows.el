@@ -45,7 +45,7 @@ frame, the showstat buffer on the left.  Return nil."
       (if (> ht mx)
 	  (setq mx ht
 		win (car windows)))
-      (windows (cdr windows)))
+      (setq windows (cdr windows)))
     win))
 
 (provide 'mds-windows)
