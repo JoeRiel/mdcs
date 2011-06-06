@@ -122,6 +122,8 @@ Optional TAG identifies the message type."
 	      ;; string tag (temporary)
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
+	     ;; cmd
+	     ((eq tag 'cmd) (insert msg "\n"))
 	     ;; prompt
 	     ((eq tag 'prompt) (insert mds-output-prompt))
 	     ;; stack
