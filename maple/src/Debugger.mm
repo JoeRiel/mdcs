@@ -157,12 +157,12 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         #{{{ Get response (from emacs)
 
         do
+            debugger_printf(DBG_PROMPT, ">");
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
-            debugger_printf(DBG_PROMPT, ">");
             res := traperror(Read());
             if res <> lasterror then break fi;
-            printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
+            debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
         od;
 
         #}}}
@@ -249,6 +249,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         #}}}
 
         return res;
+
     end proc:
 
 #}}}
