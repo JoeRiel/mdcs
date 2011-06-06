@@ -36,14 +36,6 @@
      statement.  The relevant procedure is determined by se
 
 
-      * Current plan, for "single thread" debugging,
-	is to display two windows, showstat-lve and output.
-	Showstat-dead, when active, will replace output
-	since those two rarely need to be seen concurrently,
-	I think.  New data to the output buffer will cause
-	it to pop forward.
-
-
 ** DONE Insert procedure name in mode-line of showstat buffer
    CLOSED: [2011-06-04 Sat 21:31]
 
@@ -80,7 +72,7 @@
      client together.
 
    * Current plan, for "single thread" debugging, is to display two
-     windows, showstat-lve and output.  Showstat-dead, when active,
+     windows, showstat-live and output.  Showstat-dead, when active,
      will replace output since those two rarely need to be seen
      concurrently, I think.  New data to the output buffer will cause
      it to pop forward.
@@ -91,8 +83,9 @@
      hyperlinks cause the dead buffer to replace the output buffer,
      then we have to manually bring the output buffer forward to click
      on another.  A better strategy, by default, is to have the dead
-     buffer and the live buffer share the same window.  
-
+     buffer and the live buffer share the same window.  An alternative
+     is to split the showstat window vertically when needed.  Trying 
+     the first one first.
 
 
 * Long Term

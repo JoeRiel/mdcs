@@ -14,6 +14,7 @@
 
 (require 'maplev)
 (require 'mds-output)
+(require 'mds-windows)
 (eval-when-compile
   (require 'hl-line))
 
@@ -188,8 +189,8 @@ already displaying PROCNAME, then just move the arrow; otherwise
 call (maple) showstat to display the new procedure."
 
   (with-current-buffer buf
-      ;; save the procname and the state
 
+    ;; save the procname and the state
     (setq mds-showstat-state state)
 
     ;; Revert cursor-type to ready status.
@@ -202,7 +203,7 @@ call (maple) showstat to display the new procedure."
 	  ;;
 	  ;; Assume we are in the same procedure (not robust).
 	  ;; Move the arrow.
-	  (mds-showstat-display-state)
+	  (mds-showstat-display-state state)
 
 	;; procname has changed.
 
@@ -233,10 +234,13 @@ call (maple) showstat to display the new procedure."
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
 ;;}}}
-;;{{{ (*) mds-showstat-display-inactive
+;;{{{ (*) mds-showstat-send-showstat
 
 ;; RENAME; this doesn't 'display' (directly)...
-(defun mds-showstat-display-inactive (procname statement)
+(defun mds-showstat-send-showstat (procname statement)
+  "Query the client to send the showstat information for PROCNAME.
+The output will be displayed in the dead showstat buffer.
+Set the buffer-local variables `mds-showstat-procname' and `mds-showstat-statement'."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
 	  mds-showstat-statement statement))
@@ -247,7 +251,8 @@ call (maple) showstat to display the new procedure."
 
 (defun mds-showstat-display (buf proc)
   "Insert Maple procedure PROC into the showstat buffer.
-PROC is the output of a call to showstat."
+PROC is the output of a call to showstat.  Use and update
+the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
   (with-current-buffer buf
 
     (let ((buffer-read-only nil))
@@ -261,7 +266,7 @@ PROC is the output of a call to showstat."
 
       ;; Update `mds-showstat-procname' by extracting the value from
       ;; the inserted text. It is frequently already correct, because
-      ;; was assigned in mds-showstat-display-inactive, however, it
+      ;; was assigned in mds-showstat-send-showstat, however, it
       ;; will not be assigned if the update was via
       ;; `mds-eval-and-prettyprint'.
 
@@ -271,49 +276,56 @@ PROC is the output of a call to showstat."
       ;; Update the mode-line; this adds the procname to the mode-line
       (mds-showstat-set-mode-line mds-showstat-procname)
 
-      ;; Goto current state
-      (unless (or mds-showstat-live (string= "" mds-showstat-statement))
-	(if (search-forward (concat " " mds-showstat-statement) nil t)
+      ;; Update state information and, if appropriate, move the arrow.
+      (if mds-showstat-live
+	  ;; Move the state arrow
+	  (mds-showstat-display-state mds-showstat-state)
+	(if (string= "" mds-showstat-statement)
+	    (setq mds-showstat-state 0)  ;; illegal state
+	  (if (not (search-forward (concat " " mds-showstat-statement) nil t))
+	      ;; this has never occurred.
+	      (error "cannot find statement in procedure body")
+	    ;; save state and clear statement
 	    (setq mds-showstat-state (mds-showstat-get-state)
-		  ;; clear variable so next time we do not search.
 		  mds-showstat-statement "")
-	  (error "cannot find statement in procedure body")))
-      ;; Set the state arrow
-      (mds-showstat-display-state)
-      (display-buffer buf))))
+	    ;; Move the state arrow
+	    (mds-showstat-display-state mds-showstat-state))))
+
+      ;; Make buffer visible
+      (if mds-showstat-live
+	  (display-buffer buf)
+	(mds-windows-display-dead mds-client)))))
 ;;}}}
 ;;{{{ (*) mds-showstat-display-state
 
-(defun mds-showstat-display-state ()
-  "Move the overlay arrow in the showstat buffer to current state
-and ensure that the buffer and line are visible.  The current
-state is stored in `mds-showstat-state'.  If the `hl-line'
+(defun mds-showstat-display-state (state)
+  "Move the overlay arrow in the showstat buffer to STATE and
+ensure that the buffer and line are visible.  If the `hl-line'
 feature is present in this session, then highlight the line.
 POINT is moved to the indentation of the current line."
-  (let ((buffer-read-only nil)
-	(state mds-showstat-state))
+  (let ((buffer-read-only nil))
     ;; Find the location of STATE in the buffer.
     (goto-char (point-min))
-    (re-search-forward (concat "^ *" state "[ *?]\\(!\\)?"))
-    ;; Remove the bang, which showstat uses to mark the current state.
-    (if (match-string 1)
-	(replace-match " " nil nil nil 1))
-    ;; Move the arrow marker to the left margin of the state.
-    (beginning-of-line)
-    (or mds-showstat-arrow-position
-	(setq mds-showstat-arrow-position (make-marker)))
-    (set-marker mds-showstat-arrow-position (point))
-    ;; If `hl-line' is enabled, highlight the line.
-    (when (featurep 'hl-line)
-      (cond
-       (global-hl-line-mode
-	(global-hl-line-highlight))
-       ((and hl-line-mode hl-line-sticky-flag)
-	(hl-line-highlight))))
-    ;; Move point to indentation of the current line (not including the state number).
-    (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
-  ;; Ensure marker is visible in buffer.
-  (set-window-point (get-buffer-window) (point)))
+    (when (re-search-forward (concat "^ *" state "[ *?]\\(!\\)?") nil 't)
+      ;; Remove the bang, which showstat uses to mark the current state.
+      (if (match-string 1)
+	  (replace-match " " nil nil nil 1))
+      ;; Move the arrow marker to the left margin of the state.
+      (beginning-of-line)
+      (or mds-showstat-arrow-position
+	  (setq mds-showstat-arrow-position (make-marker)))
+      (set-marker mds-showstat-arrow-position (point))
+      ;; If `hl-line' is enabled, highlight the line.
+      (when (featurep 'hl-line)
+	(cond
+	 (global-hl-line-mode
+	  (global-hl-line-highlight))
+	 ((and hl-line-mode hl-line-sticky-flag)
+	  (hl-line-highlight))))
+      ;; Move point to indentation of the current line (not including the state number).
+      (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
+    ;; Ensure marker is visible in buffer.
+    (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
 
@@ -622,7 +634,7 @@ otherwise hyperlink the raw message."
   (save-excursion
     (beginning-of-line)
     (if (looking-at mds-link-error-re)
-	(mds-showstat-display-inactive (match-string-no-properties 1) nil))))
+	(mds-showstat-send-showstat (match-string-no-properties 1) nil))))
 
 (defun mds-showexception (raw)
   "Send the 'showexception' command to the debugger.
@@ -723,7 +735,7 @@ which is the output of `mds-where'."
       (let ((procname (match-string-no-properties 1))
 	    (statement (buffer-substring-no-properties
 			(match-end 0) (line-end-position))))
-	(mds-showstat-display-inactive procname statement)))))
+	(mds-showstat-send-showstat procname statement)))))
 
 
 ;; (defun mds-pop-to-mds-buffer ()
