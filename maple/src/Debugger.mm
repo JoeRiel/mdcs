@@ -41,6 +41,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
     , getname
     , replaced := false
+    , logfile  := "readline.log"
+    , logpid
 
     ;
 
@@ -65,6 +67,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             #printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
+            logpid := fopen(logfile,'APPEND','TEXT');
         end if;
         return NULL;
     end proc;
@@ -166,6 +169,11 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         od;
 
         #}}}
+
+        fprintf(logpid, "[%s]\n", res);
+        fflush(logpid);
+
+
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
