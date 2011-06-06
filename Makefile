@@ -28,6 +28,7 @@ build: byte-compile compile doc mla
 EMACS := emacs
 ifeq ($(OS),Cygwin)
   MAPLE := cmaple
+  INSTALL_INFO = install-info
 else
   MAPLE := maple
 ifeq ($(OS),GNU/Linux)
