@@ -87,6 +87,29 @@
      is to split the showstat window vertically when needed.  Trying 
      the first one first.
 
+   * Went with a really simple approach, which works but isn't nice if
+     the user adds other buffers.  
+
+   * Here's a new idea:
+     
+     1) Check if dead-buf is visible; if so we're done.
+	Not quite.  There may be more than one visible.
+	Let Emacs window manager deal with that issue for now.
+
+     2) Next check if out-buf is visible; if so, split it vertically
+        and display dead-buf in lower half.  A refinement is
+        necessary, if out-buf is too small to split vertically, then
+        increase its height before splitting.
+
+     3) If neither buffer is visible, then create the initial
+        configuration, and goto 1.
+
+	This approach works reasonably well, at least with one client.
+	Is currently implemented.
+
+
+     
+
 
 * Long Term
  
