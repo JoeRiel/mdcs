@@ -2,19 +2,39 @@
 
 * Short Term
 
-** TODO  Decide how the output buffer should look.  
+** TODO Decide how the output buffer should look.  
 
-      * Should it mimic what is done in mdb, that is, when an input is
-        entered by user (using 'e' or '.'), it echos the command, then
-        displays the output.
+   * Should it mimic what is done in mdb, that is, when an input is
+     entered by user (using 'e' or '.'), it echos the command, then
+     displays the output.
 
-      * Alternately, should it show a prompt and allow the user to
-	enter commands there?  Essentially mimicing the tty debugger
-	interface, but with the current state suppressed. That seems
-	more difficult to implement but potentially more useful.  I
-	would still want the ability to evaluate stuff from the
-	showstat buffer and have it appear in the output buffer,
-	otherwise a lot of buffer changing would be required.
+   * Alternately, should it show a prompt and allow the user to enter
+     commands there?  Essentially mimicing the tty debugger interface,
+     but with the current state suppressed. That seems more difficult
+     to implement but potentially more useful.  I would still want the
+     ability to evaluate stuff from the showstat buffer and have it
+     appear in the output buffer, otherwise a lot of buffer changing
+     would be required.
+
+   * It would be useful to associate the output lines with the inputs
+     (in showstat) that generated them.  That is only partially
+     doable.  Suppose we are at statement 3, with a breakpoint
+     at statement 10.  Executing "continue" moves the cursor
+     to statement 10 and prints last generated output, which could
+     be from anywhere.  That could be indicated with a display
+     that looks like
+
+     [[int:-ModuleApply]]
+     args := a
+           , b
+           , c:
+     (*  [[3]] *) cont
+     some output ...
+     (* [[10]] *) 
+
+     The lines have buttons; clicking on them moves the cursor to that
+     statement.  The relevant procedure is determined by se
+
 
 ** DONE Insert procedure name in mode-line of showstat buffer
    CLOSED: [2011-06-04 Sat 21:31]
@@ -36,7 +56,8 @@
 
    * Method 1 is now implemented. 
 
-** TODO The first field in the mode-line always shows "no-proces".
+** DONE The first field in the mode-line always shows "no-process".
+   CLOSED: [2011-06-05 Sun 06:54]
    
    * The simple fix is to just delete it.  That will also open up more
      room, which will help on the laptop with a split screen.
@@ -44,6 +65,50 @@
    * A field that needs to be added to the mode-line is the 
      a label identifying the user/job.  
 
+
+** TODO Implement a window manager
+
+   * Something simple that keeps the related windows of one
+     client together.
+
+   * Current plan, for "single thread" debugging, is to display two
+     windows, showstat-live and output.  Showstat-dead, when active,
+     will replace output since those two rarely need to be seen
+     concurrently, I think.  New data to the output buffer will cause
+     it to pop forward.
+
+   * Hmm.  That doesn't quite work (implemented in windows-manager
+     branch).  The problem occurs with the call stack; it generally
+     displays multiple procedures.  If clicking on one of the
+     hyperlinks cause the dead buffer to replace the output buffer,
+     then we have to manually bring the output buffer forward to click
+     on another.  A better strategy, by default, is to have the dead
+     buffer and the live buffer share the same window.  An alternative
+     is to split the showstat window vertically when needed.  Trying 
+     the first one first.
+
+   * Went with a really simple approach, which works but isn't nice if
+     the user adds other buffers.  
+
+   * Here's a new idea:
+     
+     1) Check if dead-buf is visible; if so we're done.
+	Not quite.  There may be more than one visible.
+	Let Emacs window manager deal with that issue for now.
+
+     2) Next check if out-buf is visible; if so, split it vertically
+        and display dead-buf in lower half.  A refinement is
+        necessary, if out-buf is too small to split vertically, then
+        increase its height before splitting.
+
+     3) If neither buffer is visible, then create the initial
+        configuration, and goto 1.
+
+	This approach works reasonably well, at least with one client.
+	Is currently implemented.
+
+
+     
 
 
 * Long Term

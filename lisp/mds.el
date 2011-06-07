@@ -48,6 +48,7 @@
 
 (require 'mds-output)
 (require 'mds-showstat)
+(require 'mds-windows)
 (require 'maplev)
 (eval-when-compile
   (require 'hl-line))
@@ -80,6 +81,7 @@ group 1 matches tag-name.")
 The first group identifies SOMETHING.")
 
 (defconst mds-end-of-msg-re "---EOM---")
+
 
 ;;}}}
 
@@ -184,14 +186,13 @@ If none, then return nil."
     ;;   (mds-add-client (mds-create-client proc "dummy id"))
     ;;   'accepted)))
 
-(defun mds-set-client-status (proc status)
-  (let ((client (assoc proc mds-clients)))
-    (if client (setcar (cdr client) status))))
+(defun mds-set-status-client (client status)
+  (if client (setcar (cdr client) status)))
 
 ;;}}}
 ;;{{{ Client association list
 
-(defsubst mds-get-client (proc) (assoc proc mds-clients))
+(defsubst mds-get-client-from-proc (proc) (assoc proc mds-clients))
 
 (defun mds-delete-client (client)
   "Delete CLIENT from `mds-clients'.  Stop the associated process,
@@ -277,7 +278,7 @@ Do not touch `mds-log-buffer'."
       ;; Delete associated buffers.
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
-		       (if (mds-delete-client (mds-get-client proc))
+		       (if (mds-delete-client (mds-get-client-from-proc proc))
 			   "accepted " ""))))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
@@ -296,12 +297,14 @@ Do not touch `mds-log-buffer'."
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (let ((queue (mds--get-client-queue (mds-get-client proc))))
+      (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
      ((eq status 'new)
       (beep)
-      (mds-set-client-status proc 'accepted)
-      (mds-filter proc msg))
+      (let ((client (mds-get-client-from-proc proc)))
+	(mds-set-status-client client 'accepted)
+	(mds-windows-display-client client)
+	(mds-filter proc msg)))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -353,7 +356,7 @@ If found, pass it to the function in the queue."
 	    (delete-region (point-min) (point))
 	    ;; send msg to correspond showstat filter
 	    (let* ((proc (mds-queue-proc queue))
-		   (client (mds-get-client proc)))
+		   (client (mds-get-client-from-proc proc)))
 	      (with-current-buffer (mds--get-client-live-buf client)
 		(mds-handle-stream proc msg)))))))))
 
@@ -390,7 +393,7 @@ is not checked and will likely be removed from the protocol."
 The end of message marker has been removed.  Strip the tags and
 use them to route the message."
 
-  (let* ((client (mds-get-client proc))
+  (let* ((client (mds-get-client-from-proc proc))
 	 (live-buf (mds--get-client-live-buf client))
 	 (dead-buf (mds--get-client-dead-buf client))
 	 (out-buf  (mds--get-client-out-buf client))
@@ -401,22 +404,27 @@ use them to route the message."
     ;; route MSG to proper buffer
     ;;    (with-syntax-table maplev--symbol-syntax-table
     (cond
+     ((string= tag "DBG_PROMPT")
+      ;; Extract the state-number and pass it along
+      (mds-output-display out-buf 
+			  (buffer-local-value 'mds-showstat-state live-buf)
+			  'prompt))
+     ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
      ;; Extract the procname and state number
      ;; and update the showstat buffer
-     ((string= tag "DBG_STATE")
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
 	(mds-showstat-update live-buf 
 			     (match-string 1 msg)    ; procname
 			     (match-string 2 msg)))) ; state
+     ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-     ((string= tag "DBG_SHOW")
       (mds-showstat-display live-buf msg))
+     ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
      ;; Display in showstat buffer.
-     ((string= tag "DBG_SHOW_INACTIVE")
       (mds-showstat-display dead-buf msg))
      
      ((string= tag "DBG_WHERE")
@@ -449,6 +457,21 @@ use them to route the message."
   (and (bufferp buf)
        (buffer-name buf)
        (kill-buffer buf)))
+
+;;}}}
+
+;;{{{ mds-cycle-clients
+
+(defun mds-cycle-clients ()
+  "Pop to first client on list, the rotate list."
+  (interactive)
+  (if mds-clients
+      (let* ((L mds-clients)
+	     (client (car L)))
+	;; rotate list
+	(setq mds-clients (reverse (cons client (reverse (cdr L)))))
+	;; display the live buffer.  Maybe the whole thing...
+	(mds-windows-display-client client))))
 
 ;;}}}
 
