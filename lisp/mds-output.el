@@ -138,6 +138,9 @@ Optional TAG identifies the message type."
 	      (mds-output-hyperlink-prompt beg (1- (point)))
 	      (delete-region (point) (line-end-position)))
 
+	     ((eq tag 'output)
+	      (insert msg))
+
 	     ((eq tag 'procname)
 	      (insert msg)
 	      (mds-output-hyperlink-view-procname beg (point))
@@ -166,6 +169,11 @@ Optional TAG identifies the message type."
 	     ((eq tag 'args)
 	      ;; args
 	      (mds-insert-and-font-lock msg 'mds-args-face tag))
+
+	     ((eq tag 'printf)
+	      ;; insert msg, but no newline; this could screw-up format
+	      ;; but need to trust user here. 
+	      (insert msg))
 
 	     ((eq tag 'warn)
 	      ;; warning

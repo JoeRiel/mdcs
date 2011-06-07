@@ -146,14 +146,16 @@ Save CMD in `mds-showstat-last-debug-cmd'.  Change cursor type to
 response from Maple.  This function assumes we are in the
 appropriate `mds-showstat-buffer'."
   (setq mds-showstat-last-debug-cmd cmd)
-  (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
-  ;;(sleep-for 0.1)
   (setq cursor-type mds-cursor-waiting)
   (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
-  (mds-showstat-send-client cmd))
+  (mds-showstat-eval-expr cmd))
 
-(defun mds-showstat-eval-expr (expr)
+(defun mds-showstat-eval-expr (expr &optional noecho)
   "Send EXPR, with appended newline, to the Maple process."
+  ;; echo to output buffer;  Hmm, that won't work if
+  ;; the input was typed in the output buffer.
+  (unless noecho
+    (mds-output-display (mds--get-client-out-buf mds-client) expr 'cmd))
   (mds-showstat-send-client (concat expr "\n")))
 
 ;;}}}
@@ -569,7 +571,7 @@ With optional prefix, clear debugger output before displaying."
   (interactive (list (mds-ident-around-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mds-output-clear))
-  (mds-showstat-send-client (format "mdc:-Format:-PrettyPrint(%s)\n" expr)))
+  (mds-showstat-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
 
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
@@ -577,7 +579,7 @@ If called interactively, EXPR is queried."
   (interactive (list (mds-ident-around-point-interactive
 		      "eval: " "")))
   (if current-prefix-arg (mds-output-clear))
-  (mds-showstat-send-client (concat expr "\n")))
+  (mds-showstat-eval-expr expr))
 
 
 (defun mds-eval-and-display-expr-global (expr)
