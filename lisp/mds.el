@@ -460,6 +460,21 @@ use them to route the message."
 
 ;;}}}
 
+;;{{{ mds-cycle-live-buffers
+
+(defun mds-cycle-clients ()
+  "Pop to first client on list, the rotate list."
+  (interactive)
+  (if mds-clients
+      (let* ((L mds-clients)
+	     (client (car L)))
+	;; rotate list
+	(setq mds-clients (reverse (cons client (reverse (cdr L)))))
+	;; display the live buffer.  Maybe the whole thing...
+	(pop-to-buffer (mds--get-client-live-buf client)))))
+
+;;}}}
+
 ;;{{{ log stuff
 
 (defun mds-writeto-log (proc msg)
