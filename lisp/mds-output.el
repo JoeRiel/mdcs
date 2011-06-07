@@ -114,28 +114,45 @@ Optional TAG identifies the message type."
     (with-selected-window (get-buffer-window buf)
       (with-current-buffer buf
 	(goto-char (point-max))
-	(let ((beg (point)))
-	  (if (not tag)
-	      (insert msg)
+	(if (not tag)
+	    (insert msg)
+	  (let ((beg (point)))
 	    (cond
 	     ((stringp tag)
 	      ;; string tag (temporary)
-	      (mds-insert-tag tag) (setq beg (point))
+	      (mds-insert-tag tag) 
 	      (insert msg))
-	     ;; cmd
-	     ((eq tag 'cmd) (insert msg "\n"))
-	     ;; prompt
-	     ((eq tag 'prompt) (insert mds-output-prompt))
-	     ;; stack
+	     
+	     ((eq tag 'cmd)
+	      ;; Command
+	      (insert msg "\n"))
+	     
+	     ((eq tag 'prompt)
+	      ;; Insert prompt, with statement number (msg) embedded.
+	      ;; Goto to beginning of line and replace line, that way
+	      ;; an existing prompt is replaced.
+	      (beginning-of-line)
+	      (setq beg (point))
+	      (insert "(*" msg "*) ")
+	      (mds-output-hyperlink-view-procname beg (1- (point)))
+	      (delete-region (point) (line-end-position)))
+
+	     ((eq tag 'procname)
+	      (insert msg)
+	      (mds-output-hyperlink-view-procname beg (point))
+	      (insert "\n"))
+	     
 	     ((eq tag 'stack)
-	      (mds-insert-tag tag) (setq beg (point))
+	      ;; stack
+	      ;; (mds-insert-tag tag) (setq beg (point))
 	      (insert msg)
 	      (if (string= msg "TopLevel\n")
 		  (mds-put-face beg (point) 'mds-inactive-link-face)
-		(make-text-button beg (1- (point)) :type 'mds-output-view-proc-button)))
-	     ;; where
+		(mds-output-hyperlink-view-procname beg (1- (point)))))
+
 	     ((eq tag 'where)
-	      (mds-insert-tag tag) (setq beg (point))
+	      ;; where
+	      ;;(mds-insert-tag tag) (setq beg (point))
 	      (insert msg)
 	      (goto-char beg)
 	      (let ((toplev (looking-at "TopLevel")))
@@ -143,17 +160,26 @@ Optional TAG identifies the message type."
 		  (error "no delimiter"))
 		(if toplev
 		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
-		  (make-text-button beg (- (point) 2) :type 'mds-output-view-proc-button))))
-	     ;; args
-	     ((eq tag 'args) (mds-insert-and-font-lock msg 'mds-args-face tag))
-	     ;; warning
-	     ((eq tag 'warn) (mds-insert-and-font-lock msg 'mds-warning-face tag))
-	     ;; maple error
-	     ((eq tag 'maple-err) (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
-	     ;; maple parser error
-	     ((eq tag 'parser-err) (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
-	     ;; unknown tag
+		  (mds-output-hyperlink-view-procname beg (- (point) 2)))))
+
+	     ((eq tag 'args)
+	      ;; args
+	      (mds-insert-and-font-lock msg 'mds-args-face tag))
+
+	     ((eq tag 'warn)
+	      ;; warning
+	      (mds-insert-and-font-lock msg 'mds-warning-face tag))
+
+	     ((eq tag 'maple-err)
+	      ;; maple error
+	      (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
+	     
+	     ((eq tag 'parser-err) 
+	      ;; maple parser error
+	      (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
+
 	     ((and tag (symbolp tag))
+	      ;; unknown tag
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
 	     )))
@@ -163,13 +189,62 @@ Optional TAG identifies the message type."
 
 ;;{{{ Buttons
 
-;; define button used to hyperlink procnames
-(define-button-type 'mds-output-view-proc-button
+(defun mds-output-goto-proc-button-p (pos)
+  "Return non-nil if text at POS is part of a button that calls `mds-output-goto-proc'."
+  (interactive)
+  (let ((symb (get-text-property pos 'category)))
+    (and symb (eq (get symb 'type) 'mds-output-goto-proc))))
+
+;; define button used to hyperlink procnames;
+;; use this one for current procname 
+(define-button-type 'mds-output-goto-proc
   'help-echo "Open procedure"
   'action 'mds-output-view-procedure
   'follow-link t
   'face 'link)
 
+(defun mds-output-hyperlink-goto-procname (beg end)
+  "Make region between BEG and END jump to that procedure."
+  (make-text-button beg end :type 'mds-output-goto-proc))
+
+;; define button used to hyperlink procnames
+(define-button-type 'mds-output-view-proc
+  'help-echo "Open procedure"
+  'action 'mds-output-view-procedure
+  'follow-link t
+  'face 'link)
+
+
+(defun mds-output-hyperlink-view-procname (beg end)
+  "Make region between BEG and END jump to that procedure."
+  (make-text-button beg end :type 'mds-output-view-proc))
+
+;; define button used to hyperlink prompts
+(define-button-type 'mds-output-goto-line
+  'help-echo "Jump to line"
+  'action 'mds-output-goto-line
+  'follow-link t
+  'face 'link)
+
+(defun mds-output-hyperlink-prompt (beg end)
+  "Make region between BEG and END ..."
+  (make-text-button beg end :type 'mds-output-goto-line))
+
+(defun mds-output-goto-line (button)
+  (save-excursion ;; FIXME: why:
+    (beginning-of-line)
+    ;; extract statement number embedded in prompt
+    (when (looking-at "(\*\\([0-9]+\\)\*)")
+      (let ((state (match-string 1))
+	    fnd)
+	;; search backward for the previous procname
+	;; Need to exclude output from where/showstack
+	;; Can we search for a text property?
+	(while (and
+		(re-search-backward "^\\([A-Za-z0-9:_`-]+\\)$" nil 'move)
+		(setq fnd (mds-output-goto-proc-button-p (point))))
+	  (if fnd
+	      (let ((procname (match-string 0))))))))))
 ;;}}}
 
 ;;{{{ mds-output-view-procedure
@@ -181,8 +256,8 @@ optional statement (call) from the output generated by the
 `mds-showstat-send-showstat' to display the procedure."
   (save-excursion
     (beginning-of-line)
-    ;; temporary to jump over tag
-    (search-forward " ")
+    ;; FIXME: temporary to jump over tag
+    ;; (search-forward " ")
     (unless (looking-at "TopLevel")
       (looking-at mds-output-procname-re)
       (let ((procname (match-string-no-properties 1))

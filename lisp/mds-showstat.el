@@ -146,8 +146,8 @@ Save CMD in `mds-showstat-last-debug-cmd'.  Change cursor type to
 response from Maple.  This function assumes we are in the
 appropriate `mds-showstat-buffer'."
   (setq mds-showstat-last-debug-cmd cmd)
-  (mds-output-display (mds--get-client-out-buf mds-client) (concat "{" cmd "}") 'cmd)
-  (sleep-for 0.1)
+  (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
+  ;;(sleep-for 0.1)
   (setq cursor-type mds-cursor-waiting)
   (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-showstat-send-client cmd))
@@ -213,8 +213,8 @@ call (maple) showstat to display the new procedure."
 	;; Send procname to the output buffer
 	(mds-output-display
 	 (mds--get-client-out-buf mds-client)
-	 (format "%s:\n" procname)
-	 'PROCNAME
+	 procname
+	 'procname
 	 )
 
 	;; Update the output buffer with procname.
