@@ -3,8 +3,9 @@
 !/doc/*.texi
 
 # for now
-/maple/tst
 /maple/Browser
+/maple/tst
+/maple/sandbox
 
 *.mla
 

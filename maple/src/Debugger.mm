@@ -41,6 +41,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
     , getname
     , replaced := false
+    , logfile  := "readline.log"
+    , logpid
 
     ;
 
@@ -65,6 +67,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             #printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
+            logpid := fopen(logfile,'APPEND','TEXT');
         end if;
         return NULL;
     end proc;
@@ -154,17 +157,23 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        # `debugger_printf`("\n");
-
         #{{{ Get response (from emacs)
+
         do
+            debugger_printf(DBG_PROMPT, ">");
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
             res := traperror(Read());
             if res <> lasterror then break fi;
-            printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
+            debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
         od;
+
         #}}}
+
+        fprintf(logpid, "[%s]\n", res);
+        fflush(logpid);
+
+
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -248,10 +257,14 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         #}}}
 
         return res;
+
     end proc:
 
 #}}}
 #{{{ debugger
+
+#$define RETURN debugger_printf(DBG_END, "}"); return
+$define RETURN return
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
@@ -325,7 +338,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 if i < n then
                     debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
-                    debugger_printf(DBG_EVAL4, "<%a>\n",_passed[i])
+                    debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
                 fi
             fi
         od;
@@ -372,39 +385,41 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             fi;
             err := NULL;
 
+            # debugger_printf(DBG_PROMPT, ">");
+
             #{{{ parse cmd (else is arbitrary expression)
 
             if cmd = "cont" then
-                return
+                RETURN
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
-                return
+                RETURN
             elif cmd = "step" then
                 debugopts('steplevel'=999999999);
-                return
+                RETURN
             elif cmd = "into" then
                 debugopts('steplevel'=evalLevel+6);
-                return
+                RETURN
             elif cmd = "outfrom" then
                 debugopts('steplevel'=evalLevel-2);
-                return
+                RETURN
             elif cmd = "return" then
                 debugopts('steplevel'=evalLevel-statLevel*5);
-                return
+                RETURN
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
                 debugger_printf(DBG_STOP,"stopping\n");
                 debugopts('interrupt'=true)
             elif cmd = "where" then
                 if nops(line) = 1 then
-                    return 'debugopts'('callstack')
+                    RETURN 'debugopts'('callstack')
                 else
-                    return 'debugopts'('callstack'=line[2])
+                    RETURN 'debugopts'('callstack'=line[2])
                 fi
             elif cmd = "showstack" then
                 n := debugopts('callstack');
                 n := [op(1,n),op(5..-1,n)];
                 n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
-                return n;
+                RETURN n;
             elif cmd = "stopat" then
                 if nops(line) = 4 then
                     err := traperror(parse(line[4],'debugger'));
@@ -434,7 +449,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                             err := lasterror
                         end
                     fi;
-                    if err <> lasterror then return stopat() fi
+                    if err <> lasterror then RETURN stopat() fi
                 fi
             elif cmd = "unstopat" then
                 pName := procName;
@@ -445,7 +460,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     fi
                 od;
                 err := traperror(unstopat(pName,lNum));
-                if err <> lasterror then return err fi
+                if err <> lasterror then RETURN err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
                     debugger_printf(DBG_WARN,"Error, not currently in a procedure\n");
@@ -466,25 +481,25 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             elif cmd = "showstop" then
                 err := traperror(showstop['nonl']())
             elif cmd = "stopwhen" then
-                return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stopwhenif" then
-                return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "unstopwhen" then
-                return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
                 line := traperror(sscanf(original,"%s %1000c"));
-                return 'stoperror'(seq(line[i],i=2..nops(line)))
+                RETURN 'stoperror'(seq(line[i],i=2..nops(line)))
             elif cmd = "unstoperror" then
                 line := traperror(sscanf(original,"%s %1000c"));
-                return 'unstoperror'(seq(line[i],i=2..nops(line)))
+                RETURN 'unstoperror'(seq(line[i],i=2..nops(line)))
             elif cmd = "help" or cmd = "?" then
                 err := traperror(help('debugger'))
             elif cmd = "showerror" then
-                return ['debugopts'('lasterror')]
+                RETURN ['debugopts'('lasterror')]
             elif cmd = "showexception" then
-                return ['debugopts'('lastexception')]
+                RETURN ['debugopts'('lastexception')]
             elif cmd = "setenv" then
-                return 'debugopts'('setenv'=[line[2],line[3]])
+                RETURN 'debugopts'('setenv'=[line[2],line[3]])
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
@@ -496,9 +511,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     # TABLEREF, which can mess up MEMBER binding, so don't check
                     # for type procedure if it is a TABLEREF (i.e. type indexed).
                     if not line :: indexed and line :: procedure then
-                        return eval(line)
+                        RETURN eval(line)
                     fi;
-                    return line
+                    RETURN line
                 fi;
                 err := line;
             else
@@ -507,9 +522,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 if line <> lasterror then
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
-                        return eval(line)
+                        RETURN eval(line)
                     fi;
-                    return line
+                    RETURN line
                 fi;
                 err := line;
             fi;
@@ -521,12 +536,14 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 debugger_printf(DBG_ERR2, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
-            fi
+            fi;
 
             #}}}
+
         od;
 
         #}}}
+
     end proc:
 
 #}}}

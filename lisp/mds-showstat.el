@@ -146,9 +146,11 @@ Save CMD in `mds-showstat-last-debug-cmd'.  Change cursor type to
 response from Maple.  This function assumes we are in the
 appropriate `mds-showstat-buffer'."
   (setq mds-showstat-last-debug-cmd cmd)
+  (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
+  ;;(sleep-for 0.1)
   (setq cursor-type mds-cursor-waiting)
   (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
-  (mds-showstat-send-client (concat cmd "\n")))
+  (mds-showstat-send-client cmd))
 
 (defun mds-showstat-eval-expr (expr)
   "Send EXPR, with appended newline, to the Maple process."
@@ -200,28 +202,22 @@ call (maple) showstat to display the new procedure."
 	       (not at-first-state))
 	  
 	  ;; procname has not changed.
-	  ;;
-	  ;; Assume we are in the same procedure (not robust).
-	  ;; Move the arrow.
+	  ;; Move the arrow
 	  (mds-showstat-display-state state)
 
-	;; procname has changed.
-
+	;; procname has changed (or we entered it recursively).
+	;; Update the variable and set the mode-line
 	(setq mds-showstat-procname procname)
 	(mds-showstat-set-mode-line procname)
 
-	;; Update the buffer with procname and, if entering procname,
-	;; the values of its arguments. First determine whether we just
-	;; entered procname or are continuing (this may not be robust).
-	
-	;; Send procname (just the name) with appropriate face
-	;; to the output buffer
+	;; Send procname to the output buffer
 	(mds-output-display
 	 (mds--get-client-out-buf mds-client)
-	 (format "%s:\n" procname)
-	 'PROCNAME
+	 procname
+	 'procname
 	 )
 
+	;; Update the output buffer with procname.
 	;; (propertize procname
 	;; 		   'face (if at-first-state
 	;; 			     'mds-face-procname-entered
@@ -234,16 +230,45 @@ call (maple) showstat to display the new procedure."
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
 ;;}}}
+
+
+(defun mds-showstat-determine-state (statement)
+  "Search buffer for STATEMENT and return the statement number."
+  (goto-char (point-min))
+  (if (not (search-forward (concat " " mds-showstat-statement) nil t))
+      (error "cannot find statement in procedure body")
+    ;; clear statement
+    (setq mds-showstat-statement "")
+    (mds-showstat-get-state)))
+
+(defun mds-showstat-view-dead-proc (procname statement &optional state)
+  (with-current-buffer (mds--get-client-dead-buf mds-client)
+    (if (and (string= procname mds-showstat-procname)
+	     (not (string= procname "")))
+	;; Already displaying the procedure
+	(if state
+	    (mds-showstat-display-state state)
+	  (mds-showstat-display-state (mds-showstat-determine-state statement)))
+      
+      ;; Need to fetch from Maple
+      ;; Set these buffer locals so they can be used by ...
+      (setq mds-showstat-procname procname
+	    mds-showstat-statement statement)
+      (if state
+	  (setq mds-showstat-state state)))
+    (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))
+
 ;;{{{ (*) mds-showstat-send-showstat
 
-;; RENAME; this doesn't 'display' (directly)...
-(defun mds-showstat-send-showstat (procname statement)
+(defun mds-showstat-send-showstat (procname statement &optional state)
   "Query the client to send the showstat information for PROCNAME.
 The output will be displayed in the dead showstat buffer.
 Set the buffer-local variables `mds-showstat-procname' and `mds-showstat-statement'."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
-	  mds-showstat-statement statement))
+	  mds-showstat-statement statement)
+    (if state
+	(setq mds-showstat-state state)))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
 
 ;;}}}
@@ -277,20 +302,27 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       (mds-showstat-set-mode-line mds-showstat-procname)
 
       ;; Update state information and, if appropriate, move the arrow.
-      (if mds-showstat-live
-	  ;; Move the state arrow
-	  (mds-showstat-display-state mds-showstat-state)
-	(if (string= "" mds-showstat-statement)
-	    (setq mds-showstat-state 0)  ;; illegal state
-	  (if (not (search-forward (concat " " mds-showstat-statement) nil t))
-	      ;; this has never occurred.
-	      (error "cannot find statement in procedure body")
-	    ;; save state and clear statement
-	    (setq mds-showstat-state (mds-showstat-get-state)
-		  mds-showstat-statement "")
-	    ;; Move the state arrow
-	    (mds-showstat-display-state mds-showstat-state))))
+      (cond
+       (mds-showstat-live
+	;; Move the state arrow
+	(mds-showstat-display-state mds-showstat-state))
 
+       ((string= "" mds-showstat-statement)
+	(setq mds-showstat-state 0))  ;; illegal state
+
+       ((string= "0" mds-showstat-statement)
+	(mds-showstat-display-state mds-showstat-state))
+
+       ('t
+	(if (not (search-forward (concat " " mds-showstat-statement) nil t))
+	    ;; this has never occurred.
+	    (error "cannot find statement in procedure body")
+	  ;; save state and clear statement
+	  (setq mds-showstat-state (mds-showstat-get-state)
+		mds-showstat-statement "")
+	  ;; Move the state arrow
+	  (mds-showstat-display-state mds-showstat-state))))
+      
       ;; Make buffer visible
       (if mds-showstat-live
 	  (display-buffer buf)
@@ -385,25 +417,21 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "cont"))
 
 (defun mds-into ()
   "Send the 'into' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "into"))
 
 (defun mds-next ()
   "Send the 'next' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "next"))
 
 (defun mds-outfrom ()
   "Send the 'outfrom' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "outfrom"))
 
 (defun mds-quit ()
@@ -414,13 +442,11 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mds-return ()
   "Send the 'return' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "return"))
 
 (defun mds-step ()
   "Send the 'step' command to the debugger."
   (interactive)
-  (mds-goto-current-state)
   (mds-showstat-send-command "step"))
 
 ;;}}}
