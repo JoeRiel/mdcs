@@ -13,7 +13,7 @@
 (declare-function mds--get-client-dead-buf "mds")
 (declare-function mds--get-client-out-buf  "mds")
 
-(defun mds-windows-create (client)
+(defun mds-windows-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
 The buffers are displayed in side-by-side windows that fill the
 frame, the showstat buffer on the left.  Return nil."
@@ -29,7 +29,7 @@ frame, the showstat buffer on the left.  Return nil."
       (let ((out-buf (mds--get-client-out-buf client)))
 	(if (not (get-buffer-window-list out-buf))
 	    ;; no visible buffers, use the basic method
-	    (mds-windows-create client))
+	    (mds-windows-display-client client))
 	;; split (one of) the visible out-buf windows
 	(let ((win (display-buffer out-buf)))
 	  (select-window win)

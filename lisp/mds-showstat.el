@@ -329,6 +329,7 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       (if mds-showstat-live
 	  (display-buffer buf)
 	(mds-windows-display-dead mds-client)))))
+
 ;;}}}
 ;;{{{ (*) mds-showstat-display-state
 

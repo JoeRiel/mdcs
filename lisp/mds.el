@@ -303,7 +303,7 @@ Do not touch `mds-log-buffer'."
       (beep)
       (let ((client (mds-get-client-from-proc proc)))
 	(mds-set-status-client client 'accepted)
-	(mds-windows-create client)
+	(mds-windows-display-client client)
 	(mds-filter proc msg)))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
@@ -463,6 +463,21 @@ use them to route the message."
   (and (bufferp buf)
        (buffer-name buf)
        (kill-buffer buf)))
+
+;;}}}
+
+;;{{{ mds-cycle-clients
+
+(defun mds-cycle-clients ()
+  "Pop to first client on list, the rotate list."
+  (interactive)
+  (if mds-clients
+      (let* ((L mds-clients)
+	     (client (car L)))
+	;; rotate list
+	(setq mds-clients (reverse (cons client (reverse (cdr L)))))
+	;; display the live buffer.  Maybe the whole thing...
+	(mds-windows-display-client client))))
 
 ;;}}}
 
