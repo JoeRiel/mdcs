@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#action=--dry-run
+action=
+
+ls .git/refs/heads | while read branch;
+do
+    git checkout $branch
+    git rm --ignore-unmatch $action BUGS
+    git commit $action -m 'remove BUGS'
+done

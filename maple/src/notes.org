@@ -1,0 +1,5 @@
+* Tagging the printf output
+
+error
+info
+warning

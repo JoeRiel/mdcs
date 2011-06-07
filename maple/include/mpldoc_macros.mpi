@@ -1,0 +1,123 @@
+# This file defines the mpldoc macros for the repeated content
+# in the MapleSim package.  It should be included
+# into a file using the statement
+#
+# ##INCLUDE ../include/mpldoc_macros.mpi
+
+##DEFINE MOD mdc
+
+
+#-----------------
+#PARAMETERS macros
+#-----------------
+
+##DEFINE param_tools()
+##- 'tools' : ::module::; module with toolkit of exports
+##ENDDEFINE
+
+
+# Use the 'param_opts' macro in the PARAMETERS section
+# to define the meaning of the 'opts' parameter.
+# A typical usage is
+#
+# ##DEFINE CMD MyCoolCommand
+# ##param_opts(\CMD)
+
+##DEFINE param_opts($cmd)
+##- 'opts' : (optional) equation(s) of the form `option` = `value`;
+##  specify options for `$cmd`
+##ENDDEFINE
+
+#------------------
+#DESCRIPTION macros
+#------------------
+
+# This is intended to introduce the fields of a record
+##DEFINE field($fld)
+##- '$fld'
+##-(lead="indent")
+##ENDDEFINE
+
+#------------------
+#DESCRIPTION macros
+#------------------
+
+##DEFINE desc_p
+##- The 'p' parameter can be a procedure, the name of a procedure,
+##  or a string corresponding to the name of a procedure.
+##  The latter is useful for handling local procedures
+##  that would otherwise require assigning
+##  ~kernelopts(opaquemodules=false)~.
+##ENDDEFINE
+
+#--------------
+#OPTIONS macros
+#--------------
+
+##DEFINE keyword_params_intro()
+##-("nolead")
+##  The 'opts' arguments are optional arguments of the form `option` = `value`,
+##  where `option` is one of the names listed below.
+##  These arguments correspond to *keyword parameters*;
+##  the left side of an equation is the keyword and
+##  the right side is the value.
+##  Each keyword parameter has a default value that is assigned
+##  if the parameter is not passed.
+##
+##-("nolead")
+##  The following paragraphs describe each of the keyword parameters.
+##  The first line of each paragraph specifies the format of the argument:
+##    the left side is the keyword and
+##    the right side specifies the type of the value.
+##  If the type is *truefalse*,
+##  then passing just the keyword
+##  is equivalent to passing *keyword* = _true_.
+##ENDDEFINE
+##
+#  Used to describe an option.  As an example,
+#  ##opt(record,truefalse)
+#  ## Specifies whether ...
+#  Note that it doesn't work if the typ has a comma
+#
+##DEFINE opt($nam,$typ)
+##- `$nam` = ::$typ::
+##-(lead="indent")
+##ENDDEFINE
+##
+##
+#---------------
+#EXAMPLES macros
+#---------------
+
+##DEFINE examp_Porig
+##- Assign a simple procedure.
+##>> Porig := proc(x)
+##>> local i,y;
+##>>     for i to 10 do
+##>>         y := y + i*x;
+##>>     end do;
+##>>     y := y/x;
+##>> return y;
+##>> end proc:
+##ENDDEFINE
+##DEFINE examp_Pnew
+##- Assign a modification to the procedure.
+##>> Pnew := proc(x)
+##>> local i,y;
+##>>     for i to 10 do
+##>>         y := y + i*x;
+##>>     end do;
+##>>     y := y/x^2; # change line
+##>>     y := y+1;   # new line
+##>> return y;
+##>> end proc:
+##ENDDEFINE
+##DEFINE examp_Patch($term)
+##- Create a patch that will update `Porig` to `Pnew`.
+##> patch := Create(Porig, Pnew)$term
+##ENDDEFINE
+
+##DEFINE with_opaq
+##> with(\PKG):kernelopts('opaquemodules=false'):
+##ENDDEFINE
+
