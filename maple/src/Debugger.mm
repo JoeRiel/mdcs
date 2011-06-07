@@ -175,8 +175,8 @@ $endif
 
 $ifdef LOG_READLINE
         fprintf(logpid, "[%s]\n", res);
-$endif  fflush(logpid);
-
+        fflush(logpid);
+$endif
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
