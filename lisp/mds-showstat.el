@@ -230,16 +230,45 @@ call (maple) showstat to display the new procedure."
 	(setq mds-showstat-procname procname)
 	(mds-showstat-send-client "showstat")))))
 ;;}}}
+
+
+(defun mds-showstat-determine-state (statement)
+  "Search buffer for STATEMENT and return the statement number."
+  (goto-char (point-min))
+  (if (not (search-forward (concat " " mds-showstat-statement) nil t))
+      (error "cannot find statement in procedure body")
+    ;; clear statement
+    (setq mds-showstat-statement "")
+    (mds-showstat-get-state)))
+
+(defun mds-showstat-view-dead-proc (procname statement &optional state)
+  (with-current-buffer (mds--get-client-dead-buf mds-client)
+    (if (and (string= procname mds-showstat-procname)
+	     (not (string= procname "")))
+	;; Already displaying the procedure
+	(if state
+	    (mds-showstat-display-state state)
+	  (mds-showstat-display-state (mds-showstat-determine-state statement)))
+      
+      ;; Need to fetch from Maple
+      ;; Set these buffer locals so they can be used by ...
+      (setq mds-showstat-procname procname
+	    mds-showstat-statement statement)
+      (if state
+	  (setq mds-showstat-state state)))
+    (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))
+
 ;;{{{ (*) mds-showstat-send-showstat
 
-;; RENAME; this doesn't 'display' (directly)...
-(defun mds-showstat-send-showstat (procname statement)
+(defun mds-showstat-send-showstat (procname statement &optional state)
   "Query the client to send the showstat information for PROCNAME.
 The output will be displayed in the dead showstat buffer.
 Set the buffer-local variables `mds-showstat-procname' and `mds-showstat-statement'."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (setq mds-showstat-procname procname
-	  mds-showstat-statement statement))
+	  mds-showstat-statement statement)
+    (if state
+	(setq mds-showstat-state state)))
   (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
 
 ;;}}}
@@ -273,20 +302,27 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       (mds-showstat-set-mode-line mds-showstat-procname)
 
       ;; Update state information and, if appropriate, move the arrow.
-      (if mds-showstat-live
-	  ;; Move the state arrow
-	  (mds-showstat-display-state mds-showstat-state)
-	(if (string= "" mds-showstat-statement)
-	    (setq mds-showstat-state 0)  ;; illegal state
-	  (if (not (search-forward (concat " " mds-showstat-statement) nil t))
-	      ;; this has never occurred.
-	      (error "cannot find statement in procedure body")
-	    ;; save state and clear statement
-	    (setq mds-showstat-state (mds-showstat-get-state)
-		  mds-showstat-statement "")
-	    ;; Move the state arrow
-	    (mds-showstat-display-state mds-showstat-state))))
+      (cond
+       (mds-showstat-live
+	;; Move the state arrow
+	(mds-showstat-display-state mds-showstat-state))
 
+       ((string= "" mds-showstat-statement)
+	(setq mds-showstat-state 0))  ;; illegal state
+
+       ((string= "0" mds-showstat-statement)
+	(mds-showstat-display-state mds-showstat-state))
+
+       ('t
+	(if (not (search-forward (concat " " mds-showstat-statement) nil t))
+	    ;; this has never occurred.
+	    (error "cannot find statement in procedure body")
+	  ;; save state and clear statement
+	  (setq mds-showstat-state (mds-showstat-get-state)
+		mds-showstat-statement "")
+	  ;; Move the state arrow
+	  (mds-showstat-display-state mds-showstat-state))))
+      
       ;; Make buffer visible
       (if mds-showstat-live
 	  (display-buffer buf)
