@@ -139,6 +139,14 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 (defun mds-showstat-send-client (msg)
   (mds-send-client mds-client msg))
 
+(defun mds-showstat-eval-expr (expr &optional noecho)
+  "Send EXPR, with appended newline, to the Maple process."
+  ;; echo to output buffer;  Hmm, that won't work if
+  ;; the input was typed in the output buffer.
+  (unless noecho
+    (mds-output-display (mds--get-client-out-buf mds-client) expr 'cmd))
+  (mds-showstat-send-client (concat expr "\n")))
+
 (defun mds-showstat-send-command (cmd)
   "Send CMD, with appended newline, to the Maple process.
 Save CMD in `mds-showstat-last-debug-cmd'.  Change cursor type to
@@ -149,14 +157,6 @@ appropriate `mds-showstat-buffer'."
   (setq cursor-type mds-cursor-waiting)
   (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-showstat-eval-expr cmd))
-
-(defun mds-showstat-eval-expr (expr &optional noecho)
-  "Send EXPR, with appended newline, to the Maple process."
-  ;; echo to output buffer;  Hmm, that won't work if
-  ;; the input was typed in the output buffer.
-  (unless noecho
-    (mds-output-display (mds--get-client-out-buf mds-client) expr 'cmd))
-  (mds-showstat-send-client (concat expr "\n")))
 
 ;;}}}
 
@@ -608,6 +608,7 @@ The result is returned in the message area."
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
+  (mds-output-display (mds--get-client-out-buf mds-client) "Args" 'cmd)
   (mds-showstat-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 				  mds-thisproc)))
 
