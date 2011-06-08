@@ -16,6 +16,11 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
+$define DBG_EVAL1 'DBG_EVAL'
+$define DBG_EVAL2 'DBG_EVAL'
+$define DBG_EVAL3 'DBG_EVAL'
+$define DBG_EVAL4 'DBG_EVAL'
+
 Debugger := module()
 
 export Printf
@@ -91,7 +96,7 @@ $endif
 #{{{ Print and _printf
 
     Printf := proc()
-        debugger_printf(PRINTF, _rest);
+        debugger_printf(MDC_PRINTF, _rest);
     end proc;
 
     # currently not used
@@ -332,15 +337,19 @@ $define RETURN return
                     debugger_printf(DBG_WATCHED_CONDS, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
+                        # list/set that is part of a continued sequence
                         debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
                     else
+                        # list/set
                         debugger_printf(DBG_EVAL2, "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
+                    # expr that is part of a continued sequence
                     debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
+                    # expr
                     debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
                 fi
             fi
@@ -765,6 +774,11 @@ $define RETURN return
     end proc;
 
 #}}}
+
+$undef DBG_EVAL1
+$undef DBG_EVAL2
+$undef DBG_EVAL3
+$undef DBG_EVAL4
 
 
 end module;

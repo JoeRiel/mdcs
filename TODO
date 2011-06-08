@@ -2,7 +2,8 @@
 
 * Short Term
 
-** TODO Decide how the output buffer should look.  
+** DONE Decide how the output buffer should look.  
+   CLOSED: [2011-06-07 Tue 08:41]
 
    * Should it mimic what is done in mdb, that is, when an input is
      entered by user (using 'e' or '.'), it echos the command, then
@@ -34,7 +35,6 @@
 
      The lines have buttons; clicking on them moves the cursor to that
      statement.  The relevant procedure is determined by se
-
 
 ** DONE Insert procedure name in mode-line of showstat buffer
    CLOSED: [2011-06-04 Sat 21:31]
@@ -110,6 +110,16 @@
 
      
 
+
+** TODO Provide command for displaying breakpoints/watchpoints
+** TODO Provide a 'prettyprint' command (i.e. 2D output)
+   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.
+** TODO Develop a general Maple expression viewer
+   1. It should work with any type of Maple expression
+   2. Modules would consist of hyperlinked exports and locals;
+      clicking them would open them ...
+   3. This could work with other types of expressions...
+   
 
 * Long Term
  

@@ -426,7 +426,10 @@ use them to route the message."
      ;; msg is an inactive showstat output.
      ;; Display in showstat buffer.
       (mds-showstat-display dead-buf msg))
-     
+
+     ((string= tag "DBG_EVAL")
+      (mds-output-display out-buf msg 'output))
+      
      ((string= tag "DBG_WHERE")
       (mds-output-display out-buf msg 'where))
 
@@ -444,6 +447,9 @@ use them to route the message."
 
      ((string= tag "MPL_ERR")
       (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "MDC_PRINTF")
+      (mds-output-display out-buf msg 'printf))
      
      ;; otherwise print to debugger output buffer
      (t (mds-output-display out-buf msg tag)))))
