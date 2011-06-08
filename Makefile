@@ -197,6 +197,7 @@ install-elc: $(ELCFILES)
 	@$(CP) $+ $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
 	@ln --symbolic --target-directory=$(LISP_DIR) $(LISPFILES)
+	@for file in $(LISPFILES); do touch --reference=$$file --no-dereference $(LISP_DIR)/$${file##*/}; done
 
 # }}}
 # {{{ distribution
