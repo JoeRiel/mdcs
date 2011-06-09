@@ -156,7 +156,7 @@ response from Maple.  This function assumes we are in the
 appropriate `mds-showstat-buffer'."
   (if save (setq mds-showstat-last-debug-cmd cmd))
   (setq cursor-type mds-cursor-waiting)
-  (forward-char) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
+  (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
   (mds-showstat-send-client (concat cmd "\n")))
 
@@ -685,6 +685,16 @@ otherwise run through StringTools:-FormatMessage."
       (mds-showstat-send-client "showexception\n")
     (mds-showstat-send-command "mdc:-Debugger:-ShowException()")))
 
+(defun mds-where (&optional depth)
+  "Send the 'where' command to the debugger.
+The optional DEPTH parameter is a positive integer that specifies
+the number of activation levels to display."
+  (interactive "P")
+  (let ((cmd (if depth
+		 (format "where %d" depth)
+	       "where")))
+    (mds-showstat-send-command cmd)))
+
 ;;}}}
 ;;{{{ (*) Short cuts
 
@@ -732,16 +742,6 @@ the `mds-showstat-buffer'."
       (with-current-buffer (mds--get-client-out-buf mds-client)
 	(toggle-truncate-lines))
     (toggle-truncate-lines)))
-
-(defun mds-where (&optional depth)
-  "Send the 'where' command to the debugger.
-The optional DEPTH parameter is a positive integer that specifies
-the number of activation levels to display."
-  (interactive "P")
-  (let ((cmd (if depth
-		 (format "where %d\n" depth)
-	       "where\n")))
-    (mds-showstat-send-client cmd)))
 
 (defun mds-activate-procname-at-point ()
   (if (looking-at mds-showstat-where-procname-re)
