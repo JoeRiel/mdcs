@@ -450,6 +450,12 @@ use them to route the message."
 
      ((string= tag "MDC_PRINTF")
       (mds-output-display out-buf msg 'printf))
+
+     ((string= tag "DBG_WATCHED_CONDS")
+      (mds-output-display out-buf msg 'watch-cond))
+
+     ((string= tag "DBG_STOP")
+      (mds-output-display out-buf msg 'stop))
      
      ;; otherwise print to debugger output buffer
      (t (mds-output-display out-buf msg tag)))))

@@ -533,7 +533,9 @@ Query for local variable, using symbol at point as default."
   (interactive "P")
   (let* ((cmd (if clear "unstopwhen" "stopwhen"))
 	 (var (mds--query-stop-var cmd "var" 'mds-showstat-stopwhen-history-list)))
-    (mds-showstat-send-command (format "%s procname %s" cmd var))))
+    (if (string= var "")
+	(mds-showstat-eval-expr cmd)
+      (mds-showstat-eval-expr (format "%s procname %s" cmd var)))))
 
 (defun mds-stopwhen-global (clear)
   "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
@@ -541,15 +543,19 @@ Query for global variable, using symbol at point as default."
   (interactive "P")
   (let* ((cmd (if clear "unstopwhen" "stopwhen"))
 	 (var (mds--query-stop-var cmd "var" 'mds-showstat-stopwhen-history-list)))
-    (mds-showstat-send-command (format "%s %s" cmd var))))
+    (if (string= var "")
+	(mds-showstat-send-command cmd)
+    (mds-showstat-send-command (format "%s %s" cmd var)))))
 
 (defun mds-stopwhenif ()
-  "Query and set a conditional watchpoint on a variable."
+  "Query and set a conditional watchpoint on a global variable."
   (interactive)
   (let* ((cmd "stopwhenif")
 	 (var (mds--query-stop-var cmd "var" 'mds-showstat-stopwhen-history-list))
 	 (val (read-string "value: ")))
-    (mds-showstat-send-command (format "%s(%s,%s)" cmd var val))))
+;;    (if (string= var "")
+;;	(error "stopwhenif requires a variable and a value")
+      (mds-showstat-eval-expr (format "%s(%s,%s)" cmd var val))))
 
 (defun mds-stopwhen-clear ()
   "Query and clear a watchpoint on a variable."

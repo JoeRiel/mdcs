@@ -38,14 +38,14 @@
   "Face for inactive links in output buffer."
   :group 'mds-faces)
 
+(defface mds-info-face
+  '((((class color) (background dark)) (:foreground "sandy brown")))
+  "Face for inactive links in output buffer."
+  :group 'mds-faces)
+
 (defface mds-maple-error-face
   '((((class color) (background dark)) (:foreground "orange red")))
   "Face for Maple errors."
-  :group 'mds-faces)
-
-(defface mds-warning-face
-  '((((class color) (background dark)) (:foreground "pink")))
-  "Face for warning messages in output buffer."
   :group 'mds-faces)
 
 (defface mds-prompt-face
@@ -53,6 +53,16 @@
   "Face for prompt."
   :group 'mds-faces)
   
+(defface mds-warning-face
+  '((((class color) (background dark)) (:foreground "pink")))
+  "Face for warning messages in output buffer."
+  :group 'mds-faces)
+
+(defface mds-watch-face
+  '((((class color) (background dark)) (:foreground "spring green")))
+  "Face for watched variables in output buffer."
+  :group 'mds-faces)
+
 ;;}}}
 ;;{{{ constants
 
@@ -213,6 +223,13 @@ Optional TAG identifies the message type."
 	     ((eq tag 'parser-err) 
 	      ;; maple parser error
 	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
+
+	     ((eq tag 'stop)
+	      (ding) (sleep-for 0.2) (ding)
+	      (mds-insert-and-font-lock msg 'mds-info-face))
+
+	     ((eq tag 'watch-cond)
+	      (mds-insert-and-font-lock msg 'mds-watch-face))
 
 	     ((and tag (symbolp tag))
 	      ;; unknown tag
