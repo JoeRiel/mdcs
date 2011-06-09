@@ -327,7 +327,7 @@ $define RETURN return
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf(DBG_ERR1, "Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(DBG_ERR, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
@@ -545,7 +545,7 @@ $define RETURN return
             #{{{ handle error
 
             if err = lasterror then
-                debugger_printf(DBG_ERR2, "Error, %s\n"
+                debugger_printf(DBG_PARSE_ERR, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             fi;
