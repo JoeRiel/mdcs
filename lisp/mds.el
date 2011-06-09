@@ -442,8 +442,11 @@ use them to route the message."
      ((string= tag "DBG_WARN")
       (mds-output-display out-buf msg 'warn))
 
-     ((string= tag "DBG_ERR2")
-      (mds-output-display out-buf msg 'parser-err))
+     ((string= tag "DBG_PARSE_ERR")
+      (mds-output-display out-buf msg 'parse-err))
+
+     ((string= tag "DBG_ERR")
+      (mds-output-display out-buf msg 'maple-err))
 
      ((string= tag "MPL_ERR")
       (mds-output-display out-buf msg 'maple-err))

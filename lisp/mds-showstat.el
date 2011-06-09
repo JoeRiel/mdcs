@@ -307,7 +307,7 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       ;; `mds-eval-and-prettyprint'.
 
       (if (looking-at mds-showstat-procname-assignment-re)
-	  (setq mds-showstat-procname (match-string 1)))
+	  (setq mds-showstat-procname (match-string-no-properties 1)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
       (mds-showstat-set-mode-line mds-showstat-procname)
@@ -319,7 +319,8 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
 	(mds-showstat-display-state mds-showstat-state))
 
        ((string= "" mds-showstat-statement)
-	(setq mds-showstat-state 0))  ;; illegal state
+	(setq mds-showstat-state "1")
+	(mds-showstat-display-state "1"))
 
        ((string= "0" mds-showstat-statement)
 	(mds-showstat-display-state mds-showstat-state))
