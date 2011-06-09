@@ -194,7 +194,7 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'args)
 	      ;; args
-	      (mds-insert-and-font-lock msg 'mds-args-face tag))
+	      (mds-insert-and-font-lock msg 'mds-args-face))
 
 	     ((eq tag 'printf)
 	      ;; insert msg, but no newline; this could screw-up format
@@ -203,15 +203,15 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'warn)
 	      ;; warning
-	      (mds-insert-and-font-lock msg 'mds-warning-face tag))
+	      (mds-insert-and-font-lock msg 'mds-warning-face))
 
 	     ((eq tag 'maple-err)
 	      ;; maple error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
+	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
 	     
 	     ((eq tag 'parser-err) 
 	      ;; maple parser error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face tag))
+	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
 
 	     ((and tag (symbolp tag))
 	      ;; unknown tag
