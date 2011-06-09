@@ -121,6 +121,41 @@
    3. This could work with other types of expressions...
    
 
+** Handle all tags
+   CLOSED: [2011-06-08 Wed 20:52]
+
+
+*** DONE DBG_ARGS
+*** DONE DBG_EVAL
+*** DONE DBG_PROMPT
+*** DONE DBG_SHOW
+*** DONE DBG_STACK
+*** DONE DBG_WHERE
+*** DONE MDC_PRINTF
+*** DONE MPL_ERR
+
+*** TODO DBG_END
+*** TODO DBG_ERR
+*** TODO DBG_ERR1
+*** TODO DBG_ERR2
+*** TODO DBG_ERROR
+*** TODO DBG_EVAL1
+*** TODO DBG_EVAL2
+*** TODO DBG_EVAL3
+*** TODO DBG_EVAL4
+*** TODO DBG_EXCEPTION
+*** TODO DBG_HELP
+*** TODO DBG_INFO
+*** TODO DBG_NULL
+*** TODO DBG_STACK1
+*** TODO DBG_STACK2
+*** TODO DBG_STACK3
+*** TODO DBG_STATE
+*** TODO DBG_STOP
+*** TODO DBG_WARN
+*** TODO DBG_WATCHED
+*** TODO DEBUGGER_PROCS
+
 * Long Term
  
 ** TODO Handle exports of unnamed modules.
