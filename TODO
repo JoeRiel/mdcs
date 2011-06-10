@@ -120,7 +120,8 @@
       clicking them would open them ...
    3. This could work with other types of expressions...
    
-
+** TODO Add untraperror, etc.
+   Maybe this was a bad idea; reproducing that is crazy.
 ** Handle all tags
    CLOSED: [2011-06-08 Wed 20:52]
 
