@@ -226,6 +226,7 @@ call (maple) showstat to display the new procedure."
 
 ;;}}}
 
+;;{{{ (*) mds-showstat-determine-state
 
 (defun mds-showstat-determine-state (statement)
   "Search buffer for STATEMENT and return the statement number."
@@ -242,7 +243,14 @@ call (maple) showstat to display the new procedure."
     (message "cannot find statement in procedure body")
     nil))
 
+;;}}}
+
+;;{{{ mds-showstat-view-dead-proc
+
 (defun mds-showstat-view-dead-proc (procname statement &optional state)
+  "View procedure with name PROCNAME in the dead buffer.  If the optional string
+STATE is provided, use that as the state number to display.  Otherwise,
+find the statement number from STATEMENT."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (if (and (string= procname mds-showstat-procname)
 	     (not (string= procname "")))
@@ -259,6 +267,8 @@ call (maple) showstat to display the new procedure."
       (if state
 	  (setq mds-showstat-state state))
       (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))))
+
+;;}}}
 
 ;;{{{ (*) mds-showstat-send-showstat
 
@@ -397,20 +407,6 @@ Minibuffer completion is used if COMPLETE is non-nil."
     (if (string-equal choice "")
         (error "Empty choice"))
     choice))
-
-;; this is not used
-
-(defun mds--select-expression-at-point (prompt &optional default complete)
-  (if t ;; (mds-showstat-bol)
-      (cond ((looking-at (concat "for +\\("
-				 maplev--symbol-re
-				 "\\)"))
-	     (match-string-no-properties 1))
-	    ((looking-at "if +\\(\\(?:.*?\\)\\(?:\n.*?)*?\\)then[ \t\n]")
-	     (match-string-no-properties 1))
-	    (t
-	     (maplev-ident-around-point-interactive prompt default complete)))
-    (maplev-ident-around-point-interactive prompt default complete)))
 
 ;;}}}
 
@@ -749,45 +745,13 @@ the `mds-showstat-buffer'."
 			:type 'mds-showstat-open-button)))
 
 
-(defun mds-highlight-where-output (beg end)
-  "Font-lock the names of called functions in the region from BEG to END,
-which is the output of `mds-where'."
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward mds-showstat-where-procname-re end t)
-      (make-text-button (match-beginning 1) (match-end 1) 
-			:type 'mds-showstat-open-button))))
-
-(define-button-type 'mds-showstat-open-button
-  'help-echo "Open procedure"
-  'action 'mds-showstat-open-procedure
-  'follow-link t
-  'face 'link)
-
-(defun mds-showstat-open-procedure (button)
-  "Open the procedure"
-  (save-excursion
-    (beginning-of-line)
-    (unless (looking-at "TopLevel")
-      (looking-at mds-showstat-where-procname-re)
-      (let ((procname (match-string-no-properties 1))
-	    (statement (buffer-substring-no-properties
-			(match-end 0) (line-end-position))))
-	(mds-showstat-send-showstat procname statement)))))
-
-
-;; (defun mds-pop-to-mds-buffer ()
-;;   "Pop to the Maple debugger buffer."
-;;   (interactive)
-;;   (pop-to-buffer mds-buffer))
-
 (defun mds-help-debugger ()
+  "Display the Maple help page for the tty debugger."
   (interactive)
   (maplev-help-show-topic "debugger"))
 
 (defun mds-info ()
-  "Display the info page for Mds."
+  "Display the info page for MDS."
   (interactive)
   (info "mds"))
 
@@ -987,7 +951,6 @@ Miscellaneous
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 "
   :group 'mds
-
 
   (setq mds-showstat-procname ""
 	mds-showstat-state ""
