@@ -139,21 +139,27 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 (defun mds-showstat-send-client (msg)
   (mds-send-client mds-client msg))
 
-(defun mds-showstat-eval-expr (expr &optional noecho)
-  "Send EXPR, with appended newline, to the Maple process."
+(defun mds-showstat-eval-debug-code (cmd)
+  "Send CMD, with appended newline, to the Maple process and to the output buffer."
   ;; echo to output buffer;  Hmm, that won't work if
   ;; the input was typed in the output buffer.
-  (unless noecho
-    (mds-output-append-input (mds--get-client-out-buf mds-client) expr))
+  (mds-output-append-input (mds--get-client-out-buf mds-client) cmd 'mds-debugger-cmd-face)
+  (mds-showstat-send-client (concat cmd "\n")))
+
+(defun mds-showstat-eval-expr (expr)
+  "Send EXPR, with appended newline, to the Maple process and to the output buffer.
+This function is intended to be used for evaluating Maple expressions."
+  (mds-output-append-input (mds--get-client-out-buf mds-client) expr 'mds-user-input-face)
   (mds-showstat-send-client (concat expr "\n")))
 
-(defun mds-showstat-send-command (cmd &optional save)
-  "Send CMD, with appended newline, to the Maple process.
-If SAVE is non-nil, the save it as the last command
-`mds-showstat-last-debug-cmd'.  Change cursor type to
-`mds-cursor-waiting', which indicates we are waiting for a
-response from Maple.  This function assumes we are in the
-appropriate `mds-showstat-buffer'."
+(defun mds-showstat-eval-proc-statement (cmd &optional save)
+  "Send CMD, with appended newline, to the Maple process and to
+the output buffer, tagged as 'cmd.  If SAVE is non-nil, the save
+it as the last command `mds-showstat-last-debug-cmd'.  Change
+cursor type to `mds-cursor-waiting', which indicates we are
+waiting for a response from Maple.  This function assumes we are
+in the appropriate `mds-showstat-buffer'.  This function is
+to be used with commands that cause Maple to execute procedural code."
   (if save (setq mds-showstat-last-debug-cmd cmd))
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
@@ -162,7 +168,7 @@ appropriate `mds-showstat-buffer'."
 
 ;;}}}
 
-;;{{{ Buffer creation and update
+;;{{{ buffer creation and update
 
 ;;{{{ (*) mds-showstat-create-buffer
 
@@ -430,37 +436,37 @@ Minibuffer completion is used if COMPLETE is non-nil."
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
-  (mds-showstat-send-command "cont" 'save))
+  (mds-showstat-eval-proc-statement "cont" 'save))
 
 (defun mds-into ()
   "Send the 'into' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "into" 'save))
+  (mds-showstat-eval-proc-statement "into" 'save))
 
 (defun mds-next ()
   "Send the 'next' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "next" 'save))
+  (mds-showstat-eval-proc-statement "next" 'save))
 
 (defun mds-outfrom ()
   "Send the 'outfrom' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "outfrom" 'save))
+  (mds-showstat-eval-proc-statement "outfrom" 'save))
 
 (defun mds-quit ()
   "Send the 'quit' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "quit"))
+  (mds-showstat-eval-expr "quit"))
 
 (defun mds-return ()
   "Send the 'return' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "return" 'save))
+  (mds-showstat-eval-proc-statement "return" 'save))
 
 (defun mds-step ()
   "Send the 'step' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "step" 'save))
+  (mds-showstat-eval-proc-statement "step" 'save))
 
 ;;}}}
 ;;{{{ (*) Stop points
@@ -495,7 +501,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-send-command (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-debug-code (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
 	(ding)
 	(message "no previous state in buffer")))))
 
@@ -510,7 +516,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 	      (inhibit-read-only t)
 	      (cond (mds--query-stop-var "stopat-cond" "condition" 'mds-showstat-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mds-showstat-send-command (format "debugopts('stopat'=[%s,%s,%s])" mds-thisproc state cond)))
+	  (mds-showstat-eval-debug-code (format "debugopts('stopat'=[%s,%s,%s])" mds-thisproc state cond)))
       (ding)
       (message "no previous state in buffer"))))
 
@@ -520,7 +526,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (interactive "P")
   (let* ((cmd (if clear "unstoperror" "stoperror"))
 	 (err (mds--query-stop-var cmd "errMsg" 'mds-showstat-stoperror-history-list)))
-    (mds-showstat-send-command (format "%s %s" cmd err))))
+    (mds-showstat-eval-debug-code (format "%s %s" cmd err))))
 
 (defun mds-stoperror-clear ()
   "Query for and clear a watchpoint on an error."
@@ -545,8 +551,8 @@ Query for global variable, using symbol at point as default."
   (let* ((cmd (if clear "unstopwhen" "stopwhen"))
 	 (var (mds--query-stop-var cmd "var" 'mds-showstat-stopwhen-history-list)))
     (if (string= var "")
-	(mds-showstat-send-command cmd)
-    (mds-showstat-send-command (format "%s %s" cmd var)))))
+	(mds-showstat-eval-debug-code cmd)
+    (mds-showstat-eval-debug-code (format "%s %s" cmd var)))))
 
 (defun mds-stopwhenif ()
   "Query and set a conditional watchpoint on a global variable."
@@ -574,7 +580,7 @@ If the state does not have a breakpoint, print a message."
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t))
 	  (replace-match " " nil nil nil 2)
-	  (mds-showstat-send-command (format "unstopat %s %s" mds-showstat-procname state)))
+	  (mds-showstat-eval-debug-code (format "unstopat %s %s" mds-showstat-procname state)))
       (ding)
       (message "no breakpoint at this state"))))
 
@@ -614,7 +620,7 @@ The result is returned in the message area."
 (defun mds-args ()
   "Display the arguments of the current procedure."
   (interactive)
-  (mds-showstat-send-command "args"))
+  (mds-showstat-eval-expr "args"))
 
 
 (defun mds-show-args-as-equations ()
@@ -624,7 +630,7 @@ The result is returned in the message area."
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
-  (mds-output-append-input (mds--get-client-out-buf mds-client) "Args:")
+  (mds-output-append-input (mds--get-client-out-buf mds-client) "Args:" 'mds-args-face)
   (mds-showstat-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 				  mds-thisproc)))
 
@@ -643,12 +649,12 @@ The result is returned in the message area."
 Note that the string displayed in the echo area has the current
 procedure stripped from it."
   (interactive)
-  (mds-showstat-send-command "showstack"))
+  (mds-showstat-eval-expr "showstack"))
 
 (defun mds-showstop ()
   "Send the 'showstop' command to the debugger."
   (interactive)
-  (mds-showstat-send-command "showstop"))
+  (mds-showstat-eval-debug-code "showstop"))
 
 (defun mds-showerror (fmt)
   "Send the 'showerror' command to the debugger.
@@ -656,7 +662,7 @@ If FMT (prefix arg) is non-nil, display the formatted message,
 otherwise hyperlink the raw message."
   (interactive "P")
   (if fmt
-      (mds-showstat-send-command "mdc:-Debugger:-ShowError()")
+      (mds-showstat-eval-debug-code "mdc:-Debugger:-ShowError()")
     (mds-showstat-send-client "showerror\n")
     ))
 
@@ -688,9 +694,9 @@ If RAW (prefix arg) is non-nil, display the raw output,
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
   (if raw
-      ;;(mds-showstat-send-command "showexception")
+      ;;(mds-showstat-eval-debug-code "showexception")
       (mds-showstat-send-client "showexception\n")
-    (mds-showstat-send-command "mdc:-Debugger:-ShowException()")))
+    (mds-showstat-eval-debug-code "mdc:-Debugger:-ShowException()")))
 
 (defun mds-where (&optional depth)
   "Send the 'where' command to the debugger.
@@ -700,7 +706,7 @@ the number of activation levels to display."
   (let ((cmd (if depth
 		 (format "where %d" depth)
 	       "where")))
-    (mds-showstat-send-command cmd)))
+    (mds-showstat-eval-debug-code cmd)))
 
 ;;}}}
 ;;{{{ (*) Short cuts

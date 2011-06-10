@@ -47,7 +47,7 @@
 
 (defface mds-info-face
   '((((class color) (background dark)) (:foreground "sandy brown")))
-  "Face for inactive links in output buffer."
+  "Face for debugger information."
   :group 'mds-faces)
 
 (defface mds-maple-error-face
@@ -128,6 +128,8 @@ The first group matches the statement, with some indentation.")
 
 ;;{{{ Text insertion
 
+
+
 (defun mds-insert-and-font-lock (msg face &optional tag)
   "Insert string MSG into current buffer, at point, with font-lock FACE.
 If optional TAG is present, insert it into the buffer before MSG."
@@ -147,7 +149,7 @@ If optional TAG is present, insert it into the buffer before MSG."
   "Put FACE as a `font-lock-fact' text property on text between BEG and END."
   (put-text-property beg end 'font-lock-face face))
 
-(defun mds-output-append-input (buf msg)
+(defun mds-output-append-input (buf msg face)
   "Append string MSG and newline to the output buffer BUF.
 MSG is considered external input from a user, so the state-number
 in the prompt is cleared. The purpose is to prevent `mds-output-goto-line'
@@ -157,7 +159,7 @@ from going to a statement that does not correspond to procedure evaluation."
     (if (looking-at mds-output-prompt-re)
 	(replace-match "" 'fixedcase 'literal nil 1))
     (goto-char (point-max))
-    (mds-insert-and-font-lock msg 'mds-user-input-face)
+    (mds-insert-and-font-lock msg face)
     (insert "\n")))
 
 ;;}}}
