@@ -227,90 +227,96 @@ local indexed2slashed
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, expr, fld, ix, typ, opacity;
+    local eqs, ex, fld, ix, typ, opacity;
+    global _fake_name;
         if nargs > 2 then
             seq(procname(false,ex), ex in [_rest]);
-        else
-            expr := _rest;
-
-            if expr :: set then
-                if top then Debugger:-Printf("(*set: %d*)\n", nops(expr));
-                    return `if`(expr = []
-                                , Debugger:-Printf("NULL\n")
-                                , expr[]
-                               );
-                else
-                    return expr;
-                end if;
-            elif expr :: list then
-                if top then Debugger:-Printf("(*list: %d*)\n", nops(expr));
-                    return `if`(expr = []
-                                , Debugger:-Printf("NULL\n")
-                                , expr[]
-                               );
-                else
-                    return expr;
-                end if;
-
-            elif expr :: 'record' then
-                eqs := seq(`if`(assigned(expr[fld])
-                                , fld = procname(false, expr[fld])
-                                , fld
-                               )
-                           , fld in [exports(expr)]);
-                if top then
-                    return Debugger:-Printf("(*record*)\n"), eqs;
-                else
-                    return 'record'(eqs);
-                end if;
-
-            elif expr :: `module` then
-                # type/object won't work for some older maples.
-                if attributes(expr)='object' then
-                    try
-                        if top then
-                            Debugger:-Printf("(*object*)\n");
-                        end if;
-                        opacity := kernelopts('opaquemodules'=false);
-                        expr:-ModulePrint;
-                        return ModulePrint(expr);
-                    catch:
-                        Debugger:-Printf("object(...)\n");
-                    finally
-                        kernelopts('opaquemodules'=opacity);
-                    end try;
-                    return NULL;
-                elif top then
-                    Debugger:-Printf("(*module*)\n");
-                    return seq(fld = procname(false, expr[fld]), fld in [exports(expr)]);
-                else
-                    return `module() ... end module`; # questionable
-                end if;
-
-            elif expr :: table then
-                typ := op(0,eval(expr));
-                eqs := seq(ix = procname(false, expr[ix[]]), ix in [indices(expr)]);
-                if top then
-                    return (Debugger:-Printf("(*%a*)\n", typ), eqs);
-                else
-                    return (typ -> 'typ'(eqs))(typ);
-                end if;
-
-            elif expr :: procedure then
-                if top then
-                    Format:-showstat(convert(expr,string));
-                    return NULL;
-                else
-                    # this can be improved.
-                    return `proc() ... end proc`;
-                end if;
-            elif expr = NULL then
-                return "NULL";
-            elif expr :: 'name = anything' then
-                return lhs(expr) = procname(false,rhs(expr));
+        elif _rest :: set then
+            if top then Debugger:-Printf("(*set: %d*)\n", nops(_rest));
+                return `if`(_rest = []
+                            , Debugger:-Printf("NULL\n")
+                            , _rest[]
+                           );
             else
-                return expr;
+                return _rest;
             end if;
+        elif _rest :: list then
+            if top then Debugger:-Printf("(*list: %d*)\n", nops(_rest));
+                return `if`(_rest = []
+                            , Debugger:-Printf("NULL\n")
+                            , _rest[]
+                           );
+            else
+                return _rest;
+            end if;
+
+        elif _rest :: 'record' then
+            eqs := seq(`if`(assigned(_rest[fld])
+                            , fld = procname(false, _rest[fld])
+                            , fld
+                           )
+                       , fld in [exports(_rest)]);
+            if top then
+                return Debugger:-Printf("(*record*)\n"), eqs;
+            else
+                return 'record'(eqs);
+            end if;
+
+        elif _rest :: `module` then
+            # type/object won't work for some older maples.
+            if attributes(_rest)='object' then
+                try
+                    if top then
+                        Debugger:-Printf("(*object*)\n");
+                    end if;
+                    opacity := kernelopts('opaquemodules'=false);
+                    _rest:-ModulePrint;
+                    return ModulePrint(_rest);
+                catch:
+                    Debugger:-Printf("object(...)\n");
+                finally
+                    kernelopts('opaquemodules'=opacity);
+                end try;
+                return NULL;
+            elif top then
+                Debugger:-Printf("(*module*)\n");
+                return seq(fld = procname(false, _rest[fld]), fld in [exports(_rest)]);
+            else
+                return `module() ... end module`; # questionable
+            end if;
+
+        elif _rest :: table then
+            typ := op(0,eval(_rest));
+            eqs := seq(ix = procname(false, _rest[ix[]]), ix in [indices(_rest)]);
+            if top then
+                return (Debugger:-Printf("(*%a*)\n", typ), eqs);
+            else
+                return (typ -> 'typ'(eqs))(typ);
+            end if;
+
+        elif _rest :: procedure then
+            if top then
+                if _rest :: name then
+                    Format:-showstat(convert(_rest,string));
+                else
+                    # _rest is an evaluated _restession.  Assign to
+                    # a the global name _fake_name, which is then
+                    # displayed.  This is done because
+                    # debugopts(procdump) requires a name.
+                    _fake_name := _rest;
+                    Format:-showstat("_fake_name");
+                end if;
+                return NULL;
+            else
+                # this can be improved.
+                return `proc() ... end proc`;
+            end if;
+        elif _rest = NULL then
+            return "NULL";
+        elif _rest :: 'name = anything' then
+            return lhs(_rest) = procname(false,rhs(_rest));
+        else
+            return _rest;
         end if;
     end proc:
 
