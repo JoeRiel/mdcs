@@ -624,7 +624,7 @@ The result is returned in the message area."
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
-  (mds-output-display (mds--get-client-out-buf mds-client) "Args" 'cmd)
+  (mds-output-append-input (mds--get-client-out-buf mds-client) "Args:")
   (mds-showstat-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 				  mds-thisproc)))
 
