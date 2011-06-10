@@ -252,21 +252,20 @@ call (maple) showstat to display the new procedure."
 STATE is provided, use that as the state number to display.  Otherwise,
 find the statement number from STATEMENT."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
-    (if (and (string= procname mds-showstat-procname)
-	     (not (string= procname "")))
-	;; Already displaying the procedure; just update the arrow.
-	(if state
-	    (mds-showstat-display-state state)
-	  (if (not (string= "" statement))
-	      (mds-showstat-display-state (mds-showstat-determine-state statement))))
-      
-      ;; Need to fetch from Maple.
-      ;; Set these buffer locals so they can be used by ...
-      (setq mds-showstat-procname procname
-	    mds-showstat-statement statement)
-      (if state
-	  (setq mds-showstat-state state))
-      (mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))))
+    (unless (string= procname "")
+      (if (string= procname mds-showstat-procname)
+	  ;; Already displaying the procedure; just update the arrow.
+	  (mds-showstat-display-state (or state
+					  (mds-showstat-determine-state statement)))
+
+	;; Need to fetch from Maple.
+	;; Set the buffer locals state info.
+	(setq mds-showstat-procname   procname
+	      mds-showstat-statement  statement)
+   	(if state (setq mds-showstat-state state))
+	
+	;; Update the dead buffer.
+	(mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))))
 
 ;;}}}
 
@@ -351,29 +350,30 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
 ensure that the buffer and line are visible.  If the `hl-line'
 feature is present in this session, then highlight the line.
 POINT is moved to the indentation of the current line."
-  (let ((buffer-read-only nil))
-    ;; Find the location of STATE in the buffer.
-    (goto-char (point-min))
-    (when (re-search-forward (concat "^ *" state "[ *?]\\(!\\)?") nil 't)
-      ;; Remove the bang, which showstat uses to mark the current state.
-      (if (match-string 1)
-	  (replace-match " " nil nil nil 1))
-      ;; Move the arrow marker to the left margin of the state.
-      (beginning-of-line)
-      (or mds-showstat-arrow-position
-	  (setq mds-showstat-arrow-position (make-marker)))
-      (set-marker mds-showstat-arrow-position (point))
-      ;; If `hl-line' is enabled, highlight the line.
-      (when (featurep 'hl-line)
-	(cond
-	 (global-hl-line-mode
-	  (global-hl-line-highlight))
-	 ((and hl-line-mode hl-line-sticky-flag)
-	  (hl-line-highlight))))
-      ;; Move point to indentation of the current line (not including the state number).
-      (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
-    ;; Ensure marker is visible in buffer.
-    (set-window-point (get-buffer-window) (point))))
+  (if state
+      (let ((buffer-read-only nil))
+	;; Find the location of STATE in the buffer.
+	(goto-char (point-min))
+	(when (re-search-forward (concat "^ *" state "[ *?]\\(!\\)?") nil 't)
+	  ;; Remove the bang, which showstat uses to mark the current state.
+	  (if (match-string 1)
+	      (replace-match " " nil nil nil 1))
+	  ;; Move the arrow marker to the left margin of the state.
+	  (beginning-of-line)
+	  (or mds-showstat-arrow-position
+	      (setq mds-showstat-arrow-position (make-marker)))
+	  (set-marker mds-showstat-arrow-position (point))
+	  ;; If `hl-line' is enabled, highlight the line.
+	  (when (featurep 'hl-line)
+	    (cond
+	     (global-hl-line-mode
+	      (global-hl-line-highlight))
+	     ((and hl-line-mode hl-line-sticky-flag)
+	      (hl-line-highlight))))
+	  ;; Move point to indentation of the current line (not including the state number).
+	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
+	;; Ensure marker is visible in buffer.
+	(set-window-point (get-buffer-window) (point)))))
 
 ;;}}}
 
