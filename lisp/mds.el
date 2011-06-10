@@ -418,10 +418,12 @@ use them to route the message."
 	(mds-showstat-update live-buf 
 			     (match-string 1 msg)    ; procname
 			     (match-string 2 msg)))) ; state
+
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
       (mds-showstat-display live-buf msg))
+
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
      ;; Display in showstat buffer.

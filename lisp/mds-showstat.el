@@ -101,7 +101,8 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 
 (defvar mds-thisproc "thisproc" "Set to procname if Maple version < 14")
 
-(defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
+;; Removed because of timing issues that killed debugger
+;; (defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
 
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mds-client                  nil "Client structure associated with buffer.")
@@ -202,43 +203,27 @@ call (maple) showstat to display the new procedure."
 
   (with-current-buffer buf
 
-    ;; save the procname and the state
-    (setq mds-showstat-state state)
-
     ;; Revert cursor-type to ready status.
     (setq cursor-type mds-cursor-ready)
-    (let ((at-first-state (string= state "1")))
-      (if (and (equal procname mds-showstat-procname)
-	       (not at-first-state))
-	  
+
+    (if (string= procname mds-showstat-procname)
 	  ;; procname has not changed.
-	  ;; Move the arrow
+	  ;; move the arrow
 	  (mds-showstat-display-state state)
 
-	;; procname has changed (or we entered it recursively).
-	;; Update the variable and set the mode-line
-	(setq mds-showstat-procname procname)
-	(mds-showstat-set-mode-line procname)
+      ;; New procedure; send procname to the output buffer.
+      (mds-output-display (mds--get-client-out-buf mds-client)
+			  procname
+			  'procname)
 
-	;; Send procname to the output buffer
-	(mds-output-display
-	 (mds--get-client-out-buf mds-client)
-	 procname
-	 'procname
-	 )
+      ;; Update the showstat buffer.
+      (mds-showstat-send-client "showstat"))
 
-	;; Update the output buffer with procname.
-	;; (propertize procname
-	;; 		   'face (if at-first-state
-	;; 			     'mds-face-procname-entered
-	;; 			   'mds-face-procname-cont))))
-	;; Display arguments if we just entered the procedure.
-	;;(if (and mds-show-args-on-entry at-first-state)
-	;;      (mds-show-args-as-equations))
-	
-	;; Save procname, then update the showstat buffer.
-	(setq mds-showstat-procname procname)
-	(mds-showstat-send-client "showstat")))))
+    ;; Update the buffer-local status
+    (setq mds-showstat-procname procname
+	  mds-showstat-state    state)))
+
+
 ;;}}}
 
 
@@ -302,7 +287,7 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       (delete-region (point-min) (point-max))
       (insert proc)
       ;; Delete first char (\n)
-      (goto-char (point-min))
+      (goto-char (point-min))  ;; FIXME
       (if (looking-at "\n")
 	  (delete-char 1))
 
@@ -322,8 +307,10 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       (cond
        (mds-showstat-live
 	;; Move the state arrow
+	;; FIXME: only do if necessary
 	(mds-showstat-display-state mds-showstat-state))
 
+       ;; From here down, we are in the dead ss-buf
        ((string= "" mds-showstat-statement)
 	(setq mds-showstat-state "1")
 	(mds-showstat-display-state "1"))
@@ -627,10 +614,10 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mds-output-clear))
+  (mds-output-append-input (mds--get-client-out-buf mds-client) "Args:" 'mds-args-face)
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
-  (mds-output-append-input (mds--get-client-out-buf mds-client) "Args:" 'mds-args-face)
   (mds-showstat-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 				  mds-thisproc)))
 
