@@ -72,10 +72,11 @@ $define END_OF_MSG "---EOM---"
 unprotect('mdc'):
 module mdc()
 
-export ModuleApply
+export Authenticate
     ,  Debugger
     ,  Format
-    ,  Authenticate
+    ,  ModuleApply
+    ,  Sample
     ,  Version
     ;
 
@@ -104,6 +105,7 @@ local Connect
 $ifdef BUILD_MLA
 $include <src/Format.mm>
 $include <src/Debugger.mm>
+$include <src/Sample.mm>
 $endif
 
 #{{{ ModuleApply
@@ -119,6 +121,7 @@ $endif
                          , { maxlength :: nonnegint := max_length }
                          , { password :: string := "" }
                          , { port :: posint := Port }
+                         , { sample :: truefalse := false }
                          #, { timeout :: nonnegint := 0 }
                          , { stopat :: {string,name} := "" }
                          , { stoperror :: truefalse := false }
@@ -176,8 +179,8 @@ $endif
             :-stoperror(':-traperror');
         end if;
 
-        if enter then
-            DEBUG();
+        if sample  then Sample();
+        elif enter then DEBUG();
         end if;
 
         return NULL;
