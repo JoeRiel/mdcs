@@ -437,9 +437,12 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (mds-showstat-eval-proc-statement "outfrom" 'save))
 
 (defun mds-quit ()
-  "Send the 'quit' command to the debugger."
+  "If in the live showstat buffer, send the 'quit' command to the debugger.
+Otherwise delete the dead showstat window."
   (interactive)
-  (mds-showstat-eval-expr "quit"))
+  (if mds-showstat-live
+      (mds-showstat-eval-expr "quit")
+    (delete-window (get-buffer-window (mds--get-client-dead-buf mds-client)))))
 
 (defun mds-return ()
   "Send the 'return' command to the debugger."

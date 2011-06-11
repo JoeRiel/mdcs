@@ -33,7 +33,12 @@
   2. That didn't quite work; now it prints 'interrupted'
 
 * TODO SCR5: q in dead buffer should only kill buffer
-* TODO SCR6: Provide global binding to pop-to live buffer
+* DONE SCR6: Provide global binding to pop-to live buffer
+  CLOSED: [2011-06-10 Fri 21:52]
+  1. Done by creating an mds-output-mode and making
+     mouse-3 active in its mode-map.
+  2. Fixed in b0679e6de8b6ba49aa57cbe6328a2645251984c1
+
 * TODO SCR7: where/showstack uses same property type as procname
   That does not work with mds-output-procname-p, which uses
   the property type to distinguish the "operating" procname.
@@ -58,7 +63,11 @@
 
 
 * TODO SCR10: mdc(unstopat) should not throw error if no breakpoint is set
-* TODO SCR11 unhelpful error message 'procedure name expected'
+* DONE SCR11 unhelpful error message 'procedure name expected'
+  CLOSED: [2011-06-10 Fri 21:49]
   This occurs when formatting an evaluated procedure.
   A simple fix is to indicate that a procedure was received.
   An alternative is to reassign it, then use that name to print it.
+
+  1. Fixed in 3a9e65a3b70e0ca522ec426b0ce78ab9ed0dacfa
+  2. This prints _fake_name for the procedure
