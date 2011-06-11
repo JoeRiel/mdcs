@@ -32,7 +32,10 @@
     Change to mdc:-Debugger.
   2. That didn't quite work; now it prints 'interrupted'
 
-* TODO SCR5: q in dead buffer should only kill buffer
+* DONE SCR5: q in dead buffer should only kill buffer
+  CLOSED: [2011-06-10 Fri 22:21]
+  Fixed in fe6f17e392bc3d9b87a647c0b4ba9bca7cb69d5c.
+
 * DONE SCR6: Provide global binding to pop-to live buffer
   CLOSED: [2011-06-10 Fri 21:52]
   1. Done by creating an mds-output-mode and making
@@ -44,7 +47,7 @@
   the property type to distinguish the "operating" procname.
   Need to use a different property name.
 * TODO SCR8: procname not displayed in output buffer on restart
-  1. If we immediately quit the debugger at live 1, but leave showstat alone,
+  1. If we immediately quit the debugger at line 1, but leave showstat alone,
      then if the debugger starts-up again at the same procedure, we do not
      update the output buffer because we incorrectly think we are still
      in the same procedure, at same line number.  
