@@ -456,8 +456,20 @@ use them to route the message."
      ((string= tag "MDC_PRINTF")
       (mds-output-display out-buf msg 'printf))
 
+     ((string= tag "DBG_ERROR")
+      (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "DBG_EXCEPTION")
+      (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "DBG_INFO")
+      (mds-output-display out-buf msg 'debug-info))
+
      ((string= tag "DBG_WATCHED_CONDS")
-      (mds-output-display out-buf msg 'watch-cond))
+      (mds-output-display out-buf msg 'watch-conds))
+
+     ((string= tag "DBG_WATCHED_ERRS")
+      (mds-output-display out-buf msg 'watch-errs))
 
      ((string= tag "DBG_STOP")
       (mds-output-display out-buf msg 'stop))

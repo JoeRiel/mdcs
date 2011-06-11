@@ -34,6 +34,12 @@
   "Face for debugger commands."
   :group 'mds-faces)
 
+(defface mds-debugger-info-face
+  '((((class color) (background dark)) (:foreground "light green")))
+  "Face for debugger information."
+  :group 'mds-faces)
+
+
 (defface mds-entry-procname-face
   '((((class color) (background dark)) (:foreground "magenta1" :underline t))
     (t (:underline t )))
@@ -268,8 +274,12 @@ Optional TAG identifies the message type."
 	      (ding) (sleep-for 0.2) (ding)
 	      (mds-insert-and-font-lock msg 'mds-info-face))
 
-	     ((eq tag 'watch-cond)
+	     ((or (eq tag 'watch-conds)
+		  (eq tag 'watch-errs))
 	      (mds-insert-and-font-lock msg 'mds-watch-face))
+
+	     ((eq tag 'debug-info)
+	      (mds-insert-and-font-lock msg 'mds-debugger-info-face))
 
 	     ((and tag (symbolp tag))
 	      ;; unknown tag

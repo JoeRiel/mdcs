@@ -42,7 +42,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _showstop
     , _where
     , _print
-    , origprint
+    , orig_print
+    , orig_stopat
 
     , getname
     , replaced := false
@@ -59,7 +60,8 @@ $endif
     Replace := proc()
         if not replaced then
             # Save these
-            origprint := eval(print);
+            orig_print  := eval(print);
+            orig_stopat := eval(:-stopat);
 
             # Reassign library debugger procedures
             unprotect(debugger_procs);
@@ -101,7 +103,7 @@ $endif
 
     # currently not used
     _print := proc()
-        origprint(_passed);
+        orig_print(_passed);
         debugger_printf(DBG_WARN, "print output does not display in debugger\n");
     end proc;
 
@@ -114,7 +116,7 @@ $endif
         if err = '`(none)`' then
             debugger_printf(DBG_ERROR, "%a\n", err);
         else
-            debugger_printf(DBG_ERROR, "%s\n", StringTools:-FormatMessage(err[2..]));
+            debugger_printf(DBG_ERROR, "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
 
@@ -271,7 +273,6 @@ $endif
 #}}}
 #{{{ debugger
 
-#$define RETURN debugger_printf(DBG_END, "}"); return
 $define RETURN return
 
 # The debugger proper. This gets invoked after a call to the function debug()
@@ -595,6 +596,7 @@ $define RETURN return
     description `Display a summary of all break points and watch points.`;
     local i, ls, val;
     global showstop;
+
         ls := stopat();
         if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo breakpoints set.\n")
         else
@@ -709,6 +711,10 @@ $define RETURN return
                    , $ )
 
     local pnam,st;
+        if _npassed = 0 then
+            # this isn't cheap.  May want to "improve".
+            return orig_stopat();
+        end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
@@ -779,6 +785,5 @@ $undef DBG_EVAL1
 $undef DBG_EVAL2
 $undef DBG_EVAL3
 $undef DBG_EVAL4
-
 
 end module;
