@@ -107,13 +107,10 @@
 	This approach works reasonably well, at least with one client.
 	Is currently implemented.
 
-
-     
-
-
 ** TODO Provide command for displaying breakpoints/watchpoints
-** TODO Provide a 'prettyprint' command (i.e. 2D output)
-   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.
+   *. This is generally done with the 'showstop' command,
+      which is run with 'p'.  But there is a bug, it is is not
+      working.  Investigating...
 ** TODO Develop a general Maple expression viewer
    1. It should work with any type of Maple expression
    2. Modules would consist of hyperlinked exports and locals;
@@ -157,6 +154,7 @@
 *** TODO DBG_WATCHED
 *** TODO DEBUGGER_PROCS
 
+
 * Long Term
  
 ** TODO Handle exports of unnamed modules.
@@ -179,3 +177,5 @@
       work with constructed modules, that is, those returned by
       a procedure.  Do they have to be unnamed?
       
+** TODO Provide a 'prettyprint' command (i.e. 2D output)
+   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.
