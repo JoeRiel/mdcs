@@ -1,5 +1,3 @@
-# -*- mode:makefile-gmake; mode:folding -*-
-#
 # Makefile - for mdcs, a Maple Debugger Client/Server
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
