@@ -58,9 +58,9 @@ export ProcToCode;
                        , { traperror :: truefalse := false }
                       )
 
-        sprintf("%a:=%a;"   # assign the proc
-                "mdc(%s);"  # instrument it
-                "%a(%s);"   # call it, with arguments
+        sprintf("%a:=%a;"
+                "mdc(%s);"
+                "%a(%s);"
                 , prc, eval(prc)
                 , sprintf("%q"
                           , _options['stopat']
