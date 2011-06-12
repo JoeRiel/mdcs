@@ -18,15 +18,15 @@ local ModuleApply;
                    " (3) to raise an error\n"
                    " (4) to issue a warning \n"
                    " (5) to exit\n"
+                   "> "
                   );
 
-            # readline
-            line := sprintf("%d", RandomTools:-Generate(integer(range=1..5)));
+            line := readline('default');
 
             if   line = "2" then Grid();
             elif line = "3" then Error();
             elif line = "4" then WARNING("this is a warning");
-            elif line = "5" then "Finished with Sample";
+            elif line = "5" then break;
             end if;
         end do;
 
