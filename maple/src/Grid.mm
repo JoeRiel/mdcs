@@ -23,14 +23,14 @@ Grid := module()
 ##DESCRIPTION
 ##- The `\CMD` command
 ##  creates a string that instruments a procedure
-##  for debugging with `\MOD` so that it can be 
+##  for debugging with `\MOD` so that it can be
 ##  used with the "Grid[Launch]" command.
-##  
+##
 ##OPTIONS
 ##opt_stopat
 ##opt_stoperror
 ##opt_traperror
-##  
+##
 ##EXAMPLES
 ##- Assign a simple procedure that greets each process.
 ##  Note that while using "printf" is appropriate for normal usage,
@@ -49,14 +49,18 @@ Grid := module()
 export ProcToCode;
 
     ProcToCode := proc(prc :: And(name,procedure)
+                       (*
+                           consider making these a single option, 'mdcargs'
+                         , { mdcargs := {} }
+                       *)
                        , { stopat :: {string,name} := "" }
                        , { stoperror :: truefalse := false }
                        , { traperror :: truefalse := false }
                       )
 
-        sprintf("%a:=%a;"
-                "mdc(%s);"
-                "%a(%s);"
+        sprintf("%a:=%a;"   # assign the proc
+                "mdc(%s);"  # instrument it
+                "%a(%s);"   # call it, with arguments
                 , prc, eval(prc)
                 , sprintf("%q"
                           , _options['stopat']
