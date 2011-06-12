@@ -52,6 +52,14 @@
 ##opt(port,posint)
 ##  The port (socket) used when _connection=socket_.
 ##  The default is 10000.
+##opt(stopat,name or string)
+##  Identifies a procedure at which to set a breakpoint.
+##opt(stoperror,truefalse)
+##  If `true`, stop at any error.
+##  The default is `false`.
+##opt(traperror,truefalse)
+##  If `true`, stop at trapped errors.
+##  The default is false.
 ##opt(timeout,nonnegint)
 ##  Specifies ...
 ##opt(view,truefalse)
@@ -75,6 +83,7 @@ module mdc()
 export Authenticate
     ,  Debugger
     ,  Format
+    ,  Grid
     ,  ModuleApply
     ,  Sample
     ,  Version
@@ -103,8 +112,9 @@ local Connect
 #}}}
 
 $ifdef BUILD_MLA
-$include <src/Format.mm>
 $include <src/Debugger.mm>
+$include <src/Format.mm>
+$include <src/Grid.mm>
 $include <src/Sample.mm>
 $endif
 
@@ -123,6 +133,8 @@ $endif
                          , { port :: posint := Port }
                          , { sample :: truefalse := false }
                          #, { timeout :: nonnegint := 0 }
+                         # TODO: permits specifying multiple
+                         # procedures.
                          , { stopat :: {string,name} := "" }
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
