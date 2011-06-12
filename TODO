@@ -107,13 +107,15 @@
 	This approach works reasonably well, at least with one client.
 	Is currently implemented.
 
+** DONE Provide command for displaying breakpoints/watchpoints
+   CLOSED: [2011-06-11 Sat 14:07]
+   1. This is generally done with the 'showstop' command,
+      which is run with 'p'.  But there is a bug, it is is not
+      working.  Investigating...
+   2. Fixed with 51352867dd2d00b05f6fd2a26bc1ee879f9d9a99.
+      There were several issues with displaying error
+      messages that needed to be fixed.
 
-     
-
-
-** TODO Provide command for displaying breakpoints/watchpoints
-** TODO Provide a 'prettyprint' command (i.e. 2D output)
-   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.
 ** TODO Develop a general Maple expression viewer
    1. It should work with any type of Maple expression
    2. Modules would consist of hyperlinked exports and locals;
@@ -123,39 +125,43 @@
 ** TODO Add untraperror, etc.
    Maybe this was a bad idea; reproducing that is crazy.
 ** Handle all tags
-   CLOSED: [2011-06-08 Wed 20:52]
+   CLOSED: [2011-06-11 Sat 14:08]
 
 
 *** DONE DBG_ARGS
+*** DONE DBG_ERR
+*** DONE DBG_ERROR
 *** DONE DBG_EVAL
+*** DONE DBG_EXCEPTION
+*** DONE DBG_INFO
 *** DONE DBG_PROMPT
 *** DONE DBG_SHOW
 *** DONE DBG_STACK
+*** DONE DBG_STATE
+*** DONE DBG_STOP
+*** DONE DBG_WARN
+*** DONE DBG_WATCHED
 *** DONE DBG_WHERE
 *** DONE MDC_PRINTF
 *** DONE MPL_ERR
 
-*** TODO DBG_END
-*** TODO DBG_ERR
-*** TODO DBG_ERR1
-*** TODO DBG_ERR2
-*** TODO DBG_ERROR
-*** TODO DBG_EVAL1
-*** TODO DBG_EVAL2
-*** TODO DBG_EVAL3
-*** TODO DBG_EVAL4
-*** TODO DBG_EXCEPTION
 *** TODO DBG_HELP
-*** TODO DBG_INFO
 *** TODO DBG_NULL
 *** TODO DBG_STACK1
 *** TODO DBG_STACK2
 *** TODO DBG_STACK3
-*** TODO DBG_STATE
-*** TODO DBG_STOP
-*** TODO DBG_WARN
-*** TODO DBG_WATCHED
-*** TODO DEBUGGER_PROCS
+
+
+
+** TODO Provide a source finder/viewer
+   1. It should work with a TAGS file
+      That suggests the procedure for tagging
+      Maple source files might need some work.
+   2. It should be able to fetch from perforce
+   3. The really desirable feature is the ability
+      to go right to the proper line in the source.
+      Stefan was going to develop a hook for this,
+      but I haven't heard about it.
 
 * Long Term
  
@@ -179,3 +185,5 @@
       work with constructed modules, that is, those returned by
       a procedure.  Do they have to be unnamed?
       
+** TODO Provide a 'prettyprint' command (i.e. 2D output)
+   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.

@@ -328,19 +328,20 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
 	(mds-showstat-display-state mds-showstat-state))
 
        ('t
-	(if (not (search-forward (concat " " mds-showstat-statement) nil t))
-	    ;; this has never occurred.
-	    (error "cannot find statement in procedure body")
+	(let ((state (mds-showstat-determine-state mds-showstat-statement)))
+	  (when (null state)
+	    (beep)
+	    (message "cannot find statement in procedure body"))
 	  ;; save state and clear statement
-	  (setq mds-showstat-state (mds-showstat-get-state)
-		mds-showstat-statement "")
-	  ;; Move the state arrow
-	  (mds-showstat-display-state mds-showstat-state))))
+	  (setq mds-showstat-state state)
+	  mds-showstat-statement "")
+	;; Move the state arrow
+	(mds-showstat-display-state mds-showstat-state))))
       
       ;; Make buffer visible
       (if mds-showstat-live
 	  (display-buffer buf)
-	(mds-windows-display-dead mds-client)))))
+	(mds-windows-display-dead mds-client))))
 
 ;;}}}
 ;;{{{ (*) mds-showstat-display-state
