@@ -107,10 +107,15 @@
 	This approach works reasonably well, at least with one client.
 	Is currently implemented.
 
-** TODO Provide command for displaying breakpoints/watchpoints
-   *. This is generally done with the 'showstop' command,
+** DONE Provide command for displaying breakpoints/watchpoints
+   CLOSED: [2011-06-11 Sat 14:07]
+   1. This is generally done with the 'showstop' command,
       which is run with 'p'.  But there is a bug, it is is not
       working.  Investigating...
+   2. Fixed with 51352867dd2d00b05f6fd2a26bc1ee879f9d9a99.
+      There were several issues with displaying error
+      messages that needed to be fixed.
+
 ** TODO Develop a general Maple expression viewer
    1. It should work with any type of Maple expression
    2. Modules would consist of hyperlinked exports and locals;
@@ -120,7 +125,7 @@
 ** TODO Add untraperror, etc.
    Maybe this was a bad idea; reproducing that is crazy.
 ** Handle all tags
-   CLOSED: [2011-06-08 Wed 20:52]
+   CLOSED: [2011-06-11 Sat 14:08]
 
 
 *** DONE DBG_ARGS
@@ -145,6 +150,18 @@
 *** TODO DBG_STACK1
 *** TODO DBG_STACK2
 *** TODO DBG_STACK3
+
+
+
+** TODO Provide a source finder/viewer
+   1. It should work with a TAGS file
+      That suggests the procedure for tagging
+      Maple source files might need some work.
+   2. It should be able to fetch from perforce
+   3. The really desirable feature is the ability
+      to go right to the proper line in the source.
+      Stefan was going to develop a hook for this,
+      but I haven't heard about it.
 
 * Long Term
  
