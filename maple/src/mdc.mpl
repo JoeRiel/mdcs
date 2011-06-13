@@ -2,7 +2,7 @@
 
 #{{{ mpldoc
 
-##INCLUDE ../include/mpldoc_macros.mi
+##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE MOD mdc
 ##MODULE \MOD
 ##HALFLINE appliable module for communicating with a Maple Debugger Server
@@ -126,6 +126,7 @@ $endif
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
                          , { enter :: truefalse := false }
                          , { greeting :: string := "" }
+                         , { usegrid :: truefalse := false }
                          , { host :: string := Host }
                          , { label :: string := kernelopts('username') }
                          , { maxlength :: nonnegint := max_length }
@@ -145,6 +146,7 @@ $endif
         )
 
     global `debugger/width`;
+    local lbl;
 
         if connection <> 'socket' then
             error "currently only a socket connection is supported"
@@ -165,10 +167,16 @@ $endif
             `debugger/width` := max_length;
         end if;
 
+        if usegrid then
+            lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
+        else
+            lbl := label;
+        end if;
+
         Debugger:-Replace();
 
         try
-            Connect(host, port, CreateID(label), _options['beep','greeting'] );
+            Connect(host, port, CreateID(lbl), _options['beep','greeting'] );
         catch:
             Debugger:-Restore();
             error;
@@ -240,7 +248,7 @@ $endif
         Host := host;
         Port := port;
         if greeting <> "" then
-            Debugger:-Printf(GREET, greeting);
+            Debugger:-Printf('GREET', greeting);
         end if;
         return NULL;
     end proc;

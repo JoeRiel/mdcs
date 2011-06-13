@@ -1,4 +1,4 @@
-##INCLUDE ../include/mpldoc_macros.mi
+##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE MOD Debugger
 ##MODULE \MOD
 ##HALFLINE replacement functions for Maple debugger
