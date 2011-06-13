@@ -33,11 +33,6 @@
 ;;}}}
 ;;{{{ Commentary
 
-;; This package provides a major mode, mds-showstat, for debugging
-;; Maple code.  It uses the Maple debugger to step through interpreted
-;; Maple code, which is displayed in a buffer. It is not a true source
-;; code debugger, that is, one that allows stepping through the source
-;; *file*; however, it is the next best thing.
 
 ;;}}}
 ;;{{{ TODO
