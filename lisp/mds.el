@@ -497,10 +497,13 @@ use them to route the message."
   (if mds-clients
       (let* ((L mds-clients)
 	     (client (car L)))
-	;; rotate list
-	(setq mds-clients (reverse (cons client (reverse (cdr L)))))
-	;; display the live buffer.  Maybe the whole thing...
-	(mds-windows-display-client client))))
+	(and (> (length L) 1)
+	     ;; client is already displayed
+	     (get-buffer-window (mds--get-client-live-buf client))
+	     ;; rotate list
+	     (setq mds-clients (reverse (cons client (reverse (cdr L))))))
+	;; display the live buffer.  Maybe the whole thing.
+	(mds-windows-display-client (car mds-clients)))))
 
 ;;}}}
 
