@@ -1,5 +1,3 @@
-# -*- mode:mpldoc -*-
-
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE MOD Format
 ##MODULE \PKG[\MOD]

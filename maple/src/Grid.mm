@@ -1,4 +1,4 @@
-##INCLUDE ../include/mpldoc_macros.mi
+##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD Grid
 ##MODULE(help) \MOD[\SUBMOD]
 ##HALFLINE submodule for handling Grid a Maple Debugger Server
@@ -27,9 +27,14 @@ Grid := module()
 ##  used with the "Grid[Launch]" command.
 ##
 ##OPTIONS
-##opt_stopat
-##opt_stoperror
-##opt_traperror
+##opt(mdc_options,set)
+##  Set of options for "mdc".  These are passed to `mdc`,
+##  in addition to the option 'usegrid=true'.
+##  The default is the empty set.
+##
+##NOTES(nohelp)
+##- If nothing else is added to this module, then rename the procedue and move
+##  it into 'mdc'.
 ##
 ##EXAMPLES
 ##- Assign a simple procedure that greets each process.
@@ -42,30 +47,22 @@ Grid := module()
 ##>>    Barrier();
 ##>> end proc:
 ##- Instrument it for debugging with \MOD in Grid.
-##> code := \MOD:-\SUBMOD:-\CMD(hello, "Maple Debugger", 'stopat'=hello):
+##> code := \MOD:-\SUBMOD:-\CMD(hello, "Maple Debugger", 'stopat'=hello);
 ##- Launch Grid.
 ##> Grid:-Launch(code, 'numnodes'=2);
 
 export ProcToCode;
 
     ProcToCode := proc(prc :: And(name,procedure)
-                       (*
-                           consider making these a single option, 'mdcargs'
-                         , { mdcargs := {} }
-                       *)
-                       , { stopat :: {string,name} := "" }
-                       , { stoperror :: truefalse := false }
-                       , { traperror :: truefalse := false }
+                       , { mdc_options :: set := {} }
                       )
-
         sprintf("%a:=%a;"
-                "mdc(%s);"
+                "%s;"
                 "%a(%s);"
                 , prc, eval(prc)
-                , sprintf("%q"
-                          , _options['stopat']
-                          , _options['stoperror']
-                          , _options['traperror']
+                , sprintf("mdc(%q)"
+                          , op(mdc_options)
+                          , 'usegrid' = true
                          )
                 , prc
                 , sprintf("%q",_rest)
