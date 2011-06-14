@@ -45,6 +45,7 @@ local RotateByScaling
 # Define a few macros to accelerate conversions
 $define rotr(n,m) RotateByScaling(n, 2^(32-m), 2^m)
 $define rotl(n,m) RotateByScaling(n, 2^m, 2^(32-m))
+$define shiftright(n,m) iquo(n,2^m)
 $define toword(n) irem(n,2^32)
 
     #{{{ SHA1
@@ -186,8 +187,8 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
 
             # Extend the sixteen 32-bit words into sixty-four 32-bit words:
             for i from 16 to 63 do
-                s0 := Xor(Xor(rotr(W[i-15],7), rotr18(W[i-15])), iquo(W[i-15],2^3));
-                s1 := Xor(Xor(rotr(W[i-2],17), rotr19(W[i-2])), iquo(W[i-2],2^10));
+                s0 := Xor(Xor(rotr(W[i-15],7), rotr(W[i-15],18)), shiftright(W[i-15],3));
+                s1 := Xor(Xor(rotr(W[i-2],17), rotr(W[i-2], 19)), shiftright(W[i-2],10));
                 W[i] := toword(W[i-16] + s0 + W[i-7] + s1);
             end do;
 
@@ -323,7 +324,7 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
 
     PartialFillArray := proc(str :: string, W :: Array)
     local i, fullrows, r;
-        fullrows := iquo(length(str), 4, 'r');  # r is left over characters
+        fullrows := iquo(length(str), 4, 'r');  # r is number of remaining characters
         for i from 0 to fullrows-1 do
             W[i] := StringToInteger(str[i*4+1 .. (i+1)*4]);
         end do;
