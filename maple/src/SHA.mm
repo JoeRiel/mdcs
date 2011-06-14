@@ -23,7 +23,6 @@ local rotl1, rotl5, rotl30
     , `bits/chunk`  := 8 * `bytes/chunk`
     , bits_in_length_code := 64
 
-
     ;
 
 #}}}
@@ -47,7 +46,7 @@ local rotl1, rotl5, rotl30
         for i to Nchunks do
             s := str[(i-1)*`bytes/chunk`+1 .. i*`bytes/chunk`];
             FillArray(s,W);
-            sha:-ProcessChunk(W);
+            sha:-ProcessChunk(W, H);
         end do;
 
         # Do last chunk(s)
@@ -206,7 +205,7 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
             for i from 16 to 63 do
                 s0 := Xor(Xor(rotr7(W[i-15]), rotr18(W[i-15])), iquo(W[i-15],2^3));
                 s1 := Xor(Xor(rotr17(W[i-2]), rotr19(W[i-2])), iquo(W[i-2],2^10));
-                W[i] := W[i-16] + s0 + W[i-7] + s1;
+                W[i] := irem(W[i-16] + s0 + W[i-7] + s1, 2^32);
             end do;
 
             # Initialize for this chunk
@@ -215,10 +214,10 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
             for i from 0 to 63 do
                 s0 := Xor(Xor(rotr2(a), rotr13(a)), rotr22(a));
                 maj := Xor(Xor(And(a,b), And(a,c)), And(b,c));
-                t2 := s0 + maj;
+                t2 := irem(s0 + maj, 2^32);
                 s1 := Xor(Xor(rotr6(e), rotr11(e)), rotr25(e));
                 ch := Xor(And(e,f), And(Not(e,'bits'=32), g));
-                t1 := h + s1 + ch + K[i] + W[i];
+                t1 := irem(h + s1 + ch + K[i] + W[i], 2^32);
 
                 h := g;
                 g := f;
