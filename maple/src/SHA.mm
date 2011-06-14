@@ -7,8 +7,7 @@ export SHA1
 
 #{{{ locals
 
-local rotl1, rotl5, rotl30
-    , rotr2, rotr6, rotr7, rotr11, rotr13, rotr17, rotr18, rotr19, rotr22, rotr25
+local RotateByScaling
     , FillArray
     , InsertLengthInArray
     , IntegerToString
@@ -26,6 +25,12 @@ local rotl1, rotl5, rotl30
     ;
 
 #}}}
+
+# Define a few macros to accelerate conversions
+$define rotr(n,m) RotateByScaling(n, 2^(32-m), 2^m)
+$define rotl(n,m) RotateByScaling(n, 2^m, 2^(32-m))
+$define toword(n) irem(n,2^32)
+
 
     #{{{ OuterLoop
 
@@ -103,13 +108,13 @@ local rotl1, rotl5, rotl30
 
             # Extend the sixteen 32-bit words into eighty 32-bit words:
             for i from 16 to 79 do
-                W[i] := rotl1(Xor(Xor(W[i-3],W[i-8]), Xor(W[i-14],W[i-16])));
+                W[i] := rotl(Xor(Xor(W[i-3],W[i-8]), Xor(W[i-14],W[i-16])), 1);
             end do;
 
             # Initialize for this chunk
             (a,b,c,d,e) := seq(H[k],k=0..4);
 
-$define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
+$define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
 #$define PRINT printf("%2d: %x  %x  %x  %x  %x  %x  %x\n", i, a, b, c, d, e, f, W[i])
 
             k := K[0];
@@ -136,11 +141,11 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
                 (a,b,c,d,e) := ABCDE;
             end do;
 
-            H[0] := irem(H[0] + a, 2^32);
-            H[1] := irem(H[1] + b, 2^32);
-            H[2] := irem(H[2] + c, 2^32);
-            H[3] := irem(H[3] + d, 2^32);
-            H[4] := irem(H[4] + e, 2^32);
+            H[0] := toword(H[0] + a);
+            H[1] := toword(H[1] + b);
+            H[2] := toword(H[2] + c);
+            H[3] := toword(H[3] + d);
+            H[4] := toword(H[4] + e);
 
             return NULL;
 
@@ -203,21 +208,23 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
 
             # Extend the sixteen 32-bit words into sixty-four 32-bit words:
             for i from 16 to 63 do
-                s0 := Xor(Xor(rotr7(W[i-15]), rotr18(W[i-15])), iquo(W[i-15],2^3));
-                s1 := Xor(Xor(rotr17(W[i-2]), rotr19(W[i-2])), iquo(W[i-2],2^10));
-                W[i] := irem(W[i-16] + s0 + W[i-7] + s1, 2^32);
+                s0 := Xor(Xor(rotr(W[i-15],7), rotr18(W[i-15])), iquo(W[i-15],2^3));
+                s1 := Xor(Xor(rotr(W[i-2],17), rotr19(W[i-2])), iquo(W[i-2],2^10));
+                W[i] := toword(W[i-16] + s0 + W[i-7] + s1);
             end do;
+
+
 
             # Initialize for this chunk
             (a,b,c,d,e,f,g,h) := seq(H[j],j=0..7);
 
             for i from 0 to 63 do
-                s0 := Xor(Xor(rotr2(a), rotr13(a)), rotr22(a));
+                s0 := Xor(Xor(rotr(a,2), rotr(a,13)), rotr(a,22));
                 maj := Xor(Xor(And(a,b), And(a,c)), And(b,c));
-                t2 := irem(s0 + maj, 2^32);
-                s1 := Xor(Xor(rotr6(e), rotr11(e)), rotr25(e));
+                t2 := toword(s0 + maj);
+                s1 := Xor(Xor(rotr(e,6), rotr(e,11)), rotr(e,25));
                 ch := Xor(And(e,f), And(Not(e,'bits'=32), g));
-                t1 := irem(h + s1 + ch + K[i] + W[i], 2^32);
+                t1 := toword(h + s1 + ch + K[i] + W[i]);
 
                 h := g;
                 g := f;
@@ -230,14 +237,14 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
             end do;
 
             # Add this chunk's hash to result so far:
-            H[0] := irem(H[0] + a, 2^32);
-            H[1] := irem(H[1] + b, 2^32);
-            H[2] := irem(H[2] + c, 2^32);
-            H[3] := irem(H[3] + d, 2^32);
-            H[4] := irem(H[4] + e, 2^32);
-            H[5] := irem(H[5] + f, 2^32);
-            H[6] := irem(H[6] + g, 2^32);
-            H[7] := irem(H[7] + h, 2^32);
+            H[0] := toword(H[0] + a);
+            H[1] := toword(H[1] + b);
+            H[2] := toword(H[2] + c);
+            H[3] := toword(H[3] + d);
+            H[4] := toword(H[4] + e);
+            H[5] := toword(H[5] + f);
+            H[6] := toword(H[6] + g);
+            H[7] := toword(H[7] + h);
 
             return NULL;
 
@@ -332,47 +339,11 @@ $define ABCDE (irem(rotl5(a,5) + f + e + k + W[i],2^32), a, rotl30(b), c, d)
         return W;
     end proc;
     #}}}
-    #{{{ Rotations
+    #{{{ RotateByScaling
 
-##TEST
-## $include <AssignFunc.mi>
-## AssignLocal(rotl1, SHA1:-rotl1);
-## AssignLocal(rotl5, SHA1:-rotl5);
-## AssignLocal(rotl30, SHA1:-rotl30);
-##
-## Try("rotl1", map(rotl1, [0,1,2,4,2^31]), [0,2,4,8,1]);
-## Try("rotl1.1", rotl1(23) + rotl1(24), rotl1(23+24));
-## Try("rotl5", map(rotll5, [0,1,2,4,2^31]), [0,32,64,128,16]);
-## Try("rotl30", map(rotl30, [0,1,2^31]), [0,2^30,2^29]);
-##
-## Try("rotr2", map(rotr2, [0,1,2,4], [0,2^30,2^31,1]);
-
-$define ROTL(M)\
-    proc(n)\
-    local q;\
-        2^M*irem(n,2^(32-M),'q') + q;\
-    end proc
-
-$define ROTR(M)\
-    proc(n)\
-    local q;\
-        2^(32-M)*irem(n,2^M,'q') + q;\
-    end proc
-
-    rotl1  := ROTL(1);
-    rotl5  := ROTL(5);
-    rotl30 := ROTL(30);
-
-    rotr2  := ROTR(2);
-    rotr6  := ROTR(6);
-    rotr7  := ROTR(7);
-    rotr11 := ROTR(11);
-    rotr13 := ROTR(13);
-    rotr17 := ROTR(17);
-    rotr18 := ROTR(18);
-    rotr19 := ROTR(19);
-    rotr22 := ROTR(22);
-    rotr25 := ROTR(25);
+    RotateByScaling := proc(n,a,b)
+        a*irem(n,b,'q') + q;
+    end proc;
 
     #}}}
 
