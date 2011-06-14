@@ -10,9 +10,9 @@ local h0,h1,h2,h3,h4
     , rot1
     , rot5
     , rot30
-    , FillW
-    , InsertLengthInW
-    , PartialFillW
+    , FillArray
+    , InsertLengthInArray
+    , PartialFillArray
     , ProcessChunk
     , StringToInteger
 
@@ -68,21 +68,21 @@ local h0,h1,h2,h3,h4
         # then pass to ProcessChunk.
         for i to Nchunks do
             s := str[(i-1)*`bytes/chunk`+1 .. i*`bytes/chunk`];
-            FillW(s,W);
+            FillArray(s,W);
             ProcessChunk(W);
         end do;
 
         # Do last chunk(s)
         s := str[`bytes/chunk`*Nchunks+1..];
         rem_bits := 8*length(s);
-        PartialFillW(s,W);
+        PartialFillArray(s,W);
 
         # Determine whether we can fit the remainder in one chunk.
         if rem_bits + bits_in_length_code + 1 > `bits/chunk` then
             ProcessChunk( W );
-            InsertLengthInW( bits_in_str, W, 'clear');
+            InsertLengthInArray( bits_in_str, W, 'clear');
         else
-            InsertLengthInW( bits_in_str, W);
+            InsertLengthInArray( bits_in_str, W);
         end if;
 
         ProcessChunk( W );
@@ -103,11 +103,8 @@ local h0,h1,h2,h3,h4
 
     uses Bits;
 
-        # move up when working
-
         # Extend the sixteen 32-bit words into eighty 32-bit words:
         for i from 16 to 79 do
-#            W[i] := rot1(Xor(Xor(Xor(W[i-3],W[i-8]),W[i-14]),W[i-16]));
             W[i] := rot1(Xor(Xor(W[i-3],W[i-8]), Xor(W[i-14],W[i-16])));
         end do;
 
@@ -160,9 +157,13 @@ $define ABCDE (irem(rot5(a,5) + f + e + k + W[i],`2^32`), a, rot30(b), c, d)
     end proc;
 
     #}}}
-    #{{{ FillW
+    #{{{ FillArray
 
-    FillW := proc(str :: string, W :: Array)
+    # Fill rows 0 to 15 of Array W with string str,
+    # converted to integers.  Each row holds four characters.
+    # Str is exactly 512 characters.
+
+    FillArray := proc(str :: string, W :: Array)
     local i;
         for i from 0 to 15 do
             W[i] := StringToInteger(str[i*4+1 .. (i+1)*4]);
@@ -171,34 +172,42 @@ $define ABCDE (irem(rot5(a,5) + f + e + k + W[i],`2^32`), a, rot30(b), c, d)
     end proc;
 
     #}}}
-    #{{{ PartialFillW
+    #{{{ PartialFillArray
 
-    PartialFillW := proc(str :: string, W :: Array)
+    # Fill some of the rows of Array with string str.
+    # Each row holds four characters.  Str is less than 512
+    # characters; it may be zero length.  Insert a one bit
+    # (byte 2^7) after the last character.  Fill remaining
+    # positions, through row 15, with zeros.
+
+    PartialFillArray := proc(str :: string, W :: Array)
     local i, num, fullrows, r, s;
         fullrows := iquo(length(str), 4, 'r');  # r is left over characters
         for i from 0 to fullrows-1 do
             W[i] := StringToInteger(str[i*4+1 .. (i+1)*4]);
         end do;
-        # Convert remaining string in integer, then shift so
+        # Convert remaining string to integer, then shift so
         # it is flush-left, which means shift it 4-r bytes.
-        s := str[i*4+1..];
-        num := StringToInteger(s);
-        num := num * 2^(8*(4-r));
-        # Now insert a 1 to the right of the character
-        num := num + 2^(8*(4-r)-1);
-        W[i] := num;
+        # Finally, add the 1-bit just to the right of it.
+        W[i] := StringToInteger(str[i*4+1..]) * 2^(8*(4-r)) + 2^(8*(4-r)-1)
+
+        # Clear the remaining rows, through row 15
         for i from i+1 to 15 do
             W[i] := 0;
         end do;
         return W;
     end proc;
     #}}}
-    #{{{ InsertLengthInW
-    InsertLengthInW := proc( len :: nonnegint
-                             , W :: Array
-                             , { clear :: truefalse := false }
-                             , $
-                           )
+    #{{{ InsertLengthInArray
+
+    # Insert the length of the original string, in bits, into
+    # the Array.  It is a 64-bit field and goes in rows 14 and 15.
+    # If 'clear' is true, clear the previous rows.
+    InsertLengthInArray := proc( len :: nonnegint
+                                 , W :: Array
+                                 , { clear :: truefalse := false }
+                                 , $
+                               )
     local i,r;
         if clear then
             for i from 0 to 15-2 do
