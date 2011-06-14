@@ -1,7 +1,8 @@
 unprotect('SHA');
 module SHA()
 
-export SHA1
+export ModuleApply
+    ,  SHA1
     ,  SHA2
     ;
 
@@ -25,55 +26,26 @@ local RotateByScaling
     ;
 
 #}}}
+    #{{{ ModuleApply
+
+    ModuleApply := proc( str :: string
+                         , { sha :: identical(sha1,sha2) := 'sha1' }
+                         , $
+                       )
+
+        if sha = sha1 then
+            return SHA1(str);
+        else
+            return SHA2(str);
+        end if;
+    end proc;
+
+    #}}}
 
 # Define a few macros to accelerate conversions
 $define rotr(n,m) RotateByScaling(n, 2^(32-m), 2^m)
 $define rotl(n,m) RotateByScaling(n, 2^m, 2^(32-m))
 $define toword(n) irem(n,2^32)
-
-
-    #{{{ OuterLoop
-
-    OuterLoop := proc(str :: string, sha)
-    uses Bits;
-    local bits_in_str, bytes_in_str, Nchunks, i, rem_bits, s, W, H;
-
-        (W,H) := sha:-Initialize();
-
-        # Preprocess
-        bytes_in_str := length(str); # each character is one-byte
-        bits_in_str := 8*bytes_in_str;
-        Nchunks := iquo(bytes_in_str, `bytes/chunk`);
-
-        # Process most chunks.
-        # Extract the 32-byte substring, convert to an integer,
-        # then pass to ProcessChunk.
-        for i to Nchunks do
-            s := str[(i-1)*`bytes/chunk`+1 .. i*`bytes/chunk`];
-            FillArray(s,W);
-            sha:-ProcessChunk(W, H);
-        end do;
-
-        # Do last chunk(s)
-        s := str[`bytes/chunk`*Nchunks+1..];
-        rem_bits := 8*length(s);
-        PartialFillArray(s,W);
-
-        # Determine whether we can fit the remainder in one chunk.
-        if rem_bits + bits_in_length_code + 1 > `bits/chunk` then
-            ProcessChunk( W, H );
-            InsertLengthInArray( bits_in_str, W, 'clear');
-        else
-            InsertLengthInArray( bits_in_str, W);
-        end if;
-
-        sha:-ProcessChunk( W, H );
-
-        return sha:-CombineHash( H );
-
-    end proc;
-
-    #}}}
 
     #{{{ SHA1
 
@@ -87,18 +59,21 @@ $define toword(n) irem(n,2^32)
     local K := Array(0..3, map(convert
                                , ["5a827999","6ed9eba1","8f1bbcdc","ca62c1d6"]
                                , 'decimal, hexadecimal'
-                              ));
+                              ))
+
+        , H0 := Array(0..4, map(convert
+                                , ["67452301", "efcdab89", "98badcfe", "10325476", "c3d2e1f0"]
+                                , 'decimal, hexadecimal'
+                               ))
+        ;
+
 
         ModuleApply := proc( s :: string )
             OuterLoop( s, thismodule );
         end proc;
 
         Initialize := proc()
-            ( Array(0..79)
-              , Array(0..4, map(convert
-                                , ["67452301", "efcdab89", "98badcfe", "10325476", "c3d2e1f0"]
-                                , 'decimal, hexadecimal'
-                               )));
+            ( Array(0..79), Array( H0 ))
         end proc;
 
         ProcessChunk := proc( W :: Array, H :: Array )
@@ -187,18 +162,21 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
                               "19a4c116", "1e376c08", "2748774c", "34b0bcb5", "391c0cb3", "4ed8aa4a", "5b9cca4f", "682e6ff3",
                               "748f82ee", "78a5636f", "84c87814", "8cc70208", "90befffa", "a4506ceb", "bef9a3f7", "c67178f2"]
                            , 'decimal, hexadecimal'
-                          ));
+                          ))
+
+        , H0 := Array(0..7, map(convert
+                                , ["6a09e667", "bb67ae85", "3c6ef372", "a54ff53a", "510e527f", "9b05688c", "1f83d9ab", "5be0cd19"]
+                                , 'decimal, hexadecimal'
+                             ))
+        ;
+
 
         ModuleApply := proc( s :: string )
             OuterLoop( s, thismodule );
         end proc;
 
         Initialize := proc()
-            ( Array(0..63)
-              , Array(0..7, map(convert
-                                , ["6a09e667", "bb67ae85", "3c6ef372", "a54ff53a", "510e527f", "9b05688c", "1f83d9ab", "5be0cd19"]
-                                , 'decimal, hexadecimal'
-                               )));
+            ( Array(0..63), Array(H0) );
         end proc;
 
         ProcessChunk := proc( W :: Array, H :: Array )
@@ -258,16 +236,61 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
     end module;
 
 
+
+    #}}}
+
+    #{{{ OuterLoop
+
+    OuterLoop := proc(str :: string, sha)
+    uses Bits;
+    local bits_in_str, bytes_in_str, Nchunks, i, rem_bits, s, W, H;
+
+        (W,H) := sha:-Initialize();
+
+        # Preprocess
+        bytes_in_str := length(str); # each character is one-byte
+        bits_in_str := 8*bytes_in_str;
+        Nchunks := iquo(bytes_in_str, `bytes/chunk`);
+
+        # Process most chunks.
+        # Extract the 32-byte substring, convert to an integer,
+        # then pass to ProcessChunk.
+        for i to Nchunks do
+            s := str[(i-1)*`bytes/chunk`+1 .. i*`bytes/chunk`];
+            FillArray(s,W);
+            sha:-ProcessChunk(W, H);
+        end do;
+
+        # Do last chunk(s)
+        s := str[`bytes/chunk`*Nchunks+1..];
+        rem_bits := 8*length(s);
+        PartialFillArray(s,W);
+
+        # Determine whether we can fit the remainder in one chunk.
+        if rem_bits + bits_in_length_code + 1 > `bits/chunk` then
+            ProcessChunk( W, H );
+            InsertLengthInArray( bits_in_str, W, 'clear');
+        else
+            InsertLengthInArray( bits_in_str, W);
+        end if;
+
+        sha:-ProcessChunk( W, H );
+
+        return sha:-CombineHash( H );
+
+    end proc;
+
+    #}}}
+
+    #{{{ IntegerToString
+
     IntegerToString := proc(i)
     local s;
         s := sprintf("%x",i);
         cat("0"$(8-length(s)), s);
     end proc;
 
-
-
     #}}}
-
     #{{{ StringToInteger
 
     StringToInteger := proc(s)
