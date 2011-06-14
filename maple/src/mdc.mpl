@@ -125,7 +125,6 @@ $endif
                          , { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
                          , { enter :: truefalse := false }
-                         , { greeting :: string := "" }
                          , { usegrid :: truefalse := false }
                          , { host :: string := Host }
                          , { label :: string := kernelopts('username') }
@@ -176,7 +175,7 @@ $endif
         Debugger:-Replace();
 
         try
-            Connect(host, port, CreateID(lbl), _options['beep','greeting'] );
+            Connect(host, port, CreateID(lbl), _options['beep'] );
         catch:
             Debugger:-Restore();
             error;
@@ -232,9 +231,9 @@ $endif
                     , port :: posint
                     , id :: string
                     , { beep :: truefalse := true }
-                    , { greeting :: string := "" }
                     , $
                    )
+    local line;
         if sid <> -1 then
             Sockets:-Close(sid);
         end if;
@@ -247,10 +246,15 @@ $endif
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
-        if greeting <> "" then
-            Debugger:-Printf('GREET', greeting);
+        # handle login (hack for now)
+        line := Sockets:-Read(sid);
+        printf("%s\n", line);
+        if line = "userid: " then
+            Sockets:-Write(sid, id);
+            line := Sockets:-Read(sid);
+            return NULL;
         end if;
-        return NULL;
+        error "could not connect";
     end proc;
 
 #}}}

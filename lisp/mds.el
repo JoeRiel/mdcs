@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-login)
 (require 'mds-output)
 (require 'mds-showstat)
 (require 'mds-windows)
@@ -140,7 +141,7 @@ The returned client structure is a list (PROC status queue ID
 live-buf dead-buf out-buf), where status is initialized to 'new'."
   (let ((client (list proc)))
     (setcdr client (list
-		    'new
+		    'login
 		    (mds-queue-create proc)
 		    id
 		    (mds-showstat-create-buffer client 'live)
@@ -175,7 +176,7 @@ If none, then return nil."
 (defun mds-get-client-status (proc)
   (let ((client (assoc proc mds-clients)))
     (if client (cadr client))))
-	
+
     ;; (if (>= mds-number-clients mds-max-number-clients)
     ;; 	'rejected
     ;;   (mds-add-client (mds-create-client proc "dummy id"))
@@ -183,6 +184,9 @@ If none, then return nil."
 
 (defun mds-set-status-client (client status)
   (if client (setcar (cdr client) status)))
+
+(defun mds-client-set-id (client id)
+    (if client (setcar (cdr (cddr client)) id)))
 
 ;;}}}
 ;;{{{ Client association list
@@ -262,11 +266,12 @@ Do not touch `mds-log-buffer'."
 	    (mds-writeto-log proc "accepted client"))
 	   ((null status)
 	    ;; not yet registered
-	    (mds-add-client (mds-create-client proc "dummy id")))
+	    (mds-add-client (mds-create-client proc "anonymous"))
+	    (mds-login proc msg))
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
 	    (mds-writeto-log proc "rejected client"))
-	   ((eq status 'login) (mds-writeto-log proc "begin login"))
+	   ((eq status 'login) (mds-login proc msg))
 	   ))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
@@ -294,12 +299,15 @@ Do not touch `mds-log-buffer'."
       ;; route msg to queue
       (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
-     ((eq status 'new)
-      (beep)
+     ((eq status 'login)
+      (ding)
+      (mds-login proc msg))
+     ((eq status 'start-debugging)
+      (ding)
       (let ((client (mds-get-client-from-proc proc)))
-	(mds-set-status-client client 'accepted)
-	(mds-windows-display-client client)
-	(mds-filter proc msg)))
+       	(mds-set-status-client client 'accepted)
+       	(mds-windows-display-client client)
+       	(mds-filter proc msg)))
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
