@@ -249,8 +249,7 @@ $endif
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
-            printf("%s\n", line);	(mds-login-set-userid proc msg)
-
+            printf("%s\n", line);
             return NULL;
         end if;
         error "could not connect";
