@@ -20,9 +20,8 @@
 ##  It communicates with a *Maple Debugger Server*.
 ##OPTIONS
 ##opt(beep,truefalse)
-##  If `true`, emit a tri-tone beep
+##  If `true`, emit a beep
 ##  when succesfully connecting.
-##  Calls the system function `beep`.
 ##  The default is `true`.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
@@ -96,6 +95,7 @@ local Connect
     , CreateID
     , ModuleUnload
     , Read
+    , Write
     , WriteTagf
 
     # Module-local variables.  Seems unlikely that the debugger
@@ -238,20 +238,19 @@ $endif
             Sockets:-Close(sid);
         end if;
         if beep then
-            try
-                ssystem("beep");
-            catch:
-            end try;
+            printf("\a");
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
         # handle login (hack for now)
         line := Sockets:-Read(sid);
-        printf("%s\n", line);
+        # printf("%s\n", line);
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
+            printf("%s\n", line);	(mds-login-set-userid proc msg)
+
             return NULL;
         end if;
         error "could not connect";
@@ -266,6 +265,7 @@ $endif
 
     Disconnect := proc()
         if sid <> -1 then
+            printf("goodbye\n");
             Sockets:-Close(sid);
             sid := -1;
         end if;
@@ -277,6 +277,15 @@ $endif
 
     Read := proc()
         Sockets:-Read(sid);
+    end proc;
+
+#}}}
+#{{{ Write
+
+    Write := proc(msg :: string)
+        if sid <> -1 then
+            Sockets:-Write(sid, msg);
+        end if;
     end proc;
 
 #}}}

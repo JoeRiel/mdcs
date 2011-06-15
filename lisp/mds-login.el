@@ -5,6 +5,11 @@
 
 (declare-function 'mds-client-set-id "mds")
 
+(defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"
+  "Regular expression to match identifier expected from client.
+The first group matches the user name, the second the OS, the third
+is the process id of the Maple job.")
+
 (defvar mds-logins nil)
 
 (defun mds-login-add (proc)
@@ -50,11 +55,12 @@
      
      ((eq status 'get-userid)
       ;; For now, finish login process
-      (if (string= msg "")
-	  ;; id is empty; query again
+      (if (not (string-match mds-login-id-re msg))
+	  ;; id is incorrect
 	  (mds-login-query-userid proc)
-	(mds-login-set-userid proc msg)
-	(let ((id msg)
+	;; (mds-login-set-userid proc msg)
+	(let ((id (match-string 1 msg))
+	      (os (match-string 2 msg))
 	      (client (mds-get-client-from-proc proc)))
 	  (when client
 	    (mds-client-set-id client id)
