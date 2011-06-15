@@ -174,12 +174,14 @@ $endif
 
         Debugger:-Replace();
 
-        try
-            Connect(host, port, CreateID(lbl), _options['beep'] );
-        catch:
-            Debugger:-Restore();
-            error;
-        end try;
+        if sid = -1 then
+            try
+                Connect(host, port, CreateID(lbl), _options['beep'] );
+            catch:
+                Debugger:-Restore();
+                error;
+            end try;
+        end if;
 
         if stopat <> "" then
             Debugger:-stopat(stopat);

@@ -79,6 +79,8 @@ The first group identifies SOMETHING.")
 (defconst mds-end-of-msg-re "---EOM---")
 
 
+
+
 ;;}}}
 
 (defvar mds-proc nil "process for the server.")
@@ -300,14 +302,13 @@ Do not touch `mds-log-buffer'."
       (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
      ((eq status 'login)
+      ;; initiate the login process.
       (ding)
       (mds-login proc msg))
+     
      ((eq status 'start-debugging)
-      (ding)
-      (let ((client (mds-get-client-from-proc proc)))
-       	(mds-set-status-client client 'accepted)
-       	(mds-windows-display-client client)
-       	(mds-filter proc msg)))
+      (mds-start-debugging proc msg))
+
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -520,6 +521,24 @@ use them to route the message."
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
+
+
+(defun mds-start-debugging (proc msg)
+  "Called when debugging first starts.  This changes
+PROC is input process from the client; msg is the initial output
+of the debug Maple kernel.  Set the status of the client to
+'accepted, pass the message along for handling by the filter,
+display the client windows, and get the focus."
+  (ding)
+  (let ((client (mds-get-client-from-proc proc)))
+    (mds-set-status-client client 'accepted)
+    (mds-filter proc msg)
+    (mds-windows-display-client client)
+    (mds-get-focus-from-window-manager)))
+    
+
+(defun mds-get-focus-from-window-manager ()
+  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 
