@@ -190,6 +190,9 @@ If none, then return nil."
 (defun mds-client-set-id (client id)
     (if client (setcar (cdr (cddr client)) id)))
 
+(defun mds-client-get-id (client id)
+    (if client (cdr (cddr client))))
+
 ;;}}}
 ;;{{{ Client association list
 
