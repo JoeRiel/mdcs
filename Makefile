@@ -146,6 +146,15 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 
 # }}}
 
+# {{{ tag
+
+.PHONY: tags
+tags: $(call print-help,tags,Create TAGS file)
+tags:
+	etags --language=lisp lisp/*.el
+
+# }}}
+
 # {{{ install
 
 .PHONY: install-el install-maple install-lisp install-info install install-dev

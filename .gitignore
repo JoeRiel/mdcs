@@ -1,6 +1,7 @@
 *~
 /doc/*
 !/doc/*.texi
+TAGS
 
 # for now
 /maple/Browser
