@@ -243,11 +243,16 @@ Optional TAG identifies the message type."
 	      (insert msg)
 	      (goto-char beg)
 	      (let ((toplev (looking-at "TopLevel")))
-		(unless (re-search-forward ":\\( \\|$\\)" nil 't)
+		(unless (re-search-forward "\\(<[0-9]+>\\):\\( \\|$\\)" nil 't)
 		  (error "no delimiter"))
-		(if toplev
-		    (mds-put-face beg (- (point) 2) 'mds-inactive-link-face)
-		  (make-text-button beg (- (point) 2) :type 'mds-output-goto-proc))))
+		(let ((addr-beg (match-beginning 1))
+		      (addr-end (match-end 1)))
+		  (if toplev
+		      (mds-put-face beg addr-beg 'mds-inactive-link-face)
+		    (make-text-button beg addr-beg :type 'mds-output-goto-proc))
+		;; hide the address
+		;;(overlay-put (make-overlay addr-beg addr-end) 'invisible 'addr)
+		)))
 
 	     ((eq tag 'args)
 	      ;; args
@@ -358,9 +363,9 @@ prompt so that it is later not matched."
 	(let ((state (match-string-no-properties 1)))
 	  (if (string= state "")
 	      (message "position does not correspond to output from procedure")
-	    (let ((procname (mds-output-get-enclosing-procname)))
-	      (if procname
-		  (mds-output-display-proc procname "0" state)
+	    (let ((procname-addr (mds-output-get-enclosing-procname-addr)))
+	      (if procname-addr
+		  (mds-output-display-proc (car procname) "0" state)
 		(beep)
 		(message "no procedure found in buffer"))))))))
 
@@ -372,17 +377,20 @@ If STATEMENT is the string \"0\", then use STATE." ;; FIXME may be a bad choice
     (mds-windows-display-dead mds-client)))
   
 
-(defun mds-output-get-enclosing-procname ()
+(defun mds-output-get-enclosing-procname-addr ()
   "Search upwards from point to find the first embedded procname
 and return it.  If none is found, return nil, and leave point
 at beginning of buffer."
   (let (fnd)
     (while (and
-	    (re-search-backward "^\\([A-Za-z0-9/:_`-]+\\)$" nil 'move)
+	    (re-search-backward "^\\([][A-Za-z0-9/:_`-]+\\)<\\([0-9]+\\)>$" nil 'move)
 	    (not (setq fnd (mds-output-procname-p (point))))))
-    (if fnd (match-string-no-properties 0))))
+    (if fnd 
+	(cons (match-string-no-properties 1) (match-string-no-properties 2)))))
 
 ;;}}}
+
+;;{{{ mds-output-mode (and mode-map)
 
 (defvar mds-output-mode-map nil
   "Keymap for `mdb-output-mode'.")
@@ -400,6 +408,8 @@ at beginning of buffer."
   (use-local-map mds-output-mode-map)
   (font-lock-mode t)
   (run-hooks 'mds-output-mode-hook))
+
+;;}}}
 
 (provide 'mds-output)
 
