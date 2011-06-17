@@ -370,10 +370,13 @@ $define RETURN return
                 statNumber := -statNumber
             end if;
 
-            debugger_printf(DBG_STATE, "%s", StatWithAddr(procName
-                                                          , addressof(eval(procName))
-                                                          , 0..statNumber
-                                                         ));
+            local dump := debugopts('procdump'=[procName, 0..statNumber]);
+            local pos := searchtext(":\n", dump);
+            local state := cat(procName
+                               , "<", addressof(procName), ">"
+                               , substring(dump, pos..-1)
+                              );
+            debugger_printf(DBG_STATE, "%s", state);
         end if;
 
         #}}}
@@ -617,7 +620,7 @@ $define RETURN return
                                           , p
                                           , [p, statenum]
                                          ));
-        cat("",pname,"<",addr,">",substring(dump, 2..-1));
+        cat("",pname,"<",addr,">",substring(dump, searchtext(" :=",dump)..-1));
     end proc;
 
 #}}}
