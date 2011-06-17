@@ -167,7 +167,7 @@ to be used with commands that cause Maple to execute procedural code."
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
-  (mds-showstat-send-client (concat cmd "\n")))
+  (mds-showstat-send-client cmd))
 
 ;;}}}
 
@@ -732,7 +732,10 @@ the number of activation levels to display."
   (interactive)
   "Move cursor to the current state in the showstat buffer."
   (pop-to-buffer (mds--get-client-live-buf mds-client))
-  (mds-showstat-update (current-buffer) mds-showstat-procname mds-showstat-state))
+  (mds-showstat-update (current-buffer)
+		       mds-showstat-procname
+		       mds-showstat-addr
+		       mds-showstat-state))
    
 
 (defun mds-goto-state (state)

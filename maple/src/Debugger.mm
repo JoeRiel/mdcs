@@ -176,16 +176,16 @@ $endif
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
             res := traperror(Read());
+$ifdef LOG_READLINE
+        fprintf(logpid, "[%s]\n", res);
+        fflush(logpid);
+$endif
             if res <> lasterror then break fi;
             debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
         od;
 
         #}}}
 
-$ifdef LOG_READLINE
-        fprintf(logpid, "[%s]\n", res);
-        fflush(logpid);
-$endif
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
