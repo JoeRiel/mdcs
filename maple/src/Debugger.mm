@@ -400,7 +400,7 @@ $define RETURN return
 
             # debugger_printf(DBG_PROMPT, ">");
 
-            #{{{ parse cmd (else is arbitrary expression)
+            #{{{ parse cmd (may be arbitrary expression)
 
             if cmd = "cont" then
                 RETURN
