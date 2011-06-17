@@ -66,7 +66,7 @@
 
 
 * TODO SCR10: mdc(unstopat) should not throw error if no breakpoint is set
-* DONE SCR11 unhelpful error message 'procedure name expected'
+* DONE SCR11: unhelpful error message 'procedure name expected'
   CLOSED: [2011-06-10 Fri 21:49]
   This occurs when formatting an evaluated procedure.
   A simple fix is to indicate that a procedure was received.
@@ -74,3 +74,7 @@
 
   1. Fixed in 3a9e65a3b70e0ca522ec426b0ce78ab9ed0dacfa
   2. This prints _fake_name for the procedure
+* TODO SCR12: mds-unstopat does not work in dead-buffer
+  1. Call mds-stopat in the dead-buf; a breakpoint is inserted.
+  2. Call mds-unstopat at the breakpoint.  The error message
+     "Error, no break point set at specified location" appears.

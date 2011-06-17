@@ -28,6 +28,7 @@ export Printf
     ,  Restore
     ,  ShowError
     ,  ShowException
+    ,  ShowstatAddr
     ,  stopat
     ,  unstopat
     ;
@@ -167,23 +168,23 @@ $endif
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        #{{{ Get response (from emacs)
+        #{{{ Get response (from server)
 
         do
             debugger_printf(DBG_PROMPT, ">");
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
             res := traperror(Read());
+$ifdef LOG_READLINE
+        fprintf(logpid, "[%s]\n", res);
+        fflush(logpid);
+$endif
             if res <> lasterror then break fi;
             debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
         od;
 
         #}}}
 
-$ifdef LOG_READLINE
-        fprintf(logpid, "[%s]\n", res);
-        fflush(logpid);
-$endif
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -253,7 +254,7 @@ $endif
 
         #}}}
         #{{{ Strip trailing whitespace.
-        while endp >= startp and res[endp] <= " " do endp := endp -1 od;
+        while endp >= startp and res[endp] <= " " do endp := endp - 1 od;
         res := res[startp..endp];
         #}}}
         #{{{ Extraneous stuff
@@ -295,14 +296,16 @@ $define RETURN return
             procName := _passed[n][2];
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
-            n := n - 1
+            n := n - 1;
         else
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
 
         #{{{ remove indices in procName
-        # Added by Joe Riel
+        # Added by Joe Riel.  Indices are used by some procedures,
+        # for example, map[3], but need to be removed.  Multiple
+        # indices are possible.
         while procName :: 'And(indexed,Not(procedure))' do
             procName := op(0,procName);
         end do;
@@ -318,9 +321,18 @@ $define RETURN return
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_STACK, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK
+                                            , "<%d>\n%a\n"
+                                            , addressof(_passed[i][j])
+                                            , _passed[i][j]
+                                           );
                         else
-                            debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_WHERE
+                                            , "<%d>\n%a: %s\n"
+                                            , addressof(_passed[i][j])
+                                            , _passed[i][j]
+                                            , _passed[i][j+1]
+                                           );
                             if `debugger/no_output` <> true then
                                 debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
@@ -357,15 +369,19 @@ $define RETURN return
         od;
 
         #}}}
-        #{{{ handle negative statement number
+        #{{{ Print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
+                # handle negative statement number (indicates multiple targets)
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
-            fi;
-            debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
-        fi;
+            end if;
+            debugger_printf(DBG_STATE, "<%d>\n%A"
+                            , addressof(procName)
+                            , debugopts('procdump'=[procName, 0..statNumber])
+                           );
+        end if;
 
         #}}}
         #{{{ command loop
@@ -398,9 +414,7 @@ $define RETURN return
             fi;
             err := NULL;
 
-            # debugger_printf(DBG_PROMPT, ">");
-
-            #{{{ parse cmd (may be arbitrary expression)
+            #{{{ parse cmd (else is arbitrary expression)
 
             if cmd = "cont" then
                 RETURN
@@ -462,7 +476,7 @@ $define RETURN return
                             err := lasterror
                         end
                     fi;
-                    if err <> lasterror then RETURN stopat() fi
+                    if err <> lasterror then RETURN []; (* stopat() *) fi
                 fi
             elif cmd = "unstopat" then
                 pName := procName;
@@ -587,6 +601,21 @@ $define RETURN return
         fi;
         NULL
     end proc:
+
+#}}}
+#{{{ ShowstatAddr
+
+    ShowstatAddr := proc( addr :: posint, {dead :: truefalse := false} )
+        WriteTagf(`if`(dead
+                       , 'DBG_SHOW_INACTIVE'
+                       , 'DBG_SHOW'
+                      )
+                  , "<%d>\n%A"
+                  , addr
+                  , debugopts('procdump' = pointto(addr))
+                 );
+        NULL;
+    end proc;
 
 #}}}
 #{{{ showstop

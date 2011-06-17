@@ -106,6 +106,7 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mds-client                  nil "Client structure associated with buffer.")
+(defvar mds-showstat-addr           nil "Address of displayed showstat procedure.")
 (defvar mds-showstat-last-debug-cmd ""  "The previous debugger command.")
 (defvar mds-showstat-live	    nil "Store current state of active procedure")
 (defvar mds-showstat-procname       nil "Name of displayed showstat procedure.")
@@ -116,6 +117,7 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(mds-client
+	mds-showstat-addr
 	mds-showstat-arrow-position
 	mds-showstat-last-debug-cmd
 	mds-showstat-live
@@ -165,7 +167,7 @@ to be used with commands that cause Maple to execute procedural code."
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
-  (mds-showstat-send-client (concat cmd "\n")))
+  (mds-showstat-send-client cmd))
 
 ;;}}}
 
@@ -182,6 +184,7 @@ If ALIVE is non-nil, create a live buffer."
     (with-current-buffer buf
       (mds-showstat-mode)
       (setq mds-client client
+	    mds-showstat-addr ""
 	    mds-showstat-arrow-position nil
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
@@ -194,33 +197,36 @@ If ALIVE is non-nil, create a live buffer."
 ;;}}}
 ;;{{{ (*) mds-showstat-update
 
-(defun mds-showstat-update (buf procname state)
+(defun mds-showstat-update (buf addr procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
-`mds-showstat-state'.  PROCNAME is the name of the procedure,
-STATE is the current state; both are strings.  If the buffer is
-already displaying PROCNAME, then just move the arrow; otherwise
-call (maple) showstat to display the new procedure."
+`mds-showstat-state'.  ADDR is the address of PROCNAME, which is
+the name of the procedure, STATE is the current state; all are
+strings.  If the buffer is already displaying PROCNAME, then just
+move the arrow; otherwise call (maple) showstat to display the
+new procedure."
 
   (with-current-buffer buf
 
     ;; Revert cursor-type to ready status.
     (setq cursor-type mds-cursor-ready)
 
-    (if (string= procname mds-showstat-procname)
+    (if (string= addr mds-showstat-addr)
 	  ;; procname has not changed.
 	  ;; move the arrow
 	  (mds-showstat-display-state state)
 
       ;; New procedure; send procname to the output buffer.
       (mds-output-display (mds--get-client-out-buf mds-client)
-			  procname
-			  'procname)
+			  (format "<%s>\n%s" addr procname)
+			  'addr-procname)
 
-      ;; Update the showstat buffer.
-      (mds-showstat-send-client "showstat"))
-
+      ;; Call Maple showstat routine to update the showstat buffer.
+      ;;(mds-showstat-send-client "showstat")
+      (mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
+      
     ;; Update the buffer-local status
-    (setq mds-showstat-procname procname
+    (setq mds-showstat-addr     addr
+	  mds-showstat-procname procname
 	  mds-showstat-state    state)))
 
 
@@ -247,10 +253,11 @@ call (maple) showstat to display the new procedure."
 
 ;;{{{ mds-showstat-view-dead-proc
 
-(defun mds-showstat-view-dead-proc (procname statement &optional state)
-  "View procedure with name PROCNAME in the dead buffer.  If the optional string
-STATE is provided, use that as the state number to display.  Otherwise,
-find the statement number from STATEMENT."
+(defun mds-showstat-view-dead-proc (addr procname statement &optional state)
+  "View procedure with name PROCNAME and address ADDR in the dead buffer.
+If the optional string STATE is provided, use that as
+the state number to display.  Otherwise, find the statement
+number from STATEMENT."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (unless (string= procname "")
       (if (string= procname mds-showstat-procname)
@@ -265,7 +272,7 @@ find the statement number from STATEMENT."
    	(if state (setq mds-showstat-state state))
 	
 	;; Update the dead buffer.
-	(mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))))
+	(mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
 
 ;;}}}
 
@@ -295,10 +302,10 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       ;; Delete old contents then insert the new.
       (delete-region (point-min) (point-max))
       (insert proc)
-      ;; Delete first char (\n)
-      (goto-char (point-min))  ;; FIXME
-      (if (looking-at "\n")
-	  (delete-char 1))
+
+      ;; Hide the address
+      (goto-char (point-min))
+      (mds-activate-addr-procname)
 
       ;; Update `mds-showstat-procname' by extracting the value from
       ;; the inserted text. It is frequently already correct, because
@@ -488,7 +495,9 @@ Otherwise delete the dead showstat window."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-eval-debug-code (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-debug-code 
+	     (format "stopat %s" state)
+	     ))
 	(ding)
 	(message "no previous state in buffer")))))
 
@@ -721,7 +730,10 @@ the number of activation levels to display."
   (interactive)
   "Move cursor to the current state in the showstat buffer."
   (pop-to-buffer (mds--get-client-live-buf mds-client))
-  (mds-showstat-update (current-buffer) mds-showstat-procname mds-showstat-state))
+  (mds-showstat-update (current-buffer)
+		       mds-showstat-addr
+		       mds-showstat-procname
+		       mds-showstat-state))
    
 
 (defun mds-goto-state (state)
