@@ -217,7 +217,7 @@ new procedure."
 
       ;; New procedure; send procname to the output buffer.
       (mds-output-display (mds--get-client-out-buf mds-client)
-			  (cons addr procname)
+			  (format "<%s>\n%s" addr procname)
 			  'addr-procname)
 
       ;; Call Maple showstat routine to update the showstat buffer.
@@ -302,10 +302,10 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       ;; Delete old contents then insert the new.
       (delete-region (point-min) (point-max))
       (insert proc)
-      ;; Delete first char (\n)
-      (goto-char (point-min))  ;; FIXME
-      (if (looking-at "\n")
-	  (delete-char 1))
+
+      ;; Hide the address
+      (goto-char (point-min))
+      (mds-activate-addr-procname)
 
       ;; Update `mds-showstat-procname' by extracting the value from
       ;; the inserted text. It is frequently already correct, because

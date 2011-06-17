@@ -421,12 +421,8 @@ local indexed2slashed
         try
             opacity := kernelopts('opaquemodules' = false);
             prc := pointto(addr);
-            #try
-            #    eval(prc);
-            #catch:
-            #end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
-            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
+            WriteTagf('DBG_SHOW_INACTIVE', "<%d>\n%s", addr, prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
