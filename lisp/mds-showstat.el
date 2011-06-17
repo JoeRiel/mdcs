@@ -272,7 +272,7 @@ number from STATEMENT."
    	(if state (setq mds-showstat-state state))
 	
 	;; Update the dead buffer.
-	(mds-showstat-send-client (format "mdc:-Format:-showstatAddr(%s)" addr))))))
+	(mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
 
 ;;}}}
 
@@ -496,8 +496,6 @@ Otherwise delete the dead showstat window."
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
 	    (mds-showstat-eval-debug-code 
-	     ;;(format "mdc:-Debugger:-stopat(%s,%s)" mds-showstat-procname state)
-	     ;; (format "debugopts('stopat'=[%s,%s])" mds-showstat-procname state)
 	     (format "stopat %s" state)
 	     ))
 	(ding)

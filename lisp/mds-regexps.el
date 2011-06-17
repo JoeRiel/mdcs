@@ -5,8 +5,18 @@
   "Regexp that matches an address tag.  The first group matches the address,
 the total match includes the delimiters.")
 
+(defconst mds--name-re
+  (concat maplev--symbol-re                  ; base name
+	  "\\(?::-" maplev--symbol-re "\\)*" ; optional module components
+          "\\(?:\\[[^][]*\\]\\)*"            ; optional indices
+          "\\(?:()\\|([^*][^()]*)\\)*")      ; optional arguments (crude, no parens)
+  "Regular expression for Maple names.  Unlike `maplev--name-re',
+no white-space is allowed between elements.")
+
+
 (defconst mds--addr-procname-re (concat "\\(" mds--addr-tag-re "\n\\)"
-					"\\(" maplev--name-re "\\)")
+					"\\(" mds--name-re "\\)"
+					"\\(?:[: ]? *\\)") 
   "Regexp that matches an address tag and procedure name.
 The address, with delimiters, is stored in group 1, just the
 address is in group 2, and the procedure name is in group 3.")

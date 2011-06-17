@@ -29,7 +29,6 @@ export Printf
     ,  ShowError
     ,  ShowException
     ,  ShowstatAddr
-    ,  StatWithAddr # export?
     ,  stopat
     ,  unstopat
     ;
@@ -606,14 +605,17 @@ $define RETURN return
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: posint )
-        debugger_printf('DBG_SHOW'
-                        , "<%d>\n%A"
-                        , addr
-                        , debugopts('procdump' = pointto(addr))
-                       );
+    ShowstatAddr := proc( addr :: posint, {dead :: truefalse := false} )
+        WriteTagf(`if`(dead
+                       , 'DBG_SHOW_INACTIVE'
+                       , 'DBG_SHOW'
+                      )
+                  , "<%d>\n%A"
+                  , addr
+                  , debugopts('procdump' = pointto(addr))
+                 );
         NULL;
-    end proc:
+    end proc;
 
 #}}}
 #{{{ showstop
