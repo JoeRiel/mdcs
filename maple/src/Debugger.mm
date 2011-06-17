@@ -369,14 +369,10 @@ $define RETURN return
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
-
-            local dump := debugopts('procdump'=[procName, 0..statNumber]);
-            local pos := searchtext(":\n", dump);
-            local state := cat(procName
-                               , "<", addressof(procName), ">"
-                               , substring(dump, pos..-1)
-                              );
-            debugger_printf(DBG_STATE, "%s", state);
+            debugger_printf(DBG_STATE, "<%d>\n%A"
+                            , addressof(procName)
+                            , debugopts('procdump'=[procName, 0..statNumber])
+                           );
         end if;
 
         #}}}
@@ -601,27 +597,14 @@ $define RETURN return
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( pname :: string, addr :: nonnegint )
-    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
-    description `Displays a procedure with statement numbers and breakpoints.`;
-        debugger_printf('DBG_SHOW', "\n%s", StatWithAddr(pname, addr));
-        NULL
+    ShowstatAddr := proc( addr :: posint )
+        debugger_printf('DBG_SHOW'
+                        , "<%d>\n%A"
+                        , addr
+                        , debugopts('procdump' = pointto(addr))
+                       );
+        NULL;
     end proc:
-
-    StatWithAddr := proc( pname :: {name,string}
-                          , addr :: posint
-                          , statenum :: {posint,range} := NULL
-                          , $
-                        )
-    local dump,p;
-        p := pointto(addr);
-        # Note that dump is a name, not a string.
-        dump := debugopts('procdump'=`if`(statenum = NULL
-                                          , p
-                                          , [p, statenum]
-                                         ));
-        cat("",pname,"<",addr,">",substring(dump, searchtext(" :=",dump)..-1));
-    end proc;
 
 #}}}
 #{{{ showstop

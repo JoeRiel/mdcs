@@ -197,12 +197,13 @@ If ALIVE is non-nil, create a live buffer."
 ;;}}}
 ;;{{{ (*) mds-showstat-update
 
-(defun mds-showstat-update (buf procname addr state)
+(defun mds-showstat-update (buf addr procname state)
   "Update the showstat buffer, `mds-showstat-procname', and
-`mds-showstat-state'.  PROCNAME is the name of the procedure,
-STATE is the current state; both are strings.  If the buffer is
-already displaying PROCNAME, then just move the arrow; otherwise
-call (maple) showstat to display the new procedure."
+`mds-showstat-state'.  ADDR is the address of PROCNAME, which is
+the name of the procedure, STATE is the current state; all are
+strings.  If the buffer is already displaying PROCNAME, then just
+move the arrow; otherwise call (maple) showstat to display the
+new procedure."
 
   (with-current-buffer buf
 
@@ -216,13 +217,12 @@ call (maple) showstat to display the new procedure."
 
       ;; New procedure; send procname to the output buffer.
       (mds-output-display (mds--get-client-out-buf mds-client)
-			  (cons procname addr)
-			  'procname)
+			  (cons addr procname)
+			  'addr-procname)
 
       ;; Call Maple showstat routine to update the showstat buffer.
       ;;(mds-showstat-send-client "showstat")
-      (mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(\"%s\",%s)"
-					procname addr)))
+      (mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
       
     ;; Update the buffer-local status
     (setq mds-showstat-addr     addr
@@ -253,7 +253,7 @@ call (maple) showstat to display the new procedure."
 
 ;;{{{ mds-showstat-view-dead-proc
 
-(defun mds-showstat-view-dead-proc (procname addr statement &optional state)
+(defun mds-showstat-view-dead-proc (addr procname statement &optional state)
   "View procedure with name PROCNAME and address ADDR in the dead buffer.
 If the optional string STATE is provided, use that as
 the state number to display.  Otherwise, find the statement
@@ -733,8 +733,8 @@ the number of activation levels to display."
   "Move cursor to the current state in the showstat buffer."
   (pop-to-buffer (mds--get-client-live-buf mds-client))
   (mds-showstat-update (current-buffer)
-		       mds-showstat-procname
 		       mds-showstat-addr
+		       mds-showstat-procname
 		       mds-showstat-state))
    
 

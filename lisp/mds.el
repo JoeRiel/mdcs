@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-regexps)
 (require 'mds-login)
 (require 'mds-output)
 (require 'mds-showstat)
@@ -58,30 +59,6 @@
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
-
-;;{{{ Regular Expressions
-
-(defconst mds--debugger-status-re
-;;  (concat "^\\(" maplev--name-re "\\)<\\([0-9]+\\)>:\n\\s-*\\([1-9][0-9]*\\)[ *?]")
-  "^\\([^<]+\\)<\\([0-9]+\\)>:\n\\s-*\\([1-9][0-9]*\\)[ *?]"
-  "Regexp that matches the status output of the debugger.
-The first group matches the procedure name, the second group
-matches the address, the third group matches the state number.")
-
-(defconst mds-start-tag-re "^<\\([^>]+\\)>"
-  "Regular expression that matches start tag.
-The tag has format <tag-name>.  Group 0 matches the tag,
-group 1 matches tag-name.")
-
-(defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
-  "Regexp to match message when a client attaches.
-The first group identifies SOMETHING.")
-
-(defconst mds-end-of-msg-re "---EOM---")
-
-
-;;}}}
-
 (defvar mds-proc nil "process for the server.")
 
 
@@ -420,8 +397,8 @@ use them to route the message."
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
 	(mds-showstat-update live-buf 
-			     (match-string 1 msg)    ; procname
-			     (match-string 2 msg)    ; address
+			     (match-string 1 msg)    ; address
+			     (match-string 2 msg)    ; procname
 			     (match-string 3 msg)))) ; state
 
      ((string= tag "DBG_SHOW")
