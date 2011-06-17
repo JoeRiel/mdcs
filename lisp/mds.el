@@ -62,10 +62,11 @@
 ;;{{{ Regular Expressions
 
 (defconst mds--debugger-status-re
-  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
+;;  (concat "^\\(" maplev--name-re "\\)<\\([0-9]+\\)>:\n\\s-*\\([1-9][0-9]*\\)[ *?]")
+  "^\\([^<]+\\)<\\([0-9]+\\)>:\n\\s-*\\([1-9][0-9]*\\)[ *?]"
   "Regexp that matches the status output of the debugger.
-The first group matches the procedure name, the second group the
-state number.")
+The first group matches the procedure name, the second group
+matches the address, the third group matches the state number.")
 
 (defconst mds-start-tag-re "^<\\([^>]+\\)>"
   "Regular expression that matches start tag.
@@ -420,7 +421,8 @@ use them to route the message."
 	  (error "cannot parse current state")
 	(mds-showstat-update live-buf 
 			     (match-string 1 msg)    ; procname
-			     (match-string 2 msg)))) ; state
+			     (match-string 2 msg)    ; address
+			     (match-string 3 msg)))) ; state
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).

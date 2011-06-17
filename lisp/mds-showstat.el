@@ -106,6 +106,7 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mds-client                  nil "Client structure associated with buffer.")
+(defvar mds-showstat-addr           nil "Address of displayed showstat procedure.")
 (defvar mds-showstat-last-debug-cmd ""  "The previous debugger command.")
 (defvar mds-showstat-live	    nil "Store current state of active procedure")
 (defvar mds-showstat-procname       nil "Name of displayed showstat procedure.")
@@ -116,6 +117,7 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(mds-client
+	mds-showstat-addr
 	mds-showstat-arrow-position
 	mds-showstat-last-debug-cmd
 	mds-showstat-live
@@ -182,6 +184,7 @@ If ALIVE is non-nil, create a live buffer."
     (with-current-buffer buf
       (mds-showstat-mode)
       (setq mds-client client
+	    mds-showstat-addr ""
 	    mds-showstat-arrow-position nil
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
@@ -194,7 +197,7 @@ If ALIVE is non-nil, create a live buffer."
 ;;}}}
 ;;{{{ (*) mds-showstat-update
 
-(defun mds-showstat-update (buf procname state)
+(defun mds-showstat-update (buf procname addr state)
   "Update the showstat buffer, `mds-showstat-procname', and
 `mds-showstat-state'.  PROCNAME is the name of the procedure,
 STATE is the current state; both are strings.  If the buffer is
@@ -206,21 +209,24 @@ call (maple) showstat to display the new procedure."
     ;; Revert cursor-type to ready status.
     (setq cursor-type mds-cursor-ready)
 
-    (if (string= procname mds-showstat-procname)
+    (if (string= addr mds-showstat-addr)
 	  ;; procname has not changed.
 	  ;; move the arrow
 	  (mds-showstat-display-state state)
 
       ;; New procedure; send procname to the output buffer.
       (mds-output-display (mds--get-client-out-buf mds-client)
-			  procname
+			  (cons procname addr)
 			  'procname)
 
-      ;; Update the showstat buffer.
-      (mds-showstat-send-client "showstat"))
-
+      ;; Call Maple showstat routine to update the showstat buffer.
+      ;;(mds-showstat-send-client "showstat")
+      (mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(\"%s\",%s)"
+					procname addr)))
+      
     ;; Update the buffer-local status
-    (setq mds-showstat-procname procname
+    (setq mds-showstat-addr     addr
+	  mds-showstat-procname procname
 	  mds-showstat-state    state)))
 
 

@@ -177,8 +177,10 @@ from going to a statement that does not correspond to procedure evaluation."
 
 (defun mds-output-get-ss-line ()
   "Return the current input line of the live showstat buffer."
+  ;; FIXME :: need to go to current line
   (with-current-buffer (mds--get-client-live-buf mds-client)
     (save-excursion
+      (mds-goto-state mds-showstat-state)
       (beginning-of-line)
       (if (looking-at mds-output-ss-line-re)
 	  (match-string 1)
@@ -191,7 +193,7 @@ from going to a statement that does not correspond to procedure evaluation."
 (defun mds-output-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
-  (unless (string= msg "")
+;;  (unless (string= msg "")
     (display-buffer buf)
     (with-selected-window (get-buffer-window buf)
       (with-current-buffer buf
@@ -228,9 +230,12 @@ Optional TAG identifies the message type."
 	      (insert msg))
 
 	     ((eq tag 'procname)
-	      (insert msg)
-	      (make-text-button beg (point) :type 'mds-output-view-proc)
-	      (insert "\n"))
+	      (let ((procname (car msg))
+		    (addr  (cdr msg)))
+		(insert procname)
+		(make-text-button beg (point) :type 'mds-output-view-proc)
+		(insert "<" addr ">")
+		(insert "\n")))
 	     
 	     ((eq tag 'stack)
 	      ;; stack
@@ -292,7 +297,7 @@ Optional TAG identifies the message type."
 	      (mds-insert-tag tag) (setq beg (point))
 	      (insert msg))
 	     )))
-	(recenter -1)))))
+	(recenter -1))));)
 
 ;;}}}
 

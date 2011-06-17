@@ -28,6 +28,8 @@ export Printf
     ,  Restore
     ,  ShowError
     ,  ShowException
+    ,  ShowstatAddr
+    ,  StatWithAddr # export?
     ,  stopat
     ,  unstopat
     ;
@@ -302,7 +304,9 @@ $define RETURN return
         fi;
 
         #{{{ remove indices in procName
-        # Added by Joe Riel
+        # Added by Joe Riel.  Indices are used by some procedures,
+        # for example, map[3], but need to be removed.  Multiple
+        # indices are possible.
         while procName :: 'And(indexed,Not(procedure))' do
             procName := op(0,procName);
         end do;
@@ -357,15 +361,20 @@ $define RETURN return
         od;
 
         #}}}
-        #{{{ handle negative statement number
+        #{{{ Print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
+                # handle negative statement number (indicates multiple targets)
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
-            fi;
-            debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
-        fi;
+            end if;
+
+            debugger_printf(DBG_STATE, "%s", StatWithAddr(procName
+                                                          , addressof(eval(procName))
+                                                          , 0..statNumber
+                                                         ));
+        end if;
 
         #}}}
         #{{{ command loop
@@ -585,6 +594,31 @@ $define RETURN return
         fi;
         NULL
     end proc:
+
+#}}}
+#{{{ ShowstatAddr
+
+    ShowstatAddr := proc( pname :: string, addr :: nonnegint )
+    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
+    description `Displays a procedure with statement numbers and breakpoints.`;
+        debugger_printf('DBG_SHOW', "\n%s", StatWithAddr(pname, addr));
+        NULL
+    end proc:
+
+    StatWithAddr := proc( pname :: {name,string}
+                          , addr :: posint
+                          , statenum :: {posint,range} := NULL
+                          , $
+                        )
+    local dump,p;
+        p := pointto(addr);
+        # Note that dump is a name, not a string.
+        dump := debugopts('procdump'=`if`(statenum = NULL
+                                          , p
+                                          , [p, statenum]
+                                         ));
+        cat("",pname,"<",addr,">",substring(dump, 2..-1));
+    end proc;
 
 #}}}
 #{{{ showstop
