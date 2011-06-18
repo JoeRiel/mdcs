@@ -42,12 +42,18 @@ The first group identifies SOMETHING.")
 (defconst mds-end-of-msg-re "---EOM---")
 
 (defun mds-activate-addr-procname (&optional button)
-  (when (looking-at mds--addr-procname-re)
-;;   (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face font-lock-builtin-face)
-    (put-text-property (match-beginning 1) (match-end 1) 'invisible t)
-    (if button
-	(if (string= (match-string 3) "TopLevel")
-	    (put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link-face)
-	  (make-text-button (match-beginning 3) (match-end 3) :type button)))))
+  "If looking at an address-procname, hide the address and apply
+BUTTON to the procname.  If the procname is TopLevel, then just
+change its face to `mds-inctive-link-face'.  Return a cons cell of
+the address and procname."
+  (if (looking-at mds--addr-procname-re)
+    (let ((addr (match-string 2))
+	  (procname (match-string 3)))
+      (put-text-property (match-beginning 1) (match-end 1) 'invisible t)
+      (if button
+	  (if (string= procname "TopLevel")
+	      (put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link-face)
+	    (make-text-button (match-beginning 3) (match-end 3) :type button)))
+      (cons addr procname))))
 
 (provide 'mds-regexps)
