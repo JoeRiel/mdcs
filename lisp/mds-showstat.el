@@ -247,10 +247,11 @@ call (maple) showstat to display the new procedure."
 
 ;;{{{ mds-showstat-view-dead-proc
 
-(defun mds-showstat-view-dead-proc (procname statement &optional state)
-  "View procedure with name PROCNAME in the dead buffer.  If the optional string
-STATE is provided, use that as the state number to display.  Otherwise,
-find the statement number from STATEMENT."
+(defun mds-showstat-view-dead-proc (procname addr statement &optional state)
+  "View procedure with name PROCNAME and address ADDR in the dead buffer.
+If the optional string STATE is provided, use that as
+the state number to display.  Otherwise, find the statement
+number from STATEMENT."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (unless (string= procname "")
       (if (string= procname mds-showstat-procname)
@@ -265,7 +266,7 @@ find the statement number from STATEMENT."
    	(if state (setq mds-showstat-state state))
 	
 	;; Update the dead buffer.
-	(mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))))
+	(mds-showstat-send-client (format "mdc:-Format:-showstatAddr(%s)" addr))))))
 
 ;;}}}
 
@@ -488,7 +489,11 @@ Otherwise delete the dead showstat window."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-eval-debug-code (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-debug-code 
+	     ;;(format "mdc:-Debugger:-stopat(%s,%s)" mds-showstat-procname state)
+	     ;; (format "debugopts('stopat'=[%s,%s])" mds-showstat-procname state)
+	     (format "stopat %s" state)
+	     ))
 	(ding)
 	(message "no previous state in buffer")))))
 

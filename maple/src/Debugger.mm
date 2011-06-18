@@ -167,7 +167,7 @@ $endif
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        #{{{ Get response (from emacs)
+        #{{{ Get response (from server)
 
         do
             debugger_printf(DBG_PROMPT, ">");
@@ -253,7 +253,7 @@ $endif
 
         #}}}
         #{{{ Strip trailing whitespace.
-        while endp >= startp and res[endp] <= " " do endp := endp -1 od;
+        while endp >= startp and res[endp] <= " " do endp := endp - 1 od;
         res := res[startp..endp];
         #}}}
         #{{{ Extraneous stuff
@@ -295,7 +295,7 @@ $define RETURN return
             procName := _passed[n][2];
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
-            n := n - 1
+            n := n - 1;
         else
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
@@ -318,9 +318,9 @@ $define RETURN return
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_STACK, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK, "%a<%d>\n",_passed[i][j],addressof(_passed[i][j]));
                         else
-                            debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_WHERE, "%a<%d>: %s\n",_passed[i][j],addressof(_passed[i][j]),_passed[i][j+1]);
                             if `debugger/no_output` <> true then
                                 debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
@@ -398,8 +398,6 @@ $define RETURN return
             fi;
             err := NULL;
 
-            # debugger_printf(DBG_PROMPT, ">");
-
             #{{{ parse cmd (else is arbitrary expression)
 
             if cmd = "cont" then
@@ -462,7 +460,7 @@ $define RETURN return
                             err := lasterror
                         end
                     fi;
-                    if err <> lasterror then RETURN stopat() fi
+                    if err <> lasterror then RETURN []; (* stopat() *) fi
                 fi
             elif cmd = "unstopat" then
                 pName := procName;
