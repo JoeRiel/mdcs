@@ -110,7 +110,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-login mds-showstat mds-output mds-windows mds
+ELS = mds-regexps mds-showstat mds-output mds-windows mds
 
 LISPFILES = $(ELS:%=lisp/%.el)
 ELCFILES = $(LISPFILES:.el=.elc)
@@ -151,8 +151,8 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 .PHONY: tags
 tags: $(call print-help,tags,Create TAGS file)
 tags:
-	etags --language=lisp lisp/*.el
 	bin/mtags maple/src/*
+	etags --append --language=lisp lisp/*.el
 
 # }}}
 

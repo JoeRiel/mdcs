@@ -12,7 +12,6 @@ export ArgsToEqs
     ,  PrettyPrint
     ,  PrintProc
     ,  showstat
-    ,  showstatAddr
     ,  Try
     ;
 
@@ -368,63 +367,6 @@ local indexed2slashed
                 eval(prc);
             catch:
             end try;
-            prc := sprintf("%A", debugopts('procdump' = prc));
-            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
-        finally
-            kernelopts('opaquemodules' = opacity);
-        end try;
-        return NULL;
-    end proc;
-
-#}}}
-#{{{ showstatAddr
-
-##DEFINE CMD showstatAddr
-##PROCEDURE \MOD[\CMD]
-##HALFLINE display a procedure with statement numbers for debugging
-##AUTHOR   Joe Riel
-##DATE     May 2010
-##CALLINGSEQUENCE
-##- \CMD('addr')
-##PARAMETERS
-##- 'addr' : ::string::; string corresponding to address of the procedure
-##RETURNS
-##- `NULL`
-##DESCRIPTION
-##- The `\CMD` command
-##  formats a procedure with statement numbers
-##  and sends the string to the server.
-##
-##- It is essentially equivalent to "showstat",
-##  but (currently) only takes one argument and
-##  rather than being a procedure is a string that
-##  parses to a procedure (name).
-##
-##- The purpose of this is to allow passing
-##  names of procedures that require the
-##  use of ~kernelopts(opaquemodules=false)~
-##  to access.
-##
-##EXAMPLES
-##> \MOD:-\CMD("int");
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-showstat):
-##
-##
-## Try("1.0", FUNC("simplify"));
-
-    showstatAddr := proc(addr :: integer)
-    local opacity,prc;
-    global _prc;
-        try
-            opacity := kernelopts('opaquemodules' = false);
-            prc := pointto(addr);
-            #try
-            #    eval(prc);
-            #catch:
-            #end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
             WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
         finally
