@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-regexps)
 (require 'mds-login)
 (require 'mds-output)
 (require 'mds-showstat)
@@ -51,6 +52,11 @@
 
 ;;}}}
 
+(defcustom mds-trace-delay 0.01
+  "Delay time, in seconds, between each step when tracing"
+  :type 'numeric
+  :group 'mds)
+
 ;;{{{ Constants
 
 (defconst mds-version "0.1" "Version number of mds.")
@@ -59,31 +65,6 @@
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
-;;{{{ Regular Expressions
-
-(defconst mds--debugger-status-re
-  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
-  "Regexp that matches the status output of the debugger.
-The first group matches the procedure name, the second group the
-state number.")
-
-(defconst mds-start-tag-re "^<\\([^>]+\\)>"
-  "Regular expression that matches start tag.
-The tag has format <tag-name>.  Group 0 matches the tag,
-group 1 matches tag-name.")
-
-(defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
-  "Regexp to match message when a client attaches.
-The first group identifies SOMETHING.")
-
-(defconst mds-end-of-msg-re "---EOM---")
-
-
-
-
-;;}}}
-
-(defvar mds-proc nil "process for the server.")
 
 
 ;;}}}
@@ -94,13 +75,14 @@ The first group identifies SOMETHING.")
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-pre-Maple-14 nil
-  "Boolean flag indicating the Maple client is a release earlier
-  than Maple 14.")
-
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-proc nil "process for the server.")
+
+(defvar mds-showstat-trace nil
+  "When non-nil, trace through the debugged code.")
 
 ;; data structures
 
@@ -416,15 +398,18 @@ use them to route the message."
       (mds-output-display out-buf 
 			  (buffer-local-value 'mds-showstat-state live-buf)
 			  'prompt))
+     
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
      ;; Extract the procname and state number
      ;; and update the showstat buffer
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
-	(mds-showstat-update live-buf 
-			     (match-string 1 msg)    ; procname
-			     (match-string 2 msg)))) ; state
+	(let ((addr      (match-string 1 msg))
+	      (procname  (match-string 2 msg))
+	      (state     (match-string 3 msg))
+	      (statement (match-string 4 msg)))
+	  (mds-showstat-update live-buf addr procname state statement))))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).

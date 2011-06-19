@@ -106,22 +106,26 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 
 (defvar mds-showstat-arrow-position nil "Marker for state arrow.")
 (defvar mds-client                  nil "Client structure associated with buffer.")
+(defvar mds-showstat-addr           nil "Address of displayed showstat procedure.")
 (defvar mds-showstat-last-debug-cmd ""  "The previous debugger command.")
 (defvar mds-showstat-live	    nil "Store current state of active procedure")
 (defvar mds-showstat-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-showstat-state          "1" "Current state of procedure.")
 (defvar mds-showstat-statement      ""  "String matching a statement; used by dead buffer")
+(defvar mds-showstat-trace          nil "Valid values are nil, next, into, and step")
 (defvar mds-showstat-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names,the values are additional alists.")
 
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(mds-client
+	mds-showstat-addr
 	mds-showstat-arrow-position
 	mds-showstat-last-debug-cmd
 	mds-showstat-live
 	mds-showstat-procname
 	mds-showstat-state
 	mds-showstat-statement
+	mds-showstat-trace
 	mds-showstat-watch-alist
 	mds-this-proc
 	))
@@ -140,11 +144,11 @@ The procname is flush left.  See diatribe in `mds-showstat-where-procname-re'.")
 (defun mds-showstat-send-client (msg)
   (mds-send-client mds-client msg))
 
-(defun mds-showstat-eval-debug-code (cmd)
-  "Send CMD, with appended newline, to the Maple process and to the output buffer."
-  ;; echo to output buffer;  Hmm, that won't work if
-  ;; the input was typed in the output buffer.
-  (mds-output-append-input (mds--get-client-out-buf mds-client) cmd 'mds-debugger-cmd-face)
+(defun mds-showstat-eval-debug-code (cmd &optional hide)
+  "Send CMD, with appended newline, to the Maple process and to the output buffer.
+Echo the command to the output buffer unless HIDE is non-nil."
+  (unless hide
+    (mds-output-append-input (mds--get-client-out-buf mds-client) cmd 'mds-debugger-cmd-face))
   (mds-showstat-send-client (concat cmd "\n")))
 
 (defun mds-showstat-eval-expr (expr)
@@ -165,7 +169,7 @@ to be used with commands that cause Maple to execute procedural code."
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-output-display (mds--get-client-out-buf mds-client) cmd 'cmd)
-  (mds-showstat-send-client (concat cmd "\n")))
+  (mds-showstat-send-client cmd))
 
 ;;}}}
 
@@ -182,10 +186,12 @@ If ALIVE is non-nil, create a live buffer."
     (with-current-buffer buf
       (mds-showstat-mode)
       (setq mds-client client
+	    mds-showstat-addr ""
 	    mds-showstat-arrow-position nil
 	    mds-showstat-live alive
 	    mds-showstat-procname ""
 	    mds-showstat-state "1"
+	    mds-showstat-trace nil
 	    buffer-read-only 't)
       (if mds-truncate-lines
 	  (toggle-truncate-lines 1)))
@@ -194,33 +200,40 @@ If ALIVE is non-nil, create a live buffer."
 ;;}}}
 ;;{{{ (*) mds-showstat-update
 
-(defun mds-showstat-update (buf procname state)
-  "Update the showstat buffer, `mds-showstat-procname', and
-`mds-showstat-state'.  PROCNAME is the name of the procedure,
-STATE is the current state; both are strings.  If the buffer is
-already displaying PROCNAME, then just move the arrow; otherwise
-call (maple) showstat to display the new procedure."
+(defun mds-showstat-update (buf addr procname state &optional statement)
+  "Update the showstat buffer and the buffer local variables
+`mds-showstat-addr', `mds-showstat-procname', and
+`mds-showstat-state'.  ADDR is the address of PROCNAME, which is
+the name of the procedure, STATE is the current state; all are
+strings.  If the buffer is already displaying PROCNAME, then just
+move the arrow; otherwise call (maple) showstat to display the
+new procedure."
 
   (with-current-buffer buf
 
-    ;; Revert cursor-type to ready status.
-    (setq cursor-type mds-cursor-ready)
+    (unless mds-showstat-trace
+      ;; Revert cursor-type to ready status.
+      (setq cursor-type mds-cursor-ready))
 
-    (if (string= procname mds-showstat-procname)
+    (if (string= addr mds-showstat-addr)
 	  ;; procname has not changed.
 	  ;; move the arrow
-	  (mds-showstat-display-state state)
+	(unless mds-showstat-trace
+	  (mds-showstat-display-state state))
 
       ;; New procedure; send procname to the output buffer.
       (mds-output-display (mds--get-client-out-buf mds-client)
-			  procname
-			  'procname)
+			  (format "<%s>\n%s" addr procname)
+			  'addr-procname)
 
-      ;; Update the showstat buffer.
-      (mds-showstat-send-client "showstat"))
-
+      (unless mds-showstat-trace
+	;; Call Maple showstat routine to update the showstat buffer.
+	;;(mds-showstat-send-client "showstat")
+	(mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))))
+      
     ;; Update the buffer-local status
-    (setq mds-showstat-procname procname
+    (setq mds-showstat-addr     addr
+	  mds-showstat-procname procname
 	  mds-showstat-state    state)))
 
 
@@ -247,10 +260,11 @@ call (maple) showstat to display the new procedure."
 
 ;;{{{ mds-showstat-view-dead-proc
 
-(defun mds-showstat-view-dead-proc (procname statement &optional state)
-  "View procedure with name PROCNAME in the dead buffer.  If the optional string
-STATE is provided, use that as the state number to display.  Otherwise,
-find the statement number from STATEMENT."
+(defun mds-showstat-view-dead-proc (addr procname statement &optional state)
+  "View procedure with name PROCNAME and address ADDR in the dead buffer.
+If the optional string STATE is provided, use that as
+the state number to display.  Otherwise, find the statement
+number from STATEMENT."
   (with-current-buffer (mds--get-client-dead-buf mds-client)
     (unless (string= procname "")
       (if (string= procname mds-showstat-procname)
@@ -265,7 +279,7 @@ find the statement number from STATEMENT."
    	(if state (setq mds-showstat-state state))
 	
 	;; Update the dead buffer.
-	(mds-showstat-send-client (format "mdc:-Format:-showstat(\"%s\")" procname))))))
+	(mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
 
 ;;}}}
 
@@ -295,24 +309,16 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
       ;; Delete old contents then insert the new.
       (delete-region (point-min) (point-max))
       (insert proc)
-      ;; Delete first char (\n)
-      (goto-char (point-min))  ;; FIXME
-      (if (looking-at "\n")
-	  (delete-char 1))
 
-      ;; Update `mds-showstat-procname' by extracting the value from
-      ;; the inserted text. It is frequently already correct, because
-      ;; was assigned in mds-showstat-send-showstat, however, it
-      ;; will not be assigned if the update was via
-      ;; `mds-eval-and-prettyprint'.
-
-      (if (looking-at mds-showstat-procname-assignment-re)
-	  (setq mds-showstat-procname (match-string-no-properties 1)))
+      ;; Hide the address and assign `mds-showstat-addr'
+      (goto-char (point-min))
+      (let ((addr-procname (mds-activate-addr-procname)))
+	(setq mds-showstat-addr (car addr-procname)
+	      mds-showstat-procname (cdr addr-procname)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
       (mds-showstat-set-mode-line mds-showstat-procname)
 
-      ;; Update state information and, if appropriate, move the arrow.
       (cond
        (mds-showstat-live
 	;; Move the state arrow
@@ -330,7 +336,7 @@ the buffer-local variables `mds-showstat-state' and `mds-showstat-statement'."
        ('t
 	(let ((state (mds-showstat-determine-state mds-showstat-statement)))
 	  (when (null state)
-	    (beep)
+	    (ding)
 	    (message "cannot find statement in procedure body"))
 	  ;; save state and clear statement
 	  (setq mds-showstat-state state)
@@ -455,6 +461,16 @@ Otherwise delete the dead showstat window."
   (interactive)
   (mds-showstat-eval-proc-statement "step" 'save))
 
+(defun mds-cycle-trace ()
+  (interactive)
+  (setq mds-showstat-trace
+	(cond
+	 ((not mds-showstat-trace)             "next")
+	 ((string=  mds-showstat-trace "next") "into")
+	 ((string=  mds-showstat-trace "into") "step")
+	 ((string=  mds-showstat-trace "step") nil)))
+  (message (concat "tracing " (or mds-showstat-trace "disabled"))))
+
 ;;}}}
 ;;{{{ (*) Stop points
 
@@ -476,10 +492,6 @@ Otherwise delete the dead showstat window."
 (defun mds-breakpoint ()
   "Set a breakpoint at the current/previous state."
   (interactive)
-  ;; Assume we are in the showstat buffer
-  ;; TODO: An alternative is to move outward from
-  ;; the Maple structure.  
-  ;; If at an elif or else, then move ...
   (save-excursion
     (end-of-line)
     (let ((state (mds-showstat-get-state))
@@ -488,9 +500,10 @@ Otherwise delete the dead showstat window."
 	  (progn
 	    ;; FIXME: only replace a space, not a ?
 	    (replace-match "*" nil nil nil 2)
-	    (mds-showstat-eval-debug-code (format "mdc:-Debugger:-stopat(\"%s\",%s)" mds-showstat-procname state)))
+	    (mds-showstat-eval-debug-code
+	     (format "debugopts('stopat'=[pointto(%s),%s])" mds-showstat-addr state) 'hide))
 	(ding)
-	(message "no previous state in buffer")))))
+	(message "could not find state in buffer")))))
 
 (defun mds-breakpoint-cond ()
   "Set a conditional breakpoint at the current/previous state."
@@ -503,10 +516,11 @@ Otherwise delete the dead showstat window."
 	      (inhibit-read-only t)
 	      (cond (mds--query-stop-var "stopat-cond" "condition" 'mds-showstat-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mds-showstat-eval-debug-code (format "debugopts('stopat'=[%s,%s,%s])" mds-thisproc state cond)))
+	  (mds-showstat-eval-debug-code 
+	   (format "debugopts('stopat'=[pointto(%s),%s,%s])" 
+		   mds-showstat-addr state cond) 'hide))
       (ding)
       (message "no previous state in buffer"))))
-
 
 (defun mds-stoperror (clear)
   "Query for and set or clear, if CLEAR is non-nil, a watchpoint on an error."
@@ -520,7 +534,6 @@ Otherwise delete the dead showstat window."
   (interactive)
   (mds-stoperror 'clear))
 
-
 (defun mds-stopwhen-local (clear)
   "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
 Query for local variable, using symbol at point as default."
@@ -529,7 +542,9 @@ Query for local variable, using symbol at point as default."
 	 (var (mds--query-stop-var cmd "var" 'mds-showstat-stopwhen-history-list)))
     (if (string= var "")
 	(mds-showstat-eval-expr cmd)
-      (mds-showstat-eval-expr (format "%s procname %s" cmd var)))))
+      (mds-showstat-eval-debug-code (format "debugopts('%s'=[pointto(%s),'%s'])"
+					    (if clear "delwatch" "addwatch")
+					    mds-showstat-addr var) 'hide))))
 
 (defun mds-stopwhen-global (clear)
   "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
@@ -567,7 +582,8 @@ If the state does not have a breakpoint, print a message."
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t))
 	  (replace-match " " nil nil nil 2)
-	  (mds-showstat-eval-debug-code (format "unstopat %s %s" mds-showstat-procname state)))
+	  (mds-showstat-eval-debug-code 
+	   (format "debugopts('stopat'=[pointto(%s),-%s])" mds-showstat-addr state) 'hide))
       (ding)
       (message "no breakpoint at this state"))))
 
@@ -710,7 +726,7 @@ the number of activation levels to display."
 
 (defun mds-view ()
   (interactive)
-  (beep)
+  (ding)
   (message "viewing currently not supported"))
 
 ;;}}}
@@ -721,7 +737,10 @@ the number of activation levels to display."
   (interactive)
   "Move cursor to the current state in the showstat buffer."
   (pop-to-buffer (mds--get-client-live-buf mds-client))
-  (mds-showstat-update (current-buffer) mds-showstat-procname mds-showstat-state))
+  (mds-showstat-update (current-buffer)
+		       mds-showstat-addr
+		       mds-showstat-procname
+		       mds-showstat-state))
    
 
 (defun mds-goto-state (state)
@@ -793,6 +812,7 @@ the `mds-showstat-buffer'."
 	   ("r" . mds-return)
 	   ("R" . mds-stoperror)
 	   ("s" . mds-step)
+	   ("t" . mds-cycle-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
 	   ("v" . mds-view)
@@ -843,6 +863,7 @@ it is displayed in bold after the mode name."
        ["Outfrom"	mds-outfrom t]
        ["Step"		mds-step t]
        ["Return"	mds-return t]
+       ["Trace"         mds-trace-slow t]
        ["Quit"		mds-step t]
        ["Kill"		mds-kill-maple t])
 

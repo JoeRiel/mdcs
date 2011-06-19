@@ -76,6 +76,8 @@ $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 $define END_OF_MSG "---EOM---"
 
+#$define LOG_READLINE # for debugging (need to close file)
+
 unprotect('mdc'):
 module mdc()
 

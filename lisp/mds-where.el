@@ -113,7 +113,7 @@ each match so that clicking on the link downloads and displays it."
 	(setq buffer-read-only t)
 	(cond
 	 ((= cnt 0)
-	  (beep)
+	  (ding)
 	  (message "No match found"))
 	 ((= cnt 1)
 	  (mds-where-view-file (buffer-substring-no-properties beg end)))
