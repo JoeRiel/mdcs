@@ -41,9 +41,10 @@
 
 ;;{{{ Lisp Requirements
 
-(require 'mds-regexps)
 (require 'mds-login)
+(require 'mds-menus)
 (require 'mds-output)
+(require 'mds-regexps)
 (require 'mds-showstat)
 (require 'mds-windows)
 (require 'maplev)
@@ -52,20 +53,22 @@
 
 ;;}}}
 
-(defcustom mds-trace-delay 0.01
-  "Delay time, in seconds, between each step when tracing"
-  :type 'numeric
+(defcustom mds-port 10000
+  "Default port used by mds tcp server"
+  :type integer
   :group 'mds)
+
+(defcustom mds-max-number-clients 4
+  "Default maximum number of clients allowed."
+  :type integer
+  :group 'mds)
+
 
 ;;{{{ Constants
 
-(defconst mds-port 10000  "Port used by mds server")
-
 (defconst mds-version "0.1" "Version number of mds.")
-(defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
-(defvar mds-proc nil "process for the server.")
 
 
 ;;}}}
@@ -76,23 +79,16 @@
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-pre-Maple-14 nil
-  "Boolean flag indicating the Maple client is a release earlier
-  than Maple 14.")
-
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-proc nil "Process for the server.")
 
 (defvar mds-showstat-trace nil
   "When non-nil, trace through the debugged code.")
 
 ;; data structures
-
-(defvar mds-proc-status '()
-  "Alist containing status of each known proc.
-An entry consists of (proc . status).
-Status is either `accepted', `pending', or `rejected'.")
 
 (defvar mds-clients '() 
   "Alist containing info of accepted clients, indexed by the associated process.
@@ -101,6 +97,10 @@ See `mds-create-client' for the form of each entry.")
 (defvar mds-log-messages 't
   "When non-nil, write all messages to `mds-log-buffer'.")
 
+(defvar mds-proc-status '()
+  "Alist containing status of each known proc.
+An entry consists of (proc . status).
+Status is either `accepted', `pending', or `rejected'.")
 
 ;;}}}
 
