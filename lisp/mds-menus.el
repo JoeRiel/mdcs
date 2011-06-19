@@ -14,10 +14,10 @@
      [ "Maximum string length" mds-menu-max-length t]
      )
     ("Window Settings"
-     [ "Beep" mds-menu-beep t]
-     [ "Echo input" mds-menu-echo-input t]
-     [ "Truncate lines" mds-menu-truncate-lines t]
-     [ "Compact view"  ]
+     [ "Beep" (mds-menu-toggle mds-menu-beep) :style toggle :selected mds-menu-beep ]
+     [ "Echo input" (mds-menu-toggle mds-menu-echo-input) :style toggle :select mds-menu-echo-input]
+     [ "Truncate lines" toggle-truncate-lines :style toggle :select truncate-lines]
+     [ "Compact view" mds-windows-toggle compact :style toggle :select   ]
      [ "Enable buttons"]
      )
     ("Customize"
@@ -25,6 +25,17 @@
     "---"
     ["Find source"  mds-finder t]
     "---"
+    ["Help" mds-help t]
+    "---"
     ["Restart MDS" mds-restart t]
     ["Quit MDS" mds-quit t]))
   
+(defmacro mds-menu-toggle (flag)
+  `(setq ,flag (not ,flag)))
+
+(setq flg t)
+(mds-menu-toggle flg)
+
+
+
+(defun mds-menu-limit-clients 
