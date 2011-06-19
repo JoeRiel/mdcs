@@ -52,6 +52,11 @@
 
 ;;}}}
 
+(defcustom mds-trace-delay 0.01
+  "Delay time, in seconds, between each step when tracing"
+  :type 'numeric
+  :group 'mds)
+
 ;;{{{ Constants
 
 (defconst mds-version "0.1" "Version number of mds.")
@@ -77,6 +82,9 @@ Name given by `mds-log-buffer-name'.")
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-showstat-trace nil
+  "When non-nil, trace through the debugged code.")
 
 ;; data structures
 
@@ -390,16 +398,18 @@ use them to route the message."
       (mds-output-display out-buf 
 			  (buffer-local-value 'mds-showstat-state live-buf)
 			  'prompt))
+     
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
      ;; Extract the procname and state number
      ;; and update the showstat buffer
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
-	(mds-showstat-update live-buf 
-			     (match-string 1 msg)    ; address
-			     (match-string 2 msg)    ; procname
-			     (match-string 3 msg)))) ; state
+	(let ((addr      (match-string 1 msg))
+	      (procname  (match-string 2 msg))
+	      (state     (match-string 3 msg))
+	      (statement (match-string 4 msg)))
+	  (mds-showstat-update live-buf addr procname state statement))))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
