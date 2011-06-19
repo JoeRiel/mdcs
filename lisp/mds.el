@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'custom)
 (require 'mds-login)
 (require 'mds-menus)
 (require 'mds-output)
@@ -55,12 +56,12 @@
 
 (defcustom mds-port 10000
   "Default port used by mds tcp server"
-  :type integer
+  :type 'integer
   :group 'mds)
 
 (defcustom mds-max-number-clients 4
   "Default maximum number of clients allowed."
-  :type integer
+  :type 'integer
   :group 'mds)
 
 
