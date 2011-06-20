@@ -135,8 +135,6 @@ The first group matches the statement, with some indentation.")
 
 ;;{{{ Text insertion
 
-
-
 (defun mds-insert-and-font-lock (msg face &optional tag)
   "Insert string MSG into current buffer, at point, with font-lock FACE.
 If optional TAG is present, insert it into the buffer before MSG."

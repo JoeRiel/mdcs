@@ -9,7 +9,7 @@ Grid := module()
 
 ##DEFINE CMD ProcToCode
 ##PROCEDURE(help) \MOD[\SUBMOD][\CMD]
-##HALFLINE instrument a procedure for use with Grid
+##HALFLINE instrument a procedure for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -22,9 +22,16 @@ Grid := module()
 ##- ::string::; string of code to be passed to "Grid[Launch]"
 ##DESCRIPTION
 ##- The `\CMD` command
-##  creates a string that instruments a procedure
-##  for debugging with `\MOD` so that it can be
-##  used with the "Grid[Launch]" command.
+##  converts a procedure, 'prc', and arguments 'args'
+##  to a string that can be passed to "Grid[Launch]".
+##  The string includes debug code that launches mdc
+##  for each Grid process.
+##
+##- The 'prc' argument is a procedure to execute.
+##
+##- The 'args' arguments are optional arguments
+##  that are passed to 'prc' when it is launched
+##  via "Grid[Launch]".
 ##
 ##OPTIONS
 ##opt(mdc_options,set)
