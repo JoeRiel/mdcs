@@ -35,6 +35,8 @@
 ##  Specifies the connection type.
 ##  Currently only `socket` is supported.
 ##  The default is `socket`.
+##opt(exit,truefalse)
+##  If `true`, shutdown the TCP connection.
 ##opt(host,string)
 ##  The name of the host.
 ##  The default is _"localhost"_.
@@ -63,11 +65,10 @@
 ##  Specifies ...
 ##opt(view,truefalse)
 ##  If `true`, then the remote debugging session
-##  is echoed on the local machine.
+##  is echoed on the client machine.
 ##  The default is originally`false`,
 ##  but becomes whatever was last used.
-##opt(exit,truefalse)
-##  If `true`, then
+##  This works with tty maple, but not with the gui.
 ##NOTES
 
 #}}}
@@ -86,7 +87,6 @@ export Authenticate
     ,  Format
     ,  Grid
     ,  ModuleApply
-    ,  Sample
     ,  Version
     ;
 
@@ -117,7 +117,7 @@ $ifdef BUILD_MLA
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
-$include <src/Sample.mm>
+#$include <src/Sample.mm>
 $endif
 
 #{{{ ModuleApply
@@ -127,13 +127,12 @@ $endif
                          , { config :: {string,identical(maplet)} := NULL }
                          , { connection :: identical(socket,pipe,ptty) := 'socket' }
                          , { enter :: truefalse := false }
-                         , { usegrid :: truefalse := false }
+                         , { exit :: truefalse := false }
                          , { host :: string := Host }
                          , { label :: string := kernelopts('username') }
                          , { maxlength :: nonnegint := max_length }
                          , { password :: string := "" }
                          , { port :: posint := Port }
-                         , { sample :: truefalse := false }
                          #, { timeout :: nonnegint := 0 }
                          # TODO: permits specifying multiple
                          # procedures.
@@ -141,13 +140,15 @@ $endif
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
                          , { unstopat :: {string,name} := "" }
+                         , { usegrid :: truefalse := false }
+                         , { usethreads :: truefalse := false }
+                         , { verbose :: truefalse := false }
                          , { view :: truefalse := view_flag }
-                         , { exit :: truefalse := false }
                          , $
         )
 
     global `debugger/width`;
-    local lbl;
+    local lbl, Port, self;
 
         if connection <> 'socket' then
             error "currently only a socket connection is supported"
@@ -174,10 +175,19 @@ $endif
             lbl := label;
         end if;
 
+        if usethreads then
+            self := :-Threads:-Self();
+            lbl := sprintf("%s[%d]", lbl, self);
+            Port := port + self; # FIXME: not robust
+        else
+            Port := port;
+        end if;
+
+
         Debugger:-Replace();
 
         try
-            Connect(host, port, CreateID(lbl), _options['beep'] );
+            Connect(host, Port, CreateID(lbl), _options['beep'], _options['verbose'] );
         catch:
             Debugger:-Restore();
             error;
@@ -200,8 +210,7 @@ $endif
             :-stoperror(':-traperror');
         end if;
 
-        if sample  then Sample();
-        elif enter then DEBUG();
+        if enter then DEBUG();
         end if;
 
         return NULL;
@@ -233,13 +242,16 @@ $endif
                     , port :: posint
                     , id :: string
                     , { beep :: truefalse := true }
+                    , { verbose :: truefalse := true }
                     , $
                    )
     local line;
         if sid <> -1 then
             Sockets:-Close(sid);
         end if;
-        if beep then
+        if beep and not IsWorksheetInterface() then
+            # This doesn't work properly in the gui, it prints a box
+            # and doesn't make a tone.  It works in the tty interface.
             printf("\a");
         end if;
         sid := Sockets:-Open(host, port);
@@ -252,6 +264,10 @@ $endif
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
             printf("%s\n", line);
+            if verbose then
+                printf("Connected to %s on port %d, with id %s\n"
+                       , host, port, id );
+            end if;
             return NULL;
         end if;
         error "could not connect";
@@ -358,7 +374,7 @@ $endif
     CreateID := proc(label :: string,$)
         if length(label) = 0 then
             error "label cannot be empty";
-        elif not StringTools:-RegMatch("^[A-Za-z0-9_-]+$", label) then
+        elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
             error "invalid characters in label '%1'", label;
         end if;
         return sprintf(":%s:%s:%d:", label, kernelopts('platform,pid') );
