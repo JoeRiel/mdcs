@@ -5,10 +5,14 @@ TAGS
 
 # for now
 /maple/Browser
-/maple/tst
-/maple/sandbox
+/maple/mdoc/
+/maple/mhelp/
+/maple/mtest/
+/maple/tst/
+/maple/sandbox/
 
 *.mla
+*.hdb
 
 /lisp/*.elc
 /lisp/tst

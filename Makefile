@@ -124,6 +124,22 @@ byte-compile: $(ELCFILES)
 
 # }}}
 
+# {{{ hdb
+
+.PHONY: hdb
+
+hdb := mdc.hdb
+hdb: $(call print-help,hdb,Create Maple help database)
+hdb: mdc.hdb
+
+mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
+	mpldoc -c nightly $+
+	shelp -h $@ create
+	ls maple/mhelp/*.i | xargs -n1 shelp -h $@ load
+
+# }}}
+
+
 # {{{ mla
 
 .PHONY: mla 
@@ -164,16 +180,22 @@ INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
 INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELCFILES)))
 
 install: $(call print-help,install,Install everything)
-install: install-lisp install-info install-maple
+install: install-lisp install-info install-maple install-hdb
 
 install-dev: $(call print-help,install-dev,Install everything but link el files to source)
-install-dev: install-elc install-info install-maple
+install-dev: install-elc install-info install-maple install-hdb
 
 install-maple: $(call print-help,install-maple,Install mla in $(MAPLE_INSTALL_DIR))
 install-maple: $(mla)
 	@$(MKDIR) $(MAPLE_INSTALL_DIR)
 	@echo "Installing Maple archive into $(MAPLE_INSTALL_DIR)/"
 	@$(CP) $+ $(MAPLE_INSTALL_DIR)
+
+install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_INSTALL_DIR))
+install-hdb: $(hdb)
+	@$(MKDIR) $(MAPLE_INSTALL_DIR)
+	@echo "Installing Maple help data base into $(MAPLE_INSTALL_DIR)/"
+	@$(CP) $^ $(MAPLE_INSTALL_DIR)
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
 install-lisp: $(LISPFILES) $(ELCFILES)

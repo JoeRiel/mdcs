@@ -3,25 +3,56 @@
 #{{{ mpldoc
 
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE MOD mdc
-##MODULE \MOD
-##HALFLINE appliable module for communicating with a Maple Debugger Server
+##DEFINE CMD mdc
+##MODULE(help) \CMD
+##HALFLINE Maple Debugger Client
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##CALLINGSEQUENCE
-##- \MOD('opts')
+##- \CMD('opts')
 ##PARAMETERS
-##param_opts(\MOD)
+##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\MOD` module is an appliable module
-##  that implements a *Maple Debugger Client*.
-##  It communicates with a *Maple Debugger Server*.
+##- The `\CMD` command launches a *Maple Debugger Client*,
+##  which connects to a *Maple Debugger Server*.
+##  When debugging commences, the action is controlled
+##  by the server.
+##  This architecture has several benefits:
+##
+##-- A common, full-featured debugger interface can be used
+##  whether running Maple from the the GUI or command-line.
+##
+##-- Remote debugging is possible.  The client can be
+##  run on one machine, the server on another.
+##  Communication is via standard TCP.
+##
+##-- Multiple Maple processes can debugged concurrently.  This permits
+##  directly comparing the actions of different versions of code, or
+##  comparing code run on machines with different operating
+##  systems. It also permits stepping through separate processes in a
+##  "Grid" application.
+##
+##- Debugging is invoked in the usual way, by instrumenting a
+##  procedure with "stopat", "stopwhen" or "stoperror", then running
+##  the procedure. It may also be invoked in the the GUI by clicking
+##  the debug icon on the toolbar during a running computation.
+##
+##  The '\CMD' command provides convenient options for
+##  instrumenting a procedure; see the 'stopat' and 'stoperror'
+##  options, below.
+##
+##- The user interface of the *Maple Debugger Server*,
+##  which controls the debugger, is described in its
+##  info pages.
+##
+##
 ##OPTIONS
 ##opt(beep,truefalse)
 ##  If `true`, emit a beep
 ##  when succesfully connecting.
+##  Disabled when in the GUI because it does not work there.
 ##  The default is `true`.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
@@ -31,10 +62,6 @@
 ##  for the configuration.
 ##  If 'config' is not specified, then all defaults
 ##  are used.
-##opt(connection,socket|pipe|ptty)
-##  Specifies the connection type.
-##  Currently only `socket` is supported.
-##  The default is `socket`.
 ##opt(exit,truefalse)
 ##  If `true`, shutdown the TCP connection.
 ##opt(host,string)
@@ -54,22 +81,39 @@
 ##  The port (socket) used when _connection=socket_.
 ##  The default is 10000.
 ##opt(stopat,name or string)
-##  Identifies a procedure at which to set a breakpoint.
+##  Identifies the procedures to instrument.
+##  May be a name, a string, or a set of names or strings.
+##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
+##  so this provides a convenient means to instrument
+##  local procedures of a module.
+##
 ##opt(stoperror,truefalse)
 ##  If `true`, stop at any error.
 ##  The default is `false`.
 ##opt(traperror,truefalse)
 ##  If `true`, stop at trapped errors.
 ##  The default is false.
-##opt(timeout,nonnegint)
-##  Specifies ...
+##opt(unstopat, procedures to stopat)
+##  Identifies procedures from which to remove instrumentation.
+##  May be a name, a string, or a set of names or strings.
+##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
+##
+##opt(usegrid,truefalse)
+##  If `true`, append the "Grid" node number
+##  to the label.  This option is automatically
+##  added when "ProcToString" is used to instrument
+##  procedures for use with Grid.
+##  The default is `false`.
 ##opt(view,truefalse)
-##  If `true`, then the remote debugging session
-##  is echoed on the client machine.
-##  The default is originally`false`,
-##  but becomes whatever was last used.
-##  This works with tty maple, but not with the gui.
-##NOTES
+##  If `true`, the remote debugging session is echoed on the client machine.
+##  This only has an effect with command-line maple.
+##  The default is `false`,
+##EXAMPLES(noexecute)
+##- Launch the Maple debug client, instrumenting "int".
+##  The `verbose` option
+##> mdc(stopat=int);
+##> int(x,x);
+##ENDMPLDOC
 
 #}}}
 
@@ -125,25 +169,21 @@ $endif
     ModuleApply := proc( (* no positional parameters *)
                          { beep :: truefalse := true }
                          , { config :: {string,identical(maplet)} := NULL }
-                         , { connection :: identical(socket,pipe,ptty) := 'socket' }
-                         , { enter :: truefalse := false }
+                         #, { enter :: truefalse := false }
                          , { exit :: truefalse := false }
                          , { host :: string := Host }
                          , { label :: string := kernelopts('username') }
                          , { maxlength :: nonnegint := max_length }
-                         , { password :: string := "" }
+                         #, { password :: string := "" }
                          , { port :: posint := Port }
-                         #, { timeout :: nonnegint := 0 }
-                         # TODO: permits specifying multiple
-                         # procedures.
-                         , { stopat :: {string,name} := "" }
+                         , { stopat :: {string,name,set(string,name)} := "" }
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
-                         , { unstopat :: {string,name} := "" }
+                         , { unstopat :: {string,name,set(string,name)} := "" }
                          , { usegrid :: truefalse := false }
-                         , { usethreads :: truefalse := false }
+                         #, { usethreads :: truefalse := false }
                          , { verbose :: truefalse := false }
-                         , { view :: truefalse := view_flag }
+                         , { view :: truefalse := false }
                          , $
         )
 
@@ -162,7 +202,7 @@ $endif
             return NULL;
         end if;
 
-        view_flag := view;
+        view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
 
         if max_length > 0 then
@@ -193,11 +233,15 @@ $endif
             error;
         end try;
 
-        if stopat <> "" then
+        if stopat :: set then
+            map(Debugger:-stopat, stopat);
+        elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
 
-        if unstopat <> "" then
+        if unstopat :: set then
+            map(Debugger:-unstopat, unstopat);
+        elif unstopat <> "" then
             Debugger:-unstopat(unstopat);
         end if;
 
