@@ -23,6 +23,7 @@
 (declare-function mds-goto-state "mds-showstat")
 (declare-function mds--get-client-live-buf "mds")
 (declare-function mds--get-client-out-buf "mds")
+(declare-function mds-send-client "mds")
 (declare-function mds-showstat-view-dead-proc "mds-showstat")
 (declare-function mds-windows-display-dead "mds-windows")
 
@@ -222,10 +223,11 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt-face)
 	      (delete-region (point) (line-end-position))
-	      ;; If tracing is enable, issue step command
-	      (let ((trace-mode (buffer-local-value 'mds-showstat-trace
-						    (mds--get-client-live-buf mds-client))))
+	      (let* ((live-buf (mds--get-client-live-buf mds-client))
+		     (trace-mode (buffer-local-value 'mds-showstat-trace live-buf)))
 		(when trace-mode
+		  (if mds-output-track-input
+		      (insert (buffer-local-value 'mds-showstat-statement live-buf)))
 		  (insert "\n")
 		  (mds-send-client mds-client (concat trace-mode "\n")))))
 

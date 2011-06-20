@@ -228,13 +228,13 @@ new procedure."
 
       (unless mds-showstat-trace
 	;; Call Maple showstat routine to update the showstat buffer.
-	;;(mds-showstat-send-client "showstat")
 	(mds-showstat-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))))
       
     ;; Update the buffer-local status
     (setq mds-showstat-addr     addr
 	  mds-showstat-procname procname
-	  mds-showstat-state    state)))
+	  mds-showstat-state    state
+	  mds-showstat-statement statement)))
 
 
 ;;}}}
