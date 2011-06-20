@@ -148,7 +148,7 @@ If optional TAG is present, insert it into the buffer before MSG."
 (defun mds-insert-tag (tag)
   "Insert TAG as string with colon in the current buffer, at point."
   (let ((beg (point)))
-    (insert (format "<%s>" (prin1-to-string tag)))
+    (insert (format "<%s>" tag))
     (mds-put-face beg (point) 'font-lock-string-face)
     (insert ": ")))
 

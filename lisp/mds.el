@@ -484,7 +484,7 @@ use them to route the message."
 ;;{{{ mds-cycle-clients
 
 (defun mds-cycle-clients ()
-  "Pop to first client on list, the rotate list."
+  "Pop to first client on list, then rotate list."
   (interactive)
   (if mds-clients
       (let* ((L mds-clients)
@@ -505,7 +505,7 @@ use them to route the message."
   "Write PROC: MSG to log buffer."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
-    (insert (format "%s: %s\n" (prin1-to-string proc) msg))
+    (insert (format "%s: %s\n" proc msg))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
