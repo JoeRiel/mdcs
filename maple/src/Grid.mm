@@ -84,7 +84,9 @@ export CodeString
 
     CodeString := proc(defs :: string, launch :: string)
         cat(defs
-            , sprintf("mdc(%q,'usegrid'=true):", _rest)
+            , sprintf("mdc('label'=\"%s_%d\",%q,'usegrid'=true):"
+                      , kernelopts('username,pid')
+                      , _rest)
             , launch
            );
 
@@ -145,9 +147,13 @@ export CodeString
     Procedure := proc(prc :: procedure)
         subs('_opts' = _rest
              , '_prc' = eval(prc)
+             , '_lbl' = sprintf("%s_%d", kernelopts('username,pid'))
              , proc()
                    prc := _prc;
-                   mdc(_opts, 'usegrid'=true);
+                   mdc('label' = _lbl
+                       , _opts
+                       , 'usegrid'=true
+                      );
                    prc(_rest);
                end proc
             );
