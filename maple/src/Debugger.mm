@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE MOD Debugger
-##MODULE \MOD
+##DEFINE SUBMOD Debugger
+##MODULE \MOD[\SUBMOD]
 ##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -703,7 +703,7 @@ $define RETURN return
 #{{{ stopat
 
 ##DEFINE CMD stopat
-##PROCEDURE \PKG[\MOD]\MOD[\CMD]
+##PROCEDURE \MOD[\SUBMOD][\CMD]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010

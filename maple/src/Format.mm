@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE MOD Format
-##MODULE \PKG[\MOD]
+##DEFINE SUBMOD Format
+##MODULE \MOD[\SUBMOD]
 ##HALFLINE code used by the Emacs Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -25,7 +25,7 @@ local indexed2slashed
 #{{{ ArgsToEqs
 
 ##DEFINE PROC ArgsToEqs
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE \MOD[\SUBMOD][\PROC]
 ##HALFLINE return equations defining the parameters of a procedure call
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -174,7 +174,7 @@ local indexed2slashed
 #{{{ prettyprint
 
 ##DEFINE PROC prettyprint
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE \MOD[\SUBMOD][\PROC]
 ##HALFLINE pretty print a Maple expression
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -322,7 +322,7 @@ local indexed2slashed
 #{{{ showstat
 
 ##DEFINE CMD showstat
-##PROCEDURE \MOD[\CMD]
+##PROCEDURE \MOD[\SUBMOD][\CMD]
 ##HALFLINE display a procedure with statement numbers for debugging
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
@@ -379,7 +379,7 @@ local indexed2slashed
 #{{{ indexed2slashed
 
 ##DEFINE PROC indexed2slashed
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE \MOD[\SUBMOD][\PROC]
 ##HALFLINE convert indexed name to a slashed name
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
@@ -428,7 +428,7 @@ local indexed2slashed
 #{{{ GoTry
 
 ##DEFINE PROC GoTry
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE \MOD[\SUBMOD][\PROC]
 ##HALFLINE reassign Try to save tests for execution with the go command
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
