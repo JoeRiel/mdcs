@@ -3,50 +3,80 @@
 #{{{ mpldoc
 
 ##INCLUDE ../include/mpldoc_macros.mpi
+
+##DEFINE MOD mdc
 ##DEFINE CMD mdc
-##MODULE(help) \CMD
-##HALFLINE Maple Debugger Client
+##MODULE(help) \MOD
+##HALFLINE Overview of the Maple Debugger Client Module
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
+##DESCRIPTION
+##- The `\MOD` module implements a *Maple Debugger Client*,
+##  which is half of a *Maple Debugger Client/Server* pair.
+##  This client/server architecture replaces the
+##  existing Maple debugger.  It provides several
+##  significant benefits:
+##
+##-- A common, full-featured, debugger interface that can be used
+##  whether running Maple from the GUI or the command-line.
+##
+##-- Remote debugging---the client (Maple) can be run on one machine,
+##  the server on another. Communication is via standard TCP.
+##
+##-- Concurrent debugging---multiple Maple processes can debugged
+##  simultaneously. This permits interactively comparing the actions
+##  of different versions of code, or comparing code run on machines
+##  with different operating systems. It also permits independently or
+##  synchronously stepping through separate processes in a "Grid"
+##  application.
+##
+##- The `\MOD` module is an appliable module
+##  that launches the Maple Debugger Client.
+##  See "\MOD[\MOD]" for details.
+##
+##- The submodule "\MOD[Grid]" provides several exports
+##  for using "Grid" with the `\MOD`.
+##
+##- The user interface of the *Maple Debugger Server*,
+##  which controls the debugger, is described in its
+##  *info* pages. If this package has been properly installed,
+##  and environmental variables configured, the "mds info"
+##  pages can be read by typing *info mds* in a shell.
+##
+##SEEALSO
+##- "debugger"
+##- "\MOD[\MOD]"
+##- "\MOD[Grid]"
+##- "Grid"
+##ENDMPLDOC
+
+
+##PROCEDURE(help) \MOD[mdc]
+##HALFLINE Maple Debugger Client
+##AUTHOR   Joe Riel
+##DATE     Jun 2011
 ##CALLINGSEQUENCE
 ##- \CMD('opts')
 ##PARAMETERS
+##- 'opts' :
 ##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command launches a *Maple Debugger Client*,
-##  which connects to a *Maple Debugger Server*.
-##  When debugging commences, the action is controlled
-##  by the server.
-##  This architecture has several benefits:
+##- The `\CMD` command launches the "Maple Debugger Client".
+##  If the client successfully connects to a *Maple Debugger Server*,
+##  it replaces the standard Maple "debugger" with
+##  procedures that transfer debugging control to the server.
 ##
-##-- A common, full-featured debugger interface can be used
-##  whether running Maple from the the GUI or command-line.
+##- Debugging is invoked in the usual way, by instrumenting a target
+##  procedure with "stopat", "stopwhen", or "stoperror", then calling
+##  the target procedure. In the standard Maple GUI it may also be
+##  invoked by clicking the *debug icon* on the toolbar during a running
+##  computation.
 ##
-##-- Remote debugging is possible.  The client can be
-##  run on one machine, the server on another.
-##  Communication is via standard TCP.
-##
-##-- Multiple Maple processes can debugged concurrently.  This permits
-##  directly comparing the actions of different versions of code, or
-##  comparing code run on machines with different operating
-##  systems. It also permits stepping through separate processes in a
-##  "Grid" application.
-##
-##- Debugging is invoked in the usual way, by instrumenting a
-##  procedure with "stopat", "stopwhen" or "stoperror", then running
-##  the procedure. It may also be invoked in the the GUI by clicking
-##  the debug icon on the toolbar during a running computation.
-##
-##  The '\CMD' command provides convenient options for
-##  instrumenting a procedure; see the 'stopat' and 'stoperror'
-##  options, below.
-##
-##- The user interface of the *Maple Debugger Server*,
-##  which controls the debugger, is described in its
-##  info pages.
-##
+##- The target procedures can also be instrumented by passing
+##  the `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.
+##  These are described in the *Options* section.
 ##
 ##OPTIONS
 ##opt(beep,truefalse)
@@ -62,24 +92,33 @@
 ##  for the configuration.
 ##  If 'config' is not specified, then all defaults
 ##  are used.
+##
 ##opt(exit,truefalse)
-##  If `true`, shutdown the TCP connection.
+##  If `true`, shutdown the TCP connection
+##  and restore the original debugger procedures.
+##  The default is `false`.
+##
 ##opt(host,string)
 ##  The name of the host.
 ##  The default is _"localhost"_.
+##
 ##opt(label,string)
 ##  Label passed to server for convenient identication
 ##  of this client.
 ##  The default is the return value of _kernelopts('username')_.
+##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client will transmit.
 ##  If a string is longer than that, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
 ##  The default is 10000.
+##
 ##opt(port,posint)
-##  The port (socket) used when _connection=socket_.
+##  Assigns the TCP port used for communication.
+##  Must match the value used the server.
 ##  The default is 10000.
+##
 ##opt(stopat,name or string)
 ##  Identifies the procedures to instrument.
 ##  May be a name, a string, or a set of names or strings.
@@ -90,9 +129,11 @@
 ##opt(stoperror,truefalse)
 ##  If `true`, stop at any error.
 ##  The default is `false`.
+##
 ##opt(traperror,truefalse)
 ##  If `true`, stop at trapped errors.
-##  The default is false.
+##  The default is `false`.
+##
 ##opt(unstopat, procedures to stopat)
 ##  Identifies procedures from which to remove instrumentation.
 ##  May be a name, a string, or a set of names or strings.
@@ -100,19 +141,40 @@
 ##
 ##opt(usegrid,truefalse)
 ##  If `true`, append the "Grid" node number
-##  to the label.  This option is automatically
-##  added when "ProcToString" is used to instrument
+##  to the label.  This option is
+##  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
 ##  The default is `false`.
+##
 ##opt(view,truefalse)
 ##  If `true`, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is `false`,
+##  The default is `false`.
+##
 ##EXAMPLES(noexecute)
-##- Launch the Maple debug client, instrumenting "int".
-##  The `verbose` option
-##> mdc(stopat=int);
-##> int(x,x);
+##- Launch the Maple debugger client, instrumenting "int".
+##  Assume the Maple Debugger Server is running on a different
+##  machine, named `gauss`.
+##  The `verbose` option generates extra output when the client connects.
+##> mdc(stopat=int, host="gauss", verbose):
+##SET(lead=indent)
+##- ~Welcome joe~
+##- ~Connected to localhost on port 10000, with id :joe:unix:6120:~
+##UNSET
+##- Now launch the debugger.
+##> int(x^2,x);
+##
+##- When finished debugging, shutdown the client, restoring the debugger procedures.
+##> mdc(exit):
+##
+##XREFMAP
+##- "Maple Debugger Client" : Help:mdc
+##- "mds info" : file://{HOME}/maple/lib/mds.html
+##
+##SEEALSO
+##- "\MOD"
+##- "debugger"
+##- "\MOD[Grid]"
 ##ENDMPLDOC
 
 #}}}
@@ -176,7 +238,7 @@ $endif
                          , { maxlength :: nonnegint := max_length }
                          #, { password :: string := "" }
                          , { port :: posint := Port }
-                         , { stopat :: {string,name,set(string,name)} := "" }
+                         , { stopat :: {string,name,set({string,name})} := "" }
                          , { stoperror :: truefalse := false }
                          , { traperror :: truefalse := false }
                          , { unstopat :: {string,name,set(string,name)} := "" }
@@ -188,11 +250,9 @@ $endif
         )
 
     global `debugger/width`;
-    local lbl, Port, self;
+    local lbl;
 
-        if connection <> 'socket' then
-            error "currently only a socket connection is supported"
-        elif config <> NULL then
+        if config <> NULL then
             error "currently the 'config' option is disabled.  Use optional parameters."
         end if;
 
@@ -215,19 +275,10 @@ $endif
             lbl := label;
         end if;
 
-        if usethreads then
-            self := :-Threads:-Self();
-            lbl := sprintf("%s[%d]", lbl, self);
-            Port := port + self; # FIXME: not robust
-        else
-            Port := port;
-        end if;
-
-
         Debugger:-Replace();
 
         try
-            Connect(host, Port, CreateID(lbl), _options['beep'], _options['verbose'] );
+            Connect(host, port, CreateID(lbl), _options['beep'], _options['verbose'] );
         catch:
             Debugger:-Restore();
             error;
@@ -252,9 +303,6 @@ $endif
 
         if traperror then
             :-stoperror(':-traperror');
-        end if;
-
-        if enter then DEBUG();
         end if;
 
         return NULL;
