@@ -67,7 +67,7 @@
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
-(defvar mds-proc nil "process for the server.")
+
 
 
 ;;}}}
@@ -78,13 +78,11 @@
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-pre-Maple-14 nil
-  "Boolean flag indicating the Maple client is a release earlier
-  than Maple 14.")
-
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-proc nil "process for the server.")
 
 (defvar mds-showstat-trace nil
   "When non-nil, trace through the debugged code.")
@@ -176,6 +174,9 @@ If none, then return nil."
 
 (defun mds-client-set-id (client id)
     (if client (setcar (cdr (cddr client)) id)))
+
+(defun mds-client-get-id (client id)
+    (if client (cdr (cddr client))))
 
 ;;}}}
 ;;{{{ Client association list
@@ -289,14 +290,13 @@ Do not touch `mds-log-buffer'."
       (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
      ((eq status 'login)
+      ;; initiate the login process.
       (ding)
       (mds-login proc msg))
+     
      ((eq status 'start-debugging)
-      (ding)
-      (let ((client (mds-get-client-from-proc proc)))
-       	(mds-set-status-client client 'accepted)
-       	(mds-windows-display-client client)
-       	(mds-filter proc msg)))
+      (mds-start-debugging proc msg))
+
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -494,6 +494,24 @@ use them to route the message."
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
+
+
+(defun mds-start-debugging (proc msg)
+  "Called when debugging first starts.  This changes
+PROC is input process from the client; msg is the initial output
+of the debug Maple kernel.  Set the status of the client to
+'accepted, pass the message along for handling by the filter,
+display the client windows, and get the focus."
+  (ding)
+  (let ((client (mds-get-client-from-proc proc)))
+    (mds-set-status-client client 'accepted)
+    (mds-filter proc msg)
+    (mds-windows-display-client client)
+    (mds-get-focus-from-window-manager)))
+    
+
+(defun mds-get-focus-from-window-manager ()
+  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 
