@@ -9,12 +9,17 @@
 
 ;; avoid compiler warnings
 
+(declare-function mds--get-client-id "mds")
 (declare-function mds--get-client-live-buf "mds")
 (declare-function mds--get-client-dead-buf "mds")
 (declare-function mds--get-client-out-buf  "mds")
 
-;;(defvar mds-clients '())
-(defvar mds-windows-grouped-clients '())
+(defvar mds-clients '())  ;; duplicate, here to avoid warnings
+(defvar mds-windows-grouped-clients '()
+  "List of grouped clients.  Clients which are displayed
+together are combined in a sublist.  Clients that are not grouped
+are not in sublists.")
+
 
 
 (defun mds-windows-display-client (client)
@@ -40,44 +45,6 @@ frame, the showstat buffer on the left.  Return nil."
 	  (set-window-buffer (split-window-vertically)
 			     dead-buf))))))
 
-;; Not used, but may later	  
-(defun mds-get-tallest-window (windows)
-  "Return the tallest window in the list WINDOWS."
-  (let ((mx 0) ht win)
-    (while windows
-      (setq ht (window-height (car windows)))
-      (if (> ht mx)
-	  (setq mx ht
-		win (car windows)))
-      (setq windows (cdr windows)))
-    win))
-
-(defun mds-windows-display-client-pair (client1 client2)
-  "Display the live-showstat buffer and output buffer of CLIENT1 and CLIENT2
-in a four-window display."
-  (let* ((display-buffer-reuse-frames 't)
-	 (wtop (select-window (display-buffer (mds--get-client-live-buf client1))))
-	 wbot)
-    (delete-other-windows wtop)
-    (set-window-buffer (setq wbot (split-window-vertically)) (mds--get-client-out-buf client1))
-    (select-window wbot)
-    (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client2))
-    (select-window wtop)
-    (set-window-buffer (split-window-horizontally) (mds--get-client-live-buf client2))))
-
-(defun mds-windows-select-and-display-client-pair ()
-  (interactive)
-  (let* ((clients (mds-select-accepted-clients mds-clients))
-	 (len (length clients)))
-    (cond
-     ((< 2 len)	
-      (error "less than two registered clients"))
-     ((= 2 len)
-      (mds-windows-display-client-pair (nth 0 clients) (nth 1 clients)))
-     (t
-      ;; hack for now to avoid selecting them
-      (error "need to write code to select 2 of the clients")))))
-
 (defun mds-windows-display-group (clients)
   "Display a group of CLIENTS, which is a list of clients.
 The screen is split vertically such that all showstat buffers 
@@ -91,12 +58,15 @@ with n being the number of clients."
 	(delete-other-windows wtop)
 	(setq wbot (split-window-vertically))
 	(while clients
-	  (set-window-buffer wtop (mds--get-client-live-buf (car clients)))
-	  (select-window wtop)
-	  (if (> n 1) (setq wtop (split-window-horizontally (/ (window-width) n))))
+	  ;; split output buffers (bottom half of frame)
 	  (set-window-buffer wbot (mds--get-client-out-buf (car clients)))
 	  (select-window wbot)
 	  (if (> n 1) (setq wbot (split-window-horizontally (/ (window-width) n))))
+
+	  (set-window-buffer wtop (mds--get-client-live-buf (car clients)))
+	  (select-window wtop)
+	  (if (> n 1) (setq wtop (split-window-horizontally (/ (window-width) n))))
+	  ;; split live buffers (top half of frame)
 	  (setq n (1- n)
 		clients (cdr clients))))))
 
@@ -116,14 +86,15 @@ with n being the number of clients."
       (setq clients (cdr clients)))
     (mapcar #'cdr alist)))
 
-
-;;(setq mds-windows-grouped-clients (mds-windows-group-clients mds-clients))
+(defun mds-windows-group-update (clients)
+  (setq mds-windows-grouped-clients (mds-windows-group-clients mds-clients)))
+  
 
 
 ;;{{{ mds-windows-cycle-clients
 
 (defun mds-windows-cycle-clients ()
-  "Pop to first group of client on list, then rotate list."
+  "Pop to first client on list, then rotate list."
   (interactive)
   (if mds-clients
       (let* ((L mds-clients)

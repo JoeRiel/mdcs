@@ -31,10 +31,6 @@
 
 ;;{{{ customization
 
-(defgroup mds nil
-  "Maple Debugger Server."
-  :group 'tools)
-
 (defcustom mds-truncate-lines 't
   "When non-nil, lines in showstat buffer are initially truncated."
   :group 'mds)

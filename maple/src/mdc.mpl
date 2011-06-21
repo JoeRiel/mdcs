@@ -338,7 +338,7 @@ $endif
                     , port :: posint
                     , id :: string
                     , { beep :: truefalse := true }
-                    , { verbose :: truefalse := true }
+                    , { verbose :: truefalse := false }
                     , $
                    )
     local line;

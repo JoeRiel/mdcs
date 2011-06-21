@@ -52,14 +52,17 @@
 
 ;;}}}
 
-(defcustom mds-trace-delay 0.01
-  "Delay time, in seconds, between each step when tracing"
-  :type 'numeric
-  :group 'mds)
+;;{{{ customizations
+
+(defgroup mds nil
+  "Maple Debugger Server."
+  :group 'tools)
 
 (defcustom mds-port 10000  "Port used by mds server"
   :type 'integer
   :group 'mds)
+
+;;}}}
 
 ;;{{{ Constants
 
@@ -243,6 +246,7 @@ Do not touch `mds-log-buffer'."
 ;;{{{ Sentinel
 
 (defun mds-sentinel (proc msg)
+  "Monitor the client processes and handle any changes."
   (unless (eq msg "")
     (cond
      ((string-match mds--client-attach-re msg)
@@ -269,9 +273,26 @@ Do not touch `mds-log-buffer'."
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
 		       (if (mds-delete-client (mds-get-client-from-proc proc))
-			   "accepted " ""))))
+			   "accepted " "")))
+      (mds-windows-group-update mds-clients))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
+
+
+(defun mds-start-debugging (proc msg)
+  "Called when debugging first starts.  PROC is input process
+from the client; msg is the initial output of the debug Maple
+kernel.  Set the status of the client to 'accepted, pass the
+message along for handling by the filter, display the client
+windows, and get the focus."
+  (ding)
+  (let ((client (mds-get-client-from-proc proc)))
+    (mds-set-status-client client 'accepted)
+    (mds-filter proc msg)
+    ;; update groups
+    (mds-windows-group-update mds-clients)
+    (mds-windows-display-client client)
+    (mds-get-focus-from-window-manager)))
 
 
 ;;}}}
@@ -494,20 +515,6 @@ use them to route the message."
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
-
-
-(defun mds-start-debugging (proc msg)
-  "Called when debugging first starts.  This changes
-PROC is input process from the client; msg is the initial output
-of the debug Maple kernel.  Set the status of the client to
-'accepted, pass the message along for handling by the filter,
-display the client windows, and get the focus."
-  (ding)
-  (let ((client (mds-get-client-from-proc proc)))
-    (mds-set-status-client client 'accepted)
-    (mds-filter proc msg)
-    (mds-windows-display-client client)
-    (mds-get-focus-from-window-manager)))
     
 
 (defun mds-get-focus-from-window-manager ()
