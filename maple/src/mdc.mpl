@@ -192,7 +192,7 @@ export Authenticate
     ,  Debugger
     ,  Format
     ,  Grid
-    ,  ModuleApply
+    ,  mdc
     ,  Version
     ;
 
@@ -201,6 +201,7 @@ export Authenticate
 local Connect
     , Disconnect
     , CreateID
+    , ModuleApply
     , ModuleUnload
     , Read
     , Write
@@ -223,31 +224,32 @@ $ifdef BUILD_MLA
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
-#$include <src/Sample.mm>
 $endif
 
-#{{{ ModuleApply
+    ModuleApply := mdc;
 
-    ModuleApply := proc( (* no positional parameters *)
-                         { beep :: truefalse := true }
-                         , { config :: {string,identical(maplet)} := NULL }
-                         #, { enter :: truefalse := false }
-                         , { exit :: truefalse := false }
-                         , { host :: string := Host }
-                         , { label :: string := kernelopts('username') }
-                         , { maxlength :: nonnegint := max_length }
-                         #, { password :: string := "" }
-                         , { port :: posint := Port }
-                         , { stopat :: {string,name,set({string,name})} := "" }
-                         , { stoperror :: truefalse := false }
-                         , { traperror :: truefalse := false }
-                         , { unstopat :: {string,name,set(string,name)} := "" }
-                         , { usegrid :: truefalse := false }
-                         #, { usethreads :: truefalse := false }
-                         , { verbose :: truefalse := false }
-                         , { view :: truefalse := false }
-                         , $
-        )
+#{{{ mdc
+
+    mdc := proc( (* no positional parameters *)
+                 { beep :: truefalse := true }
+                 , { config :: {string,identical(maplet)} := NULL }
+                 #, { enter :: truefalse := false }
+                 , { exit :: truefalse := false }
+                 , { host :: string := Host }
+                 , { label :: string := kernelopts('username') }
+                 , { maxlength :: nonnegint := max_length }
+                 #, { password :: string := "" }
+                 , { port :: posint := Port }
+                 , { stopat :: {string,name,set({string,name})} := "" }
+                 , { stoperror :: truefalse := false }
+                 , { traperror :: truefalse := false }
+                 , { unstopat :: {string,name,set(string,name)} := "" }
+                 , { usegrid :: truefalse := false }
+                 #, { usethreads :: truefalse := false }
+                 , { verbose :: truefalse := false }
+                 , { view :: truefalse := false }
+                 , $
+               )
 
     global `debugger/width`;
     local lbl;
@@ -278,7 +280,10 @@ $endif
         Debugger:-Replace();
 
         try
-            Connect(host, port, CreateID(lbl), _options['beep'], _options['verbose'] );
+            Connect(host, port, CreateID(lbl)
+                    , `if`(usegrid, NULL, _options['beep'] )
+                    , _options['verbose']
+                   );
         catch:
             Debugger:-Restore();
             error;
@@ -344,6 +349,7 @@ $endif
         if beep and not IsWorksheetInterface() then
             # This doesn't work properly in the gui, it prints a box
             # and doesn't make a tone.  It works in the tty interface.
+            #
             printf("\a");
         end if;
         sid := Sockets:-Open(host, port);

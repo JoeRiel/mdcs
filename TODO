@@ -163,6 +163,10 @@
       Stefan was going to develop a hook for this,
       but I haven't heard about it.
 
+** TODO Allow input in mdl-output buffer.
+   * Naturally, one will then want history and lots of other cool stuff.
+   * Will this actually be used?  Not sure.
+
 * Long Term
  
 ** TODO Handle exports of unnamed modules.
