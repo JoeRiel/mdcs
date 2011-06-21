@@ -484,24 +484,6 @@ use them to route the message."
 
 ;;}}}
 
-;;{{{ mds-cycle-clients
-
-(defun mds-cycle-clients ()
-  "Pop to first client on list, then rotate list."
-  (interactive)
-  (if mds-clients
-      (let* ((L mds-clients)
-	     (client (car L)))
-	(and (> (length L) 1)
-	     ;; client is already displayed
-	     (get-buffer-window (mds--get-client-live-buf client))
-	     ;; rotate list
-	     (setq mds-clients (reverse (cons client (reverse (cdr L))))))
-	;; display the live buffer.  Maybe the whole thing.
-	(mds-windows-display-client (car mds-clients)))))
-
-;;}}}
-
 ;;{{{ log stuff
 
 (defun mds-writeto-log (proc msg)

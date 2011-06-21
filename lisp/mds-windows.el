@@ -13,6 +13,10 @@
 (declare-function mds--get-client-dead-buf "mds")
 (declare-function mds--get-client-out-buf  "mds")
 
+;;(defvar mds-clients '())
+(defvar mds-windows-grouped-clients '())
+
+
 (defun mds-windows-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
 The buffers are displayed in side-by-side windows that fill the
@@ -73,7 +77,84 @@ in a four-window display."
      (t
       ;; hack for now to avoid selecting them
       (error "need to write code to select 2 of the clients")))))
-    
+
+(defun mds-windows-display-group (clients)
+  "Display a group of CLIENTS, which is a list of clients.
+The screen is split vertically such that all showstat buffers 
+go on the top and the output buffers on the bottom.  The top
+and bottom panes are then split equally into n smaller panes,
+with n being the number of clients."
+  (if clients
+      (let ((n (length clients))
+	    wbot wtop)
+	(setq wtop (select-window (display-buffer (mds--get-client-live-buf (car clients)))))
+	(delete-other-windows wtop)
+	(setq wbot (split-window-vertically))
+	(while clients
+	  (set-window-buffer wtop (mds--get-client-live-buf (car clients)))
+	  (select-window wtop)
+	  (if (> n 1) (setq wtop (split-window-horizontally (/ (window-width) n))))
+	  (set-window-buffer wbot (mds--get-client-out-buf (car clients)))
+	  (select-window wbot)
+	  (if (> n 1) (setq wbot (split-window-horizontally (/ (window-width) n))))
+	  (setq n (1- n)
+		clients (cdr clients))))))
+
+(defun mds-windows-group-clients (clients)
+  "Group clients with a common base name."
+  (let ((alist '())
+	id base client)
+    (while clients
+      (setq client (car clients)
+	    id (mds--get-client-id client))
+      (when (string-match "\\([^-]+\\)-[0-9]+$" id)
+	(setq base (match-string 1 id))
+	(let ((entry (assoc base alist)))
+	  (if entry
+	      (setcdr entry (cons client (cdr entry)))
+	    (setq alist (cons (cons base (list client)) alist)))))
+      (setq clients (cdr clients)))
+    (mapcar #'cdr alist)))
+
+
+;;(setq mds-windows-grouped-clients (mds-windows-group-clients mds-clients))
+
+
+;;{{{ mds-windows-cycle-clients
+
+(defun mds-windows-cycle-clients ()
+  "Pop to first group of client on list, then rotate list."
+  (interactive)
+  (if mds-clients
+      (let* ((L mds-clients)
+	     (client (car L)))
+	(and (> (length L) 1)
+	     ;; client is already displayed
+	     (get-buffer-window (mds--get-client-live-buf client))
+	     ;; rotate list
+	     (setq mds-clients (reverse (cons client (reverse (cdr L))))))
+	;; display the live buffer.  Maybe the whole thing.
+	(mds-windows-display-client (car mds-clients)))))
+
+(defun mds-windows-cycle-groups ()
+  "Pop to first group of client on list, then rotate list."
+  (interactive)
+  (if mds-windows-grouped-clients
+      (let* ((G mds-windows-grouped-clients)
+	     (g (car G)))
+	(and (> (length G) 1)
+	     ;; group is already displayed
+	     ;; (get-buffer-window (mds--get-client-live-buf client))
+	     ;; rotate list
+	     (setq G (reverse (cons g (reverse (cdr G))))))
+	;; display the live buffer.  Maybe the whole thing.
+	(let ((g (car G)))
+	  (if (listp g)
+	      (mds-windows-display-group g)
+	    (mds-windows-display-client g))
+	  (setq mds-windows-grouped-clients G)))))
+
+;;}}}
 
 (provide 'mds-windows)
 
