@@ -48,5 +48,32 @@ frame, the showstat buffer on the left.  Return nil."
       (setq windows (cdr windows)))
     win))
 
+(defun mds-windows-display-client-pair (client1 client2)
+  "Display the live-showstat buffer and output buffer of CLIENT1 and CLIENT2
+in a four-window display."
+  (let* ((display-buffer-reuse-frames 't)
+	 (wtop (select-window (display-buffer (mds--get-client-live-buf client1))))
+	 wbot)
+    (delete-other-windows wtop)
+    (set-window-buffer (setq wbot (split-window-vertically)) (mds--get-client-out-buf client1))
+    (select-window wbot)
+    (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client2))
+    (select-window wtop)
+    (set-window-buffer (split-window-horizontally) (mds--get-client-live-buf client2))))
+
+(defun mds-windows-select-and-display-client-pair ()
+  (interactive)
+  (let* ((clients (mds-select-accepted-clients mds-clients))
+	 (len (length clients)))
+    (cond
+     ((< 2 len)	
+      (error "less than two registered clients"))
+     ((= 2 len)
+      (mds-windows-display-client-pair (nth 0 clients) (nth 1 clients)))
+     (t
+      ;; hack for now to avoid selecting them
+      (error "need to write code to select 2 of the clients")))))
+    
+
 (provide 'mds-windows)
 

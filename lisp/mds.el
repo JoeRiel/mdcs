@@ -57,10 +57,13 @@
   :type 'numeric
   :group 'mds)
 
+(defcustom mds-port 10000  "Port used by mds server"
+  :type 'integer
+  :group 'mds)
+
 ;;{{{ Constants
 
 (defconst mds-version "0.1" "Version number of mds.")
-(defconst mds-port 10000  "Port used by mds server")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
@@ -484,7 +487,7 @@ use them to route the message."
 ;;{{{ mds-cycle-clients
 
 (defun mds-cycle-clients ()
-  "Pop to first client on list, the rotate list."
+  "Pop to first client on list, then rotate list."
   (interactive)
   (if mds-clients
       (let* ((L mds-clients)
@@ -505,7 +508,7 @@ use them to route the message."
   "Write PROC: MSG to log buffer."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
-    (insert (format "%s: %s\n" (prin1-to-string proc) msg))
+    (insert (format "%s: %s\n" proc msg))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}

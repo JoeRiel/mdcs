@@ -23,6 +23,7 @@
 (declare-function mds-goto-state "mds-showstat")
 (declare-function mds--get-client-live-buf "mds")
 (declare-function mds--get-client-out-buf "mds")
+(declare-function mds-send-client "mds")
 (declare-function mds-showstat-view-dead-proc "mds-showstat")
 (declare-function mds-windows-display-dead "mds-windows")
 
@@ -134,8 +135,6 @@ The first group matches the statement, with some indentation.")
 
 ;;{{{ Text insertion
 
-
-
 (defun mds-insert-and-font-lock (msg face &optional tag)
   "Insert string MSG into current buffer, at point, with font-lock FACE.
 If optional TAG is present, insert it into the buffer before MSG."
@@ -147,7 +146,7 @@ If optional TAG is present, insert it into the buffer before MSG."
 (defun mds-insert-tag (tag)
   "Insert TAG as string with colon in the current buffer, at point."
   (let ((beg (point)))
-    (insert (format "<%s>" (prin1-to-string tag)))
+    (insert (format "<%s>" tag))
     (mds-put-face beg (point) 'font-lock-string-face)
     (insert ": ")))
 
@@ -222,10 +221,11 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt-face)
 	      (delete-region (point) (line-end-position))
-	      ;; If tracing is enable, issue step command
-	      (let ((trace-mode (buffer-local-value 'mds-showstat-trace
-						    (mds--get-client-live-buf mds-client))))
+	      (let* ((live-buf (mds--get-client-live-buf mds-client))
+		     (trace-mode (buffer-local-value 'mds-showstat-trace live-buf)))
 		(when trace-mode
+		  (if mds-output-track-input
+		      (insert (buffer-local-value 'mds-showstat-statement live-buf)))
 		  (insert "\n")
 		  (mds-send-client mds-client (concat trace-mode "\n")))))
 
