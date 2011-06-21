@@ -55,7 +55,7 @@ in a four-window display."
 	 (wtop (select-window (display-buffer (mds--get-client-live-buf client1))))
 	 wbot)
     (delete-other-windows wtop)
-    (set-window-buffer (setq wbot (split-window-vertically) (mds--get-client-out-buf client1))
+    (set-window-buffer (setq wbot (split-window-vertically)) (mds--get-client-out-buf client1))
     (select-window wbot)
     (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client2))
     (select-window wtop)
@@ -64,7 +64,7 @@ in a four-window display."
 (defun mds-windows-select-and-display-client-pair ()
   (interactive)
   (let* ((clients (mds-select-accepted-clients mds-clients))
-	 ((len (length clients)))
+	 (len (length clients)))
     (cond
      ((< 2 len)	
       (error "less than two registered clients"))
