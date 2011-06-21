@@ -63,10 +63,10 @@ export CodeString
 ##>>     printf("Hi, %s.  I'm node %d of %d\n", nam, MyNode(),NumNodes());
 ##>>     Barrier();
 ##>>  end proc:
-##- Assign a string that, when parsed and evaluated, assigns 'hello'.
-##> defs := sprintf("%a:=%a:", hello, eval(hello)):
+##- Assign a string that, when parsed and evaluated, assigns `hello`.
+##> defs := sprintf("%a:=%a:", hello, eval(hello))
 ##
-##- Assign the string that. when parsed and evaluated, ~hello("Debugger")~.
+##- Assign the string that, when parsed and evaluated, calls `hello`.
 ##> launch := sprintf("hello(%a):", "Debugger");
 ##
 ##- Create the block of code, a string, that is passed to
