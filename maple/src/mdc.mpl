@@ -279,15 +279,14 @@ $endif
 
         Debugger:-Replace();
 
-        try
-            Connect(host, port, CreateID(lbl)
-                    , `if`(usegrid, NULL, _options['beep'] )
-                    , _options['verbose']
-                   );
-        catch:
-            Debugger:-Restore();
-            error;
-        end try;
+        if sid = -1 then
+            try
+                Connect(host, port, CreateID(lbl), _options['beep'] );
+            catch:
+                Debugger:-Restore();
+                error;
+            end try;
+        end if;
 
         if stopat :: set then
             map(Debugger:-stopat, stopat);
@@ -339,7 +338,7 @@ $endif
                     , port :: posint
                     , id :: string
                     , { beep :: truefalse := true }
-                    , { verbose :: truefalse := true }
+                    , { verbose :: truefalse := false }
                     , $
                    )
     local line;

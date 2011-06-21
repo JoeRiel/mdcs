@@ -137,6 +137,7 @@ byte-compile: $(call print-help,byte-compile,Byte compile $(LISPFILES))
 byte-compile: $(ELCFILES)
 
 %.elc : %.el
+	$(RM) $@
 	@echo Byte-compiling $+
 	@$(ELC) $<
 

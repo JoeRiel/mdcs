@@ -52,14 +52,17 @@
 
 ;;}}}
 
-(defcustom mds-trace-delay 0.01
-  "Delay time, in seconds, between each step when tracing"
-  :type 'numeric
-  :group 'mds)
+;;{{{ customizations
+
+(defgroup mds nil
+  "Maple Debugger Server."
+  :group 'tools)
 
 (defcustom mds-port 10000  "Port used by mds server"
   :type 'integer
   :group 'mds)
+
+;;}}}
 
 ;;{{{ Constants
 
@@ -67,7 +70,7 @@
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
-(defvar mds-proc nil "process for the server.")
+
 
 
 ;;}}}
@@ -78,13 +81,11 @@
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-pre-Maple-14 nil
-  "Boolean flag indicating the Maple client is a release earlier
-  than Maple 14.")
-
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-proc nil "process for the server.")
 
 (defvar mds-showstat-trace nil
   "When non-nil, trace through the debugged code.")
@@ -177,6 +178,9 @@ If none, then return nil."
 (defun mds-client-set-id (client id)
     (if client (setcar (cdr (cddr client)) id)))
 
+(defun mds-client-get-id (client id)
+    (if client (cdr (cddr client))))
+
 ;;}}}
 ;;{{{ Client association list
 
@@ -242,6 +246,7 @@ Do not touch `mds-log-buffer'."
 ;;{{{ Sentinel
 
 (defun mds-sentinel (proc msg)
+  "Monitor the client processes and handle any changes."
   (unless (eq msg "")
     (cond
      ((string-match mds--client-attach-re msg)
@@ -268,9 +273,26 @@ Do not touch `mds-log-buffer'."
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
 		       (if (mds-delete-client (mds-get-client-from-proc proc))
-			   "accepted " ""))))
+			   "accepted " "")))
+      (mds-windows-group-update mds-clients))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
+
+
+(defun mds-start-debugging (proc msg)
+  "Called when debugging first starts.  PROC is input process
+from the client; msg is the initial output of the debug Maple
+kernel.  Set the status of the client to 'accepted, pass the
+message along for handling by the filter, display the client
+windows, and get the focus."
+  (ding)
+  (let ((client (mds-get-client-from-proc proc)))
+    (mds-set-status-client client 'accepted)
+    (mds-filter proc msg)
+    ;; update groups
+    (mds-windows-group-update mds-clients)
+    (mds-windows-display-client client)
+    (mds-get-focus-from-window-manager)))
 
 
 ;;}}}
@@ -289,14 +311,13 @@ Do not touch `mds-log-buffer'."
       (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
      ((eq status 'login)
+      ;; initiate the login process.
       (ding)
       (mds-login proc msg))
+     
      ((eq status 'start-debugging)
-      (ding)
-      (let ((client (mds-get-client-from-proc proc)))
-       	(mds-set-status-client client 'accepted)
-       	(mds-windows-display-client client)
-       	(mds-filter proc msg)))
+      (mds-start-debugging proc msg))
+
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -484,24 +505,6 @@ use them to route the message."
 
 ;;}}}
 
-;;{{{ mds-cycle-clients
-
-(defun mds-cycle-clients ()
-  "Pop to first client on list, then rotate list."
-  (interactive)
-  (if mds-clients
-      (let* ((L mds-clients)
-	     (client (car L)))
-	(and (> (length L) 1)
-	     ;; client is already displayed
-	     (get-buffer-window (mds--get-client-live-buf client))
-	     ;; rotate list
-	     (setq mds-clients (reverse (cons client (reverse (cdr L))))))
-	;; display the live buffer.  Maybe the whole thing.
-	(mds-windows-display-client (car mds-clients)))))
-
-;;}}}
-
 ;;{{{ log stuff
 
 (defun mds-writeto-log (proc msg)
@@ -512,6 +515,10 @@ use them to route the message."
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
+    
+
+(defun mds-get-focus-from-window-manager ()
+  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 
