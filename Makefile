@@ -266,7 +266,7 @@ install-maple: $(mla)
 
 PHONY: zip
 
-dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) $(PDF_FILES) README
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README
 $(info $(dist))
 
 zip: $(PKG).zip

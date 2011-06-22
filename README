@@ -24,9 +24,9 @@ Here is where I put the various files:
    $HOME/.emacs.d   :  lisp/mds*.el (unpack, don't include the "lisp/")
    $HOME/share/info :  doc/mds (same here, don't include teh "doc/")
 
-Under the doc subdirectory are a pdf and html of the (incomplete) mds
-manual.  They may be useful if you do not have Emacs or info installed
-and so cannot read the info file (mds).
+Under the doc subdirectory is an html format of the mds manual.  It
+may be useful if you do not have Emacs or info installed and so cannot
+read the info file (mds).
 
 CONFIGURATION
 -------------
