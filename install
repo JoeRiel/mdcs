@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Simple installation script for mdcs
+
+LISP_DIR=$HOME/.emacs.d
+INFO_DIR=$HOME/share/info
+MAPLE_INSTALL_DIR=$HOME/maple/lib
+
+cp -a lisp/*.el $LISP_DIR
+cp -a mds $INFO_DIR
+cp -a mdc.mla mdc.hdb $MAPLE_INSTALL_DIR
+
