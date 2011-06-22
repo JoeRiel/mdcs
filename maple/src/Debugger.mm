@@ -179,6 +179,8 @@ $ifdef LOG_READLINE
                 fflush(logpid);
 $endif
                 break
+            catch "process %1 disconnected unexpectedly":
+                error;
             catch:
                 debugger_printf(DBG_ERR
                                 , "Error, %s\n"
