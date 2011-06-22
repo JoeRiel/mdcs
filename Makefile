@@ -213,8 +213,8 @@ INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
 install: $(call print-help,install,Install everything)
 install: $(addprefix install-,dev html info lisp maple)
 
-install-dev: $(call print-help,install-dev,Install everything but link el files to source)
-install-dev: install-elc install-info install-maple install-hdb
+install-dev: $(call print-help,install-dev,Install everything but hdb)
+install-dev: install-elc install-info install-maple
 
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(call print-help,install-el,Install el files but not elc files)
