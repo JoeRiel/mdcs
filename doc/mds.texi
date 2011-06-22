@@ -75,14 +75,14 @@ Introduction
 
 * Summary::                     Summary of what MDS does
 * Requirements::                What is needed to run MDS
-* Installation::                
+* Installation::                How to install MDS
 * Configuration::               How to configure MDS
 * Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
-* Emacs::                       Updating @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}
 
 Showstat Buffer
 
@@ -92,7 +92,7 @@ Showstat Buffer
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
-* Help::                        Get help
+* Help::                        Getting help
 
 Command and Variable Index
 
@@ -109,7 +109,7 @@ Command and Variable Index
 @menu
 * Summary::                     Summary of what MDS does
 * Requirements::                What is needed to run MDS
-* Installation::                
+* Installation::                How to install MDS
 * Configuration::               How to configure MDS
 * Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
@@ -221,7 +221,7 @@ to run MDS.
 
 
 @menu
-* Emacs::                       Updating @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}
 @end menu
 
 @node Emacs,  , Configuration, Configuration
@@ -237,15 +237,13 @@ add the following line to your @file{.emacs} file:
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 
-You will probably want to bind global keys to the 
-commands @command{mds-windows-cycle-clients}
-and @command{mds-windows-cycle-groups}.  The former
-is for cycling through connected clients, the latter
-for cycling through groups of clients.  Groups are
-formed when, for example, the Maple @code{mdc:-Grid} package
-is used to launch parallel debugging sessions.  
-To bind these to the @key{f12} and @key{CTRL}-@key{f12}
-keystrokes, do
+You will probably want to bind global keys to the commands
+@command{mds-windows-cycle-clients} and
+@command{mds-windows-cycle-groups}.  The former is for cycling through
+the list of all clients, the latter for cycling through groups of
+clients.  Groups are formed from clients with labels that share a common
+basename. To bind these commands to the @key{f12} and
+@key{CTRL}-@key{f12} keystrokes, do
 
 @example
 (global-set-key [f12] 'mds-windows-cycle-clients)
@@ -286,10 +284,10 @@ server is already running, it is restarted, which disconnects all
 clients.  
 
 When a client connects, two buffers are opened,
-the @emph{showstat buffer} (@pxref{Showstat Buffer}),
+the @b{showstat buffer} (@pxref{Showstat Buffer}),
 which displays the current procedure,
 and 
-the @emph{debugger output buffer}, 
+the @b{debugger output buffer}, 
 which displays Maple output during debugging.
 
 
@@ -297,8 +295,11 @@ which displays Maple output during debugging.
 @chapter Showstat Buffer
 @cindex showstat buffer
 
-The showstat buffer, which uses @code{mds-showstat-mode},
-becomes active when an instrumented Maple procedure activates a breakpoint or watchpoint.
+Each client has two showstat buffer, named @verb{|*showstat live*|} and @verb{|*showstat dead*|}.
+Both use @code{mds-showstat-mode}, though some commands are handled differently.
+
+The live showstat buffer becomes active when an instrumented Maple procedure activates 
+a breakpoint or watchpoint.
 The buffer displays the output of the Maple @code{showstat} command, that is,
 the current procedure being debugged.
 Maple statements are numbered and Maple keywords and syntactic elements are highlighted.
@@ -335,11 +336,15 @@ end proc
 @end ifinfo
 @end example
 
+The dead showstat buffer looks the same as the live buffer.
+It is used for displaying inactive procedures.  It is normally
+not displayed until a request is made to display an inactive
+procedure.
 
+Currently typing execution keys in the dead showstat buffer
+function the same as if typed in the live buffer to advance.  This
+will most likely be changed.
  
-
-@example
-@end example
 
 @code{MDS-showstat-mode} binds keys to the common debugging commands. 
 It also provides commands that are not available in the Maple debugger.
@@ -353,7 +358,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
-* Help::                        Get help
+* Help::                        Getting help
 @end menu
 
 @node Execution, Status, Showstat Buffer, Showstat Buffer
@@ -441,11 +446,12 @@ nesting level, in the body of a control structure (for example,
 @item t (@code{mds-trace})
 Select a tracing mode.  Two tracing modes are available, @strong{into}
 and @strong{step}.  If neither tracing mode is selected, then tracing
-does not occur.  When tracing begins, debugging will continue automatically
-until the client exits.  At that point, the user should disable
-tracing mode (press @kbd{t}).  Then, by reissuing the Maple command,
-the hyperlinks in the output buffer become active and permit quickly
-moving to places of interest in the showstat buffers.
+does not occur.  When tracing begins, debugging will continue
+automatically until the client exits.  At that point, the user should
+disable tracing mode by press @kbd{t} until the echo area says the
+tracing is disabled. Then, by reissuing the original Maple command so
+that debugging commences, the hyperlinks in the output buffer become
+active and permit quickly moving to places of interest.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
@@ -456,10 +462,9 @@ This only applies to the commands in this table.
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple
 @item C-c C-c (@code{mds-kill-maple})
-Kill the maple process, switch to the @code{MDS Buffer}, and restart the Maple process.
+Kill the maple process.
 This can be used to stop a runaway Maple computation (say an infinite loop).
-OpenMaple does not properly service interrupts, so it is currently not possible to
-interrupt it and regain control, as can be done with the builtin Maple debugger.
+@strong{This currently is not implemented.}
 
 @end table
 
@@ -477,7 +482,8 @@ of the debugger.
 @item k (@code{mds-showstack})
 Showstack: display an abbreviated form of the calling stack.
 Only the names of the procedures are shown.  The name of the current
-procedure is not shown.
+procedure is not shown.  Each name is an active link.  Clicking on a link
+(mouse-1) opens the procedure in the @strong{showstat dead} buffer.
 
 @kindex K
 @findex mds-where
@@ -491,17 +497,10 @@ An optional prefix argument can be passed; it specifies the number of levels to 
 For example @kbd{C-u 2 K} displays the lowest two levels.
 
 The procedure names are active links.  Clicking on a link opens the
-procedure in the showstat buffer, at the callling line.  
+procedure in the @strong{showstat dead} buffer, at the callling line.  
 Breakpoints can be set in the opened procedure.
 Use @code{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
-
-For this to work with module exports, the modules must be @emph{named},
-otherwise the output of the @command{where} command does
-not include the module name, so the links do not work properly.
-To name a module either use the explicit form (see the Maple 
-help page @code{module[named]}) or save the module to an archive
-and then load it.
 
 @kindex p
 @findex showstop
@@ -703,15 +702,14 @@ c = NULL
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
-@findex mds-toggle-show-args
-@item @code{mds-toggle-show-args}
-Toggle the display of arguments upon entering a procedure.
-
 @end table
 
 @node Help,  , Miscellaneous, Showstat Buffer
 @section Help
 @cindex help
+
+The MDS showstat-mode has several ways for obtaining help.
+
 
 @table @asis
 
@@ -727,7 +725,7 @@ Display the help for this mode.
 @kindex H
 @findex mds-info
 @item H (@code{mds-info})
-Open the @command{info} document for MDS mode.
+Open the @command{info} document for MDS mode (this document).
 
 @kindex C-?
 @findex maplev-help-at-point
