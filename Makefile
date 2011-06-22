@@ -4,6 +4,8 @@
 
 SHELL := /bin/sh
 
+VERSION := 0.1.1.0
+
 include help-system.mak
 
 .PHONY: byte-compile build default
@@ -266,13 +268,11 @@ install-maple: $(mla)
 
 PHONY: zip
 
-dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) $(PDF_FILES) README
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README
 $(info $(dist))
 
-zip: $(PKG).zip
-
-$(PKG).zip: $(dist)
-	zip $@ $?
+zip: $(dist)
+	zip mdcs-$(VERSION).zip $?
 
 # }}}
 
