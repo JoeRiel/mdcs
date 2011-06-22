@@ -272,7 +272,7 @@ dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README
 $(info $(dist))
 
 zip: $(dist)
-	zip $(PKG)-$(VERSION).zip $?
+	zip mdcs-$(VERSION).zip $?
 
 # }}}
 
