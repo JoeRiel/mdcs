@@ -88,6 +88,11 @@ file="README"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/^VERSION /$sed_cmd" "$file"
 
+# Update Makefile
+file="Makefile"
+[ "$check" ] && echo -ne "$file:\t"
+sed $sed_opt "/^VERSION := /$sed_cmd" "$file"
+
 
 #}}}
 
