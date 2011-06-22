@@ -1,6 +1,6 @@
-##INCLUDE ../include/mpldoc_macros.mi
-##DEFINE MOD Debugger
-##MODULE \MOD
+##INCLUDE ../include/mpldoc_macros.mpi
+##DEFINE SUBMOD Debugger
+##MODULE \MOD[\SUBMOD]
 ##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -16,11 +16,19 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
+$define DBG_EVAL1 'DBG_EVAL'
+$define DBG_EVAL2 'DBG_EVAL'
+$define DBG_EVAL3 'DBG_EVAL'
+$define DBG_EVAL4 'DBG_EVAL'
+
 Debugger := module()
 
 export Printf
     ,  Replace
     ,  Restore
+    ,  ShowError
+    ,  ShowException
+    ,  ShowstatAddr
     ,  stopat
     ,  unstopat
     ;
@@ -35,11 +43,15 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _showstop
     , _where
     , _print
-    , origprint
+    , orig_print
+    , orig_stopat
 
     , getname
     , replaced := false
-
+    , logfile  := "readline.log"
+$ifdef LOG_READLINE
+    , logpid
+$endif
     ;
 
 # module local: sid
@@ -49,7 +61,8 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     Replace := proc()
         if not replaced then
             # Save these
-            origprint := eval(print);
+            orig_print  := eval(print);
+            orig_stopat := eval(:-stopat);
 
             # Reassign library debugger procedures
             unprotect(debugger_procs);
@@ -63,6 +76,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             #printf              := eval(_printf);
             protect(debugger_procs);
             replaced := true;
+$ifdef LOG_READLINE
+            logpid := fopen(logfile,'APPEND','TEXT');
+$endif
         end if;
         return NULL;
     end proc;
@@ -80,17 +96,42 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     end proc;
 
 #}}}
-
 #{{{ Print and _printf
 
     Printf := proc()
-        debugger_printf(PRINTF, _rest);
+        debugger_printf(MDC_PRINTF, _rest);
     end proc;
 
     # currently not used
     _print := proc()
-        origprint(_passed);
+        orig_print(_passed);
         debugger_printf(DBG_WARN, "print output does not display in debugger\n");
+    end proc;
+
+#}}}
+#{{{ ShowError
+
+    ShowError := proc()
+    local err;
+        err := debugopts('lasterror');
+        if err = '`(none)`' then
+            debugger_printf(DBG_ERROR, "%a\n", err);
+        else
+            debugger_printf(DBG_ERROR, "%s\n", StringTools:-FormatMessage(err));
+        end if;
+    end proc;
+
+#}}}
+#{{{ ShowException
+
+    ShowException := proc()
+    local exception;
+        exception := debugopts('lastexception');
+        if exception = '`(none)`' then
+            debugger_printf(DBG_EXCEPTION, "%a\n", exception);
+        else
+            debugger_printf(DBG_EXCEPTION, "%s\n", StringTools:-FormatMessage(exception[2..]));
+        end if;
     end proc;
 
 #}}}
@@ -127,17 +168,23 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     local len, res, startp, endp, i, endcolon;
     global `debugger/default`;
 
-        # `debugger_printf`("\n");
+        #{{{ Get response (from server)
 
-        #{{{ Get response (from emacs)
         do
+            debugger_printf(DBG_PROMPT, ">");
             #res := traperror(readline(-2));
             #res := traperror(readline(pipe_to_maple));
             res := traperror(Read());
+$ifdef LOG_READLINE
+        fprintf(logpid, "[%s]\n", res);
+        fflush(logpid);
+$endif
             if res <> lasterror then break fi;
-            printf("Error, %s\n",StringTools:-FormatMessage(lastexception[2..]))
+            debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
         od;
+
         #}}}
+
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -204,9 +251,10 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 fi
             od
         fi;
+
         #}}}
         #{{{ Strip trailing whitespace.
-        while endp >= startp and res[endp] <= " " do endp := endp -1 od;
+        while endp >= startp and res[endp] <= " " do endp := endp - 1 od;
         res := res[startp..endp];
         #}}}
         #{{{ Extraneous stuff
@@ -220,10 +268,13 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
         #}}}
 
         return res;
+
     end proc:
 
 #}}}
 #{{{ debugger
+
+$define RETURN return
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
@@ -245,14 +296,16 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             procName := _passed[n][2];
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
-            n := n - 1
+            n := n - 1;
         else
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
 
         #{{{ remove indices in procName
-        # Added by Joe Riel
+        # Added by Joe Riel.  Indices are used by some procedures,
+        # for example, map[3], but need to be removed.  Multiple
+        # indices are possible.
         while procName :: 'And(indexed,Not(procedure))' do
             procName := op(0,procName);
         end do;
@@ -268,9 +321,18 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_STACK0, "%a\n",_passed[i][j])
+                            debugger_printf(DBG_STACK
+                                            , "<%d>\n%a\n"
+                                            , addressof(_passed[i][j])
+                                            , _passed[i][j]
+                                           );
                         else
-                            debugger_printf(DBG_WHERE, "%a: %s\n",_passed[i][j],_passed[i][j+1]);
+                            debugger_printf(DBG_WHERE
+                                            , "<%d>\n%a: %s\n"
+                                            , addressof(_passed[i][j])
+                                            , _passed[i][j]
+                                            , _passed[i][j+1]
+                                           );
                             if `debugger/no_output` <> true then
                                 debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
                             fi
@@ -278,7 +340,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf(DBG_ERR1, "Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(DBG_ERR, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
@@ -288,30 +350,38 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     debugger_printf(DBG_WATCHED_CONDS, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
+                        # list/set that is part of a continued sequence
                         debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
                     else
+                        # list/set
                         debugger_printf(DBG_EVAL2, "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
+                    # expr that is part of a continued sequence
                     debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
                 else
+                    # expr
                     debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
                 fi
             fi
         od;
 
         #}}}
-        #{{{ handle negative statement number
+        #{{{ Print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
+                # handle negative statement number (indicates multiple targets)
                 debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
-            fi;
-            debugger_printf(DBG_STATE,"%s",debugopts('procdump'=[procName,0..statNumber]))
-        fi;
+            end if;
+            debugger_printf(DBG_STATE, "<%d>\n%A"
+                            , addressof(procName)
+                            , debugopts('procdump'=[procName, 0..statNumber])
+                           );
+        end if;
 
         #}}}
         #{{{ command loop
@@ -347,36 +417,37 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             #{{{ parse cmd (else is arbitrary expression)
 
             if cmd = "cont" then
-                return
+                RETURN
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
-                return
+                RETURN
             elif cmd = "step" then
                 debugopts('steplevel'=999999999);
-                return
+                RETURN
             elif cmd = "into" then
                 debugopts('steplevel'=evalLevel+6);
-                return
+                RETURN
             elif cmd = "outfrom" then
                 debugopts('steplevel'=evalLevel-2);
-                return
+                RETURN
             elif cmd = "return" then
                 debugopts('steplevel'=evalLevel-statLevel*5);
-                return
+                RETURN
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-                debugger_printf(DBG_STOP,"stopping\n");
+                # debugger_printf(DBG_STOP,"stopping\n");
+                # ssystem("sleep 1"); FIXME: may need to delay here.
                 debugopts('interrupt'=true)
             elif cmd = "where" then
                 if nops(line) = 1 then
-                    return 'debugopts'('callstack')
+                    RETURN 'debugopts'('callstack')
                 else
-                    return 'debugopts'('callstack'=line[2])
+                    RETURN 'debugopts'('callstack'=line[2])
                 fi
             elif cmd = "showstack" then
                 n := debugopts('callstack');
                 n := [op(1,n),op(5..-1,n)];
                 n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
-                return n;
+                RETURN n;
             elif cmd = "stopat" then
                 if nops(line) = 4 then
                     err := traperror(parse(line[4],'debugger'));
@@ -406,7 +477,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                             err := lasterror
                         end
                     fi;
-                    if err <> lasterror then return stopat() fi
+                    if err <> lasterror then RETURN []; (* stopat() *) fi
                 fi
             elif cmd = "unstopat" then
                 pName := procName;
@@ -417,7 +488,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     fi
                 od;
                 err := traperror(unstopat(pName,lNum));
-                if err <> lasterror then return err fi
+                if err <> lasterror then RETURN err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
                     debugger_printf(DBG_WARN,"Error, not currently in a procedure\n");
@@ -438,25 +509,25 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             elif cmd = "showstop" then
                 err := traperror(showstop['nonl']())
             elif cmd = "stopwhen" then
-                return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stopwhenif" then
-                return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "unstopwhen" then
-                return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                RETURN 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
                 line := traperror(sscanf(original,"%s %1000c"));
-                return 'stoperror'(seq(line[i],i=2..nops(line)))
+                RETURN 'stoperror'(seq(line[i],i=2..nops(line)))
             elif cmd = "unstoperror" then
                 line := traperror(sscanf(original,"%s %1000c"));
-                return 'unstoperror'(seq(line[i],i=2..nops(line)))
+                RETURN 'unstoperror'(seq(line[i],i=2..nops(line)))
             elif cmd = "help" or cmd = "?" then
                 err := traperror(help('debugger'))
             elif cmd = "showerror" then
-                return ['debugopts'('lasterror')]
+                RETURN ['debugopts'('lasterror')]
             elif cmd = "showexception" then
-                return ['debugopts'('lastexception')]
+                RETURN ['debugopts'('lastexception')]
             elif cmd = "setenv" then
-                return 'debugopts'('setenv'=[line[2],line[3]])
+                RETURN 'debugopts'('setenv'=[line[2],line[3]])
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
@@ -468,9 +539,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                     # TABLEREF, which can mess up MEMBER binding, so don't check
                     # for type procedure if it is a TABLEREF (i.e. type indexed).
                     if not line :: indexed and line :: procedure then
-                        return eval(line)
+                        RETURN eval(line)
                     fi;
-                    return line
+                    RETURN line
                 fi;
                 err := line;
             else
@@ -479,9 +550,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                 if line <> lasterror then
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
-                        return eval(line)
+                        RETURN eval(line)
                     fi;
-                    return line
+                    RETURN line
                 fi;
                 err := line;
             fi;
@@ -490,15 +561,17 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
             #{{{ handle error
 
             if err = lasterror then
-                debugger_printf(DBG_ERR2, "Error, %s\n"
+                debugger_printf(DBG_PARSE_ERR, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
-            fi
+            fi;
 
             #}}}
+
         od;
 
         #}}}
+
     end proc:
 
 #}}}
@@ -531,6 +604,23 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     end proc:
 
 #}}}
+#{{{ ShowstatAddr
+
+    ShowstatAddr := proc( addr :: posint, {dead :: truefalse := false} )
+        WriteTagf(`if`(dead
+                       , 'DBG_SHOW_INACTIVE'
+                       , 'DBG_SHOW'
+                      )
+                  , "<%d>\n%A"
+                  , addr
+                  , debugopts('procdump' = pointto(addr))
+                 );
+        NULL;
+    end proc;
+
+
+
+#}}}
 #{{{ showstop
 
     _showstop := proc( $ )
@@ -538,6 +628,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     description `Display a summary of all break points and watch points.`;
     local i, ls, val;
     global showstop;
+
         ls := stopat();
         if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo breakpoints set.\n")
         else
@@ -613,7 +704,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 #{{{ stopat
 
 ##DEFINE CMD stopat
-##PROCEDURE \PKG[\MOD]\MOD[\CMD]
+##PROCEDURE \MOD[\SUBMOD][\CMD]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010
@@ -652,6 +743,10 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
                    , $ )
 
     local pnam,st;
+        if _npassed = 0 then
+            # this isn't cheap.  May want to "improve".
+            return orig_stopat();
+        end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
@@ -718,5 +813,9 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
 
 #}}}
 
+$undef DBG_EVAL1
+$undef DBG_EVAL2
+$undef DBG_EVAL3
+$undef DBG_EVAL4
 
 end module;

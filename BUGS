@@ -1,0 +1,80 @@
+-*- org -*-
+
+* DONE SCR1: mds-eval-and-prettyprint writes procedure to live-buf, which screws up operation
+  CLOSED: [2011-06-04 Sat 09:07]
+  1. Problem occurs because [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][prettyprint]] calls ':-showstat'.  Changed
+     to showstat (which is mdc:-Format:-showstat).
+  2. That fails because `mds-showstat-statement' is not being set correctly.
+     It cannot be, since we are calling from Maple.  Two obvious solutions:
+     1. Handle the error (simple);
+     2. Clear [[file:lisp/mds-showstat.el::clear%20variable%20so%20next%20time%20we%20do%20not%20search][mds-showstat-statement]] after use.
+  3. Try 2 first.  It can probably be made to work, however,
+     mds-showstat-statement is currently not buffer-local.  Making
+     it buffer-local (I don't believe it is intended to communicate
+     between live and dead buffers.  That seems to fix the problem.
+
+* DONE SRC2: [[file:lisp/mds-showstat.el::defun%20mds%20eval%20and%20prettyprint%20expr][mds-eval-and-prettyprint]] writes <type> to client, not server
+  CLOSED: [2011-06-04 Sat 09:07]
+  1. The actual culprit is [[file:maple/src/Format.mm::prettyprint%20proc%20top%20truefalse%20true][mdc:-Format:-prettyprint]], which calls printf.
+  2. Fixed by renaming mdc:-Debugger:-_print to [[file:maple/src/Debugger.mm::Printf%20proc][mdc:-Debugger:-Printf]],
+     making it an export of mdc:-Debugger, and then replacing all printf
+     statements with it.
+
+* DONE SCR3: Try (in showstat buffer) ". int:-ModuleApply". 
+  CLOSED: [2011-06-07 Tue 10:00]
+  The procedure doesn't display, and the error is "module does not
+  export %1".  Contrast this with the error in tty, "the name
+  ModuleApply in 'int' is declared local..."
+
+* TODO SCR4: Display formatted error messages
+  The 'x' key (mds-showexception) has no effect on the output buffer.
+  1. The cause is simple, [[file:lisp/mds-showstat.el::mds%20showstat%20eval%20expr%20printf%20s%20n%20StringTools%20FormatMessage%20debugopts%20lastexception%202][mds-showexception]] is calling 'printf'.
+    Change to mdc:-Debugger.
+  2. That didn't quite work; now it prints 'interrupted'
+
+* DONE SCR5: q in dead buffer should only kill buffer
+  CLOSED: [2011-06-10 Fri 22:21]
+  Fixed in fe6f17e392bc3d9b87a647c0b4ba9bca7cb69d5c.
+
+* DONE SCR6: Provide global binding to pop-to live buffer
+  CLOSED: [2011-06-10 Fri 21:52]
+  1. Done by creating an mds-output-mode and making
+     mouse-3 active in its mode-map.
+  2. Fixed in b0679e6de8b6ba49aa57cbe6328a2645251984c1
+
+* TODO SCR7: where/showstack uses same property type as procname
+  That does not work with mds-output-procname-p, which uses
+  the property type to distinguish the "operating" procname.
+  Need to use a different property name.
+* TODO SCR8: procname not displayed in output buffer on restart
+  1. If we immediately quit the debugger at line 1, but leave showstat alone,
+     then if the debugger starts-up again at the same procedure, we do not
+     update the output buffer because we incorrectly think we are still
+     in the same procedure, at same line number.  
+  2. This isn't a serious issue and is fixable when Paul provides a hook
+     in the kernel; we can then use that to reset the ss state variables.
+     Meanwhile, we can provide a partial implementation when mds-quit
+     is used to exit.
+* DONE SCR9: debugger inexplicably exits.
+  CLOSED: [2011-06-10 Fri 08:04]
+  To reproduce, do mdc(stopat = simplify): simplify(x^2+x); then step
+  through the code; it will prematurely exit.
+
+  * Fixed rather drastically by removing the `mds-show-args-on-entry'
+    variable.  There was a timing issue that I haven't been able to
+    resolve.  
+
+
+* TODO SCR10: mdc(unstopat) should not throw error if no breakpoint is set
+* DONE SCR11: unhelpful error message 'procedure name expected'
+  CLOSED: [2011-06-10 Fri 21:49]
+  This occurs when formatting an evaluated procedure.
+  A simple fix is to indicate that a procedure was received.
+  An alternative is to reassign it, then use that name to print it.
+
+  1. Fixed in 3a9e65a3b70e0ca522ec426b0ce78ab9ed0dacfa
+  2. This prints _fake_name for the procedure
+* TODO SCR12: mds-unstopat does not work in dead-buffer
+  1. Call mds-stopat in the dead-buf; a breakpoint is inserted.
+  2. Call mds-unstopat at the breakpoint.  The error message
+     "Error, no break point set at specified location" appears.

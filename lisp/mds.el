@@ -33,11 +33,6 @@
 ;;}}}
 ;;{{{ Commentary
 
-;; This package provides a major mode, mds-showstat, for debugging
-;; Maple code.  It uses the Maple debugger to step through interpreted
-;; Maple code, which is displayed in a buffer. It is not a true source
-;; code debugger, that is, one that allows stepping through the source
-;; *file*; however, it is the next best thing.
 
 ;;}}}
 ;;{{{ TODO
@@ -46,44 +41,36 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-regexps)
+(require 'mds-login)
 (require 'mds-output)
 (require 'mds-showstat)
+(require 'mds-windows)
 (require 'maplev)
 (eval-when-compile
   (require 'hl-line))
 
 ;;}}}
 
+;;{{{ customizations
+
+(defgroup mds nil
+  "Maple Debugger Server."
+  :group 'tools)
+
+(defcustom mds-port 10000  "Port used by mds server"
+  :type 'integer
+  :group 'mds)
+
+;;}}}
+
 ;;{{{ Constants
 
-(defconst mds-version "0.1" "Version number of mds.")
-(defconst mds-port 10000  "Port used by mds server")
+(defconst mds-version "0.1.1.0" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
-;;{{{ Regular Expressions
-
-(defconst mds--debugger-status-re
-  (concat "^\\(" maplev--name-re "\\):\n\\s-*\\([1-9][0-9]*\\)[ *?]")
-  "Regexp that matches the status output of the debugger.
-The first group matches the procedure name, the second group the
-state number.")
-
-(defconst mds-start-tag-re "^<\\([^>]+\\)>"
-  "Regular expression that matches start tag.
-The tag has format <tag-name>.  Group 0 matches the tag,
-group 1 matches tag-name.")
-
-(defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
-  "Regexp to match message when a client attaches.
-The first group identifies SOMETHING.")
-
-(defconst mds-end-of-msg-re "---EOM---")
-
-;;}}}
-
-(defvar mds-proc nil "process for the server.")
 
 
 ;;}}}
@@ -94,13 +81,14 @@ The first group identifies SOMETHING.")
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-pre-Maple-14 nil
-  "Boolean flag indicating the Maple client is a release earlier
-  than Maple 14.")
-
 (defvar mds-number-clients 0
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
+
+(defvar mds-proc nil "process for the server.")
+
+(defvar mds-showstat-trace nil
+  "When non-nil, trace through the debugged code.")
 
 ;; data structures
 
@@ -143,7 +131,7 @@ The returned client structure is a list (PROC status queue ID
 live-buf dead-buf out-buf), where status is initialized to 'new'."
   (let ((client (list proc)))
     (setcdr client (list
-		    'new
+		    'login
 		    (mds-queue-create proc)
 		    id
 		    (mds-showstat-create-buffer client 'live)
@@ -178,20 +166,25 @@ If none, then return nil."
 (defun mds-get-client-status (proc)
   (let ((client (assoc proc mds-clients)))
     (if client (cadr client))))
-	
+
     ;; (if (>= mds-number-clients mds-max-number-clients)
     ;; 	'rejected
     ;;   (mds-add-client (mds-create-client proc "dummy id"))
     ;;   'accepted)))
 
-(defun mds-set-client-status (proc status)
-  (let ((client (assoc proc mds-clients)))
-    (if client (setcar (cdr client) status))))
+(defun mds-set-status-client (client status)
+  (if client (setcar (cdr client) status)))
+
+(defun mds-client-set-id (client id)
+    (if client (setcar (cdr (cddr client)) id)))
+
+(defun mds-client-get-id (client id)
+    (if client (cdr (cddr client))))
 
 ;;}}}
 ;;{{{ Client association list
 
-(defsubst mds-get-client (proc) (assoc proc mds-clients))
+(defsubst mds-get-client-from-proc (proc) (assoc proc mds-clients))
 
 (defun mds-delete-client (client)
   "Delete CLIENT from `mds-clients'.  Stop the associated process,
@@ -253,6 +246,7 @@ Do not touch `mds-log-buffer'."
 ;;{{{ Sentinel
 
 (defun mds-sentinel (proc msg)
+  "Monitor the client processes and handle any changes."
   (unless (eq msg "")
     (cond
      ((string-match mds--client-attach-re msg)
@@ -266,21 +260,39 @@ Do not touch `mds-log-buffer'."
 	    (mds-writeto-log proc "accepted client"))
 	   ((null status)
 	    ;; not yet registered
-	    (mds-add-client (mds-create-client proc "dummy id")))
+	    (mds-add-client (mds-create-client proc "anonymous"))
+	    (mds-login proc msg))
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
 	    (mds-writeto-log proc "rejected client"))
-	   ((eq status 'login) (mds-writeto-log proc "begin login"))
+	   ((eq status 'login) (mds-login proc msg))
 	   ))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
       ;; Delete associated buffers.
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
-		       (if (mds-delete-client (mds-get-client proc))
-			   "accepted " ""))))
+		       (if (mds-delete-client (mds-get-client-from-proc proc))
+			   "accepted " "")))
+      (mds-windows-group-update mds-clients))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
+
+
+(defun mds-start-debugging (proc msg)
+  "Called when debugging first starts.  PROC is input process
+from the client; msg is the initial output of the debug Maple
+kernel.  Set the status of the client to 'accepted, pass the
+message along for handling by the filter, display the client
+windows, and get the focus."
+  (ding)
+  (let ((client (mds-get-client-from-proc proc)))
+    (mds-set-status-client client 'accepted)
+    (mds-filter proc msg)
+    ;; update groups
+    (mds-windows-group-update mds-clients)
+    (mds-windows-display-client client)
+    (mds-get-focus-from-window-manager)))
 
 
 ;;}}}
@@ -296,12 +308,16 @@ Do not touch `mds-log-buffer'."
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (let ((queue (mds--get-client-queue (mds-get-client proc))))
+      (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
 	(mds-queue-filter queue msg)))
-     ((eq status 'new)
-      (beep)
-      (mds-set-client-status proc 'accepted)
-      (mds-filter proc msg))
+     ((eq status 'login)
+      ;; initiate the login process.
+      (ding)
+      (mds-login proc msg))
+     
+     ((eq status 'start-debugging)
+      (mds-start-debugging proc msg))
+
      ((eq status 'rejected)
       (mds-writeto-log proc "ignoring msg from rejected client")))))
 
@@ -353,7 +369,7 @@ If found, pass it to the function in the queue."
 	    (delete-region (point-min) (point))
 	    ;; send msg to correspond showstat filter
 	    (let* ((proc (mds-queue-proc queue))
-		   (client (mds-get-client proc)))
+		   (client (mds-get-client-from-proc proc)))
 	      (with-current-buffer (mds--get-client-live-buf client)
 		(mds-handle-stream proc msg)))))))))
 
@@ -390,7 +406,7 @@ is not checked and will likely be removed from the protocol."
 The end of message marker has been removed.  Strip the tags and
 use them to route the message."
 
-  (let* ((client (mds-get-client proc))
+  (let* ((client (mds-get-client-from-proc proc))
 	 (live-buf (mds--get-client-live-buf client))
 	 (dead-buf (mds--get-client-dead-buf client))
 	 (out-buf  (mds--get-client-out-buf client))
@@ -401,24 +417,37 @@ use them to route the message."
     ;; route MSG to proper buffer
     ;;    (with-syntax-table maplev--symbol-syntax-table
     (cond
+     ((string= tag "DBG_PROMPT")
+      ;; Extract the state-number and pass it along
+      (mds-output-display out-buf 
+			  (buffer-local-value 'mds-showstat-state live-buf)
+			  'prompt))
+     
+     ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
      ;; Extract the procname and state number
      ;; and update the showstat buffer
-     ((string= tag "DBG_STATE")
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "cannot parse current state")
-	(mds-showstat-update live-buf 
-			     (match-string 1 msg)    ; procname
-			     (match-string 2 msg)))) ; state
+	(let ((addr      (match-string 1 msg))
+	      (procname  (match-string 2 msg))
+	      (state     (match-string 3 msg))
+	      (statement (match-string 4 msg)))
+	  (mds-showstat-update live-buf addr procname state statement))))
+
+     ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-     ((string= tag "DBG_SHOW")
       (mds-showstat-display live-buf msg))
+
+     ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
      ;; Display in showstat buffer.
-     ((string= tag "DBG_SHOW_INACTIVE")
       (mds-showstat-display dead-buf msg))
-     
+
+     ((string= tag "DBG_EVAL")
+      (mds-output-display out-buf msg 'output))
+      
      ((string= tag "DBG_WHERE")
       (mds-output-display out-buf msg 'where))
 
@@ -431,11 +460,35 @@ use them to route the message."
      ((string= tag "DBG_WARN")
       (mds-output-display out-buf msg 'warn))
 
-     ((string= tag "DBG_ERR2")
-      (mds-output-display out-buf msg 'parser-err))
+     ((string= tag "DBG_PARSE_ERR")
+      (mds-output-display out-buf msg 'parse-err))
+
+     ((string= tag "DBG_ERR")
+      (mds-output-display out-buf msg 'maple-err))
 
      ((string= tag "MPL_ERR")
       (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "MDC_PRINTF")
+      (mds-output-display out-buf msg 'printf))
+
+     ((string= tag "DBG_ERROR")
+      (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "DBG_EXCEPTION")
+      (mds-output-display out-buf msg 'maple-err))
+
+     ((string= tag "DBG_INFO")
+      (mds-output-display out-buf msg 'debug-info))
+
+     ((string= tag "DBG_WATCHED_CONDS")
+      (mds-output-display out-buf msg 'watch-conds))
+
+     ((string= tag "DBG_WATCHED_ERRS")
+      (mds-output-display out-buf msg 'watch-errs))
+
+     ((string= tag "DBG_STOP")
+      (mds-output-display out-buf msg 'stop))
      
      ;; otherwise print to debugger output buffer
      (t (mds-output-display out-buf msg tag)))))
@@ -458,10 +511,14 @@ use them to route the message."
   "Write PROC: MSG to log buffer."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
-    (insert (format "%s: %s\n" (prin1-to-string proc) msg))
+    (insert (format "%s: %s\n" proc msg))
     (set-window-point (get-buffer-window) (point))))
 
 ;;}}}
+    
+
+(defun mds-get-focus-from-window-manager ()
+  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 

@@ -1,10 +1,10 @@
 \input texinfo
 @c %***start of header
 @setfilename mds
-@settitle The Emacs Maple Debug Server Manual
+@settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1
-@set DATE May 2010
+@set VERSION 0.1.1.0
+@set DATE June 2011
 
 @dircategory Emacs
 @direntry
@@ -21,10 +21,10 @@
 @finalout
 
 @copying
-EMDS is an Emacs package for debugging Maple code.
+MDS is an Emacs package that implements a Maple Debugger Server.
 Maple is a computer algebra system from Maplesoft Inc.
 
-This manual is for EMDS version @value{VERSION}.
+This manual is for MDS version @value{VERSION}.
 
 Copyright @copyright{} 2011, Joseph S. Riel
 
@@ -39,7 +39,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The EMDCS Manual
+@title The MDS Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -55,15 +55,14 @@ Texts.  A copy of the license is included in the section entitled
 
 @ifnottex
 @node Top, Introduction, (dir), (dir)
-@top Mds Mode Manual
+@top Mds Manual
 
 @insertcopying
 @end ifnottex
 
 @menu
 * Introduction::                Getting started
-* Launching Mds::               
-* Mds Buffer::                  Launching Mds
+* Launching MDS::               
 * Showstat Buffer::             Stepping through code
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
@@ -74,24 +73,16 @@ Texts.  A copy of the license is included in the section entitled
 
 Introduction
 
-* Summary::                     Summary of what Mds does
-* Requirements::                What is needed to run Mds
-* Building::                    How to build Mds
-* Installation::                How to install Mds
-* Configuration::               How to configure Mds
-* Customization::               Customize Mds variables
+* Summary::                     Summary of what MDS does
+* Requirements::                What is needed to run MDS
+* Installation::                
+* Configuration::               How to configure MDS
+* Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
 * Emacs::                       Updating @file{.emacs}
-* Environment::                 Environmental variables
-
-Mds Buffer
-
-* Usage::                       Intended usage of the mds buffer
-* History::                     Saving entries
-* Key Bindings::                
 
 Showstat Buffer
 
@@ -111,17 +102,16 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Launching Mds, Top, Top
+@node Introduction, Launching MDS, Top, Top
 @chapter Introduction
 @cindex introduction
 
 @menu
-* Summary::                     Summary of what Mds does
-* Requirements::                What is needed to run Mds
-* Building::                    How to build Mds
-* Installation::                How to install Mds
-* Configuration::               How to configure Mds
-* Customization::               Customize Mds variables
+* Summary::                     Summary of what MDS does
+* Requirements::                What is needed to run MDS
+* Installation::                
+* Configuration::               How to configure MDS
+* Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -132,31 +122,31 @@ Command and Variable Index
 @section Summary
 @cindex summary
 
-EMDS, the ``Emacs Maple Debug Server'', is an Emacs frontend
-to the Maple debugger.  It is a successor to `mdb'.  
-The primary difference is that it communicates to the 
-Maple engine via TCP rather than through pipes, and
-can handle concurrent debug sessions.  These
-two changes enable useful new functionality:
+MDS is an Emacs package that implements a 
+@emph{Maple Debugger Server}, which is half of
+a @emph{Maple Debugger Client/Server} pair.
+This client/server architecture provides
+several benefits:
 
 @itemize @bullet
 @item
-debugs Maple code run on the standard GUI as well as the tty interface.
+A common, full-featured, debugger interface that can be used whether
+running Maple from the GUI or the command-line.
 @item
-works with the Grid and Threads Maple packages.
-Separate processes/threads can be stepped through
-individually.
+Remote debugging---the client (Maple) can be run on one machine, the
+server on another. Communication is via standard TCP.
 @item
-installs easily on Windows, Macs, and Linux.
-No compilation necessary.
-@item
-permits differential debugging, that is, comparing
-the output of two code bases, or the same code base
-run on different machines.
+Concurrent debugging---multiple Maple processes can debugged
+simultaneously. This permits interactively comparing the actions of
+different versions of code, or comparing code run on machines with
+different operating systems. It also permits independently or
+synchronously stepping through separate processes in a @b{Grid}
+application.
 @end itemize
 
-The user interface to EMDS is similar to that of mdb.
-It provides the following features.
+
+The user interface to the debugger, which is provided 
+by MDS, has the following features.
 
 @itemize @bullet
 @item
@@ -171,9 +161,6 @@ are displayed in a separate buffer.
 These are printed in 1-D format so that the buffer 
 can be saved and reused as Maple input.
 @item
-Upon entering a procedure,
-its formal parameters and values are displayed as a list of equations.
-@item
 Expressions can be directly evaluated and displayed in a nice format.
 For example, a record can be displayed as a vertical list of equations
 with field name on the left and the entry on the right.
@@ -183,115 +170,45 @@ The common debugging commands,
 are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
 @item 
 Breakpoints can be set or cleared directly in the buffer.
-
 @end itemize
 
-@node Requirements, Building, Summary, Introduction
+While the core of MDS is based on @command{mdb}, an earlier debugger
+that used @b{OpenMaple} as an interface between Emacs and Maple, it
+has significant improvements.  Because @b{OpenMaple} is not used
+with MDS, there is no requirement to compile an executable.
+That makes installation substantially simpler. 
+
+
+@node Requirements, Installation, Summary, Introduction
 @comment  node-name,  next,  previous,  up
 @section Requirements
 @cindex requirements
 
 
 @table @r
-@item GNU Emacs 22.2.1+
-Mds may work with earlier versions, but I have not tested it.
-@item Maple 14+  
-Mds will work with earlier versions of Maple, however,
-some features may not be available, or work as well.  In particular,
-the prettyprinting of a procedure's arguments can not be done robustly
-in earlier versions.
+@item GNU Emacs 23.3+
+MDS may work with earlier versions, but I have not tested it.
+@item Maple 15+  
+MDS should work with earlier versions of Maple, however,
+it currently has not been tested with any.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
-regardless whether you use Mds.
+regardless whether you use MDS.
 See 
 @url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}
 for a recent version.
 Debian and Ubuntu provide a version with the @file{emacs-goodies-el}
-package, but it may be dated.
+package, but it is dated.
 @end table
 
 
-
-@node Building, Installation, Requirements, Introduction
+@node Installation, Configuration, Requirements, Introduction
 @comment  node-name,  next,  previous,  up
-@section Building
-@cindex building
-
-This section describes how to build Mds.
-The readme files included with the distribution,
-@file{README} and @file{c/README} give further details.
-In all likelihood they take precedence over this document;
-contact the author (@ref{Feedback}) if in doubt.
-
-There are two makefiles included with the distribution,
-@file{Makefile} and @file{c/Makefile}.
-The former creates
-the documentation (@file{doc/mds})
-and the Maple archive (@file{maple/mds.mla}).
-It calls the latter to build the binary executable (@file{c/pmaple}).
-
-@vindex MAPLE_ROOT
-The environmental variable @env{MAPLE_ROOT},
-which points to the directory where Maple is installed,
-must be assigned.  It is also needed for execution,
-so the assignment should go in a startup file.
-@xref{Environment}.
-
-To build Mds, 
-execute the following command in the @file{mds} directory,
-
-@example
-make build
-@end example
-
-
-@node Installation, Configuration, Building, Introduction
 @section Installation
 @cindex installation
 
-To install Mds, the environmental variables described
-in the following table must be properly assigned.
-
-@table @env
-
-@item BIN_INSTALL_DIR
-@vindex BIN_INSTALL_DIR
-The directory where the executables are installed.
-The default is @file{$HOME/bin}.
-
-@item INFO_DIR
-@vindex INFO_DIR
-The directory where the info files are installed.
-The default is @file{$HOME/share/info}.
-
-@item LISP_DIR
-@vindex LISP_DIR
-The directory where the lisp files are installed.
-The default is @file{$HOME/.emacs.d}.
-
-@item MAPLE_INSTALL_DIR
-@vindex MAPLE_INSTALL_DIR
-The directory where the maple archive and help database are installed.
-The default is @file{$HOME/maple/lib}.
-
-@end table
-
-To install Mds,
-execute the following command in the @file{mds} directory.
-
-@example
-make install
-@end example
-
-To avoid touching the makefiles, the environmental variables can
-be assigned on the command line and the @samp{-e} option 
-passed to @command{make}; for example
-
-@example
-LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
-@end example
-
+See the included @file{README} file on how to install MDS.
 
 
 @node Configuration, Customization, Installation, Introduction
@@ -300,63 +217,39 @@ LISP_DIR=$HOME/lisp INFO_DIR=$HOME/info make -e install
 @cindex configuration
 
 This section describes how to configure your system
-to run Mds.  
+to run MDS.  
 
 
 @menu
 * Emacs::                       Updating @file{.emacs}
-* Environment::                 Shell variables
 @end menu
 
-@node Emacs, Environment, Configuration, Configuration
+@node Emacs,  , Configuration, Configuration
 @comment  node-name,  next,  previous,  up
 @subsection Emacs
 @cindex emacs
 @cindex .emacs
 
-To permit @kbd{M-x mds} to launch mds, 
+To permit @kbd{M-x mds} to start (and restart) mds, 
 add the following line to your @file{.emacs} file:
 
 @example
-(autoload 'mds "mds" "Maple debugger" t)
+(autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 
-@node Environment,  , Emacs, Configuration
-@comment  node-name,  next,  previous,  up
-@subsection Environment
-@cindex environmental variables
-
-The @env{MAPLE_ROOT} shell environmental variable
-must be assigned to point to the installation directory of Maple.
-For example
-
-@example
-export MAPLE_ROOT="/usr/local/share/maple/r14"
-@end example
-
-@vindex MAPLE_INCLUDE_PATH
-If you use Maple preprocessor include directives in Maple source code
-that must search a particular directory then you can assign
-the environmental variable @env{MAPLE_INCLUDE_PATH} a comma-separated
-sequence of directories to search.
-For example
+You will probably want to bind global keys to the 
+commands @command{mds-windows-cycle-clients}
+and @command{mds-windows-cycle-groups}.  The former
+is for cycling through connected clients, the latter
+for cycling through groups of clients.  Groups are
+formed when, for example, the Maple @code{mdc:-Grid} package
+is used to launch parallel debugging sessions.  
+To bind these to the @key{f12} and @key{CTRL}-@key{f12}
+keystrokes, do
 
 @example
-export MAPLE_INCLUDE_PATH="$HOME/maple/lib/include,$MAPLE_ROOT/lib/include"
-@end example
-
-This might be useful in a Maple source file that
-included, say, the @file{userinfo.mi} that is
-distributed with Maple:
-
-@example
-# Assign UI_INFO, UI_TRACE, UI_DEBUG
-$include <userinfo.mi>
-
-myproc := proc(x)
-    userinfo( UI_DEBUG, procname, "entering myproc" );
-    (* useful code *)
-end proc:
+(global-set-key [f12] 'mds-windows-cycle-clients)
+(global-set-key [C-f12] 'mds-windows-cycle-groups)
 @end example
 
 
@@ -365,149 +258,42 @@ end proc:
 @section Customization
 @cindex customization
 
-Mds mode has a number of variables that can be customized.
-To access them load Mds (@code{M-x mds}) then run 
-@code{M-x customize-group} and enter @code{mds-group}.
-Most of the variables are not significant, and some should
-not be changed without also recompiling @command{pmaple}.
+MDS has a number of variables that can be customized.
+To access them load MDS (@code{M-x mds}) then run 
+@code{M-x customize-group} and enter @code{mds} or
+@code{mds-faces}.
 
-If you are using a Maple release earlier than
-Maple 14, set @code{mds-pre-Maple-14} to non-nil.
 
 @node Feedback,  , Customization, Introduction
 @section Feedback
 @cindex feedback
 
-If you find problems with Mds, or if you have questions,
+If you find problems with MDS, or if you have questions,
 comments, or ideas, please mail them to Joe Riel, @email{jriel@@maplesoft.com}.
 
 For bug reports, please provide as much information as possible,
 including the version information of Emacs (@kbd{C-h v emacs-version}),
-Mds, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
+MDS, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
 
 
-@node Launching Mds, Mds Buffer, Introduction, Top
-@chapter Launching Mds
+@node Launching MDS, Showstat Buffer, Introduction, Top
+@chapter Launching MDS
 @cindex launching mds
 
 @findex mds
-The @kbd{M-x mds} command launches an Mds buffer (@ref{Mds Buffer}).
-If an Mds buffer already exists, it pops to it.
-If called with an optional prefix argument (@kbd{C-u M-x mds})
-and the current buffer is a Maple source buffer,
-then a Maple @code{read @var{filename}:} command is inserted into
-the Mds buffer, where @var{filename} is the filename associated
-with the buffer.
+The @kbd{M-x mds} command starts the Maple Debugger Server.  If the
+server is already running, it is restarted, which disconnects all
+clients.  
 
-
-@node Mds Buffer, Showstat Buffer, Launching Mds, Top
-@chapter Mds Buffer
-@cindex mds buffer
-
-When Mds is launched (@ref{Launching Mds}), a buffer opens in @code{mds-mode}.
-This buffer is an interface to the Maple engine.
-It is a rudimentary form of the tty interface @command{cmaple}.
-
-The prompt is @samp{(**)}.  
-Entering Maple statements at the prompt sends them to the Maple engine.  
-The output is printed beginning just below the prompt.
-For example
-
-@example
-(**) y := x^2;
-y := x^2
-(**) int(%, x=1..3);
-26/3
-@end example
-
-
-@menu
-* Usage::                       Intended usage of the mds buffer
-* History::                     Saving entries
-* Key Bindings::                
-@end menu
-
-@node Usage, History, Mds Buffer, Mds Buffer
-@section Usage
-@cindex usage
-
-The purpose of Mds mode is to start the debugger.
-The Maple @code{stopat} command can be used to set a breakpoint
-in the procedure to debug.
-For example,
-
-@example
-(**) stopat(int);
-[int]
-(**) int(x^2, x=1..2);
-@end example
-
-When the debugger starts, two buffers are opened,
+When a client connects, two buffers are opened,
 the @emph{showstat buffer} (@pxref{Showstat Buffer}),
 which displays the current procedure,
 and 
 the @emph{debugger output buffer}, 
 which displays Maple output during debugging.
 
-When debugging is finished, control returns to the Mds buffer
-and the output of the program is displayed in the buffer.
 
-
-
-@node History, Key Bindings, Usage, Mds Buffer
-@section History
-@cindex history, mds-mode
-
-@code{Mds-mode} maintains a 50-line command history
-(the maximum size can be configured by customizing @code{mds-history-size}).
-It is accessed with @kbd{M-p} and @kbd{M-n}.
-
-@findex mds-write-history-file
-@cindex history file
-@vindex mds-history-file
-
-@code{Mds-mode} uses a history file to store the history between sessions.
-The name of the history file is stored in the customizable variable
-@code{mds-history-file}, whose default value is @file{~/.mds_history}.
-The command @command{mds-write-history-file}
-writes the current content of the history to @code{mds-history-file}.
-
-@vindex mds-history-size
-
-@node Key Bindings,  , History, Mds Buffer
-@section Key Bindings
-@cindex key bindings
-@comment  node-name,  next,  previous,  up
-
-The following table lists the key bindings defined by @code{mds-mode}.
-
-@table @asis
-@kindex M-p
-@kindex up
-@findex mds-history-prev
-@item Up
-@itemx M-p (@code{mds-history-prev})
-Recall previous input.
-
-@kindex down
-@kindex M-n
-@findex mds-history-next
-@item Down
-@itemx M-n (@code{mds-history-next})
-Recall next input.
-
-@kindex C-a
-@kindex C-u C-a
-@item C-a (@code{mds-bol})
-Move to beginning of line (right of the prompt).
-@kbd{C-u C-a} moves to the left margin.
-
-@end table
-
-
-
-
-@node Showstat Buffer, Main Index, Mds Buffer, Top
+@node Showstat Buffer, Main Index, Launching MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
@@ -555,7 +341,7 @@ end proc
 @example
 @end example
 
-@code{Mds-showstat-mode} binds keys to the common debugging commands. 
+@code{MDS-showstat-mode} binds keys to the common debugging commands. 
 It also provides commands that are not available in the Maple debugger.
 The following sections describe these bindings and commands.
 They are grouped according to function.
@@ -574,7 +360,7 @@ They are grouped according to function.
 @section Execution
 @cindex execution
 
-Mds supports all the Maple debugger commands for executing the statements of
+MDS supports all the Maple debugger commands for executing the statements of
 a procedure.  These commands are bound to single keystrokes in the Showstat buffer.
 Output from these commands is written to the @emph{debugger output buffer}.
 
@@ -650,6 +436,17 @@ the following statement, regardless of whether it is at the current
 nesting level, in the body of a control structure (for example,
 @code{if}), or in a called function.
 
+@kindex t
+@findex mds-trace
+@item t (@code{mds-trace})
+Select a tracing mode.  Two tracing modes are available, @strong{into}
+and @strong{step}.  If neither tracing mode is selected, then tracing
+does not occur.  When tracing begins, debugging will continue automatically
+until the client exits.  At that point, the user should disable
+tracing mode (press @kbd{t}).  Then, by reissuing the Maple command,
+the hyperlinks in the output buffer become active and permit quickly
+moving to places of interest in the showstat buffers.
+
 @kindex @key{SPACE}
 @findex mds-send-last-command
 @item @key{SPACE} (@code{mds-send-last-command})
@@ -659,7 +456,7 @@ This only applies to the commands in this table.
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple
 @item C-c C-c (@code{mds-kill-maple})
-Kill the maple process, switch to the @code{Mds Buffer}, and restart the Maple process.
+Kill the maple process, switch to the @code{MDS Buffer}, and restart the Maple process.
 This can be used to stop a runaway Maple computation (say an infinite loop).
 OpenMaple does not properly service interrupts, so it is currently not possible to
 interrupt it and regain control, as can be done with the builtin Maple debugger.
@@ -670,7 +467,7 @@ interrupt it and regain control, as can be done with the builtin Maple debugger.
 @section Status
 @cindex status
 
-Mds supports the following debugger commands for querying the status
+MDS supports the following debugger commands for querying the status
 of the debugger.
 
 @table @asis
@@ -734,7 +531,7 @@ to see the raw exception, use @kbd{C-u X}.
 @section Breakpoints
 @cindex breakpoints
 
-Mds can set and clear breakpoints, watchpoints, and error watchpoints.
+MDS can set and clear breakpoints, watchpoints, and error watchpoints.
 Breakpoints can be set and cleared as is done in the Maple debugger, that is, 
 by evaluating the expression @code{stopat <statement-number>}, 
 however, the more convenient way is to move the cursor to the statement 
@@ -837,7 +634,7 @@ Use @kbd{C-u W} to clear a global watchpoint.
 @section Evaluation
 @cindex evaluation, expression
 
-Mds can evaluate expressions using the current context of Maple.
+MDS can evaluate expressions using the current context of Maple.
 
 @table @asis
 
@@ -930,7 +727,7 @@ Display the help for this mode.
 @kindex H
 @findex mds-info
 @item H (@code{mds-info})
-Open the @command{info} document for Mds mode.
+Open the @command{info} document for MDS mode.
 
 @kindex C-?
 @findex maplev-help-at-point

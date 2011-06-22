@@ -2,20 +2,170 @@
 
 * Short Term
 
-** TODO 
-   1. Decide how the output buffer should look.  
+** DONE Decide how the output buffer should look.  
+   CLOSED: [2011-06-07 Tue 08:41]
 
-      * Should it mimic what is done in mdb, that is, when an input is
-        entered by user (using 'e' or '.'), it echos the command, then
-        displays the output.
+   * Should it mimic what is done in mdb, that is, when an input is
+     entered by user (using 'e' or '.'), it echos the command, then
+     displays the output.
 
-      * Alternately, should it show a prompt and allow the user to
-	enter commands there?  Essentially mimicing the tty debugger
-	interface, but with the current state suppressed. That seems
-	more difficult to implement but potentially more useful.  I
-	would still want the ability to evaluate stuff from the
-	showstat buffer and have it appear in the output buffer,
-	otherwise a lot of buffer changing would be required.
+   * Alternately, should it show a prompt and allow the user to enter
+     commands there?  Essentially mimicing the tty debugger interface,
+     but with the current state suppressed. That seems more difficult
+     to implement but potentially more useful.  I would still want the
+     ability to evaluate stuff from the showstat buffer and have it
+     appear in the output buffer, otherwise a lot of buffer changing
+     would be required.
+
+   * It would be useful to associate the output lines with the inputs
+     (in showstat) that generated them.  That is only partially
+     doable.  Suppose we are at statement 3, with a breakpoint
+     at statement 10.  Executing "continue" moves the cursor
+     to statement 10 and prints last generated output, which could
+     be from anywhere.  That could be indicated with a display
+     that looks like
+
+     [[int:-ModuleApply]]
+     args := a
+           , b
+           , c:
+     (*  [[3]] *) cont
+     some output ...
+     (* [[10]] *) 
+
+     The lines have buttons; clicking on them moves the cursor to that
+     statement.  The relevant procedure is determined by se
+
+** DONE Insert procedure name in mode-line of showstat buffer
+   CLOSED: [2011-06-04 Sat 21:31]
+
+   * Wrote [[file:lisp/mds-showstat.el::defun%20mds%20showstat%20set%20mode%20line%20proc][mds-showstat-set-mode-line]] to do this.
+
+   * There is a snag; it needs the name of the procedure.
+     That is supposed to be stored in the `mds-showstat-procname'
+     variable, however, when the dead buffer is updated via
+     a call to `mds-eval-and-prettyprint', procname is never
+     directly available.  Two possible fixes:
+
+     1. Extract the name from the buffer after printing.
+     2. Implement a protocol for returning the procedure name.
+
+   * The latter seems better, but is a bit of work for a one-off fix.
+     However, it could be useful for other enhancements.
+     For the nonce I'll go with the former.
+
+   * Method 1 is now implemented. 
+
+** DONE The first field in the mode-line always shows "no-process".
+   CLOSED: [2011-06-05 Sun 06:54]
+   
+   * The simple fix is to just delete it.  That will also open up more
+     room, which will help on the laptop with a split screen.
+
+   * A field that needs to be added to the mode-line is the 
+     a label identifying the user/job.  
+
+
+** TODO Implement a window manager
+
+   * Something simple that keeps the related windows of one
+     client together.
+
+   * Current plan, for "single thread" debugging, is to display two
+     windows, showstat-live and output.  Showstat-dead, when active,
+     will replace output since those two rarely need to be seen
+     concurrently, I think.  New data to the output buffer will cause
+     it to pop forward.
+
+   * Hmm.  That doesn't quite work (implemented in windows-manager
+     branch).  The problem occurs with the call stack; it generally
+     displays multiple procedures.  If clicking on one of the
+     hyperlinks cause the dead buffer to replace the output buffer,
+     then we have to manually bring the output buffer forward to click
+     on another.  A better strategy, by default, is to have the dead
+     buffer and the live buffer share the same window.  An alternative
+     is to split the showstat window vertically when needed.  Trying 
+     the first one first.
+
+   * Went with a really simple approach, which works but isn't nice if
+     the user adds other buffers.  
+
+   * Here's a new idea:
+     
+     1) Check if dead-buf is visible; if so we're done.
+	Not quite.  There may be more than one visible.
+	Let Emacs window manager deal with that issue for now.
+
+     2) Next check if out-buf is visible; if so, split it vertically
+        and display dead-buf in lower half.  A refinement is
+        necessary, if out-buf is too small to split vertically, then
+        increase its height before splitting.
+
+     3) If neither buffer is visible, then create the initial
+        configuration, and goto 1.
+
+	This approach works reasonably well, at least with one client.
+	Is currently implemented.
+
+** DONE Provide command for displaying breakpoints/watchpoints
+   CLOSED: [2011-06-11 Sat 14:07]
+   1. This is generally done with the 'showstop' command,
+      which is run with 'p'.  But there is a bug, it is is not
+      working.  Investigating...
+   2. Fixed with 51352867dd2d00b05f6fd2a26bc1ee879f9d9a99.
+      There were several issues with displaying error
+      messages that needed to be fixed.
+
+** TODO Develop a general Maple expression viewer
+   1. It should work with any type of Maple expression
+   2. Modules would consist of hyperlinked exports and locals;
+      clicking them would open them ...
+   3. This could work with other types of expressions...
+   
+** TODO Add untraperror, etc.
+   Maybe this was a bad idea; reproducing that is crazy.
+** Handle all tags
+   CLOSED: [2011-06-11 Sat 14:08]
+
+
+*** DONE DBG_ARGS
+*** DONE DBG_ERR
+*** DONE DBG_ERROR
+*** DONE DBG_EVAL
+*** DONE DBG_EXCEPTION
+*** DONE DBG_INFO
+*** DONE DBG_PROMPT
+*** DONE DBG_SHOW
+*** DONE DBG_STACK
+*** DONE DBG_STATE
+*** DONE DBG_STOP
+*** DONE DBG_WARN
+*** DONE DBG_WATCHED
+*** DONE DBG_WHERE
+*** DONE MDC_PRINTF
+*** DONE MPL_ERR
+
+*** TODO DBG_HELP
+*** TODO DBG_NULL
+*** TODO DBG_STACK1
+*** TODO DBG_STACK2
+*** TODO DBG_STACK3
+
+
+
+** TODO Provide a source finder/viewer
+   1. It should work with a TAGS file
+      That suggests the procedure for tagging
+      Maple source files might need some work.
+   2. It should be able to fetch from perforce
+   3. The really desirable feature is the ability
+      to go right to the proper line in the source.
+      Stefan was going to develop a hook for this,
+      but I haven't heard about it.
+
+** TODO Allow input in mdl-output buffer.
+   * Naturally, one will then want history and lots of other cool stuff.
+   * Will this actually be used?  Not sure.
 
 * Long Term
  
@@ -39,3 +189,5 @@
       work with constructed modules, that is, those returned by
       a procedure.  Do they have to be unnamed?
       
+** TODO Provide a 'prettyprint' command (i.e. 2D output)
+   1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.
