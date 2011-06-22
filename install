@@ -11,3 +11,6 @@ $CP lisp/*.el $LISP_DIR
 $CP doc/mds $INFO_DIR
 $CP mdc.mla mdc.hdb $MAPLE_INSTALL_DIR
 
+echo "Consider byte-compiling the installed lisp files"
+
+exit 0
