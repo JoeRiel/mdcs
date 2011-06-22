@@ -236,7 +236,6 @@ $endif
     mdc := proc( (* no positional parameters *)
                  { beep :: truefalse := true }
                  , { config :: {string,identical(maplet)} := NULL }
-                 #, { enter :: truefalse := false }
                  , { exit :: truefalse := false }
                  , { host :: string := Host }
                  , { label :: string := kernelopts('username') }
