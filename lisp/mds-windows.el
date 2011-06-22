@@ -76,7 +76,7 @@ with n being the number of clients."
 	id base client)
     (while clients
       (setq client (car clients)
-	    id (mds--get-client-id client))
+	    id (car (mds--get-client-id client)))
       (when (string-match "\\([^-]+\\)-[0-9]+$" id)
 	(setq base (match-string 1 id))
 	(let ((entry (assoc base alist)))
