@@ -28,6 +28,11 @@ Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot
 read the info file (mds).
 
+The provided install file can be used to do the copying,
+just be sure to check that it does what you want.  Run
+
+./install
+
 CONFIGURATION
 -------------
 Modify your .emacs file.  I have the following
