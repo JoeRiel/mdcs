@@ -13,6 +13,9 @@ TAGS
 
 *.mla
 *.hdb
+*.zip
+*.tags
+*.xml
 
 /lisp/*.elc
 /lisp/tst
