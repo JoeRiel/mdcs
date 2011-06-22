@@ -7,7 +7,8 @@ script="$0"
 
 # Regular expression that matches version number
 
-regex="[0-9]+\.[0-9]+"
+bash_regex="([0-9]+\.)+[0-9]+"
+sed_regex="\([0-9]\+\.\)\+[0-9]\+"
 
 #{{{ Functions
 
@@ -17,9 +18,10 @@ regex="[0-9]+\.[0-9]+"
 # usage 101
 
 function usage { echo "\
-Usage:  $script [-h] version 
+Usage:  $script [-ch] version 
 
 Options:
+  -c       check the result (print the version number in the files)
   -h       show this info
 
 Update the version number embedded in the source files of the mdcs project.
@@ -52,11 +54,13 @@ if [ "$check" ]; then
 else
     [ -z "$*" ] && echo "no version number specified" && exit 101
     version="$1"
-    [[ ! "$version" =~ ^$regex$ ]] && echo "Illegal version number: ${version}. See $script -h." &&  exit 1
+    [[ ! "$version" =~ ^$bash_regex$ ]] && echo "Illegal version number: ${version}. See $script -h." &&  exit 1
     sed_opt=-i
-    # escape + for sed in regex (what a pain)
-    sed_cmd="s/${regex//+/\+}/$version/"
+    sed_cmd="s/$sed_regex/$version/"
 fi
+
+#echo $sed_cmd
+#exit 1
 
 #}}}
 #{{{ Update source files
@@ -78,6 +82,17 @@ sed $sed_opt "/Version := /$sed_cmd" "$file"
 file="doc/mds.texi"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/^@set VERSION /$sed_cmd" "$file"
+
+# Update README
+file="README"
+[ "$check" ] && echo -ne "$file:\t"
+sed $sed_opt "/^VERSION /$sed_cmd" "$file"
+
+# Update Makefile
+file="Makefile"
+[ "$check" ] && echo -ne "$file:\t"
+sed $sed_opt "/^VERSION := /$sed_cmd" "$file"
+
 
 #}}}
 

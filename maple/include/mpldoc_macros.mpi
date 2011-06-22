@@ -5,7 +5,7 @@
 # ##INCLUDE ../include/mpldoc_macros.mpi
 
 ##DEFINE MOD mdc
-
+##DEFINE comma() ,
 
 #-----------------
 #PARAMETERS macros

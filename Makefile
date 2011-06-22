@@ -4,6 +4,8 @@
 
 SHELL := /bin/sh
 
+VERSION := 0.1.1.1
+
 include help-system.mak
 
 .PHONY: byte-compile build default
@@ -81,6 +83,7 @@ PKG := mds
 TEXI_FILES = doc/$(PKG).texi
 INFO_FILES = doc/$(PKG)
 HTML_FILES = doc/$(PKG).html
+PDF_FILES  = doc/$(PKG).pdf
 
 doc/$(PKG).pdf: doc/$(PKG).texi
 	(cd doc; $(TEXI2PDF) $(PKG).texi)
@@ -128,13 +131,13 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-regexps mds-showstat mds-output mds-windows mds
+ELS = mds-regexps mds-showstat mds-output mds-windows mds-login mds
 
-LISPFILES = $(ELS:%=lisp/%.el)
-ELCFILES = $(LISPFILES:.el=.elc)
+LISP_FILES = $(ELS:%=lisp/%.el)
+ELC_FILES = $(LISP_FILES:.el=.elc)
 
-byte-compile: $(call print-help,byte-compile,Byte compile $(LISPFILES))
-byte-compile: $(ELCFILES)
+byte-compile: $(call print-help,byte-compile,Byte compile $(LISP_FILES))
+byte-compile: $(ELC_FILES)
 
 %.elc : %.el
 	$(RM) $@
@@ -156,7 +159,7 @@ hdb: mdc.hdb
 # 	shelp -h $@ create
 # 	ls maple/mhelp/*.i | xargs -n1 shelp -h $@ load
 
-mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
+mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	mpldoc -c nightly $+
 	shelp -h $@ create
 	maple -c "makehelp(\"mdc\",\"maple/mhelp/mdc.mw\",\"$@\")" \
@@ -167,7 +170,6 @@ mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
 	      -c done
 
 # }}}
-
 
 # {{{ mla
 
@@ -205,8 +207,8 @@ tags:
 
 .PHONY: install $(addprefix install-,dev el elc html info lisp maple)
 
-INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISPFILES)))
-INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELCFILES)))
+INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISP_FILES)))
+INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
 
 install: $(call print-help,install,Install everything)
 install: $(addprefix install-,dev html info lisp maple)
@@ -216,13 +218,13 @@ install-dev: install-elc install-info install-maple install-hdb
 
 # Install el files but not elc files; useful for checking old versions of emacs.
 install-el: $(call print-help,install-el,Install el files but not elc files)
-install-el: $(LISPFILES)
+install-el: $(LISP_FILES)
 	$(MKDIR) $(LISP_DIR)
 	$(CP) $+ $(LISP_DIR)
 
 
 install-elc: $(call print-help,install-elc,Install elc files and link *.el files)
-install-elc: $(ELCFILES)
+install-elc: $(ELC_FILES)
 	@echo "Installing elc files into $(LISP_DIR)"
 	@$(MKDIR) $(LISP_DIR)
 	@$(CP) $+ $(LISP_DIR)
@@ -249,7 +251,7 @@ install-info: $(INFO_FILES)
 		do $(INSTALL_INFO) --dir-file=$(INFO_DIR)/dir $${file}; done
 
 install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
-install-lisp: $(LISPFILES) $(ELCFILES)
+install-lisp: $(LISP_FILES) $(ELC_FILES)
 	@echo "Installing lisp files into $(LISP_DIR)/"
 	@$(MKDIR) $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
@@ -262,16 +264,14 @@ install-maple: $(mla)
 	@$(CP) $+ $(MAPLE_INSTALL_DIR)
 
 # }}}
-# {{{ distribution
+# {{{ zip
 
-PHONY: dist
+PHONY: zip
 
-dist = $(ELS) $(TEXI_FILE) $(INFO_FILES) $(HTML_FILES) Makefile README
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README install
 
-dist: $(PKG).zip
-
-$(PKG).zip: $(dist)
-	zip $@ $?
+zip: $(dist)
+	zip mdcs-$(VERSION).zip $+
 
 # }}}
 

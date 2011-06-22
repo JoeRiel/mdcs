@@ -36,7 +36,7 @@ export CodeString
 ##- \CMD('defs', 'launch')
 ##PARAMETERS
 ##- 'defs'   : ::string::; code that assigns procedures
-##- 'launch' : ::launch::; code that calls the procedures
+##- 'launch' : ::string::; code that calls the procedures
 ##RETURNS
 ##- ::string::; string of code to be passed to "Grid[Launch]"
 ##DESCRIPTION
@@ -49,24 +49,23 @@ export CodeString
 ##  that assigns the parallel procedures run with `Grid`.
 ##
 ##- The 'launch' parameter is a string of code
-##  that calls one of the procedures assigned in 'defs'
-##  with the starting arguments.
+##  that executes the parallel procedures.
 ##
 ##- The remaining arguments are optional arguments
 ##  to "mdc[mdc]".  They initialize the client
 ##  and instrument the selected procedures.
 ##
 ##EXAMPLES(noexecute)
-##- Assign the procedure that will be run in 'Grid'.
+##- Assign a simple procedure that will be run in 'Grid'.
 ##>> hello := proc(nam :: string)
 ##>>  uses Grid;
 ##>>     printf("Hi, %s.  I'm node %d of %d\n", nam, MyNode(),NumNodes());
 ##>>     Barrier();
 ##>>  end proc:
-##- Assign a string that, when parsed and evaluated, assigns 'hello'.
-##> defs := sprintf("%a:=%a:", hello, eval(hello)):
+##- Assign a string that, when parsed and evaluated, assigns `hello`.
+##> defs := sprintf("%a:=%a:", hello, eval(hello))
 ##
-##- Assign the string that. when parsed and evaluated, ~hello("Debugger")~.
+##- Assign the string that, when parsed and evaluated, calls `hello`.
 ##> launch := sprintf("hello(%a):", "Debugger");
 ##
 ##- Create the block of code, a string, that is passed to
@@ -74,13 +73,16 @@ export CodeString
 ##  to stop the debugger in the `hello` procedure.
 ##> Code := \MOD:-\SUBMOD:-\CMD(defs, launch, 'stopat'=hello);
 ##
-##- Launch Grid.
+##- Launch Grid with two nodes.
+##  This initiates two independent debugging sessions
+##  on the Maple Debugger Server.  They are grouped
+##  together so that both can be readily observed and controlled.
 ##> Grid:-Launch(Code,'numnodes'=2);
 ##SEEALSO
 ##- "Grid"
 ##- "mdc[mdc]"
 ##- "mdc[Grid]"
-##- "mdc[Grid][CodeBlock]"
+##- "mdc[Grid][Procedure]"
 
     CodeString := proc(defs :: string, launch :: string)
         cat(defs
@@ -101,34 +103,30 @@ export CodeString
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('prc')
+##- \CMD('prc', 'opts')
 ##PARAMETERS
 ##- 'prc'  : procedure
+##param_opts(mdc)
 ##RETURNS
 ##- ::procedure::;
 ##DESCRIPTION
 ##- The `\CMD` command
-##  converts a procedure, 'prc', and arguments 'args',
-##  to a string that can be passed to "Grid[Launch]".
-##  The string includes debug code that launches "mdc"
-##  for each Grid process.
+##  wraps a procedure, 'prc', in another procedure that
+##  can be passed to "Grid[Launch]" and which launches "mdc".
 ##
-##- The 'prc' argument is a procedure to execute.
+##- The 'prc' argument is the procedure to execute.
 ##
-##- The optional 'args' arguments are passed to 'prc' when it is
-##  launched via "Grid[Launch]".
+##- The remaining arguments to `\CMD` are passed
+##  to "mdc[mdc]".
 ##
-##OPTIONS
-##opt(mdc_options,set)
-##  Set of options for "mdc".  These are passed to `mdc`,
-##  in addition to the option 'usegrid=true'.
-##  The default is the empty set.
+##- The wrapper procedure passes its arguments to 'prc'.
 ##
 ##EXAMPLES(noexecute)
 ##- Assign a simple procedure that greets each process.
 ##  Note that while using "printf" is appropriate for normal usage,
 ##  it currently does not work well with the debugger in that the
-##  print stream does not flow to the debugger.
+##  print stream does not flow to the debugger but rather to
+##  the Maple display.
 ##>> hello := proc(nam :: string)
 ##>> uses Grid;
 ##>>    printf("Hi, %s.  I'm node %d of %d\n", nam, MyNode(),NumNodes());

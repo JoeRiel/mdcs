@@ -458,11 +458,18 @@ Otherwise delete the dead showstat window."
   (mds-showstat-eval-proc-statement "step" 'save))
 
 (defun mds-cycle-trace ()
+  "Cycle through the three tracing states: 'nil', 'into' or 'step'.
+If nil is selected, tracing does not occur.  If into is selected,
+then only those procedures that have been instrumented are traced.
+If 'step' is selected, then all procedures are traced.
+
+To best use the results after tracing, turn off tracing mode (select nil),
+then reenter the debugger from the client.  The hyperlinks in the 
+output buffer are then active."
   (interactive)
   (setq mds-showstat-trace
 	(cond
-	 ((not mds-showstat-trace)             "next")
-	 ((string=  mds-showstat-trace "next") "into")
+	 ((null mds-showstat-trace)            "into")
 	 ((string=  mds-showstat-trace "into") "step")
 	 ((string=  mds-showstat-trace "step") nil)))
   (message (concat "tracing " (or mds-showstat-trace "disabled"))))
@@ -859,7 +866,7 @@ it is displayed in bold after the mode name."
        ["Outfrom"	mds-outfrom t]
        ["Step"		mds-step t]
        ["Return"	mds-return t]
-       ["Trace"         mds-trace-slow t]
+       ["Trace"         mds-cycle-trace t]
        ["Quit"		mds-step t]
        ["Kill"		mds-kill-maple t])
 
@@ -922,6 +929,7 @@ Tracing
 \\[mds-outfrom] (outfrom) execute current statement sequence or until stop point
 \\[mds-step] (step) execute next statement at any level
 \\[mds-return] (return) continue executing until current procedure returns
+\\[mds-cycle-trace] select auto-trace mode
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
 \\[mds-kill-maple] kill and restart the Maple process
 
