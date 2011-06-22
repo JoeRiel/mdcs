@@ -172,15 +172,21 @@ $endif
 
         do
             debugger_printf(DBG_PROMPT, ">");
-            #res := traperror(readline(-2));
-            #res := traperror(readline(pipe_to_maple));
-            res := traperror(Read());
+            try
+                res := Read();
 $ifdef LOG_READLINE
-        fprintf(logpid, "[%s]\n", res);
-        fflush(logpid);
+                fprintf(logpid, "[%s]\n", res);
+                fflush(logpid);
 $endif
-            if res <> lasterror then break fi;
-            debugger_printf(DBG_ERR, "Error, %s\n",StringTools:-FormatMessage(lastexception[2..]));
+                break
+            catch "process %1 disconnected unexpectedly":
+                error;
+            catch:
+                debugger_printf(DBG_ERR
+                                , "Error, %s\n"
+                                , StringTools:-FormatMessage(lastexception[2..])
+                               );
+            end try;
         od;
 
         #}}}
@@ -406,8 +412,8 @@ $define RETURN return
                         line := [cmd,sprintf("%a",line[1]),traperror(parse(line[2],'debugger'))];
                         cmd := "setenv"
                     else
-                        original := sprintf("assign('%a',%a)",line[1],
-                                            traperror(parse(line[2],'debugger')));
+                        original := sprintf("assign('%a',%a)",line[1]
+                                            , traperror(parse(line[2],'debugger')));
                         cmd := ""
                     fi
                 fi

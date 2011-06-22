@@ -392,7 +392,12 @@ $endif
 #{{{ Read
 
     Read := proc()
-        Sockets:-Read(sid);
+    local res;
+        res := Sockets:-Read(sid);
+        if res = false then
+            error "process %1 disconnected unexpectedly", sid;
+        end if;
+        return res;
     end proc;
 
 #}}}
