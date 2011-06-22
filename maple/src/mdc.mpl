@@ -13,17 +13,16 @@
 ##DESCRIPTION
 ##- The `\MOD` module implements a *Maple Debugger Client*,
 ##  which is half of a *Maple Debugger Client/Server* pair.
-##  This client/server architecture replaces the
-##  existing Maple debugger.  It provides several
+##  This client/server architecture provides several
 ##  significant benefits:
 ##
 ##-- A common, full-featured, debugger interface that can be used
 ##  whether running Maple from the GUI or the command-line.
 ##
-##-- Remote debugging---the client (Maple) can be run on one machine,
+##-- Remote debugging; client (Maple) can be run on one machine,
 ##  the server on another. Communication is via standard TCP.
 ##
-##-- Concurrent debugging---multiple Maple processes can debugged
+##-- Concurrent debugging; Maple processes can debugged
 ##  simultaneously. This permits interactively comparing the actions
 ##  of different versions of code, or comparing code run on machines
 ##  with different operating systems. It also permits independently or
@@ -58,7 +57,6 @@
 ##CALLINGSEQUENCE
 ##- \CMD('opts')
 ##PARAMETERS
-##- 'opts' :
 ##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
@@ -69,21 +67,22 @@
 ##  procedures that transfer debugging control to the server.
 ##
 ##- Debugging is invoked in the usual way, by instrumenting a target
-##  procedure with "stopat", "stopwhen", or "stoperror", then calling
-##  the target procedure. In the standard Maple GUI it may also be
-##  invoked by clicking the *debug icon* on the toolbar during a running
-##  computation.
+##  procedure with "stopat", "stopwhen", or "stoperror", the executing
+##  code that calls the procedure. In the standard Maple GUI the
+##  debugger may also be invoked by clicking the *debug icon* on the
+##  toolbar during a running computation.
 ##
-##- The target procedures can also be instrumented by passing
-##  the `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.
-##  These are described in the *Options* section.
+##- The target procedures can also be instrumented by passing the
+##  `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.  These,
+##  as well as configuration are, options described in the *Options*
+##  section.
 ##
 ##OPTIONS
 ##opt(beep,truefalse)
-##  If `true`, emit a beep
+##  If *true*, emit a beep
 ##  when succesfully connecting.
 ##  Disabled when in the GUI because it does not work there.
-##  The default is `true`.
+##  The default is *true*.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
 ##  If a string, then the configuration is read
@@ -94,22 +93,28 @@
 ##  are used.
 ##
 ##opt(exit,truefalse)
-##  If `true`, shutdown the TCP connection
+##  If *true*, shutdown the TCP connection
 ##  and restore the original debugger procedures.
-##  The default is `false`.
+##  The default is *false*.
 ##
 ##opt(host,string)
-##  The name of the host.
+##  The name of the host machine that is running the Maple Debugger Server.
 ##  The default is _"localhost"_.
 ##
 ##opt(label,string)
-##  Label passed to server for convenient identication
-##  of this client.
-##  The default is the return value of _kernelopts('username')_.
+##  Label passed to server for identification and grouping of the client.
+##  If the basename of two or more labels, from independent
+##  clients, are identical, the clients are grouped in the server.
+##  The basename is the substring of `label` that matches
+##  the first group in the regular expression ~^([^-]+)-[0-9]+$~,
+##  that is, everything before a hypen followed by digits
+##  that terminate the string.  For example, ~"foo-1"~ and ~"foo-2"~
+##  share a common basename, ~"foo"~, and so would be grouped together.
+##  The default label is the return value of _kernelopts('username')_.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client will transmit.
-##  If a string is longer than that, it is replaced
+##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
 ##  The default is 10000.
@@ -119,47 +124,45 @@
 ##  Must match the value used the server.
 ##  The default is 10000.
 ##
-##opt(stopat,name or string)
-##  Identifies the procedures to instrument.
-##  May be a name, a string, or a set of names or strings.
+##opt(stopat, name\comma string\comma or set of names and strings)
+##  Specifies the procedures to instrument.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
 ##  so this provides a convenient means to instrument
-##  local procedures of a module.
+##  local procedures of a module.  See the `unstopat` option.
+##  Using this option may be considerably faster than
+##  calling the "stopat" procedure.
 ##
 ##opt(stoperror,truefalse)
-##  If `true`, stop at any error.
-##  The default is `false`.
+##  If *true*, stop at any error.
+##  The default is *false*.
 ##
 ##opt(traperror,truefalse)
-##  If `true`, stop at trapped errors.
-##  The default is `false`.
+##  If *true*, stop at trapped errors.
+##  The default is *false*.
 ##
-##opt(unstopat, procedures to stopat)
-##  Identifies procedures from which to remove instrumentation.
-##  May be a name, a string, or a set of names or strings.
+##opt(unstopat, name\comma string\comma or set of names and strings)
+##  Specifies procedures from which to remove instrumentation.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
+##  See the `stopat` option.
 ##
 ##opt(usegrid,truefalse)
-##  If `true`, append the "Grid" node number
-##  to the label.  This option is
-##  added by the "mdc[Grid]" exports to instrument
+##  If *true*, append the "Grid" node number to the label.
+##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
-##  The default is `false`.
+##  The default is *false*.
 ##
 ##opt(view,truefalse)
-##  If `true`, the remote debugging session is echoed on the client machine.
+##  If *true*, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is `false`.
+##  The default is *false*.
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
 ##  Assume the Maple Debugger Server is running on a different
 ##  machine, named `gauss`.
-##  The `verbose` option generates extra output when the client connects.
-##> mdc(stopat=int, host="gauss", verbose):
+##> mdc(stopat=int, host="gauss"):
 ##SET(lead=indent)
 ##- ~Welcome joe~
-##- ~Connected to localhost on port 10000, with id :joe:unix:6120:~
 ##UNSET
 ##- Now launch the debugger.
 ##> int(x^2,x);
@@ -233,7 +236,6 @@ $endif
     mdc := proc( (* no positional parameters *)
                  { beep :: truefalse := true }
                  , { config :: {string,identical(maplet)} := NULL }
-                 #, { enter :: truefalse := false }
                  , { exit :: truefalse := false }
                  , { host :: string := Host }
                  , { label :: string := kernelopts('username') }
@@ -481,7 +483,7 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1.1.0";
+    Version := "0.1.1.1";
 
 #}}}
 

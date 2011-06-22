@@ -4,7 +4,7 @@
 
 SHELL := /bin/sh
 
-VERSION := 0.1.1.0
+VERSION := 0.1.1.1
 
 include help-system.mak
 
@@ -159,7 +159,7 @@ hdb: mdc.hdb
 # 	shelp -h $@ create
 # 	ls maple/mhelp/*.i | xargs -n1 shelp -h $@ load
 
-mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
+mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	mpldoc -c nightly $+
 	shelp -h $@ create
 	maple -c "makehelp(\"mdc\",\"maple/mhelp/mdc.mw\",\"$@\")" \
