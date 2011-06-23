@@ -40,7 +40,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The MDS Manual
+@title The Maple Debugger Server Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -62,8 +62,8 @@ Texts.  A copy of the license is included in the section entitled
 @end ifnottex
 
 @menu
-* Introduction::                Getting started
-* Launching MDS::               
+* Introduction::                
+* Launching MDS::               Starting the server
 * Showstat Buffer::             Stepping through code
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
@@ -127,14 +127,14 @@ MDS is an Emacs package that implements a @emph{Maple Debugger Server}.
 It is part of the @emph{Maple Debugger Client/Server} architecture.
 This manual describes the installation, configuration, and usage
 of the server.  For help with the client, see the Maple help pages
-for @command{mdc}.
+for @command{mdc}.@footnote{In Maple, type @samp{?mdc}}
 
 The client/server architecture provides several benefits:
 
 @itemize @bullet
 @item
 A common, full-featured, debugger interface that can be used whether
-running Maple from the GUI or the command-line.
+running Maple from the GUI, the command-line, or from a script.
 @item
 Remote debugging---the client (Maple) can be run on one machine, the
 server on another. Communication is via standard TCP.
@@ -186,9 +186,9 @@ the corresponding statement in the code, facilitates debugging.
 
 While the core of MDS is based on @command{mdb}@footnote{@inforef{mdb,Emacs Maple Debugger,mdb}},
 an earlier debugger that used @b{OpenMaple} as an interface between
-Emacs and Maple, it has significant improvements.  Because @b{OpenMaple}
-is not used with MDS, there is no requirement to compile an executable,
-which makes installation substantially simpler.
+Emacs and Maple, it has significant improvements.  Because MDS does not 
+use @b{OpenMaple}, there is no requirement to compile an executable,
+which simplifies the installation.
 
 
 @node Requirements, Installation, Summary, Introduction
@@ -198,11 +198,10 @@ which makes installation substantially simpler.
 
 
 @table @r
-@item GNU Emacs 23.3+
-MDS may work with earlier versions, but I have not tested it.
-@item Maple 15+  
-MDS should work with earlier versions of Maple, however,
-it currently has not been tested with any.
+@item GNU Emacs 23.1+
+MDS should work with earlier versions of Emacs but has not been tested.
+@item Maple 14+  
+MDS should work with earlier versions of Maple but has not been tested.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
@@ -220,8 +219,18 @@ package, but it is dated.
 @section Installation
 @cindex installation
 
-See the included @file{README} file on how to install MDS.
+Installation consists of unzipping the zip file,
+@file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
+copying the files to the appropriate directories.  Include in the zip
+file is a bash script, @file{install}, that byte-compiles the
+files in the @file{lisp} subdirectory and then copies all files to the
+standard locations.  Modify it per your setup then execute it with
 
+@example
+$ ./install
+@end example
+
+Windows and Mac users may have to do that manually.
 
 @node Configuration, Customization, Installation, Introduction
 @comment  node-name,  next,  previous,  up
@@ -242,20 +251,23 @@ to run MDS.
 @cindex emacs
 @cindex .emacs
 
-To permit @kbd{M-x mds} to start (and restart) mds, 
+To permit @kbd{M-x mds} to start (and restart) MDS, 
 add the following line to your @file{.emacs} file:
 
 @example
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 
-You will probably want to bind global keys to the commands
+Consider binding global keys to the commands
 @command{mds-windows-cycle-clients} and
-@command{mds-windows-cycle-groups}.  The former is for cycling through
-the list of all clients, the latter for cycling through groups of
-clients.  Groups are formed from clients with labels that share a common
-basename. To bind these commands to the @key{f12} and
-@key{CTRL}-@key{f12} keystrokes, do
+@command{mds-windows-cycle-groups}.  
+
+The former is for cycling through the list of all clients, the latter
+for cycling through groups of clients.  Groups are formed from clients
+with labels that share a common basename. This is used with the
+@command{mdc[Grid]}@footnote{Type @samp{?mdc[Grid]} in Maple for more
+information.} commands in the Maple client.  For example, to bind these
+commands to the @key{f12} and @key{CTRL}-@key{f12} keystrokes, do
 
 @example
 (global-set-key [f12] 'mds-windows-cycle-clients)
@@ -272,6 +284,35 @@ MDS has a number of variables that can be customized.
 To access them load MDS (@code{M-x mds}) then run 
 @code{M-x customize-group} and enter @code{mds} or
 @code{mds-faces}.
+
+The most useful customizations are the following.
+
+@table @asis
+
+@vindex mds-get-focus-function
+@item @code{mds-get-focus-function}
+A function that calls the window manager to transfer
+focus to Emacs.  This is called when a client begins debugging.
+The default is nil unless the command @command{wmctrl}
+is available, then it is set to @code{mds-windows-get-focus-wmctrl}.
+The nil value means that focus will not automatically be
+transferred to Emacs.
+
+@vindex mds-port
+@item @code{mds-port}
+An integer that is the port number used for communication.
+The default is 10000.
+
+@vindex mds-truncate-lines
+@item @code{mds-truncate-lines}
+A boolean value that, when non-nil, causes lines in the showstat and 
+output windows to be truncated at the right edge of the screen 
+rather than wrapping.   The default truncates lines.
+
+@end table
+
+
+
 
 
 @node Feedback,  , Customization, Introduction
