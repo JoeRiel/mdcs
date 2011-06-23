@@ -8,7 +8,7 @@
 
 @dircategory Emacs
 @direntry
-* Mds mode: (mds).      Source-code debugger for Maple
+* mds: (mds).      Maple Debugger Server
 @end direntry
 
 @c Version and Contact Info
@@ -56,7 +56,7 @@ Texts.  A copy of the license is included in the section entitled
 
 @ifnottex
 @node Top, Introduction, (dir), (dir)
-@top Mds Manual
+@top Maple Debugger Server Manual
 
 @insertcopying
 @end ifnottex
