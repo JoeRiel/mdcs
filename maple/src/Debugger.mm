@@ -16,10 +16,10 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
-$define DBG_EVAL1 'DBG_EVAL'
-$define DBG_EVAL2 'DBG_EVAL'
-$define DBG_EVAL3 'DBG_EVAL'
-$define DBG_EVAL4 'DBG_EVAL'
+$define DBG_EVAL1 DBG_EVAL
+$define DBG_EVAL2 DBG_EVAL
+$define DBG_EVAL3 DBG_EVAL
+$define DBG_EVAL4 DBG_EVAL
 
 Debugger := module()
 
@@ -105,7 +105,7 @@ $endif
     # currently not used
     _print := proc()
         orig_print(_passed);
-        debugger_printf(DBG_WARN, "print output does not display in debugger\n");
+        debugger_printf('DBG_WARN', "print output does not display in debugger\n");
     end proc;
 
 #}}}
@@ -115,9 +115,9 @@ $endif
     local err;
         err := debugopts('lasterror');
         if err = '`(none)`' then
-            debugger_printf(DBG_ERROR, "%a\n", err);
+            debugger_printf('DBG_ERROR', "%a\n", err);
         else
-            debugger_printf(DBG_ERROR, "%s\n", StringTools:-FormatMessage(err));
+            debugger_printf('DBG_ERROR', "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
 
@@ -128,9 +128,9 @@ $endif
     local exception;
         exception := debugopts('lastexception');
         if exception = '`(none)`' then
-            debugger_printf(DBG_EXCEPTION, "%a\n", exception);
+            debugger_printf('DBG_EXCEPTION', "%a\n", exception);
         else
-            debugger_printf(DBG_EXCEPTION, "%s\n", StringTools:-FormatMessage(exception[2..]));
+            debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(exception[2..]));
         end if;
     end proc;
 
@@ -171,7 +171,7 @@ $endif
         #{{{ Get response (from server)
 
         do
-            debugger_printf(DBG_PROMPT, ">");
+            debugger_printf('DBG_PROMPT', ">");
             try
                 res := Read();
 $ifdef LOG_READLINE
@@ -182,7 +182,7 @@ $endif
             catch "process %1 disconnected unexpectedly":
                 error;
             catch:
-                debugger_printf(DBG_ERR
+                debugger_printf('DBG_ERR'
                                 , "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
@@ -200,7 +200,7 @@ $endif
         if `debugger/isspace`( res ) then
             res := `if`(assigned(`debugger/default`)
                         , `debugger/default`
-                        , "debugger_printf(DBG_HELP, \"See ?debugger for available commands\n\")"
+                        , "debugger_printf('DBG_HELP', \"See ?debugger for available commands\n\")"
                        );
         else
             `debugger/default` := res;
@@ -251,8 +251,8 @@ $endif
         if i < len and res[i] <> "#" then
             for i from i to len do
                 if res[i] <> " " then
-                    debugger_printf(DBG_WARN,"Warning, extra characters at end of parsed string\n");
-                    debugger_printf(DBG_WARN,"Extra stuff: %q\n", res[i]);
+                    debugger_printf('DBG_WARN',"Warning, extra characters at end of parsed string\n");
+                    debugger_printf('DBG_WARN',"Extra stuff: %q\n", res[i]);
                     break
                 fi
             od
@@ -327,49 +327,49 @@ $define RETURN return
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf(DBG_STACK
+                            debugger_printf('DBG_STACK'
                                             , "<%d>\n%a\n"
                                             , addressof(_passed[i][j])
                                             , _passed[i][j]
                                            );
                         else
-                            debugger_printf(DBG_WHERE
+                            debugger_printf('DBG_WHERE'
                                             , "<%d>\n%a: %s\n"
                                             , addressof(_passed[i][j])
                                             , _passed[i][j]
                                             , _passed[i][j+1]
                                            );
                             if `debugger/no_output` <> true then
-                                debugger_printf(DBG_ARGS,"\t%a\n",_passed[i][j-1])
+                                debugger_printf('DBG_ARGS',"\t%a\n",_passed[i][j-1])
                             fi
                         fi;
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf(DBG_ERR, "Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf('DBG_ERR', "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
                     then
                         return
                     fi;
-                    debugger_printf(DBG_WATCHED_CONDS, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif `debugger/no_output` <> true then
                     if i < n then
                         # list/set that is part of a continued sequence
-                        debugger_printf(DBG_EVAL1, "%a,\n",_passed[i])
+                        debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
                     else
                         # list/set
-                        debugger_printf(DBG_EVAL2, "%a\n",_passed[i])
+                        debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
                     fi
                 fi
             elif `debugger/no_output` <> true then
                 if i < n then
                     # expr that is part of a continued sequence
-                    debugger_printf(DBG_EVAL3, "%a,\n",_passed[i])
+                    debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
                 else
                     # expr
-                    debugger_printf(DBG_EVAL4, "%a\n",_passed[i])
+                    debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
                 fi
             fi
         od;
@@ -380,10 +380,10 @@ $define RETURN return
         if procName <> 0 then
             if statNumber < 0 then
                 # handle negative statement number (indicates multiple targets)
-                debugger_printf(DBG_WARN, "Warning, statement number may be incorrect\n");
+                debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
-            debugger_printf(DBG_STATE, "<%d>\n%A"
+            debugger_printf('DBG_STATE', "<%d>\n%A"
                             , addressof(procName)
                             , debugopts('procdump'=[procName, 0..statNumber])
                            );
@@ -440,7 +440,7 @@ $define RETURN return
                 debugopts('steplevel'=evalLevel-statLevel*5);
                 RETURN
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-                # debugger_printf(DBG_STOP,"stopping\n");
+                # debugger_printf('DBG_STOP',"stopping\n");
                 # ssystem("sleep 1"); FIXME: may need to delay here.
                 debugopts('interrupt'=true)
             elif cmd = "where" then
@@ -505,7 +505,7 @@ $define RETURN return
                 if err <> lasterror then RETURN err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
-                    debugger_printf(DBG_WARN,"Error, not currently in a procedure\n");
+                    debugger_printf('DBG_WARN',"Error, not currently in a procedure\n");
                 elif nops(line) = 1 and cmd = "list" then
                     i := statNumber - 5;
                     if i < 1 then i := 1 fi;
@@ -603,7 +603,7 @@ $define RETURN return
             #{{{ handle error
 
             if err = lasterror then
-                debugger_printf(DBG_PARSE_ERR, "Error, %s\n"
+                debugger_printf('DBG_PARSE_ERR', "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             fi;
@@ -635,11 +635,11 @@ $define RETURN return
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
 
-            map[3](debugger_printf, DBG_SHOW, "\n%s", [res]);
+            map[3](debugger_printf, 'DBG_SHOW', "\n%s", [res]);
 
             # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
-                debugger_printf(DBG_NULL, "\n" )
+                debugger_printf('DBG_NULL', "\n" )
             fi
         fi;
         NULL
@@ -672,49 +672,49 @@ $define RETURN return
     global showstop;
 
         ls := stopat();
-        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo breakpoints set.\n")
+        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo breakpoints set.\n")
         else
-            debugger_printf(DBG_INFO, "\nBreakpoints in:\n");
-            for i in ls do debugger_printf(DBG_INFO, "   %a\n",i) od
+            debugger_printf('DBG_INFO', "\nBreakpoints in:\n");
+            for i in ls do debugger_printf('DBG_INFO', "   %a\n",i) od
         fi;
         ls := stopwhen();
-        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo variables being watched.\n")
+        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo variables being watched.\n")
         else
-            debugger_printf(DBG_INFO, "\nWatched variables:\n");
+            debugger_printf('DBG_INFO', "\nWatched variables:\n");
             for i in ls do
                 if type(i,list) then
-                    debugger_printf(DBG_INFO, "   %a in procedure %a\n",i[2],i[1])
+                    debugger_printf('DBG_INFO', "   %a in procedure %a\n",i[2],i[1])
                 elif assigned(`debugger/watch_condition`[i]) then
-                    val := sprintf(DBG_INFO, "%a",`debugger/watch_condition`[i]);
+                    val := sprintf('DBG_INFO', "%a",`debugger/watch_condition`[i]);
                     if length(val) > interface('screenwidth') / 2 then
                         val := cat(val[1..round(interface('screenwidth')/2)]," ...")
                     fi;
-                    debugger_printf(DBG_INFO, "   %a = %s\n",i,val)
+                    debugger_printf('DBG_INFO', "   %a = %s\n",i,val)
                 else
-                    debugger_printf(DBG_INFO, "   %a\n",i)
+                    debugger_printf('DBG_INFO', "   %a\n",i)
                 fi
             od
         fi;
         ls := stoperror();
-        if nops(ls) = 0 then debugger_printf(DBG_INFO, "\nNo errors being watched.\n")
+        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo errors being watched.\n")
         else
-            debugger_printf(DBG_WATCHED_ERRS, "\nWatched errors:\n");
+            debugger_printf('DBG_WATCHED_ERRS', "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
-                    debugger_printf(DBG_INFO, "   All errors\n")
+                    debugger_printf('DBG_INFO', "   All errors\n")
                 else
-                    debugger_printf(DBG_INFO, "   All untrapped errors\n")
+                    debugger_printf('DBG_INFO', "   All untrapped errors\n")
                 fi
             else
                 if member('traperror',ls) then
-                    debugger_printf(DBG_INFO, "   All trapped errors\n")
+                    debugger_printf('DBG_INFO', "   All trapped errors\n")
                 fi;
                 for i in ls do
-                    if i <> 'traperror' then debugger_printf(DBG_INFO, "   %a\n",i) fi
+                    if i <> 'traperror' then debugger_printf('DBG_INFO', "   %a\n",i) fi
                 od
             fi
         fi;
-        if procname <> 'showstop[nonl]' then debugger_printf(DBG_INFO, "\n") fi;
+        if procname <> 'showstop[nonl]' then debugger_printf('DBG_INFO', "\n") fi;
         NULL
     end proc:
 
@@ -731,12 +731,12 @@ $define RETURN return
             stack := debugopts('callstack')
         fi;
         for i from nops(stack)-2 to 8 by -3 do
-            debugger_printf(DBG_STACK1, "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
+            debugger_printf('DBG_STACK1', "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
         od;
         if stack[5] = 'TopLevel' then
-            debugger_printf(DBG_STACK2,"Currently at TopLevel.\n")
+            debugger_printf('DBG_STACK2',"Currently at TopLevel.\n")
         else
-            debugger_printf(DBG_STACK3,"Currently in %a.\n",stack[5])
+            debugger_printf('DBG_STACK3',"Currently in %a.\n",stack[5])
         fi;
         NULL
     end proc:
