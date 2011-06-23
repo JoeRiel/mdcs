@@ -18,8 +18,7 @@
 
 ;; avoid compiler warnings
 
-(eval-when-compile
-  (defvar mds-showstat-state nil))
+(defvar mds-showstat-state nil)
 (declare-function mds-goto-state "mds-showstat")
 (declare-function mds--get-client-live-buf "mds")
 (declare-function mds--get-client-out-buf "mds")

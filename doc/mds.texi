@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1.1.1
+@set VERSION 0.1.1.3
 @set DATE June 2011
 
 @dircategory Emacs
@@ -22,6 +22,7 @@
 
 @copying
 MDS is an Emacs package that implements a Maple Debugger Server.
+It is part of the Maple Debugger Client/Server Architecture. 
 Maple is a computer algebra system from Maplesoft Inc.
 
 This manual is for MDS version @value{VERSION}.
@@ -39,7 +40,7 @@ Texts.  A copy of the license is included in the section entitled
 @end copying
 
 @titlepage
-@title The MDS Manual
+@title The Maple Debugger Server Manual
 
 @subtitle Release @value{VERSION}
 @author by Joseph Riel
@@ -61,8 +62,8 @@ Texts.  A copy of the license is included in the section entitled
 @end ifnottex
 
 @menu
-* Introduction::                Getting started
-* Launching MDS::               
+* Introduction::                
+* Launching MDS::               Starting the server
 * Showstat Buffer::             Stepping through code
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
@@ -75,14 +76,14 @@ Introduction
 
 * Summary::                     Summary of what MDS does
 * Requirements::                What is needed to run MDS
-* Installation::                
+* Installation::                How to install MDS
 * Configuration::               How to configure MDS
 * Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
-* Emacs::                       Updating @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}
 
 Showstat Buffer
 
@@ -92,7 +93,7 @@ Showstat Buffer
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
-* Help::                        Get help
+* Help::                        Getting help
 
 Command and Variable Index
 
@@ -109,7 +110,7 @@ Command and Variable Index
 @menu
 * Summary::                     Summary of what MDS does
 * Requirements::                What is needed to run MDS
-* Installation::                
+* Installation::                How to install MDS
 * Configuration::               How to configure MDS
 * Customization::               Customize MDS variables
 * Feedback::                    Bug reports, ideas, etc.
@@ -122,16 +123,18 @@ Command and Variable Index
 @section Summary
 @cindex summary
 
-MDS is an Emacs package that implements a 
-@emph{Maple Debugger Server}, which is half of
-a @emph{Maple Debugger Client/Server} pair.
-This client/server architecture provides
-several benefits:
+MDS is an Emacs package that implements a @emph{Maple Debugger Server}.  
+It is part of the @emph{Maple Debugger Client/Server} architecture.
+This manual describes the installation, configuration, and usage
+of the server.  For help with the client, see the Maple help pages
+for @command{mdc}.@footnote{In Maple, type @samp{?mdc}}
+
+The client/server architecture provides several benefits:
 
 @itemize @bullet
 @item
 A common, full-featured, debugger interface that can be used whether
-running Maple from the GUI or the command-line.
+running Maple from the GUI, the command-line, or from a script.
 @item
 Remote debugging---the client (Maple) can be run on one machine, the
 server on another. Communication is via standard TCP.
@@ -144,22 +147,27 @@ synchronously stepping through separate processes in a @b{Grid}
 application.
 @end itemize
 
-
 The user interface to the debugger, which is provided 
 by MDS, has the following features.
 
 @itemize @bullet
 @item
-The procedure being debugged is displayed in a buffer;
+The procedure being debugged is displayed in a window;
 font-locking is enabled to highlight syntactic elements.
 @item
 Executing the code advances an @emph{overlay-arrow} 
 that points to the next statement to be executed.
 @item
 The output of executed statements and evaluated expressions
-are displayed in a separate buffer.  
-These are printed in 1-D format so that the buffer 
-can be saved and reused as Maple input.
+are displayed in a separate window.  
+These are printed in 1-D format so that they 
+can be saved and reused as Maple input. 
+@item
+As lines of code are executed, they are echoed in the output
+window.  The result provides a visual trace of all the code
+that has been executed.  Clicking in the output window
+will open a third window that displays the procedure and
+statement that generated the selected output.
 @item
 Expressions can be directly evaluated and displayed in a nice format.
 For example, a record can be displayed as a vertical list of equations
@@ -170,13 +178,17 @@ The common debugging commands,
 are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
 @item 
 Breakpoints can be set or cleared directly in the buffer.
+@item
+A trace mode permits rapidly tracing through instrumented procedures.
+That, coupled with the ability to jump from the ouput to
+the corresponding statement in the code, facilitates debugging.
 @end itemize
 
-While the core of MDS is based on @command{mdb}, an earlier debugger
-that used @b{OpenMaple} as an interface between Emacs and Maple, it
-has significant improvements.  Because @b{OpenMaple} is not used
-with MDS, there is no requirement to compile an executable.
-That makes installation substantially simpler. 
+While the core of MDS is based on @command{mdb}@footnote{@inforef{mdb,Emacs Maple Debugger,mdb}},
+an earlier debugger that used @b{OpenMaple} as an interface between
+Emacs and Maple, it has significant improvements.  Because MDS does not 
+use @b{OpenMaple}, there is no requirement to compile an executable,
+which simplifies the installation.
 
 
 @node Requirements, Installation, Summary, Introduction
@@ -186,11 +198,10 @@ That makes installation substantially simpler.
 
 
 @table @r
-@item GNU Emacs 23.3+
-MDS may work with earlier versions, but I have not tested it.
-@item Maple 15+  
-MDS should work with earlier versions of Maple, however,
-it currently has not been tested with any.
+@item GNU Emacs 23.1+
+MDS should work with earlier versions of Emacs but has not been tested.
+@item Maple 14+  
+MDS should work with earlier versions of Maple but has not been tested.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
@@ -208,8 +219,18 @@ package, but it is dated.
 @section Installation
 @cindex installation
 
-See the included @file{README} file on how to install MDS.
+Installation consists of unzipping the zip file,
+@file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
+copying the files to the appropriate directories.  Include in the zip
+file is a bash script, @file{install}, that byte-compiles the
+files in the @file{lisp} subdirectory and then copies all files to the
+standard locations.  Modify it per your setup then execute it with
 
+@example
+$ ./install
+@end example
+
+Windows and Mac users may have to do that manually.
 
 @node Configuration, Customization, Installation, Introduction
 @comment  node-name,  next,  previous,  up
@@ -221,7 +242,7 @@ to run MDS.
 
 
 @menu
-* Emacs::                       Updating @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}
 @end menu
 
 @node Emacs,  , Configuration, Configuration
@@ -230,22 +251,23 @@ to run MDS.
 @cindex emacs
 @cindex .emacs
 
-To permit @kbd{M-x mds} to start (and restart) mds, 
+To permit @kbd{M-x mds} to start (and restart) MDS, 
 add the following line to your @file{.emacs} file:
 
 @example
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 
-You will probably want to bind global keys to the 
-commands @command{mds-windows-cycle-clients}
-and @command{mds-windows-cycle-groups}.  The former
-is for cycling through connected clients, the latter
-for cycling through groups of clients.  Groups are
-formed when, for example, the Maple @code{mdc:-Grid} package
-is used to launch parallel debugging sessions.  
-To bind these to the @key{f12} and @key{CTRL}-@key{f12}
-keystrokes, do
+Consider binding global keys to the commands
+@command{mds-windows-cycle-clients} and
+@command{mds-windows-cycle-groups}.  
+
+The former is for cycling through the list of all clients, the latter
+for cycling through groups of clients.  Groups are formed from clients
+with labels that share a common basename. This is used with the
+@command{mdc[Grid]}@footnote{Type @samp{?mdc[Grid]} in Maple for more
+information.} commands in the Maple client.  For example, to bind these
+commands to the @key{f12} and @key{CTRL}-@key{f12} keystrokes, do
 
 @example
 (global-set-key [f12] 'mds-windows-cycle-clients)
@@ -262,6 +284,35 @@ MDS has a number of variables that can be customized.
 To access them load MDS (@code{M-x mds}) then run 
 @code{M-x customize-group} and enter @code{mds} or
 @code{mds-faces}.
+
+The most useful customizations are the following.
+
+@table @asis
+
+@vindex mds-get-focus-function
+@item @code{mds-get-focus-function}
+A function that calls the window manager to transfer
+focus to Emacs.  This is called when a client begins debugging.
+The default is nil unless the command @command{wmctrl}
+is available, then it is set to @code{mds-windows-get-focus-wmctrl}.
+The nil value means that focus will not automatically be
+transferred to Emacs.
+
+@vindex mds-port
+@item @code{mds-port}
+An integer that is the port number used for communication.
+The default is 10000.
+
+@vindex mds-truncate-lines
+@item @code{mds-truncate-lines}
+A boolean value that, when non-nil, causes lines in the showstat and 
+output windows to be truncated at the right edge of the screen 
+rather than wrapping.   The default truncates lines.
+
+@end table
+
+
+
 
 
 @node Feedback,  , Customization, Introduction
@@ -286,10 +337,10 @@ server is already running, it is restarted, which disconnects all
 clients.  
 
 When a client connects, two buffers are opened,
-the @emph{showstat buffer} (@pxref{Showstat Buffer}),
+the @b{showstat buffer} (@pxref{Showstat Buffer}),
 which displays the current procedure,
 and 
-the @emph{debugger output buffer}, 
+the @b{debugger output buffer}, 
 which displays Maple output during debugging.
 
 
@@ -297,8 +348,11 @@ which displays Maple output during debugging.
 @chapter Showstat Buffer
 @cindex showstat buffer
 
-The showstat buffer, which uses @code{mds-showstat-mode},
-becomes active when an instrumented Maple procedure activates a breakpoint or watchpoint.
+Each client has two showstat buffer, named @verb{|*showstat live*|} and @verb{|*showstat dead*|}.
+Both use @code{mds-showstat-mode}, though some commands are handled differently.
+
+The live showstat buffer becomes active when an instrumented Maple procedure activates 
+a breakpoint or watchpoint.
 The buffer displays the output of the Maple @code{showstat} command, that is,
 the current procedure being debugged.
 Maple statements are numbered and Maple keywords and syntactic elements are highlighted.
@@ -335,11 +389,15 @@ end proc
 @end ifinfo
 @end example
 
+The dead showstat buffer looks the same as the live buffer.
+It is used for displaying inactive procedures.  It is normally
+not displayed until a request is made to display an inactive
+procedure.
 
+Currently typing execution keys in the dead showstat buffer
+function the same as if typed in the live buffer to advance.  This
+will most likely be changed.
  
-
-@example
-@end example
 
 @code{MDS-showstat-mode} binds keys to the common debugging commands. 
 It also provides commands that are not available in the Maple debugger.
@@ -353,7 +411,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
-* Help::                        Get help
+* Help::                        Getting help
 @end menu
 
 @node Execution, Status, Showstat Buffer, Showstat Buffer
@@ -441,11 +499,12 @@ nesting level, in the body of a control structure (for example,
 @item t (@code{mds-trace})
 Select a tracing mode.  Two tracing modes are available, @strong{into}
 and @strong{step}.  If neither tracing mode is selected, then tracing
-does not occur.  When tracing begins, debugging will continue automatically
-until the client exits.  At that point, the user should disable
-tracing mode (press @kbd{t}).  Then, by reissuing the Maple command,
-the hyperlinks in the output buffer become active and permit quickly
-moving to places of interest in the showstat buffers.
+does not occur.  When tracing begins, debugging will continue
+automatically until the client exits.  At that point, the user should
+disable tracing mode by press @kbd{t} until the echo area says the
+tracing is disabled. Then, by reissuing the original Maple command so
+that debugging commences, the hyperlinks in the output buffer become
+active and permit quickly moving to places of interest.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
@@ -456,10 +515,9 @@ This only applies to the commands in this table.
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple
 @item C-c C-c (@code{mds-kill-maple})
-Kill the maple process, switch to the @code{MDS Buffer}, and restart the Maple process.
+Kill the maple process.
 This can be used to stop a runaway Maple computation (say an infinite loop).
-OpenMaple does not properly service interrupts, so it is currently not possible to
-interrupt it and regain control, as can be done with the builtin Maple debugger.
+@strong{This currently is not implemented.}
 
 @end table
 
@@ -477,7 +535,8 @@ of the debugger.
 @item k (@code{mds-showstack})
 Showstack: display an abbreviated form of the calling stack.
 Only the names of the procedures are shown.  The name of the current
-procedure is not shown.
+procedure is not shown.  Each name is an active link.  Clicking on a link
+(mouse-1) opens the procedure in the @strong{showstat dead} buffer.
 
 @kindex K
 @findex mds-where
@@ -491,17 +550,10 @@ An optional prefix argument can be passed; it specifies the number of levels to 
 For example @kbd{C-u 2 K} displays the lowest two levels.
 
 The procedure names are active links.  Clicking on a link opens the
-procedure in the showstat buffer, at the callling line.  
+procedure in the @strong{showstat dead} buffer, at the callling line.  
 Breakpoints can be set in the opened procedure.
 Use @code{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
-
-For this to work with module exports, the modules must be @emph{named},
-otherwise the output of the @command{where} command does
-not include the module name, so the links do not work properly.
-To name a module either use the explicit form (see the Maple 
-help page @code{module[named]}) or save the module to an archive
-and then load it.
 
 @kindex p
 @findex showstop
@@ -703,15 +755,14 @@ c = NULL
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
-@findex mds-toggle-show-args
-@item @code{mds-toggle-show-args}
-Toggle the display of arguments upon entering a procedure.
-
 @end table
 
 @node Help,  , Miscellaneous, Showstat Buffer
 @section Help
 @cindex help
+
+The MDS showstat-mode has several ways for obtaining help.
+
 
 @table @asis
 
@@ -727,7 +778,7 @@ Display the help for this mode.
 @kindex H
 @findex mds-info
 @item H (@code{mds-info})
-Open the @command{info} document for MDS mode.
+Open the @command{info} document for MDS mode (this document).
 
 @kindex C-?
 @findex maplev-help-at-point
@@ -738,7 +789,7 @@ with the default the word under the cursor.
 @kindex M-?
 @findex maplev-proc-at-point
 @item M-? (@code{maplev-proc-at-point})
-Display a Maple procedure.  The procedure name is intered in the mini-buffer,
+Display a Maple procedure.  The procedure name is entered in the mini-buffer,
 with the default the word under then cursor.
 
 @end table

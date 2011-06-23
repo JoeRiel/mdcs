@@ -1,4 +1,4 @@
-VERSION 0.1.1.1
+VERSION 0.1.1.3
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -11,9 +11,9 @@ replaces the Maple library debugger.
 
 REQUIREMENTS
 ------------
-* GNU Emacs 23.3+
+* GNU Emacs 23.1+ (earlier versions may work)
 * maplev-mode (Emacs mode for developing Maple code)
-* Maple 15+ (earlier versions should work)
+* Maple 14+ (earlier versions should work)
 
 INSTALLATION
 ------------
@@ -27,6 +27,11 @@ Here is where I put the various files:
 Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot
 read the info file (mds).
+
+The provided install file can be used to do the copying,
+just be sure to check that it does what you want.  Run
+
+./install
 
 CONFIGURATION
 -------------
