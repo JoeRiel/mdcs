@@ -62,6 +62,15 @@
   :type 'integer
   :group 'mds)
 
+(defcustom mds-get-focus-function
+    (and (= 0 (shell-command "which wmctrl"))
+	 #'mds-windows-get-focus-wmctrl)
+  "Function called to give emacs the focus when starting
+debugging.  The default works on a linux system with wmctrl
+installed. Automatically assigned to nil if wmctrl is not available."  
+  :type 'function
+  :group 'mds)
+
 ;;}}}
 
 ;;{{{ Constants
@@ -103,7 +112,6 @@ See `mds-create-client' for the form of each entry.")
 
 (defvar mds-log-messages 't
   "When non-nil, write all messages to `mds-log-buffer'.")
-
 
 ;;}}}
 
@@ -292,7 +300,9 @@ windows, and get the focus."
     ;; update groups
     (mds-windows-group-update mds-clients)
     (mds-windows-display-client client)
-    (mds-get-focus-from-window-manager)))
+    ;; switch focus
+    (if (functionp mds-get-focus-function)
+      (funcall mds-get-focus-function))))
 
 
 ;;}}}
@@ -516,9 +526,6 @@ use them to route the message."
 
 ;;}}}
     
-
-(defun mds-get-focus-from-window-manager ()
-  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 

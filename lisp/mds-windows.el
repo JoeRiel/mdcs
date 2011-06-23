@@ -127,5 +127,10 @@ with n being the number of clients."
 
 ;;}}}
 
+
+(defun mds-windows-get-focus-wmctrl ()
+  "Call shell program wmctrl to give emacs the focus."
+  (shell-command "wmctrl -xa emacs"))
+
 (provide 'mds-windows)
 
