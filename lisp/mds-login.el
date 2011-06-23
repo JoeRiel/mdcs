@@ -3,7 +3,9 @@
 
 (require 'sha1)
 
-(declare-function 'mds-client-set-id "mds")
+(declare-function mds-client-get-from-proc "mds")
+(declare-function mds-client-set-id "mds")
+(declare-function mds-client-set-status "mds")
 
 (defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"
   "Regular expression to match identifier expected from client.
@@ -62,10 +64,10 @@ is the process id of the Maple job.")
 	(let ((id (match-string 1 msg))
 	      (os (match-string 2 msg))
 	      (maple (match-string 3 msg))
-	      (client (mds-get-client-from-proc proc)))
+	      (client (mds-client-get-from-proc proc)))
 	  (when client
 	    (mds-client-set-id client (list id os maple))
-	    (mds-set-status-client client 'start-debugging)
+	    (mds-client-set-status client 'start-debugging)
 	    (mds-login-greet proc id)))
 	(mds-login-delete proc))))))
 
@@ -88,10 +90,10 @@ string is 40 characters long."
   (let ((rand (sha1 (format "%d" (random t)))))
     (cons rand (sha1 (concat rand (mds-login-get-passkey userid))))))
 
-(defun mds-login-verify-response (userid challenge response)
-  "Verify the RESPONSE from USERID to a CHALLENGE.  Return non-nil
-if the challeng is correct, nil otherwise."
-  (let ((passkey (mds-login-get-passkey userid)))
-    (string= response (sha1 (concat (mds-login-get-passkey userid) (car rand))))))
+;; (defun mds-login-verify-response (userid challenge response)
+;;   "Verify the RESPONSE from USERID to a CHALLENGE.  Return non-nil
+;; if the challeng is correct, nil otherwise."
+;;   (let ((passkey (mds-login-get-passkey userid)))
+;;     (string= response (sha1 (concat (mds-login-get-passkey userid) (car rand))))))
 
 (provide 'mds-login)
