@@ -456,8 +456,12 @@ $define RETURN return
                 RETURN n;
             elif cmd = "stopat" then
                 if nops(line) = 4 then
-                    err := traperror(parse(line[4],'debugger'));
-                    line := [line[1],line[2],line[3],err]
+                    try
+                        parse(line[4],'debugger');
+                        line := [line[1],line[2],line[3],err];
+                    catch:
+                        err := lasterror;
+                    end try;
                 fi;
                 if err <> lasterror then
                     pName := procName;
@@ -493,7 +497,11 @@ $define RETURN return
                     else lNum := line[i]
                     fi
                 od;
-                err := traperror(unstopat(pName,lNum));
+                try
+                    unstopat(pName,lNum);
+                catch:
+                    err := lasterror;
+                end try;
                 if err <> lasterror then RETURN err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
@@ -501,7 +509,11 @@ $define RETURN return
                 elif nops(line) = 1 and cmd = "list" then
                     i := statNumber - 5;
                     if i < 1 then i := 1 fi;
-                    err := traperror(showstat['nonl'](procName,i..statNumber+1))
+                    try
+                        showstat['nonl'](procName,i..statNumber+1);
+                    catch:
+                        err := lasterror;
+                    end try;
                 else
                     pName := procName;
                     lNum := NULL;
@@ -510,10 +522,18 @@ $define RETURN return
                         else lNum := line[i]
                         fi
                     od;
-                    err := traperror(showstat['nonl'](pName,lNum));
+                    try
+                        showstat['nonl'](pName,lNum);
+                    catch:
+                        err := lasterror;
+                    end try;
                 fi
             elif cmd = "showstop" then
-                err := traperror(showstop['nonl']())
+                try
+                    showstat['nonl']();
+                catch:
+                    err := lasterror;
+                end try;
             elif cmd = "stopwhen" then
                 RETURN 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stopwhenif" then
@@ -521,13 +541,25 @@ $define RETURN return
             elif cmd = "unstopwhen" then
                 RETURN 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
-                line := traperror(sscanf(original,"%s %1000c"));
-                RETURN 'stoperror'(seq(line[i],i=2..nops(line)))
+                try
+                    line := sscanf(original,"%s %1000c");
+                    RETURN 'stoperror'(seq(line[i],i=2..nops(line)))
+                catch:
+                    err := lasterror;
+                end try;
             elif cmd = "unstoperror" then
-                line := traperror(sscanf(original,"%s %1000c"));
-                RETURN 'unstoperror'(seq(line[i],i=2..nops(line)))
+                try
+                    line := sscanf(original,"%s %1000c");
+                    RETURN 'unstoperror'(seq(line[i],i=2..nops(line)));
+                catch:
+                    err := lasterror;
+                end try;
             elif cmd = "help" or cmd = "?" then
-                err := traperror(help('debugger'))
+                try
+                    help('debugger');
+                catch:
+                    err := lasterror;
+                end try;
             elif cmd = "showerror" then
                 RETURN ['debugopts'('lasterror')]
             elif cmd = "showexception" then
@@ -537,30 +569,34 @@ $define RETURN return
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
-                line := traperror(parse(original,'statement','debugger'));
-                if line <> lasterror then
+                try
+                    line := parse(original,'statement','debugger');
                     # *** Avoid returning `line` unevaluated (due to LNED) by
                     # evaluating if line refers to a procedure. Note that the check
                     # for type procedure also evaluates line if it happens to be a
                     # TABLEREF, which can mess up MEMBER binding, so don't check
                     # for type procedure if it is a TABLEREF (i.e. type indexed).
                     if not line :: indexed and line :: procedure then
-                        RETURN eval(line)
+                        RETURN eval(line);
+                    else
+                        RETURN line;
                     fi;
-                    RETURN line
-                fi;
-                err := line;
+                catch:
+                    err := lasterror;
+                end try
             else
-                # Must be an expression to evaluate.
-                line := traperror(parse(original,'debugger'));
-                if line <> lasterror then
+                try
+                    # Must be an expression to evaluate.
+                    line := parse(original,'debugger');
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
-                        RETURN eval(line)
+                        RETURN eval(line);
+                    else
+                        RETURN line;
                     fi;
-                    RETURN line
-                fi;
-                err := line;
+                catch:
+                    err := lasterror;
+                end try;
             fi;
 
             #}}}
