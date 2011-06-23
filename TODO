@@ -66,7 +66,8 @@
      a label identifying the user/job.  
 
 
-** TODO Implement a window manager
+** DONE Implement a window manager
+   CLOSED: [2011-06-23 Thu 08:35]
 
    * Something simple that keeps the related windows of one
      client together.
@@ -151,8 +152,6 @@
 *** TODO DBG_STACK2
 *** TODO DBG_STACK3
 
-
-
 ** TODO Provide a source finder/viewer
    1. It should work with a TAGS file
       That suggests the procedure for tagging
@@ -167,9 +166,17 @@
    * Naturally, one will then want history and lots of other cool stuff.
    * Will this actually be used?  Not sure.
 
+** TODO Provide a control panel
+   1. Originally envisioned for those not comfortable with Emacs keybindings,
+      it would emulate the GUI debugger but would allow keystrokes.
+   2. It could also be useful for concurrent control of grouped clients.
+   3. A floating frame might be the best approach; it doesn't require
+      futzing with windows and the user can move/delete it as required.
+      
 * Long Term
  
-** TODO Handle exports of unnamed modules.
+** DONE Handle exports of unnamed modules.
+   CLOSED: [2011-06-23 Thu 08:35]
    1. The problem occurs when a module is assigned as
       M := module() ... end module.  Unless the module is
       saved and loaded from a library, the module technically
@@ -188,6 +195,14 @@
    4. The practical workaround is to name modules.  That does not
       work with constructed modules, that is, those returned by
       a procedure.  Do they have to be unnamed?
+   5. The solution was none of the above.  The robust and simple
+      solution was to have the debugger send the address of the
+      procedure name (not the procedure; that didn't work for reasons
+      that are not entirely clear) to the server.  It is then
+      embedded where needed and reused to access the procedure.
+      This works with locals/exports of anonymous modules.
+      It should work with objects, but I haven't tested it.
+   
       
 ** TODO Provide a 'prettyprint' command (i.e. 2D output)
    1. Change the current Format:-PrettyPrint to UglyPrint, or StructuredPrint.

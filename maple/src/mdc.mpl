@@ -78,11 +78,6 @@
 ##  section.
 ##
 ##OPTIONS
-##opt(beep,truefalse)
-##  If *true*, emit a beep
-##  when succesfully connecting.
-##  Disabled when in the GUI because it does not work there.
-##  The default is *true*.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
 ##  If a string, then the configuration is read
@@ -234,8 +229,7 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { beep :: truefalse := true }
-                 , { config :: {string,identical(maplet)} := NULL }
+                 { config :: {string,identical(maplet)} := NULL }
                  , { exit :: truefalse := false }
                  , { host :: string := Host }
                  , { label :: string := kernelopts('username') }
@@ -283,7 +277,7 @@ $endif
 
         if sid = -1 then
             try
-                Connect(host, port, CreateID(lbl), _options['beep'] );
+                Connect(host, port, CreateID(lbl));
             catch:
                 Debugger:-Restore();
                 error;
@@ -339,19 +333,12 @@ $endif
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
-                    , { beep :: truefalse := true }
                     , { verbose :: truefalse := false }
                     , $
                    )
     local line;
         if sid <> -1 then
             Sockets:-Close(sid);
-        end if;
-        if beep and not IsWorksheetInterface() then
-            # This doesn't work properly in the gui, it prints a box
-            # and doesn't make a tone.  It works in the tty interface.
-            #
-            printf("\a");
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
@@ -392,7 +379,12 @@ $endif
 #{{{ Read
 
     Read := proc()
-        Sockets:-Read(sid);
+    local res;
+        res := Sockets:-Read(sid);
+        if res = false then
+            error "process %1 disconnected unexpectedly", sid;
+        end if;
+        return res;
     end proc;
 
 #}}}
@@ -483,7 +475,7 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1.1.1";
+    Version := "0.1.1.3";
 
 #}}}
 
