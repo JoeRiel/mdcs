@@ -35,7 +35,7 @@ export CodeString
 ##CALLINGSEQUENCE
 ##- \CMD('defs', 'launch')
 ##PARAMETERS
-##- 'defs'   : ::string::; code that assigns procedures
+##- 'defs'   : ::string::; code that defines procedures
 ##- 'launch' : ::string::; code that calls the procedures
 ##RETURNS
 ##- ::string::; string of code to be passed to "Grid[Launch]"
@@ -44,6 +44,10 @@ export CodeString
 ##  instruments a string of code that is
 ##  passed to "Grid[Launch]" so that it
 ##  can be debugged with "mdc".
+##  It does so by returning a new string of code
+##  that contains a call to `mdc` just before
+##  executing the code that launches the debugging.
+##  This returned string can be passed to `Grid[Launch]`.
 ##
 ##- The 'defs' parameter is a string of code
 ##  that assigns the parallel procedures run with `Grid`.
@@ -62,7 +66,8 @@ export CodeString
 ##>>     printf("Hi, %s.  I'm node %d of %d\n", nam, MyNode(),NumNodes());
 ##>>     Barrier();
 ##>>  end proc:
-##- Assign a string that, when parsed and evaluated, assigns `hello`.
+##- Assign a string that, when parsed and evaluated, assigns the
+##  previously defined `hello` procedure.
 ##> defs := sprintf("%a:=%a:", hello, eval(hello))
 ##
 ##- Assign the string that, when parsed and evaluated, calls `hello`.
@@ -70,7 +75,7 @@ export CodeString
 ##
 ##- Create the block of code, a string, that is passed to
 ##  ~Grid[Launch]~.  The 'stopat' option is passed to 'mdc'
-##  to stop the debugger in the `hello` procedure.
+##  so that the debugger stops in the `hello` procedure.
 ##> Code := \MOD:-\SUBMOD:-\CMD(defs, launch, 'stopat'=hello);
 ##
 ##- Launch Grid with two nodes.
@@ -80,6 +85,7 @@ export CodeString
 ##> Grid:-Launch(Code,'numnodes'=2);
 ##SEEALSO
 ##- "Grid"
+##- "mdc"
 ##- "mdc[mdc]"
 ##- "mdc[Grid]"
 ##- "mdc[Grid][Procedure]"
@@ -114,7 +120,7 @@ export CodeString
 ##  wraps a procedure, 'prc', in another procedure that
 ##  can be passed to "Grid[Launch]" and which launches "mdc".
 ##
-##- The 'prc' argument is the procedure to execute.
+##- The 'prc' parameter is the procedure to execute.
 ##
 ##- The remaining arguments to `\CMD` are passed
 ##  to "mdc[mdc]".
