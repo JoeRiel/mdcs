@@ -11,9 +11,9 @@ replaces the Maple library debugger.
 
 REQUIREMENTS
 ------------
-* GNU Emacs 23.3+
+* GNU Emacs 23.1+ (earlier versions may work)
 * maplev-mode (Emacs mode for developing Maple code)
-* Maple 15+ (earlier versions should work)
+* Maple 14+ (earlier versions should work)
 
 INSTALLATION
 ------------

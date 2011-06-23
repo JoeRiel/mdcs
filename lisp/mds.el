@@ -62,6 +62,15 @@
   :type 'integer
   :group 'mds)
 
+(defcustom mds-get-focus-function
+    (and (= 0 (shell-command "which wmctrl"))
+	 #'mds-windows-get-focus-wmctrl)
+  "Function called to give emacs the focus when starting
+debugging.  The default works on a linux system with wmctrl
+installed. Automatically assigned to nil if wmctrl is not available."  
+  :type 'function
+  :group 'mds)
+
 ;;}}}
 
 ;;{{{ Constants
@@ -103,7 +112,6 @@ See `mds-create-client' for the form of each entry.")
 
 (defvar mds-log-messages 't
   "When non-nil, write all messages to `mds-log-buffer'.")
-
 
 ;;}}}
 
@@ -172,7 +180,7 @@ If none, then return nil."
     ;;   (mds-add-client (mds-create-client proc "dummy id"))
     ;;   'accepted)))
 
-(defun mds-set-status-client (client status)
+(defun mds-client-set-status (client status)
   (if client (setcar (cdr client) status)))
 
 (defun mds-client-set-id (client id)
@@ -184,7 +192,7 @@ If none, then return nil."
 ;;}}}
 ;;{{{ Client association list
 
-(defsubst mds-get-client-from-proc (proc) (assoc proc mds-clients))
+(defun mds-client-get-from-proc (proc) (assoc proc mds-clients))
 
 (defun mds-delete-client (client)
   "Delete CLIENT from `mds-clients'.  Stop the associated process,
@@ -272,7 +280,7 @@ Do not touch `mds-log-buffer'."
       ;; Delete associated buffers.
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
-		       (if (mds-delete-client (mds-get-client-from-proc proc))
+		       (if (mds-delete-client (mds-client-get-from-proc proc))
 			   "accepted " "")))
       (mds-windows-group-update mds-clients))
      ((string= msg "deleted\n"))
@@ -286,13 +294,15 @@ kernel.  Set the status of the client to 'accepted, pass the
 message along for handling by the filter, display the client
 windows, and get the focus."
   (ding)
-  (let ((client (mds-get-client-from-proc proc)))
-    (mds-set-status-client client 'accepted)
+  (let ((client (mds-client-get-from-proc proc)))
+    (mds-client-set-status client 'accepted)
     (mds-filter proc msg)
     ;; update groups
     (mds-windows-group-update mds-clients)
     (mds-windows-display-client client)
-    (mds-get-focus-from-window-manager)))
+    ;; switch focus
+    (if (functionp mds-get-focus-function)
+      (funcall mds-get-focus-function))))
 
 
 ;;}}}
@@ -308,7 +318,7 @@ windows, and get the focus."
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (let ((queue (mds--get-client-queue (mds-get-client-from-proc proc))))
+      (let ((queue (mds--get-client-queue (mds-client-get-from-proc proc))))
 	(mds-queue-filter queue msg)))
      ((eq status 'login)
       ;; initiate the login process.
@@ -369,7 +379,7 @@ If found, pass it to the function in the queue."
 	    (delete-region (point-min) (point))
 	    ;; send msg to correspond showstat filter
 	    (let* ((proc (mds-queue-proc queue))
-		   (client (mds-get-client-from-proc proc)))
+		   (client (mds-client-get-from-proc proc)))
 	      (with-current-buffer (mds--get-client-live-buf client)
 		(mds-handle-stream proc msg)))))))))
 
@@ -406,7 +416,7 @@ is not checked and will likely be removed from the protocol."
 The end of message marker has been removed.  Strip the tags and
 use them to route the message."
 
-  (let* ((client (mds-get-client-from-proc proc))
+  (let* ((client (mds-client-get-from-proc proc))
 	 (live-buf (mds--get-client-live-buf client))
 	 (dead-buf (mds--get-client-dead-buf client))
 	 (out-buf  (mds--get-client-out-buf client))
@@ -516,9 +526,6 @@ use them to route the message."
 
 ;;}}}
     
-
-(defun mds-get-focus-from-window-manager ()
-  (shell-command "wmctrl -xa emacs"))
 
 (provide 'mds)
 
