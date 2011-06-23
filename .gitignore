@@ -1,21 +1,28 @@
 *~
 /doc/*
 !/doc/*.texi
+TAGS
 
 # for now
 /maple/Browser
-/maple/tst
-/maple/sandbox
+/maple/mdoc/
+/maple/mhelp/
+/maple/mtest/
+/maple/tst/
+/maple/sandbox/
 
 *.mla
+*.hdb
+*.zip
+*.tags
+*.xml
 
 /lisp/*.elc
 /lisp/tst
 /ChangeLog
 _preview_.mm
 
-/bin/rmBUGS
+/bin/rm
 
 readline.log
-
-BUGS
+/releases/

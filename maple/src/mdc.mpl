@@ -2,28 +2,82 @@
 
 #{{{ mpldoc
 
-##INCLUDE ../include/mpldoc_macros.mi
+##INCLUDE ../include/mpldoc_macros.mpi
+
 ##DEFINE MOD mdc
-##MODULE \MOD
-##HALFLINE appliable module for communicating with a Maple Debugger Server
+##DEFINE CMD mdc
+##MODULE(help) \MOD
+##HALFLINE Overview of the Maple Debugger Client Module
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
+##DESCRIPTION
+##- The `\MOD` module implements a *Maple Debugger Client*,
+##  which is half of a *Maple Debugger Client/Server* pair.
+##  This client/server architecture provides several
+##  significant benefits:
+##
+##-- A common, full-featured, debugger interface that can be used
+##  whether running Maple from the GUI or the command-line.
+##
+##-- Remote debugging; client (Maple) can be run on one machine,
+##  the server on another. Communication is via standard TCP.
+##
+##-- Concurrent debugging; Maple processes can debugged
+##  simultaneously. This permits interactively comparing the actions
+##  of different versions of code, or comparing code run on machines
+##  with different operating systems. It also permits independently or
+##  synchronously stepping through separate processes in a "Grid"
+##  application.
+##
+##- The `\MOD` module is an appliable module
+##  that launches the Maple Debugger Client.
+##  See "\MOD[\MOD]" for details.
+##
+##- The submodule "\MOD[Grid]" provides several exports
+##  for using "Grid" with the `\MOD`.
+##
+##- The user interface of the *Maple Debugger Server*,
+##  which controls the debugger, is described in its
+##  *info* pages. If this package has been properly installed,
+##  and environmental variables configured, the "mds info"
+##  pages can be read by typing *info mds* in a shell.
+##
+##SEEALSO
+##- "debugger"
+##- "\MOD[\MOD]"
+##- "\MOD[Grid]"
+##- "Grid"
+##ENDMPLDOC
+
+
+##PROCEDURE(help) \MOD[mdc]
+##HALFLINE Maple Debugger Client
+##AUTHOR   Joe Riel
+##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \MOD('opts')
+##- \CMD('opts')
 ##PARAMETERS
-##param_opts(\MOD)
+##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\MOD` module is an appliable module
-##  that implements a *Maple Debugger Client*.
-##  It communicates with a *Maple Debugger Server*.
+##- The `\CMD` command launches the "Maple Debugger Client".
+##  If the client successfully connects to a *Maple Debugger Server*,
+##  it replaces the standard Maple "debugger" with
+##  procedures that transfer debugging control to the server.
+##
+##- Debugging is invoked in the usual way, by instrumenting a target
+##  procedure with "stopat", "stopwhen", or "stoperror", the executing
+##  code that calls the procedure. In the standard Maple GUI the
+##  debugger may also be invoked by clicking the *debug icon* on the
+##  toolbar during a running computation.
+##
+##- The target procedures can also be instrumented by passing the
+##  `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.  These,
+##  as well as configuration are, options described in the *Options*
+##  section.
+##
 ##OPTIONS
-##opt(beep,truefalse)
-##  If `true`, emit a tri-tone beep
-##  when succesfully connecting.
-##  Calls the system function `beep`.
-##  The default is `true`.
 ##opt(config,maplet or string)
 ##  Specifies a method for configuring the client.
 ##  If a string, then the configuration is read
@@ -32,36 +86,94 @@
 ##  for the configuration.
 ##  If 'config' is not specified, then all defaults
 ##  are used.
-##opt(connection,socket|pipe|ptty)
-##  Specifies the connection type.
-##  Currently only `socket` is supported.
-##  The default is `socket`.
+##
+##opt(exit,truefalse)
+##  If *true*, shutdown the TCP connection
+##  and restore the original debugger procedures.
+##  The default is *false*.
+##
 ##opt(host,string)
-##  The name of the host.
+##  The name of the host machine that is running the Maple Debugger Server.
 ##  The default is _"localhost"_.
+##
 ##opt(label,string)
-##  Label passed to server for convenient identication
-##  of this client.
-##  The default is the return value of _kernelopts('username')_.
+##  Label passed to server for identification and grouping of the client.
+##  If the basename of two or more labels, from independent
+##  clients, are identical, the clients are grouped in the server.
+##  The basename is the substring of `label` that matches
+##  the first group in the regular expression ~^([^-]+)-[0-9]+$~,
+##  that is, everything before a hypen followed by digits
+##  that terminate the string.  For example, ~"foo-1"~ and ~"foo-2"~
+##  share a common basename, ~"foo"~, and so would be grouped together.
+##  The default label is the return value of _kernelopts('username')_.
+##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client will transmit.
-##  If a string is longer than that, it is replaced
+##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
 ##  The default is 10000.
+##
 ##opt(port,posint)
-##  The port (socket) used when _connection=socket_.
+##  Assigns the TCP port used for communication.
+##  Must match the value used the server.
 ##  The default is 10000.
-##opt(timeout,nonnegint)
-##  Specifies ...
+##
+##opt(stopat, name\comma string\comma or set of names and strings)
+##  Specifies the procedures to instrument.
+##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
+##  so this provides a convenient means to instrument
+##  local procedures of a module.  See the `unstopat` option.
+##  Using this option may be considerably faster than
+##  calling the "stopat" procedure.
+##
+##opt(stoperror,truefalse)
+##  If *true*, stop at any error.
+##  The default is *false*.
+##
+##opt(traperror,truefalse)
+##  If *true*, stop at trapped errors.
+##  The default is *false*.
+##
+##opt(unstopat, name\comma string\comma or set of names and strings)
+##  Specifies procedures from which to remove instrumentation.
+##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
+##  See the `stopat` option.
+##
+##opt(usegrid,truefalse)
+##  If *true*, append the "Grid" node number to the label.
+##  This option is  added by the "mdc[Grid]" exports to instrument
+##  procedures for use with Grid.
+##  The default is *false*.
+##
 ##opt(view,truefalse)
-##  If `true`, then the remote debugging session
-##  is echoed on the local machine.
-##  The default is originally`false`,
-##  but becomes whatever was last used.
-##opt(exit,truefalse)
-##  If `true`, then
-##NOTES
+##  If *true*, the remote debugging session is echoed on the client machine.
+##  This only has an effect with command-line maple.
+##  The default is *false*.
+##
+##EXAMPLES(noexecute)
+##- Launch the Maple debugger client, instrumenting "int".
+##  Assume the Maple Debugger Server is running on a different
+##  machine, named `gauss`.
+##> mdc(stopat=int, host="gauss"):
+##SET(lead=indent)
+##- ~Welcome joe~
+##UNSET
+##- Now launch the debugger.
+##> int(x^2,x);
+##
+##- When finished debugging, shutdown the client, restoring the debugger procedures.
+##> mdc(exit):
+##
+##XREFMAP
+##- "Maple Debugger Client" : Help:mdc
+##- "mds info" : file://{HOME}/maple/lib/mds.html
+##
+##SEEALSO
+##- "\MOD"
+##- "debugger"
+##- "\MOD[Grid]"
+##ENDMPLDOC
 
 #}}}
 
@@ -69,13 +181,16 @@ $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 $define END_OF_MSG "---EOM---"
 
+#$define LOG_READLINE # for debugging (need to close file)
+
 unprotect('mdc'):
 module mdc()
 
-export ModuleApply
+export Authenticate
     ,  Debugger
     ,  Format
-    ,  Authenticate
+    ,  Grid
+    ,  mdc
     ,  Version
     ;
 
@@ -84,8 +199,10 @@ export ModuleApply
 local Connect
     , Disconnect
     , CreateID
+    , ModuleApply
     , ModuleUnload
     , Read
+    , Write
     , WriteTagf
 
     # Module-local variables.  Seems unlikely that the debugger
@@ -102,38 +219,38 @@ local Connect
 #}}}
 
 $ifdef BUILD_MLA
-$include <src/Format.mm>
 $include <src/Debugger.mm>
+$include <src/Format.mm>
+$include <src/Grid.mm>
 $endif
 
-#{{{ ModuleApply
+    ModuleApply := mdc;
 
-    ModuleApply := proc( (* no positional parameters *)
-                         { beep :: truefalse := true }
-                         , { config :: {string,identical(maplet)} := NULL }
-                         , { connection :: identical(socket,pipe,ptty) := 'socket' }
-                         , { enter :: truefalse := false }
-                         , { greeting :: string := "" }
-                         , { host :: string := Host }
-                         , { label :: string := kernelopts('username') }
-                         , { maxlength :: nonnegint := max_length }
-                         , { password :: string := "" }
-                         , { port :: posint := Port }
-                         #, { timeout :: nonnegint := 0 }
-                         , { stopat :: {string,name} := "" }
-                         , { stoperror :: truefalse := false }
-                         , { traperror :: truefalse := false }
-                         , { unstopat :: {string,name} := "" }
-                         , { view :: truefalse := view_flag }
-                         , { exit :: truefalse := false }
-                         , $
-        )
+#{{{ mdc
+
+    mdc := proc( (* no positional parameters *)
+                 { config :: {string,identical(maplet)} := NULL }
+                 , { exit :: truefalse := false }
+                 , { host :: string := Host }
+                 , { label :: string := kernelopts('username') }
+                 , { maxlength :: nonnegint := max_length }
+                 #, { password :: string := "" }
+                 , { port :: posint := Port }
+                 , { stopat :: {string,name,set({string,name})} := "" }
+                 , { stoperror :: truefalse := false }
+                 , { traperror :: truefalse := false }
+                 , { unstopat :: {string,name,set(string,name)} := "" }
+                 , { usegrid :: truefalse := false }
+                 #, { usethreads :: truefalse := false }
+                 , { verbose :: truefalse := false }
+                 , { view :: truefalse := false }
+                 , $
+               )
 
     global `debugger/width`;
+    local lbl;
 
-        if connection <> 'socket' then
-            error "currently only a socket connection is supported"
-        elif config <> NULL then
+        if config <> NULL then
             error "currently the 'config' option is disabled.  Use optional parameters."
         end if;
 
@@ -143,27 +260,39 @@ $endif
             return NULL;
         end if;
 
-        view_flag := view;
+        view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
 
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
 
+        if usegrid then
+            lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
+        else
+            lbl := label;
+        end if;
+
         Debugger:-Replace();
 
-        try
-            Connect(host, port, CreateID(label), _options['beep','greeting'] );
-        catch:
-            Debugger:-Restore();
-            error;
-        end try;
+        if sid = -1 then
+            try
+                Connect(host, port, CreateID(lbl));
+            catch:
+                Debugger:-Restore();
+                error;
+            end try;
+        end if;
 
-        if stopat <> "" then
+        if stopat :: set then
+            map(Debugger:-stopat, stopat);
+        elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
 
-        if unstopat <> "" then
+        if unstopat :: set then
+            map(Debugger:-unstopat, unstopat);
+        elif unstopat <> "" then
             Debugger:-unstopat(unstopat);
         end if;
 
@@ -174,10 +303,6 @@ $endif
 
         if traperror then
             :-stoperror(':-traperror');
-        end if;
-
-        if enter then
-            DEBUG();
         end if;
 
         return NULL;
@@ -208,26 +333,30 @@ $endif
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
-                    , { beep :: truefalse := true }
-                    , { greeting :: string := "" }
+                    , { verbose :: truefalse := false }
                     , $
                    )
+    local line;
         if sid <> -1 then
             Sockets:-Close(sid);
-        end if;
-        if beep then
-            try
-                ssystem("beep");
-            catch:
-            end try;
         end if;
         sid := Sockets:-Open(host, port);
         Host := host;
         Port := port;
-        if greeting <> "" then
-            Debugger:-Printf(GREET, greeting);
+        # handle login (hack for now)
+        line := Sockets:-Read(sid);
+        # printf("%s\n", line);
+        if line = "userid: " then
+            Sockets:-Write(sid, id);
+            line := Sockets:-Read(sid);
+            printf("%s\n", line);
+            if verbose then
+                printf("Connected to %s on port %d, with id %s\n"
+                       , host, port, id );
+            end if;
+            return NULL;
         end if;
-        return NULL;
+        error "could not connect";
     end proc;
 
 #}}}
@@ -239,6 +368,7 @@ $endif
 
     Disconnect := proc()
         if sid <> -1 then
+            printf("goodbye\n");
             Sockets:-Close(sid);
             sid := -1;
         end if;
@@ -249,7 +379,21 @@ $endif
 #{{{ Read
 
     Read := proc()
-        Sockets:-Read(sid);
+    local res;
+        res := Sockets:-Read(sid);
+        if res = false then
+            error "process %1 disconnected unexpectedly", sid;
+        end if;
+        return res;
+    end proc;
+
+#}}}
+#{{{ Write
+
+    Write := proc(msg :: string)
+        if sid <> -1 then
+            Sockets:-Write(sid, msg);
+        end if;
     end proc;
 
 #}}}
@@ -259,7 +403,7 @@ $endif
     uses Write = Sockets:-Write;
     local msg,len;
         msg := sprintf(_rest);
-        if 0 < max_length then
+        if tag <> 'DBG_SHOW' and 0 < max_length then
             len := length(msg);
             if max_length < len then
                 msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
@@ -321,7 +465,7 @@ $endif
     CreateID := proc(label :: string,$)
         if length(label) = 0 then
             error "label cannot be empty";
-        elif not StringTools:-RegMatch("^[A-Za-z0-9_-]+$", label) then
+        elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
             error "invalid characters in label '%1'", label;
         end if;
         return sprintf(":%s:%s:%d:", label, kernelopts('platform,pid') );
@@ -331,7 +475,7 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1";
+    Version := "0.1.1.3";
 
 #}}}
 
