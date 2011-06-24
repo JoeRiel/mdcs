@@ -136,7 +136,9 @@ See `mds-create-client' for the form of each entry.")
 (defun mds-create-client (proc id)
   "Create a client that is associated with process PROC and has identity ID.
 The returned client structure is a list (PROC status queue ID
-live-buf dead-buf out-buf), where status is initialized to 'new'."
+live-buf dead-buf out-buf), where status is initialized to 'new'.
+Currently ID is assumed to be a list of three strings: the client
+label, the operating system, and the Maple process id."
   (let ((client (list proc)))
     (setcdr client (list
 		    'login
@@ -268,7 +270,7 @@ Do not touch `mds-log-buffer'."
 	    (mds-writeto-log proc "accepted client"))
 	   ((null status)
 	    ;; not yet registered
-	    (mds-add-client (mds-create-client proc "anonymous"))
+	    (mds-add-client (mds-create-client proc '("anonymous" "unknown" "unknown")))
 	    (mds-login proc msg))
 	   ((eq status 'rejected) 
 	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
