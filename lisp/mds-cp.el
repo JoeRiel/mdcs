@@ -86,7 +86,15 @@
   (setq mds-overlay (make-overlay (point-min) (point-max) nil 'rear-advance)))
 
 (overlay-put mds-overlay 'face '(:background "gray15"))
-; (setq mode-line-format `(:propertize ,mode-line-format face default))
+
+(defface mds-mode-line-face 
+  '((((class color) (background dark)) :foreground "black" :background "orange"))
+  "Random face"
+  :group 'mds-faces)
+
+
+;; (setq mode-line-format `(:propertize ,mode-line-format face mds-mode-line-face))
+;; (setq mode-line-format (propertize mode-line-format 'background "blue"))
 
 ;;}}}
 
