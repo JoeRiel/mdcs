@@ -30,59 +30,58 @@
 ;;{{{ faces
 
 (defface mds-args-face
-  '((((class color) (background dark)) (:foreground "lawn green")))
+  '((((class color) (background dark)) :foreground "lawn green"))
   "Face for stack arguments."
   :group 'mds-faces)
 
 (defface mds-debugger-cmd-face
-  '((((class color) (background dark)) (:foreground "yellow")))
+  '((((class color) (background dark)) :foreground "yellow"))
   "Face for debugger commands."
   :group 'mds-faces)
 
 (defface mds-debugger-info-face
-  '((((class color) (background dark)) (:foreground "light green")))
+  '((((class color) (background dark)) :foreground "light green"))
   "Face for debugger information."
   :group 'mds-faces)
 
-
 (defface mds-entry-procname-face
-  '((((class color) (background dark)) (:foreground "magenta1" :underline t))
-    (t (:underline t )))
+  '((((class color) (background dark)) :foreground "magenta1" :underline t)
+    (t :underline t ))
   "Face for entry procnames (those printed on entering a procedure) in output buffer."
   :group 'mds-faces)
 
 (defface mds-inactive-link-face
-  '((((class color) (background dark)) (:foreground "cyan1")))
+  '((((class color) (background dark)) :foreground "cyan1"))
   "Face for inactive links in output buffer."
   :group 'mds-faces)
 
 (defface mds-info-face
-  '((((class color) (background dark)) (:foreground "sandy brown")))
+  '((((class color) (background dark)) :foreground "sandy brown"))
   "Face for debugger information."
   :group 'mds-faces)
 
 (defface mds-maple-error-face
-  '((((class color) (background dark)) (:foreground "orange red")))
+  '((((class color) (background dark)) :foreground "orange red"))
   "Face for Maple errors."
   :group 'mds-faces)
 
 (defface mds-prompt-face
-  '((((class color) (background dark)) (:foreground "gray40")))
+  '((((class color) (background dark)) :foreground "gray40"))
   "Face for prompt."
   :group 'mds-faces)
 
 (defface mds-user-input-face
-  '((((class color) (background dark)) (:foreground "lime green")))
+  '((((class color) (background dark)) :foreground "lime green"))
   "Face for user input (sort-of)."
   :group 'mds-faces)
   
 (defface mds-warning-face
-  '((((class color) (background dark)) (:foreground "pink")))
+  '((((class color) (background dark)) :foreground "pink"))
   "Face for warning messages in output buffer."
   :group 'mds-faces)
 
 (defface mds-watch-face
-  '((((class color) (background dark)) (:foreground "spring green")))
+  '((((class color) (background dark)) :foreground "spring green"))
   "Face for watched variables in output buffer."
   :group 'mds-faces)
 
