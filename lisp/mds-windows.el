@@ -14,6 +14,8 @@
 (declare-function mds--get-client-dead-buf "mds")
 (declare-function mds--get-client-out-buf  "mds")
 
+(defvar mds-frame nil "Frame used by mds")
+
 (defvar mds-clients '())  ;; duplicate, here to avoid warnings
 (defvar mds-windows-grouped-clients '()
   "List of grouped clients.  Clients which are displayed
@@ -26,9 +28,9 @@ are not in sublists.")
   "Display the live-showstat buffer and the output buffer of CLIENT.
 The buffers are displayed in side-by-side windows that fill the
 frame, the showstat buffer on the left.  Return nil."
-  (let ((display-buffer-reuse-frames 't))
-    (delete-other-windows (select-window (display-buffer (mds--get-client-live-buf client))))
-    (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client))))
+  (select-frame mds-frame)
+  (delete-other-windows (select-window (display-buffer (mds--get-client-live-buf client))))
+  (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client)))
 
 
 (defun mds-windows-display-dead (client)
@@ -93,19 +95,25 @@ with n being the number of clients."
 
 ;;{{{ mds-windows-cycle-clients
 
-(defun mds-windows-cycle-clients ()
-  "Pop to first client on list, then rotate list."
+(defun mds-windows-cycle-clients (&optional backward)
+  "Pop to first client on list, then rotate list.
+If dir is positive, then rotate forward, otherwise rotate backward."
   (interactive)
   (if mds-clients
       (let* ((L mds-clients)
 	     (client (car L)))
 	(and (> (length L) 1)
 	     ;; client is already displayed
-	     (get-buffer-window (mds--get-client-live-buf client))
+	     (get-buffer-window (mds--get-client-live-buf client) 'visible)
 	     ;; rotate list
-	     (setq mds-clients (reverse (cons client (reverse (cdr L))))))
-	;; display the live buffer.  Maybe the whole thing.
-	(mds-windows-display-client (car mds-clients)))))
+	     (setq mds-clients
+		   (if 'backward
+		       ;; FIXME: not the most efficient technique
+		       (cons (car (setq L (reverse L))) (reverse (cdr L)))
+		     (reverse (cons client (reverse (cdr L))))
+		     ))
+	     ;; display the live buffer.  Maybe the whole thing.
+	     (mds-windows-display-client (car mds-clients))))))
 
 (defun mds-windows-cycle-groups ()
   "Pop to first group of client on list, then rotate list."

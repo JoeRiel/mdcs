@@ -14,6 +14,7 @@
 
 (require 'widget)
 (eval-when-compile
+  (require 'mds-windows)
   (require 'wid-edit))
 
 ;;{{{ declarations
@@ -35,11 +36,15 @@
 ;;}}}
 ;;{{{ constants
 
-
 ;;}}}
 ;;{{{ variables
 
+;; this won't work.  We need to be able to switch clients.
+
 (defvar mds-cp-ss-buf nil "Live showstat buffer associated with control panel.")
+(defvar mds-cp-out-buf nil "Output associated with control panel.")
+
+(defvar mds-cp-frame nil "Floating frame used for control panel.")
 
 ;;}}}
 
@@ -51,19 +56,66 @@
 
   (delete-region (point-min) (point-max))
 
-  (widget-insert "MDS Control Panel\n\n")
+  (widget-create 'push-button
+		 :notify (lambda (&rest ignore)
+			   (mds-windows-cycle-clients 'backward))
+		 "<-")
+  (widget-create 'push-button
+		 :notify (lambda (&rest ignore)
+			   (mds-windows-cycle-clients))
+		 "->")
+  (widget-insert "\n")
+  
   (widget-create 'push-button "Next")
   (widget-create 'push-button "Into")
   (widget-create 'push-button "Step")
   (widget-create 'push-button "Cont")
-
+  (widget-insert "\n")
   (widget-create 'push-button "Outfrom")
   (widget-create 'push-button "Return")
-  (widget-create 'push-button "Done")
+  (widget-create 'push-button "Quit")
 
+  (use-local-map widget-keymap) ; what is this?
   (widget-setup)
   )
 
+;; (mds-cp-create)
+;
+
+(let ((win (get-buffer-window)))
+  (setq mds-overlay (make-overlay (point-min) (point-max) nil 'rear-advance)))
+
+(overlay-put mds-overlay 'face '(:background "gray15"))
+; (setq mode-line-format `(:propertize ,mode-line-format face default))
+
+;;}}}
+
+;;{{{ mds-cp-create
+(defun mds-cp-create ()
+  "Create the control panel frame and assign to `mds-cp-frame'."
+  
+  (let* ((frame (make-frame '((title . "mds control panel")
+			      (height . 5)
+			      (width . 50)
+			      (vertical-scroll-bars . nil)
+			      (menu-bar-line . 0)
+			      (minibuffer . nil)
+			      (unsplittable . t)
+			      )))
+	 (window (frame-first-window frame))
+	 (buffer (get-buffer-create "*mds-control-panel*")))
+
+    (let ((cp-ht  (frame-pixel-height frame))
+	  (cp-wd  (frame-pixel-width frame))
+	  (mds-ht (frame-pixel-height))
+	  (mds-wd (frame-pixel-width)))
+      (set-frame-position frame (/ (- mds-wd cp-wd) 2) mds-ht))
+    (select-frame frame)
+    (select-window window)
+    (delete-other-windows)
+    (set-window-buffer window buffer)
+    (set-buffer buffer)
+    (mds-cp-mode)))
 
 ;;}}}
 

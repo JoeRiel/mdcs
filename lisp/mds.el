@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-cp)
 (require 'mds-regexps)
 (require 'mds-login)
 (require 'mds-output)
@@ -85,6 +86,7 @@ installed. Automatically assigned to nil if wmctrl is not available."
 ;;}}}
 
 ;;{{{ Variables
+
 
 (defvar mds-log-buffer nil
   "Buffer used to record log entries. 
@@ -230,6 +232,10 @@ If server is already running, stop then restart it."
     (progn
       (mds-stop)
       (message "restarting Maple Debugger Server")))
+  (or (framep mds-frame)
+      ;; pick the first frame in the current configuration.
+      ;; not sure this is a good idea
+      (setq mds-frame (car (nth 1 (current-frame-configuration)))))
   (setq mds-clients '()
 	mds-proc (make-network-process 
 		  :name "mds" 
@@ -264,16 +270,22 @@ Do not touch `mds-log-buffer'."
 	(let ((status (mds-get-client-status proc)))
 	  (cond
 	   ((eq status 'accepted)
+	    ;; Accepted!
 	    (ding)
 	    (mds-writeto-log proc "accepted client"))
+
 	   ((null status)
-	    ;; not yet registered
+	    ;; Not yet registered
 	    (mds-add-client (mds-create-client proc "anonymous"))
 	    (mds-login proc msg))
-	   ((eq status 'rejected) 
-	    ;; (mds-send-client proc "Sorry, cannot connect at this time.\n")
+
+	   ((eq status 'rejected)
+	    ;; Rejected
 	    (mds-writeto-log proc "rejected client"))
-	   ((eq status 'login) (mds-login proc msg))
+
+	   ((eq status 'login)
+	    ;; Continue the login process
+	    (mds-login proc msg))
 	   ))))
      ((string= msg "connection broken by remote peer\n")
       ;; A client has unattached.
@@ -289,7 +301,7 @@ Do not touch `mds-log-buffer'."
 
 (defun mds-start-debugging (proc msg)
   "Called when debugging first starts.  PROC is input process
-from the client; msg is the initial output of the debug Maple
+from the client; MSG is the initial output of the debug Maple
 kernel.  Set the status of the client to 'accepted, pass the
 message along for handling by the filter, display the client
 windows, and get the focus."
