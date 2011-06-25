@@ -1,20 +1,40 @@
-;;; mds-conrol-panel.el
+;;; mds-cp.el
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
-;; Created:    Jan 2011
+;; Created:    June 2011
 ;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
 ;; Code for the Maple Debugger Control Panel.
 
-;;;
+;;{{{ License
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software
+;; Foundation, Inc.,  51 Franklin St, Fifth Floor, Boston, MA
+;; 02110-1301, USA.
+
+;;}}}
+
+
+;;; Code
 
 (require 'widget)
 (eval-when-compile
-  (require 'mds-windows)
+  (require 'mds-wm)
   (require 'wid-edit))
 
 ;;{{{ declarations
@@ -22,8 +42,8 @@
 ;; avoid compiler warnings
 
 (declare-function mds--get-client-out-buf "mds")
-(declare-function mds-showstat-view-dead-proc "mds-showstat")
-(declare-function mds-windows-display-dead "mds-windows")
+(declare-function mds-ss-view-dead-proc "mds-ss")
+(declare-function mds-wm-display-dead "mds-wm")
 
 ;;}}}
 ;;{{{ faces
@@ -48,22 +68,28 @@
 
 ;;}}}
 
+
+(defun mds-cp-select-next-client (&optional backwards)
+  (mds-ss-modeline-hilite (mds--client-get-live-buf (mds-wm-selected-client)) 'off)
+  (mds-ss-modeline-hilite (mds--client-get-live-buf (mds-wm-next-client backwards))))
+
 ;;{{{ mds-cp-mode
 
-(define-derived-mode mds-cp-mode fundamental-mode "mds-control-panel-mode"
-  "Long winded description"
+(define-derived-mode mds-cp-mode fundamental-mode "mds-cp-mode"
+  "Long-winded description"
   :group 'mds
 
   (delete-region (point-min) (point-max))
 
   (widget-create 'push-button
 		 :notify (lambda (&rest ignore)
-			   (mds-windows-cycle-clients 'backward))
+			    (mds-cp-select-next-client 'backwards))
 		 "<-")
   (widget-create 'push-button
 		 :notify (lambda (&rest ignore)
-			   (mds-windows-cycle-clients))
+			    (mds-cp-select-next-client 'backwards))
 		 "->")
+
   (widget-insert "\n")
   
   (widget-create 'push-button "Next")
@@ -79,22 +105,8 @@
   (widget-setup)
   )
 
-;; (mds-cp-create)
-;
+;; (mds-ss-modeline-hilite (current-buffer))
 
-(let ((win (get-buffer-window)))
-  (setq mds-overlay (make-overlay (point-min) (point-max) nil 'rear-advance)))
-
-(overlay-put mds-overlay 'face '(:background "gray15"))
-
-(defface mds-mode-line-face 
-  '((((class color) (background dark)) :foreground "black" :background "orange"))
-  "Random face"
-  :group 'mds-faces)
-
-
-;; (setq mode-line-format `(:propertize ,mode-line-format face mds-mode-line-face))
-;; (setq mode-line-format (propertize mode-line-format 'background "blue"))
 
 ;;}}}
 
@@ -129,4 +141,4 @@
 
 (provide 'mds-cp)
 
-;; mds-control-panel.el ends here
+;; mds-cp.el ends here

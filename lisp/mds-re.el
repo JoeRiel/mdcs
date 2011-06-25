@@ -70,4 +70,4 @@ the address and procname."
 	    (make-text-button (match-beginning 3) (match-end 3) :type button)))
       (cons addr procname))))
 
-(provide 'mds-regexps)
+(provide 'mds-re)

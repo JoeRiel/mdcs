@@ -11,8 +11,6 @@
 ;; This file contains the source for the Emacs Maple debugger server.
 ;; It is a part of the Maple Debugger Client Server package.
 
-;;; Code:
-
 ;;{{{ License
 
 ;; This program is free software; you can redistribute it and/or
@@ -39,14 +37,16 @@
 
 ;;}}}
 
+;;; Code:
+
 ;;{{{ Lisp Requirements
 
 (require 'mds-cp)
-(require 'mds-regexps)
+(require 'mds-re)
 (require 'mds-login)
-(require 'mds-output)
-(require 'mds-showstat)
-(require 'mds-windows)
+(require 'mds-out)
+(require 'mds-ss)
+(require 'mds-wm)
 (require 'maplev)
 (eval-when-compile
   (require 'hl-line))
@@ -65,7 +65,7 @@
 
 (defcustom mds-get-focus-function
     (and (= 0 (shell-command "which wmctrl"))
-	 #'mds-windows-get-focus-wmctrl)
+	 #'mds-wm-get-focus-wmctrl)
   "Function called to give emacs the focus when starting
 debugging.  The default works on a linux system with wmctrl
 installed. Automatically assigned to nil if wmctrl is not available."  
@@ -98,7 +98,7 @@ Maximum is given by `mds-max-number-clients'.")
 
 (defvar mds-proc nil "process for the server.")
 
-(defvar mds-showstat-trace nil
+(defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
 
 ;; data structures
@@ -144,9 +144,9 @@ live-buf dead-buf out-buf), where status is initialized to 'new'."
 		    'login
 		    (mds-queue-create proc)
 		    id
-		    (mds-showstat-create-buffer client 'live)
-		    (mds-showstat-create-buffer client)
-		    (mds-output-create-buffer   client)))
+		    (mds-ss-create-buffer client 'live)
+		    (mds-ss-create-buffer client)
+		    (mds-out-create-buffer   client)))
     client))
   
 (defun mds-destroy-client (client)
@@ -294,7 +294,7 @@ Do not touch `mds-log-buffer'."
 	       (format "%sclient has unattached"
 		       (if (mds-delete-client (mds-client-get-from-proc proc))
 			   "accepted " "")))
-      (mds-windows-group-update mds-clients))
+      (mds-wm-group-update mds-clients))
      ((string= msg "deleted\n"))
      (t (error "unexpected sentinel message: %s" msg)))))
 
@@ -310,8 +310,8 @@ windows, and get the focus."
     (mds-client-set-status client 'accepted)
     (mds-filter proc msg)
     ;; update groups
-    (mds-windows-group-update mds-clients)
-    (mds-windows-display-client client)
+    (mds-wm-group-update mds-clients)
+    (mds-wm-display-client client)
     ;; switch focus
     (if (functionp mds-get-focus-function)
       (funcall mds-get-focus-function))))
@@ -441,8 +441,8 @@ use them to route the message."
     (cond
      ((string= tag "DBG_PROMPT")
       ;; Extract the state-number and pass it along
-      (mds-output-display out-buf 
-			  (buffer-local-value 'mds-showstat-state live-buf)
+      (mds-out-display out-buf 
+			  (buffer-local-value 'mds-ss-state live-buf)
 			  'prompt))
      
      ((string= tag "DBG_STATE")
@@ -455,65 +455,65 @@ use them to route the message."
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
-	  (mds-showstat-update live-buf addr procname state statement))))
+	  (mds-ss-update live-buf addr procname state statement))))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-      (mds-showstat-display live-buf msg))
+      (mds-ss-display live-buf msg))
 
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
      ;; Display in showstat buffer.
-      (mds-showstat-display dead-buf msg))
+      (mds-ss-display dead-buf msg))
 
      ((string= tag "DBG_EVAL")
-      (mds-output-display out-buf msg 'output))
+      (mds-out-display out-buf msg 'output))
       
      ((string= tag "DBG_WHERE")
-      (mds-output-display out-buf msg 'where))
+      (mds-out-display out-buf msg 'where))
 
      ((string= tag "DBG_ARGS")
-      (mds-output-display out-buf msg 'args))
+      (mds-out-display out-buf msg 'args))
      
      ((string= tag "DBG_STACK")
-      (mds-output-display out-buf msg 'stack))
+      (mds-out-display out-buf msg 'stack))
      
      ((string= tag "DBG_WARN")
-      (mds-output-display out-buf msg 'warn))
+      (mds-out-display out-buf msg 'warn))
 
      ((string= tag "DBG_PARSE_ERR")
-      (mds-output-display out-buf msg 'parse-err))
+      (mds-out-display out-buf msg 'parse-err))
 
      ((string= tag "DBG_ERR")
-      (mds-output-display out-buf msg 'maple-err))
+      (mds-out-display out-buf msg 'maple-err))
 
      ((string= tag "MPL_ERR")
-      (mds-output-display out-buf msg 'maple-err))
+      (mds-out-display out-buf msg 'maple-err))
 
      ((string= tag "MDC_PRINTF")
-      (mds-output-display out-buf msg 'printf))
+      (mds-out-display out-buf msg 'printf))
 
      ((string= tag "DBG_ERROR")
-      (mds-output-display out-buf msg 'maple-err))
+      (mds-out-display out-buf msg 'maple-err))
 
      ((string= tag "DBG_EXCEPTION")
-      (mds-output-display out-buf msg 'maple-err))
+      (mds-out-display out-buf msg 'maple-err))
 
      ((string= tag "DBG_INFO")
-      (mds-output-display out-buf msg 'debug-info))
+      (mds-out-display out-buf msg 'debug-info))
 
      ((string= tag "DBG_WATCHED_CONDS")
-      (mds-output-display out-buf msg 'watch-conds))
+      (mds-out-display out-buf msg 'watch-conds))
 
      ((string= tag "DBG_WATCHED_ERRS")
-      (mds-output-display out-buf msg 'watch-errs))
+      (mds-out-display out-buf msg 'watch-errs))
 
      ((string= tag "DBG_STOP")
-      (mds-output-display out-buf msg 'stop))
+      (mds-out-display out-buf msg 'stop))
      
      ;; otherwise print to debugger output buffer
-     (t (mds-output-display out-buf msg tag)))))
+     (t (mds-out-display out-buf msg tag)))))
 
 ;;}}}
 
@@ -544,7 +544,7 @@ use them to route the message."
 ;;{{{ Manual Tests
 
 ;;
-;; (load "mds-showstat.el")
+;; (load "mds-ss.el")
 ;; (load "mds.el")
 ;; (mds-start)
 ;; (mds-stop)
