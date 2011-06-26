@@ -34,14 +34,16 @@
 
 (require 'widget)
 (eval-when-compile
+  (require 'mds-client)
   (require 'mds-wm)
   (require 'wid-edit))
+  
 
 ;;{{{ declarations
 
 ;; avoid compiler warnings
 
-(declare-function mds--get-client-out-buf "mds")
+(declare-function mds-client-out-buf "mds")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
 
@@ -63,24 +65,35 @@
 
 (defvar mds-cp-ss-buf nil "Live showstat buffer associated with control panel.")
 (defvar mds-cp-out-buf nil "Output associated with control panel.")
-
 (defvar mds-cp-frame nil "Floating frame used for control panel.")
 
 ;;}}}
 
 
 (defun mds-cp-select-next-client (&optional backwards)
-  (mds-ss-modeline-hilite (mds--client-get-live-buf (mds-wm-selected-client)) 'off)
-  (mds-ss-modeline-hilite (mds--client-get-live-buf (mds-wm-next-client backwards))))
+  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-selected-client)) 'off)
+  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-next-client backwards))))
+
+(defmacro mds-cp-cmd (cmd)
+  "Send CMD (a string) to the active client.  This is equivalent
+to using the key-binding in the active client's live showstat buffer."
+  `(lambda (&rest ignore)
+     (with-current-buffer (mds-cp-get-ss-live-buf)
+       (mds-ss-eval-proc-statement ,cmd 'save))))
+
+(defun mds-cp-get-ss-live-buf ()
+  "Return the live showstat buffer of the active client."
+  )
 
 ;;{{{ mds-cp-mode
 
 (define-derived-mode mds-cp-mode fundamental-mode "mds-cp-mode"
   "Long-winded description"
   :group 'mds
-
+  
   (delete-region (point-min) (point-max))
 
+  ;;{{{ create widgets
   (widget-create 'push-button
 		 :notify (lambda (&rest ignore)
 			    (mds-cp-select-next-client 'backwards))
@@ -92,7 +105,7 @@
 
   (widget-insert "\n")
   
-  (widget-create 'push-button "Next")
+  (widget-create 'push-button "Next" :notify (mds-cp-cmd "next"))
   (widget-create 'push-button "Into")
   (widget-create 'push-button "Step")
   (widget-create 'push-button "Cont")
@@ -103,9 +116,11 @@
 
   (use-local-map widget-keymap) ; what is this?
   (widget-setup)
-  )
+  ;;}}}
+  
+  ;;{{{ 
 
-;; (mds-ss-modeline-hilite (current-buffer))
+  )
 
 
 ;;}}}

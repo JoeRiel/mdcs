@@ -22,9 +22,9 @@
 
 ;; avoid compiler warnings
 
-(declare-function mds--get-client-out-buf "mds")
-(declare-function mds--get-client-live-buf "mds")
-(declare-function mds--get-client-dead-buf "mds")
+(declare-function mds-client-out-buf "mds")
+(declare-function mds-client-live-buf "mds")
+(declare-function mds-client-dead-buf "mds")
 (declare-function mds-send-client "mds")
 
 ;;}}}
@@ -144,13 +144,13 @@ The procname is flush left.  See diatribe in `mds-ss-where-procname-re'.")
   "Send CMD, with appended newline, to the Maple process and to the output buffer.
 Echo the command to the output buffer unless HIDE is non-nil."
   (unless hide
-    (mds-out-append-input (mds--get-client-out-buf mds-client) cmd 'mds-debugger-cmd-face))
+    (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd-face))
   (mds-ss-send-client (concat cmd "\n")))
 
 (defun mds-ss-eval-expr (expr)
   "Send EXPR, with appended newline, to the Maple process and to the output buffer.
 This function is intended to be used for evaluating Maple expressions."
-  (mds-out-append-input (mds--get-client-out-buf mds-client) expr 'mds-user-input-face)
+  (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input-face)
   (mds-ss-send-client (concat expr "\n")))
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
@@ -164,7 +164,7 @@ to be used with commands that cause Maple to execute procedural code."
   (if save (setq mds-ss-last-debug-cmd cmd))
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
-  (mds-out-display (mds--get-client-out-buf mds-client) cmd 'cmd)
+  (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd)
   (mds-ss-send-client cmd))
 
 ;;}}}
@@ -218,7 +218,7 @@ new procedure."
 	  (mds-ss-display-state state))
 
       ;; New procedure; send procname to the output buffer.
-      (mds-out-display (mds--get-client-out-buf mds-client)
+      (mds-out-display (mds-client-out-buf mds-client)
 			  (format "<%s>\n%s" addr procname)
 			  'addr-procname)
 
@@ -261,7 +261,7 @@ new procedure."
 If the optional string STATE is provided, use that as
 the state number to display.  Otherwise, find the statement
 number from STATEMENT."
-  (with-current-buffer (mds--get-client-dead-buf mds-client)
+  (with-current-buffer (mds-client-dead-buf mds-client)
     (unless (string= procname "")
       (if (string= procname mds-ss-procname)
 	  ;; Already displaying the procedure; just update the arrow.
@@ -285,7 +285,7 @@ number from STATEMENT."
   "Query the client to send the showstat information for PROCNAME.
 The output will be displayed in the dead showstat buffer.
 Set the buffer-local variables `mds-ss-procname' and `mds-ss-statement'."
-  (with-current-buffer (mds--get-client-dead-buf mds-client)
+  (with-current-buffer (mds-client-dead-buf mds-client)
     (setq mds-ss-procname procname
 	  mds-ss-statement statement)
     (if state
@@ -445,7 +445,7 @@ Otherwise delete the dead showstat window."
   (interactive)
   (if mds-ss-live
       (mds-ss-eval-expr "quit")
-    (delete-window (get-buffer-window (mds--get-client-dead-buf mds-client)))))
+    (delete-window (get-buffer-window (mds-client-dead-buf mds-client)))))
 
 (defun mds-return ()
   "Send the 'return' command to the debugger."
@@ -633,7 +633,7 @@ The result is returned in the message area."
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
   (if current-prefix-arg (mds-out-clear))
-  (mds-out-append-input (mds--get-client-out-buf mds-client) "Args:" 'mds-args-face)
+  (mds-out-append-input (mds-client-out-buf mds-client) "Args:" 'mds-args-face)
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
@@ -739,7 +739,7 @@ the number of activation levels to display."
 (defun mds-goto-current-state ()
   (interactive)
   "Move cursor to the current state in the showstat buffer."
-  (pop-to-buffer (mds--get-client-live-buf mds-client))
+  (pop-to-buffer (mds-client-live-buf mds-client))
   (mds-ss-update (current-buffer)
 		       mds-ss-addr
 		       mds-ss-procname
@@ -761,7 +761,7 @@ non-nil, do so in the `mds-out-buffer', otherwise do so in
 the `mds-ss-buffer'."
   (interactive "P")
   (if output-buffer
-      (with-current-buffer (mds--get-client-out-buf mds-client)
+      (with-current-buffer (mds-client-out-buf mds-client)
 	(toggle-truncate-lines))
     (toggle-truncate-lines)))
 

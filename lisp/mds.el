@@ -41,6 +41,7 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'mds-client)
 (require 'mds-cp)
 (require 'mds-re)
 (require 'mds-login)
@@ -92,135 +93,18 @@ installed. Automatically assigned to nil if wmctrl is not available."
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-number-clients 0
-  "Current number of clients.
-Maximum is given by `mds-max-number-clients'.")
-
 (defvar mds-proc nil "process for the server.")
 
 (defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
-
-;; data structures
-
-(defvar mds-proc-status '()
-  "Alist containing status of each known proc.
-An entry consists of (proc . status).
-Status is either `accepted', `pending', or `rejected'.")
-
-(defvar mds-clients '() 
-  "Alist containing info of accepted clients, indexed by the associated process.
-See `mds-create-client' for the form of each entry.")
 
 (defvar mds-log-messages 't
   "When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
 
-;;{{{ Client structure and creation/destruction
-
-;; Each entry in the alist, including the key (proc),
-;; has the structure
-;;
-;;    (proc ss-buf id . queue)
-;;    (proc queue id live-buf out-buf dead-buf)
-;;
-;; Access elements of a client (entry in `mds-clients').
-
-(defsubst mds--get-client-proc     (client) (car client))
-(defsubst mds--get-client-status   (client) (nth 1 client))
-(defsubst mds--get-client-queue    (client) (nth 2 client))
-(defsubst mds--get-client-id       (client) (nth 3 client))
-(defsubst mds--get-client-live-buf (client) (nth 4 client))
-(defsubst mds--get-client-dead-buf (client) (nth 5 client))
-(defsubst mds--get-client-out-buf  (client) (nth 6 client))
-
-(defun mds-create-client (proc id)
-  "Create a client that is associated with process PROC and has identity ID.
-The returned client structure is a list (PROC status queue ID
-live-buf dead-buf out-buf), where status is initialized to 'new'."
-  (let ((client (list proc)))
-    (setcdr client (list
-		    'login
-		    (mds-queue-create proc)
-		    id
-		    (mds-ss-create-buffer client 'live)
-		    (mds-ss-create-buffer client)
-		    (mds-out-create-buffer   client)))
-    client))
-  
-(defun mds-destroy-client (client)
-  "Destroy a client."
-  ;; kill the process and buffers
-  (delete-process  (mds--get-client-proc client))
-  (mds-kill-buffer (mds--get-client-live-buf client))
-  (mds-kill-buffer (mds--get-client-dead-buf client))
-  (mds-kill-buffer (mds--get-client-out-buf client)))
-
-(defun mds-find-client-with-id (id)
-  "Return entry in `mds-clients' with matching ID.
-If none, then return nil."
-  (let ((clients mds-clients)
-	client match)
-    (while (and clients (null match))
-      (setq client (car clients))
-      (if (eq id (mds--get-client-id client))
-    	  (setq match client)
-    	(setq clients (cdr clients))))
-    match))
-
-(defun mds-swap-proc-in-clients (oldproc newproc)
-    (setq mds-clients (cons (cons newproc (cdr (assoc oldproc mds-clients)))
-			    (assq-delete-all oldproc mds-clients))))
-
-(defun mds-get-client-status (proc)
-  (let ((client (assoc proc mds-clients)))
-    (if client (cadr client))))
-
-    ;; (if (>= mds-number-clients mds-max-number-clients)
-    ;; 	'rejected
-    ;;   (mds-add-client (mds-create-client proc "dummy id"))
-    ;;   'accepted)))
-
-(defun mds-client-set-status (client status)
-  (if client (setcar (cdr client) status)))
-
-(defun mds-client-set-id (client id)
-    (if client (setcar (cdr (cddr client)) id)))
-
-(defun mds-client-get-id (client id)
-    (if client (cdr (cddr client))))
-
-;;}}}
-;;{{{ Client association list
-
-(defun mds-client-get-from-proc (proc) (assoc proc mds-clients))
-
-(defun mds-delete-client (client)
-  "Delete CLIENT from `mds-clients'.  Stop the associated process,
-kill the buffers, and decrement `mds-number-clients'."
-  (if client
-      (let ((proc (mds--get-client-proc client)))
-	(mds-writeto-log proc "removing client")
-	(mds-destroy-client client)
-	;; update `mds-clients' and `mds-number-clients'
-	(setq mds-clients (delq client mds-clients)
-	      mds-number-clients (1- mds-number-clients)))))
-
-(defun mds-add-client (client)
-  (setq mds-clients (cons client mds-clients)
-	mds-number-clients (1+ mds-number-clients)))
-
-(defun mds-kill-clients ()
-  (while mds-clients
-    (let ((client (car mds-clients)))
-      (mds-delete-client client))))
-
-;;}}}
 
 ;;{{{ Start and stop server
-
-;; (setq mds-clients nil)
 
 (defun mds ()
   "Start an mds server; return the process.
@@ -250,7 +134,7 @@ If server is already running, stop then restart it."
   "Kill all clients, stop the Emacs mds server.
 Do not touch `mds-log-buffer'."
   (interactive)
-  (mds-kill-clients)
+  (mds-clients-kill)
   ;; Kill the server process
   (if (process-status mds-proc)
       (delete-process mds-proc))
@@ -267,7 +151,7 @@ Do not touch `mds-log-buffer'."
       ;; A client has attached.
       (let ((conn (match-string 1 msg)))
 	(mds-writeto-log proc (format "client has attached: %s" (substring msg 0 -2)))
-	(let ((status (mds-get-client-status proc)))
+	(let ((status (mds-client-status (assq proc mds-clients))))
 	  (cond
 	   ((eq status 'accepted)
 	    ;; Accepted!
@@ -276,7 +160,7 @@ Do not touch `mds-log-buffer'."
 
 	   ((null status)
 	    ;; Not yet registered
-	    (mds-add-client (mds-create-client proc "anonymous"))
+	    (mds-client-add (mds-client-create proc "anonymous"))
 	    (mds-login proc msg))
 
 	   ((eq status 'rejected)
@@ -292,7 +176,7 @@ Do not touch `mds-log-buffer'."
       ;; Delete associated buffers.
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
-		       (if (mds-delete-client (mds-client-get-from-proc proc))
+		       (if (mds-client-delete (assq proc mds-clients))
 			   "accepted " "")))
       (mds-wm-group-update mds-clients))
      ((string= msg "deleted\n"))
@@ -306,7 +190,7 @@ kernel.  Set the status of the client to 'accepted, pass the
 message along for handling by the filter, display the client
 windows, and get the focus."
   (ding)
-  (let ((client (mds-client-get-from-proc proc)))
+  (let ((client (assq proc mds-clients)))
     (mds-client-set-status client 'accepted)
     (mds-filter proc msg)
     ;; update groups
@@ -322,7 +206,7 @@ windows, and get the focus."
 
 (defun mds-filter (proc msg)
   "Dispatch message MSG.  If PROC is an accepted client, send the message to its queue."
-  (let ((status (mds-get-client-status proc)))
+  (let ((status (mds-client-status (assq proc mds-clients))))
     (cond
      ((eq status 'accepted)
       (when mds-log-messages
@@ -330,8 +214,7 @@ windows, and get the focus."
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (let ((queue (mds--get-client-queue (mds-client-get-from-proc proc))))
-	(mds-queue-filter queue msg)))
+      (mds-queue-filter (mds-client-queue (assq proc mds-clients)) msg))
      ((eq status 'login)
       ;; initiate the login process.
       (ding)
@@ -390,9 +273,8 @@ If found, pass it to the function in the queue."
 	    ;; delete msg, including eom
 	    (delete-region (point-min) (point))
 	    ;; send msg to correspond showstat filter
-	    (let* ((proc (mds-queue-proc queue))
-		   (client (mds-client-get-from-proc proc)))
-	      (with-current-buffer (mds--get-client-live-buf client)
+	    (let ((proc (mds-queue-proc queue)))
+	      (with-current-buffer (mds-client-live-buf (assq proc mds-clients))
 		(mds-handle-stream proc msg)))))))))
 
 ;;}}}
@@ -401,7 +283,7 @@ If found, pass it to the function in the queue."
 
 (defun mds-send-client (client msg)
   "Send MSG to CLIENT."
-  (let ((proc (mds--get-client-proc client)))
+  (let ((proc (mds-client-proc client)))
     (process-send-string proc msg)))
 
 ;;}}}
@@ -428,10 +310,10 @@ is not checked and will likely be removed from the protocol."
 The end of message marker has been removed.  Strip the tags and
 use them to route the message."
 
-  (let* ((client (mds-client-get-from-proc proc))
-	 (live-buf (mds--get-client-live-buf client))
-	 (dead-buf (mds--get-client-dead-buf client))
-	 (out-buf  (mds--get-client-out-buf client))
+  (let* ((client (assq proc mds-clients))
+	 (live-buf (mds-client-live-buf client))
+	 (dead-buf (mds-client-dead-buf client))
+	 (out-buf  (mds-client-out-buf client))
 	 (tag-msg (mds-extract-tag msg))
 	 (tag (car tag-msg))  ; name of tag
 	 (msg (cdr tag-msg))) ; msg with no tags

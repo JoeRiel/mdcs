@@ -1,0 +1,16 @@
+-*- org -*-
+
+* mdcs-0.1.1.3:
+
+** Renamed many of the functions and some of the files.
+   The functions mds-windows-cycle-groups and mds-windws-cycle-clients
+   are now mds-wm-cycle-groups and mds-wm-cycle-clients, respectively.
+   Be sure to update any key bindings that use these.
+
+** Split mds-client.el out of mds.el
+
+* mdcs-0.1.1.2:  Fixed bug with wmctrl; improved client and server documentation
+
+* mdsc-0.1.1.1:  Emergency release; include missing *.el file
+
+* mdcs-0.1.1.0:  Initial alpha

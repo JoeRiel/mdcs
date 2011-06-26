@@ -35,10 +35,10 @@
 
 ;; avoid compiler warnings
 
-(declare-function mds--get-client-id "mds")
-(declare-function mds--get-client-live-buf "mds")
-(declare-function mds--get-client-dead-buf "mds")
-(declare-function mds--get-client-out-buf  "mds")
+(declare-function mds-client-id "mds")
+(declare-function mds-client-live-buf "mds")
+(declare-function mds-client-dead-buf "mds")
+(declare-function mds-client-out-buf  "mds")
 
 ;;}}}
 ;;{{{ variables
@@ -59,15 +59,15 @@ are not in sublists.")
 The buffers are displayed in side-by-side windows that fill the
 frame, the showstat buffer on the left.  Return nil."
   (select-frame mds-frame)
-  (delete-other-windows (select-window (display-buffer (mds--get-client-live-buf client))))
-  (set-window-buffer (split-window-horizontally) (mds--get-client-out-buf client)))
+  (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
+  (set-window-buffer (split-window-horizontally) (mds-client-out-buf client)))
 
 
 (defun mds-wm-display-dead (client)
   "Display the dead showstat buffer of CLIENT in a window."
-  (let ((dead-buf (mds--get-client-dead-buf client)))
+  (let ((dead-buf (mds-client-dead-buf client)))
     (unless (get-buffer-window-list dead-buf)
-      (let ((out-buf (mds--get-client-out-buf client)))
+      (let ((out-buf (mds-client-out-buf client)))
 	(if (not (get-buffer-window-list out-buf))
 	    ;; no visible buffers, use the basic method
 	    (mds-wm-display-client client))
@@ -89,16 +89,16 @@ with n being the number of clients."
   (if clients
       (let ((n (length clients))
 	    wbot wtop)
-	(setq wtop (select-window (display-buffer (mds--get-client-live-buf (car clients)))))
+	(setq wtop (select-window (display-buffer (mds-client-live-buf (car clients)))))
 	(delete-other-windows wtop)
 	(setq wbot (split-window-vertically))
 	(while clients
 	  ;; split output buffers (bottom half of frame)
-	  (set-window-buffer wbot (mds--get-client-out-buf (car clients)))
+	  (set-window-buffer wbot (mds-client-out-buf (car clients)))
 	  (select-window wbot)
 	  (if (> n 1) (setq wbot (split-window-horizontally (/ (window-width) n))))
 
-	  (set-window-buffer wtop (mds--get-client-live-buf (car clients)))
+	  (set-window-buffer wtop (mds-client-live-buf (car clients)))
 	  (select-window wtop)
 	  (if (> n 1) (setq wtop (split-window-horizontally (/ (window-width) n))))
 	  ;; split live buffers (top half of frame)
@@ -111,7 +111,7 @@ with n being the number of clients."
 	id base client)
     (while clients
       (setq client (car clients)
-	    id (car (mds--get-client-id client)))
+	    id (car (mds-client-id client)))
       (when (string-match "\\([^-]+\\)-[0-9]+$" id)
 	(setq base (match-string 1 id))
 	(let ((entry (assoc base alist)))
@@ -122,7 +122,7 @@ with n being the number of clients."
     (mapcar #'cdr alist)))
 
 (defun mds-wm-group-update (clients)
-  "Call `mds-wm-groupo-clients' to group the clients, and
+  "Call `mds-wm-group-clients' to group the clients, and
 assign the list to `mds-wm-grouped-clients'."
   (setq mds-wm-grouped-clients (mds-wm-group-clients mds-clients)))
 
@@ -131,7 +131,7 @@ assign the list to `mds-wm-grouped-clients'."
 ;;{{{ mds-wm-cycle-clients
 
 (defun mds-wm-cycle-clients (&optional backwards)
-  "Pop to first client on list, then rotate list.
+  "Rotate the ... to first client in on list, then rotate list.
 If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
   (interactive)
   (if mds-clients
@@ -139,7 +139,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 	     (client (car L)))
 	(and (> (length L) 1)
 	     ;; client is already displayed
-	     (get-buffer-window (mds--get-client-live-buf client) 'visible)
+	     (get-buffer-window (mds-client-live-buf client) 'visible)
 	     ;; rotate list
 	     (setq mds-clients
 		   (if 'backwards
@@ -158,7 +158,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 	     (g (car G)))
 	(and (> (length G) 1)
 	     ;; group is already displayed
-	     ;; (get-buffer-window (mds--get-client-live-buf client))
+	     ;; (get-buffer-window (mds-client-live-buf client))
 	     ;; rotate list
 	     (setq G (reverse (cons g (reverse (cdr G))))))
 	;; display the live buffer.  Maybe the whole thing.
@@ -169,12 +169,37 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 	  (setq mds-wm-grouped-clients G)))))
 
 
+(defvar mds-wm-group nil)
+;; (setq L '#1=(a b c . #1#))
+
+;; (defun mds-wm-circ (L)
+;;   (nconc L L))
+
+;; (setq L (mds-wm-circ '("a" "b" "c")))
+
+;; (let* ((x (car L))
+;;        (y (cadr L)))
+;;   (while (not (eq x y))
+;;     (insert y)
+;;     (setq L (cdr L)
+;; 	  y (cadr L))))
+
+
 ;;}}}
 
+(defun mds-wm-active-client ()
+  "Return the active client."
+  )
+
+
+;;{{{ Call operating system's window manager to get focus
 
 (defun mds-wm-get-focus-wmctrl ()
-  "Call shell program wmctrl to give emacs the focus."
+  "Call shell program wmctrl to give emacs the focus.
+This is only appropriate for a linux system."
   (shell-command "wmctrl -xa emacs"))
+
+;;}}}
 
 (provide 'mds-wm)
 

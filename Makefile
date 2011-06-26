@@ -2,7 +2,7 @@
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
 
-SHELL := /bin/sh
+SHELL := /bin/bash
 
 VERSION := 0.1.1.3
 
@@ -131,7 +131,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds
+ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds-client mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)
@@ -140,9 +140,12 @@ byte-compile: $(call print-help,byte-compile,Byte compile $(LISP_FILES))
 byte-compile: $(ELC_FILES)
 
 %.elc : %.el
-	$(RM) $@
+	@$(RM) $@
 	@echo Byte-compiling $+
-	@$(ELC) $<
+	@err=$$($(ELC) $< 2>&1 > /dev/null | sed '/^Wrote/d') ; \
+		if [ ! -z "$$err" ]; then \
+			echo $(call warn,$$err); \
+		fi
 
 # }}}
 

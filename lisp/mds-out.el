@@ -20,8 +20,8 @@
 
 (defvar mds-ss-state nil)
 (declare-function mds-goto-state "mds-ss")
-(declare-function mds--get-client-live-buf "mds")
-(declare-function mds--get-client-out-buf "mds")
+(declare-function mds-client-live-buf "mds")
+(declare-function mds-client-out-buf "mds")
 (declare-function mds-send-client "mds")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
@@ -125,7 +125,7 @@ The first group matches the statement, with some indentation.")
 (defun mds-out-clear ()
   "Clear the debugger output buffer."
   (interactive)
-  (let ((buf (mds--get-client-out-buf mds-client)))
+  (let ((buf (mds-client-out-buf mds-client)))
     (when (bufferp buf)
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
@@ -175,7 +175,7 @@ from going to a statement that does not correspond to procedure evaluation."
 (defun mds-out-get-ss-line ()
   "Return the current input line of the live showstat buffer."
   ;; FIXME :: need to go to current line
-  (with-current-buffer (mds--get-client-live-buf mds-client)
+  (with-current-buffer (mds-client-live-buf mds-client)
     (save-excursion
       (mds-goto-state mds-ss-state)
       (beginning-of-line)
@@ -220,7 +220,7 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt-face)
 	      (delete-region (point) (line-end-position))
-	      (let* ((live-buf (mds--get-client-live-buf mds-client))
+	      (let* ((live-buf (mds-client-live-buf mds-client))
 		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
 		(when trace-mode
 		  (if mds-out-track-input
