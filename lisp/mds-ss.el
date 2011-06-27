@@ -700,7 +700,6 @@ If RAW (prefix arg) is non-nil, display the raw output,
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
   (if raw
-      ;;(mds-ss-eval-debug-code "showexception")
       (mds-ss-send-client "showexception\n")
     (mds-ss-eval-debug-code "mdc:-Debugger:-ShowException()")))
 

@@ -57,10 +57,11 @@ are not in sublists.")
 (defun mds-wm-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
 The buffers are displayed in side-by-side windows that fill the
-frame, the showstat buffer on the left.  Return nil."
+frame, the showstat buffer on the left.  Return the client."
   (select-frame mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
-  (set-window-buffer (split-window-horizontally) (mds-client-out-buf client)))
+  (set-window-buffer (split-window-horizontally) (mds-client-out-buf client))
+  client)
 
 
 (defun mds-wm-display-dead (client)
@@ -131,24 +132,29 @@ assign the list to `mds-wm-grouped-clients'."
 ;;{{{ mds-wm-cycle-clients
 
 (defun mds-wm-cycle-clients (&optional backwards)
+
+;; If client is not visible, make it so without rotating.
+;; That should probably be a seperate function
+
   "Rotate the ... to first client in on list, then rotate list.
 If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
   (interactive)
   (if mds-clients
-      (let* ((L mds-clients)
-	     (client (car L)))
-	(and (> (length L) 1)
+      (let ((client (car mds-clients)))
+	(and (> (length mds-clients) 1)
 	     ;; client is already displayed
-	     (get-buffer-window (mds-client-live-buf client) 'visible)
+	     (get-buffer-window (mds-client-live-buf client) mds-frame)
 	     ;; rotate list
 	     (setq mds-clients
 		   (if 'backwards
 		       ;; FIXME: not the most efficient technique
-		       (cons (car (setq L (reverse L))) (reverse (cdr L)))
-		     (reverse (cons client (reverse (cdr L))))
-		     ))
-	     ;; display the live buffer.  Maybe the whole thing.
-	     (mds-wm-display-client (car mds-clients))))))
+		       (cons (car (setq mds-clients (reverse mds-clients))) (reverse (cdr mds-clients)))
+		     (reverse (cons client (reverse (cdr mds-clients))))
+		     )))
+	;; display and return the client
+	(mds-wm-display-client (car mds-clients)))))
+
+    
 
 (defun mds-wm-cycle-groups ()
   "Pop to first group of clients on list, then rotate list."
@@ -189,7 +195,8 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 
 (defun mds-wm-active-client ()
   "Return the active client."
-  )
+  ;; FIXME:
+  (car mds-clients))
 
 
 ;;{{{ Call operating system's window manager to get focus

@@ -69,27 +69,73 @@
 
 ;;}}}
 
-
 (defun mds-cp-select-next-client (&optional backwards)
-  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-selected-client)) 'off)
-  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-next-client backwards))))
+  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-active-client)) 'off)
+  (mds-ss-modeline-hilite (mds-client-live-buf (mds-wm-cycle-clients backwards))))
 
 (defmacro mds-cp-cmd (cmd)
   "Send CMD (a string) to the active client.  This is equivalent
 to using the key-binding in the active client's live showstat buffer."
   `(lambda (&rest ignore)
+     (interactive)
+     (select-frame mds-frame)
      (with-current-buffer (mds-cp-get-ss-live-buf)
        (mds-ss-eval-proc-statement ,cmd 'save))))
 
+(defmacro mds-cp-ss-cmd (cmd)
+  "Execute elisp command CMD in the ss-live-buf."
+  `(lambda (&rest ignore)
+     (interactive)
+     (select-frame mds-frame)
+     (with-current-buffer (mds-cp-get-ss-live-buf)
+       (,cmd))))
+
+(defun mds-cp-next (&rest ignore)
+  (select-frame mds-frame)
+  (with-current-buffer (mds-cp-get-ss-live-buf)
+    (mds-ss-eval-proc-statement "next" 'save))
+  (select-frame mds-cp-frame))
+
+(defun mds-cp-step (&rest ignore)
+  (interactive)
+  (select-frame mds-frame)
+  (with-current-buffer (mds-cp-get-ss-live-buf)
+    (mds-ss-eval-proc-statement "step" 'save)))
+;;  (select-frame mds-cp-frame))
+
 (defun mds-cp-get-ss-live-buf ()
   "Return the live showstat buffer of the active client."
-  )
+  (mds-client-live-buf (mds-wm-active-client)))
+
+
+;;{{{ mds-cp-mode-map
+
+(defvar mds-cp-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map widget-keymap)
+    (let ((bindings
+	   `(
+	     ("c" . ,(mds-cp-cmd "cont"))
+	     ("i" . ,(mds-cp-cmd "into"))
+	     ("n" . ,(mds-cp-cmd "next"))
+	     ("o" . ,(mds-cp-cmd "outfrom"))
+	     ("r" . ,(mds-cp-cmd "return"))
+	     ("s" . ,(mds-cp-cmd "step"))
+	     )))
+      (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
+	    bindings)
+      map)))
+
+;;}}}
 
 ;;{{{ mds-cp-mode
 
+
 (define-derived-mode mds-cp-mode fundamental-mode "mds-cp-mode"
-  "Long-winded description"
+  "Major mode for the mds control panel."
+
   :group 'mds
+
   
   (delete-region (point-min) (point-max))
 
@@ -100,27 +146,29 @@ to using the key-binding in the active client's live showstat buffer."
 		 "<-")
   (widget-create 'push-button
 		 :notify (lambda (&rest ignore)
-			    (mds-cp-select-next-client 'backwards))
+			    (mds-cp-select-next-client))
 		 "->")
 
   (widget-insert "\n")
-  
-  (widget-create 'push-button "Next" :notify (mds-cp-cmd "next"))
-  (widget-create 'push-button "Into")
-  (widget-create 'push-button "Step")
-  (widget-create 'push-button "Cont")
+  (widget-create 'push-button :notify (mds-cp-cmd "next") "Next")
+  (widget-create 'push-button :notify (mds-cp-cmd "into") "Into")
+  (widget-create 'push-button :notify (mds-cp-cmd "step") "Step")
+  (widget-create 'push-button :notify (mds-cp-cmd "cont") "Cont")
   (widget-insert "\n")
-  (widget-create 'push-button "Outfrom")
-  (widget-create 'push-button "Return")
-  (widget-create 'push-button "Quit")
+  (widget-create 'push-button :notify (mds-cp-cmd "outfrom") "Outfrom")
+  (widget-create 'push-button :notify (mds-cp-cmd "return")  "Return")
+  (widget-create 'push-button :notify (mds-cp-cmd "quit")    "Quit")
+  (widget-insert "\n")
+  (widget-create 'push-button :notify (mds-cp-cmd "where")     "Where")
+  (widget-create 'push-button :notify (mds-cp-cmd "showstack") "Showstack")
 
-  (use-local-map widget-keymap) ; what is this?
+  ;;(use-local-map widget-keymap) ; what is this?
+  (use-local-map mds-cp-mode-map)
   (widget-setup)
   ;;}}}
-  
-  ;;{{{ 
 
-  )
+
+  ) ; end: mds-cp-mode
 
 
 ;;}}}
@@ -139,7 +187,7 @@ to using the key-binding in the active client's live showstat buffer."
 			      )))
 	 (window (frame-first-window frame))
 	 (buffer (get-buffer-create "*mds-control-panel*")))
-
+    (setq mds-cp-frame frame)
     (let ((cp-ht  (frame-pixel-height frame))
 	  (cp-wd  (frame-pixel-width frame))
 	  (mds-ht (frame-pixel-height))
@@ -154,6 +202,10 @@ to using the key-binding in the active client's live showstat buffer."
 
 ;;}}}
 
+;; (mds-cp-create)
+
 (provide 'mds-cp)
 
 ;; mds-cp.el ends here
+
+

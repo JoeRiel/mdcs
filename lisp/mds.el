@@ -88,7 +88,6 @@ installed. Automatically assigned to nil if wmctrl is not available."
 
 ;;{{{ Variables
 
-
 (defvar mds-log-buffer nil
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
