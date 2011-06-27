@@ -65,6 +65,7 @@ Texts.  A copy of the license is included in the section entitled
 * Introduction::                
 * Launching MDS::               Starting the server
 * Showstat Buffer::             Stepping through code
+* Output Buffer::               Maple output
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
 * Command and Variable Index::  Indices of commands and variables
@@ -86,6 +87,12 @@ Configuration
 * Emacs::                       Configuring @file{.emacs}
 
 Showstat Buffer
+
+* Live Showstat Buffer::        
+* Dead Showstat Buffer::        
+* Showstat Mode::               
+
+Showstat Mode
 
 * Execution::                   Executing procedure statements
 * Status::                      Determining debugger status
@@ -344,12 +351,25 @@ the @b{debugger output buffer},
 which displays Maple output during debugging.
 
 
-@node Showstat Buffer, Main Index, Launching MDS, Top
+@node Showstat Buffer, Output Buffer, Launching MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
-Each client has two showstat buffer, named @verb{|*showstat live*|} and @verb{|*showstat dead*|}.
-Both use @code{mds-showstat-mode}, though some commands are handled differently.
+Each client has two showstat buffers, named @verb{|*showstat live*|} and
+@verb{|*showstat dead*|}, that are used to display Maple procedures
+in @emph{showstat form}, that is, with the statements numbered.
+Both use @code{mds-showstat-mode}, though some commands are handled
+differently.
+
+@menu
+* Live Showstat Buffer::        
+* Dead Showstat Buffer::        
+* Showstat Mode::               
+@end menu
+
+@node Live Showstat Buffer, Dead Showstat Buffer, Showstat Buffer, Showstat Buffer
+@section Live Showstat Buffer
+@cindex live showstat buffer
 
 The live showstat buffer becomes active when an instrumented Maple procedure activates 
 a breakpoint or watchpoint.
@@ -389,6 +409,10 @@ end proc
 @end ifinfo
 @end example
 
+@node Dead Showstat Buffer, Showstat Mode, Live Showstat Buffer, Showstat Buffer
+@section Dead Showstat Buffer
+@cindex dead showstat buffer
+
 The dead showstat buffer looks the same as the live buffer.
 It is used for displaying inactive procedures.  It is normally
 not displayed until a request is made to display an inactive
@@ -399,7 +423,12 @@ function the same as if typed in the live buffer to advance.  This
 will most likely be changed.
  
 
-@code{MDS-showstat-mode} binds keys to the common debugging commands. 
+
+@node Showstat Mode,  , Dead Showstat Buffer, Showstat Buffer
+@section Showstat Mode
+@cindex showstat mode
+
+@code{mds-showstat-mode} binds keys to the common debugging commands. 
 It also provides commands that are not available in the Maple debugger.
 The following sections describe these bindings and commands.
 They are grouped according to function.
@@ -414,8 +443,8 @@ They are grouped according to function.
 * Help::                        Getting help
 @end menu
 
-@node Execution, Status, Showstat Buffer, Showstat Buffer
-@section Execution
+@node Execution, Status, Showstat Mode, Showstat Mode
+@subsection Execution
 @cindex execution
 
 MDS supports all the Maple debugger commands for executing the statements of
@@ -521,8 +550,8 @@ This can be used to stop a runaway Maple computation (say an infinite loop).
 
 @end table
 
-@node Status, Breakpoints, Execution, Showstat Buffer
-@section Status
+@node Status, Breakpoints, Execution, Showstat Mode
+@subsection Status
 @cindex status
 
 MDS supports the following debugger commands for querying the status
@@ -579,8 +608,8 @@ to see the raw exception, use @kbd{C-u X}.
 @end table
 
 
-@node Breakpoints, Watchpoints, Status, Showstat Buffer
-@section Breakpoints
+@node Breakpoints, Watchpoints, Status, Showstat Mode
+@subsection Breakpoints
 @cindex breakpoints
 
 MDS can set and clear breakpoints, watchpoints, and error watchpoints.
@@ -622,8 +651,8 @@ Unstopat: Clear a breakpoint at the start of the statement at the cursor.
 
 @end table
 
-@node Watchpoints, Evaluation, Breakpoints, Showstat Buffer
-@section Watchpoints
+@node Watchpoints, Evaluation, Breakpoints, Showstat Mode
+@subsection Watchpoints
 @cindex watchpoints
 
 A @emph{watchpoint} set on a variable causes the debugger to stop 
@@ -682,8 +711,8 @@ Use @kbd{C-u W} to clear a global watchpoint.
 @end table
 
 
-@node Evaluation, Miscellaneous, Watchpoints, Showstat Buffer
-@section Evaluation
+@node Evaluation, Miscellaneous, Watchpoints, Showstat Mode
+@subsection Evaluation
 @cindex evaluation, expression
 
 MDS can evaluate expressions using the current context of Maple.
@@ -743,8 +772,8 @@ c = NULL
 
 @end table
 
-@node Miscellaneous, Help, Evaluation, Showstat Buffer
-@section Miscellaneous
+@node Miscellaneous, Help, Evaluation, Showstat Mode
+@subsection Miscellaneous
 @cindex miscellaneous
 
 @table @asis
@@ -757,8 +786,8 @@ With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
 @end table
 
-@node Help,  , Miscellaneous, Showstat Buffer
-@section Help
+@node Help,  , Miscellaneous, Showstat Mode
+@subsection Help
 @cindex help
 
 The MDS showstat-mode has several ways for obtaining help.
@@ -796,8 +825,39 @@ with the default the word under then cursor.
 
 
 
+@node Output Buffer, Main Index, Showstat Buffer, Top
+@chapter Output Buffer
+@cindex output buffer
 
-@node Main Index, Key Index, Showstat Buffer, Top
+
+The output buffer displays Maple output during debugging.  
+It also echos the user input, and optionally, the input statements executed.
+
+The following is representative of the output buffer content
+
+@example
+@b{fibonacci}
+(*1*) into    @b{if} i < 1 
+32
+(*2*) 
+@end example
+
+The line ``@b{fibonacci}'' is the name of the procedure that is being debugged.
+Whenever a procedure is entered, the name of it is printed in the output buffer.
+The name is hyperlinked; clicking on it (mouse-1) displayes the procedure
+in the showstat dead buffer.
+
+Debugger commands that evaluate program code are echoed in the buffer.
+If the `mds-???' variable is non-nil, the corresponding statement is printed
+after the debugger command.  This provides a visual trace of the commands executed.
+
+Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
+buffer, the procedure at the appropriate statement that generated that output.
+
+
+
+
+@node Main Index, Key Index, Output Buffer, Top
 @unnumbered Main Index
 @printindex cp
 
