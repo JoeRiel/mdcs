@@ -528,20 +528,24 @@ nesting level, in the body of a control structure (for example,
 @kindex t
 @findex mds-trace
 @item t (@code{mds-trace})
-Select a tracing mode.  Two tracing modes are available, @strong{into}
-and @strong{step}.  If neither tracing mode is selected, then tracing
-does not occur.  When tracing begins, debugging will continue
-automatically until the client exits.  At that point, the user should
-disable tracing mode by press @kbd{t} until the echo area says the
-tracing is disabled. Then, by reissuing the original Maple command so
-that debugging commences, the hyperlinks in the output buffer become
-active and permit quickly moving to places of interest.
+Cycle through tracing modes.
+The tracing mode, @strong{into} or @strong{step}, determines
+the output in the output buffer.  When the tracing mode is @strong{into},
+only the output from procedures that have been instrumented is shown.
+When the tracing mode is @strong{step}, the output of all procedures is shown.
+
+After selecting a tracing mode, tracing begins with the next command
+that executes a statement.  Statements are then automatically executed
+until the client exits.  At that point, the tracing mode should be
+manually disabled by selecting the @strong{disabled} mode.  Reissuing
+the original Maple command (in Maple) will cause the debugger to
+recommence, at which time the hyperlinks in the output buffer become
+operational and permit quickly moving to places of interest.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
 @item @key{SPACE} (@code{mds-send-last-command})
-Re-execute the last command.
-This only applies to the commands in this table.
+Re-execute the last command that executes a program statement.
 
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple
@@ -827,7 +831,7 @@ with the default the word under then cursor.
 
 
 
-@node Output Buffer, Main Index, Showstat Buffer, Top
+@node Output Buffer, , Showstat Buffer, Top
 @chapter Output Buffer
 @cindex output buffer
 
@@ -858,8 +862,29 @@ buffer, the procedure at the appropriate statement that generated that output.
 
 
 
+@node  Debugging Hints, Main Index, Output Buffer, Top
+@chapter Debugging Hints
+@cindex debugging hints
 
-@node Main Index, Key Index, Output Buffer, Top
+MDS provides some convenient ways to debug Maple code.
+
+@itemize @bullet
+
+@item
+Use @command{stoperror} to cause the debugger to stop at the statement
+that raises an error.  Frequently the cause of the error is ``upstream''
+in the source, possibly in a calling procedure.  To quickly set a
+breakpoint in the calling procedure execute @command{mds-where}
+(@kbd{w}) to display the stack contents in the output buffer, click on
+the relevant calling procedure, then, in the showstat-dead buffer, set a
+breakpoint at an appropriate statement in that procedure.  Quit the
+debugger and reexecute the code in Maple.  The debugger will then stop
+
+@end itemize
+
+
+
+@node Main Index, Key Index, Debugging Hints, Top
 @unnumbered Main Index
 @printindex cp
 
