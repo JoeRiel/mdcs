@@ -2,11 +2,11 @@
 
 # Simple installation script for mdcs
 
-LISP_DIR=$HOME/.emacs.d            # for lisp files
+LISP_DIR=$HOME/.emacs.d/mds        # for lisp files
 INFO_DIR=$HOME/share/info          # for the info file
 MAPLE_INSTALL_DIR=$HOME/maple/lib  # for the Maple archive and help database
 
-
+echo "Byte-compiling mds lisp files"
 # Byte-compile lisp/*.el
 emacs --no-site-file \
       --no-init-file \
@@ -15,9 +15,19 @@ emacs --no-site-file \
       --funcall=batch-byte-compile \
       lisp/*.el
 
-CP="cp --preserve"
-$CP lisp/*.el lisp/*.elc $LISP_DIR
-$CP doc/mds $INFO_DIR
-$CP mdc.mla mdc.hdb $MAPLE_INSTALL_DIR
+CP="cp --preserve --verbose"
+RM="rm --force --verbose"
 
+# remove old mds stuff; now in mds subdirectory
+$RM $LISP_DIR/mds*.el $LISP_DIR/mds*.elc
+
+echo -e "\nInstalling lisp files"
+$CP lisp/*.el lisp/*.elc $LISP_DIR
+echo -e "\nInstalling info files"
+$CP doc/mds $INFO_DIR
+echo -e "\nInstalling Maple files"
+$CP mdc.mla mdc.hdb $MAPLE_INSTALL_DIR
+echo -e "\nDone"
+echo
+echo "Update, if needed, your .emacs file.  See README for details."
 exit 0

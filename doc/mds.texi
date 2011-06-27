@@ -259,9 +259,11 @@ to run MDS.
 @cindex .emacs
 
 To permit @kbd{M-x mds} to start (and restart) MDS, 
-add the following line to your @file{.emacs} file:
+add the following lines, appropriately modified,
+to your @file{.emacs} file:
 
 @example
+(push "/home/joe/.emacs.d/mds" load-path)
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 

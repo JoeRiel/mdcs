@@ -52,7 +52,7 @@ TEXI2HTML := makeinfo --html --number-sections
 export BIN_INSTALL_DIR := $(HOME)/bin
 
 # where lisp files go
-LISP_DIR := $(HOME)/.emacs.d
+LISP_DIR := $(HOME)/.emacs.d/mds
 
 # where html files go.
 # there is no standard place for this.
