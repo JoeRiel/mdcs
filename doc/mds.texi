@@ -311,6 +311,20 @@ A boolean value that, when non-nil, causes lines in the showstat and
 output windows to be truncated at the right edge of the screen 
 rather than wrapping.   The default truncates lines.
 
+
+@vindex mds-wm-side-by-side
+@item @code{mds-wm-side-by-side}
+A boolean value that, when non-nil, causes the @b{live-showstat}
+and @b{output} windows to appear side-by-side when displayed
+in a single client view.  That is the default.
+
+@vindex mds-wm-ss-size
+@item @code{mds-wm-ss-size}
+Specifies the size of the showstat-live window when it is displayed.
+The size is the width of the window when @code{mds-wm-side-by-side} is
+non-nil, otherwise it is the height.  If nil, the window is set to
+the same size as the output window.
+
 @end table
 
 
