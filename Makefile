@@ -271,7 +271,7 @@ install-maple: $(mla)
 
 PHONY: zip
 
-dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README install
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES README install
 
 zip: $(dist)
 	zip mdcs-$(VERSION).zip $+
