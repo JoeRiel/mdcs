@@ -113,7 +113,7 @@ The procname is flush left.  See diatribe in `mds-ss-where-procname-re'.")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure.")
 (defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
-(defvar mds-ss-trace          nil "Valid values are nil, next, into, and step")
+(defvar mds-ss-trace          nil "Valid values are nil, cont, into, and step")
 (defvar mds-ss-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names,the values are additional alists.")
 
 ;; Make variables buffer-local
@@ -463,7 +463,7 @@ Otherwise delete the dead showstat window."
   (mds-ss-eval-proc-statement "step" 'save))
 
 (defun mds-cycle-trace ()
-  "Cycle through the three tracing states: 'nil', 'into' or 'step'.
+  "Cycle through the four tracing states: 'nil', 'into', 'step', and 'cont'.
 If nil is selected, tracing does not occur.  If into is selected,
 then only those procedures that have been instrumented are traced.
 If 'step' is selected, then all procedures are traced.
@@ -474,9 +474,10 @@ output buffer are then active."
   (interactive)
   (setq mds-ss-trace
 	(cond
-	 ((null mds-ss-trace)            "into")
-	 ((string=  mds-ss-trace "into") "step")
-	 ((string=  mds-ss-trace "step") nil)))
+	 ((null mds-ss-trace)           "cont")
+	 ((string= mds-ss-trace "cont") "into")
+	 ((string= mds-ss-trace "into") "step")
+	 ((string= mds-ss-trace "step") nil)))
   (message (concat "tracing " (or mds-ss-trace "disabled"))))
 
 ;;}}}

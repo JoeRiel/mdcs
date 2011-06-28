@@ -35,6 +35,17 @@
   :type 'boolean
   :group 'mds)
 
+(defmacro mds-menu-toggle (title flag)
+  "Create menu entry, with TITLE, that toggles FLAG variable.
+When activated, it toggles the variable and displays the message
+TITLE is enabled|disabled."
+  `[,title
+    (progn 
+      (setq ,flag (not ,flag))
+      (message "%s is %s" ',title (if ,flag "enabled" "disabled")))
+    :style toggle
+    :selected ,flag])
+
 
 (defvar maple-menu-keymap (make-sparse-keymap))
 (easy-menu-define maple-menu maple-menu-keymap
@@ -69,22 +80,9 @@
     ))
 
 ;; This will go elsewhere; maybe in .emacs.
-(easy-menu-add-item global-map '("menu-bar") maple-menu "help-menu") 
+;;(easy-menu-add-item global-map '("menu-bar") maple-menu "help-menu") 
   
-(defmacro mds-menu-toggle (title flag)
-  "Create menu entry, with TITLE, that toggles FLAG variable.
-When activated, it toggles the variable and displays the message
-TITLE is enabled|disabled."
-  `[,title
-    (progn 
-      (setq ,flag (not ,flag))
-      (message "%s is %s" ',title (if ,flag "enabled" "disabled")))
-    :style toggle
-    :selected ,flag])
-
-(macroexpand '(mds-menu-toggle "Beep" mds-menu-beep))
-
-
+;;(macroexpand '(mds-menu-toggle "Beep" mds-menu-beep))
 
 (defun mds-read-numeric (prompt initial &optional min max )
   (let (n)
@@ -113,3 +111,4 @@ TITLE is enabled|disabled."
   (setq mds-port (mds-read-numeric "max clients: " mds-max-number-clients 1)))
 
 
+(provide 'mds-menu)
