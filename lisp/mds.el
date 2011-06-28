@@ -41,9 +41,11 @@
 
 ;;{{{ Lisp Requirements
 
-(require 'mds-regexps)
+(require 'custom)
 (require 'mds-login)
+(require 'mds-menus)
 (require 'mds-output)
+(require 'mds-regexps)
 (require 'mds-showstat)
 (require 'mds-windows)
 (require 'maplev)
@@ -77,10 +79,7 @@ installed. Automatically assigned to nil if wmctrl is not available."
 
 (defconst mds-version "0.1.1.3" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
-
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
-
-
 
 ;;}}}
 
@@ -94,17 +93,12 @@ Name given by `mds-log-buffer-name'.")
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
 
-(defvar mds-proc nil "process for the server.")
+(defvar mds-proc nil "Process for the server.")
 
 (defvar mds-showstat-trace nil
   "When non-nil, trace through the debugged code.")
 
 ;; data structures
-
-(defvar mds-proc-status '()
-  "Alist containing status of each known proc.
-An entry consists of (proc . status).
-Status is either `accepted', `pending', or `rejected'.")
 
 (defvar mds-clients '() 
   "Alist containing info of accepted clients, indexed by the associated process.
