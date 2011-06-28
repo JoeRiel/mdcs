@@ -45,7 +45,7 @@
 (require 'mds-cp)
 (require 'mds-re)
 (require 'mds-login)
-(require 'mds-menu)
+;;(require 'mds-menu)
 (require 'mds-out)
 (require 'mds-ss)
 (require 'mds-wm)
