@@ -77,12 +77,13 @@ are not in sublists.")
 
 (defun mds-wm-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
-The buffers are displayed in side-by-side windows that fill the
-frame, the showstat buffer on the left.  Return the client."
+The split direction and initial size of the showstat window are
+determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
+the client."
   (select-frame mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
   (set-window-buffer
-   (split-window mds-wm-side-by-side mds-wm-ss-size)
+   (split-window nil mds-wm-ss-size mds-wm-side-by-side)
    (mds-client-out-buf client))
   client)
 
