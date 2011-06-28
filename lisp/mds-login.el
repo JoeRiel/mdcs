@@ -3,9 +3,11 @@
 
 (require 'sha1)
 
-(declare-function mds-client-get-from-proc "mds")
+(eval-when-compile
+  (require 'mds-client))
 (declare-function mds-client-set-id "mds")
 (declare-function mds-client-set-status "mds")
+
 
 (defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"
   "Regular expression to match identifier expected from client.
@@ -64,7 +66,7 @@ is the process id of the Maple job.")
 	(let ((id (match-string 1 msg))
 	      (os (match-string 2 msg))
 	      (maple (match-string 3 msg))
-	      (client (mds-client-get-from-proc proc)))
+	      (client (assq proc mds-clients)))
 	  (when client
 	    (mds-client-set-id client (list id os maple))
 	    (mds-client-set-status client 'start-debugging)

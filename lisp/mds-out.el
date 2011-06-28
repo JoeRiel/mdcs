@@ -1,4 +1,4 @@
-;;; mds-output.el
+;;; mds-out.el
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -12,19 +12,19 @@
 
 ;;;
 
-(require 'mds-regexps)
+(require 'mds-re)
 
 ;;{{{ declarations
 
 ;; avoid compiler warnings
 
-(defvar mds-showstat-state nil)
-(declare-function mds-goto-state "mds-showstat")
-(declare-function mds--get-client-live-buf "mds")
-(declare-function mds--get-client-out-buf "mds")
+(defvar mds-ss-state nil)
+(declare-function mds-goto-state "mds-ss")
+(declare-function mds-client-live-buf "mds")
+(declare-function mds-client-out-buf "mds")
 (declare-function mds-send-client "mds")
-(declare-function mds-showstat-view-dead-proc "mds-showstat")
-(declare-function mds-windows-display-dead "mds-windows")
+(declare-function mds-ss-view-dead-proc "mds-ss")
+(declare-function mds-wm-display-dead "mds-wm")
 
 ;;}}}
 ;;{{{ faces
@@ -88,12 +88,12 @@
 ;;}}}
 ;;{{{ constants
 
-(defconst mds-output-prompt-re "^(\\*\\([0-9]*\\)\\*)"
+(defconst mds-out-prompt-re "^(\\*\\([0-9]*\\)\\*)"
   "Regular expression to match prompt. Group one matches
 the statement number; if empty then prompt corresponds
 to user-input.")
 
-(defconst mds-output-ss-line-re " *[0-9!*]*\\(.*\\)$"
+(defconst mds-out-ss-line-re " *[0-9!*]*\\(.*\\)$"
   "Regular expression to match statement line in showstat buffer.
 The first group matches the statement, with some indentation.")
 
@@ -103,28 +103,28 @@ The first group matches the statement, with some indentation.")
 (defvar mds-client nil
   "Client associated with the output buffer.")
 
-(defvar mds-output-track-input t
+(defvar mds-out-track-input t
   "If non-nil, track (echo) the input line to the output after each command.")
 
 (make-variable-buffer-local 'mds-client)
-(make-variable-buffer-local 'mds-output-track-input)
+(make-variable-buffer-local 'mds-out-track-input)
 
 ;;}}}
 
 ;;{{{ Create and clear buffer
 
-(defun mds-output-create-buffer (client)
-  "Create and return an `mds-output-buffer' with client CLIENT."
-  (let ((buf (generate-new-buffer "*mds-output*")))
+(defun mds-out-create-buffer (client)
+  "Create and return an `mds-out-buffer' with client CLIENT."
+  (let ((buf (generate-new-buffer "*mds-out*")))
     (with-current-buffer buf
-      (mds-output-mode)
+      (mds-out-mode)
       (setq mds-client client))
     buf))
 
-(defun mds-output-clear ()
+(defun mds-out-clear ()
   "Clear the debugger output buffer."
   (interactive)
-  (let ((buf (mds--get-client-out-buf mds-client)))
+  (let ((buf (mds-client-out-buf mds-client)))
     (when (bufferp buf)
       (with-current-buffer buf
 	(delete-region (point-min) (point-max))))))
@@ -152,14 +152,14 @@ If optional TAG is present, insert it into the buffer before MSG."
   "Put FACE as a `font-lock-fact' text property on text between BEG and END."
   (put-text-property beg end 'font-lock-face face))
 
-(defun mds-output-append-input (buf msg face)
+(defun mds-out-append-input (buf msg face)
   "Append string MSG and newline to the output buffer BUF.
 MSG is considered external input from a user, so the state-number
-in the prompt is cleared. The purpose is to prevent `mds-output-goto-line'
+in the prompt is cleared. The purpose is to prevent `mds-out-goto-line'
 from going to a statement that does not correspond to procedure evaluation."
   (with-current-buffer buf
     (beginning-of-line)
-    (if (looking-at mds-output-prompt-re)
+    (if (looking-at mds-out-prompt-re)
 	(replace-match "" 'fixedcase 'literal nil 1))
     (goto-char (point-max))
     (mds-insert-and-font-lock msg face)
@@ -167,26 +167,26 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;}}}
 
-;;{{{ mds-output-get-ss-line
+;;{{{ mds-out-get-ss-line
 
 ;; FIXME: this belongs in mds-ss.el
 
-(defun mds-output-get-ss-line ()
+(defun mds-out-get-ss-line ()
   "Return the current input line of the live showstat buffer."
   ;; FIXME :: need to go to current line
-  (with-current-buffer (mds--get-client-live-buf mds-client)
+  (with-current-buffer (mds-client-live-buf mds-client)
     (save-excursion
-      (mds-goto-state mds-showstat-state)
+      (mds-goto-state mds-ss-state)
       (beginning-of-line)
-      (if (looking-at mds-output-ss-line-re)
+      (if (looking-at mds-out-ss-line-re)
 	  (match-string 1)
 	""))))
 
 ;;}}}
 
-;;{{{ mds-output-display
+;;{{{ mds-out-display
 
-(defun mds-output-display (buf msg &optional tag)
+(defun mds-out-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
   (unless (string= msg "") ;; FIXME: is empty-string possible?
@@ -206,8 +206,8 @@ Optional TAG identifies the message type."
 	     ((eq tag 'cmd)
 	      ;; Command
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd-face)
-	      (if mds-output-track-input
-		  (insert (mds-output-get-ss-line) "\n")
+	      (if mds-out-track-input
+		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
 	     
 	     ((eq tag 'prompt)
@@ -219,11 +219,11 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt-face)
 	      (delete-region (point) (line-end-position))
-	      (let* ((live-buf (mds--get-client-live-buf mds-client))
-		     (trace-mode (buffer-local-value 'mds-showstat-trace live-buf)))
+	      (let* ((live-buf (mds-client-live-buf mds-client))
+		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
 		(when trace-mode
-		  (if mds-output-track-input
-		      (insert (buffer-local-value 'mds-showstat-statement live-buf)))
+		  (if mds-out-track-input
+		      (insert (buffer-local-value 'mds-ss-statement live-buf)))
 		  (insert "\n")
 		  (mds-send-client mds-client (concat trace-mode "\n")))))
 
@@ -233,14 +233,14 @@ Optional TAG identifies the message type."
 	     ((eq tag 'addr-procname)
 	      (insert msg "\n")
 	      (goto-char beg)
-	      (mds-activate-addr-procname 'mds-output-view-proc))
+	      (mds-activate-addr-procname 'mds-out-view-proc))
 	     
 	     ((or (eq tag 'stack)
 		  (eq tag 'where))
 	      ;; stack or where
 	      (insert msg)
 	      (goto-char beg)
-	      (mds-activate-addr-procname 'mds-output-goto-proc))
+	      (mds-activate-addr-procname 'mds-out-goto-proc))
 
 	     ((eq tag 'args)
 	      ;; args
@@ -290,20 +290,20 @@ Optional TAG identifies the message type."
 ;; names are required (there is probably a better way).
 
 ;; define button used to hyperlink entry procname
-(define-button-type 'mds-output-view-proc
+(define-button-type 'mds-out-view-proc
   'help-echo "Open procedure"
-  'action 'mds-output-view-proc
+  'action 'mds-out-view-proc
   'follow-link t
   'face 'mds-entry-procname-face)
 
 ;; define button used to hyperlink showstack/where procnames
-(define-button-type 'mds-output-goto-proc
+(define-button-type 'mds-out-goto-proc
   'help-echo "Open procedure and goto statement"
-  'action 'mds-output-view-proc
+  'action 'mds-out-view-proc
   'follow-link t
   'face 'link)
 
-(defun mds-output-view-proc (button)
+(defun mds-out-view-proc (button)
   "Search at start of line for the Maple procedure name and
 optional statement (call) from the output generated by the
 'stack' and 'where' debugger commands."
@@ -315,7 +315,7 @@ optional statement (call) from the output generated by the
 	(let ((addr     (match-string-no-properties 2))
 	      (procname (match-string-no-properties 3))
 	      (statement (buffer-substring-no-properties (match-end 0) (line-end-position))))
-	  (mds-output-display-proc addr procname statement (and (string= statement "")
+	  (mds-out-display-proc addr procname statement (and (string= statement "")
 								"1")))))))
 
 ;;}}}
@@ -325,14 +325,14 @@ optional statement (call) from the output generated by the
 ;; Functions for moving to the appropriate line of code
 ;; in the dead-ss buffer.
 
-(defun mds-output-goto-source-click (click)
+(defun mds-out-goto-source-click (click)
   "Goto the source corresponding to the output at position of mouse CLICK."
   (interactive "e")
   (set-buffer (window-buffer (car (nth 1 click))))
-  (mds-output-goto-source-line (posn-point (event-start click))))
+  (mds-out-goto-source-line (posn-point (event-start click))))
 
 
-(defun mds-output-goto-source-line (pos)
+(defun mds-out-goto-source-line (pos)
   "Goto the line of source corresponding to the output at
 position POS in the output buffer.  This works by finding
 the closest prompt, extracting the line number, then finding
@@ -342,25 +342,25 @@ prompt so that it is later not matched."
   (interactive "d")
   (goto-char pos)
   (end-of-line)
-  (if (re-search-backward mds-output-prompt-re nil 'move)
+  (if (re-search-backward mds-out-prompt-re nil 'move)
       (let ((state (match-string-no-properties 1)))
 	(if (string= state "")
 	    (message "position does not correspond to output from procedure")
-	  (let ((addr-procname (mds-output-get-enclosing-addr-procname)))
+	  (let ((addr-procname (mds-out-get-enclosing-addr-procname)))
 	    (if addr-procname
-		(mds-output-display-proc (car addr-procname) (cdr addr-procname) "0" state)
+		(mds-out-display-proc (car addr-procname) (cdr addr-procname) "0" state)
 	      (ding)
 	      (message "no procedure found in buffer")))))))
 
-(defun mds-output-display-proc (addr procname statement &optional state)
+(defun mds-out-display-proc (addr procname statement &optional state)
   "Display procedure PROCNAME, with address ADDR, in the dead buffer.  Put arrow at STATEMENT.
 If STATEMENT is the string \"0\", then use STATE." ;; FIXME may be a bad choice
   (when procname
-    (mds-showstat-view-dead-proc addr procname statement state)
-    (mds-windows-display-dead mds-client)))
+    (mds-ss-view-dead-proc addr procname statement state)
+    (mds-wm-display-dead mds-client)))
   
 
-(defun mds-output-get-enclosing-addr-procname ()
+(defun mds-out-get-enclosing-addr-procname ()
   "Search upwards from point to find the first embedded addr and procname,
 an return the two as a cons cell, (addr . procname).  If none is
 found, return nil, and leave point at beginning of buffer."
@@ -373,27 +373,27 @@ found, return nil, and leave point at beginning of buffer."
 
 ;;}}}
 
-;;{{{ mds-output-mode (and mode-map)
+;;{{{ mds-out-mode (and mode-map)
 
-(defvar mds-output-mode-map nil
+(defvar mds-out-mode-map nil
   "Keymap for `mdb-output-mode'.")
 
-(unless mds-output-mode-map
+(unless mds-out-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-3] 'mds-output-goto-source-click)
-    (setq mds-output-mode-map map)))
+    (define-key map [mouse-3] 'mds-out-goto-source-click)
+    (setq mds-out-mode-map map)))
 
 
-(defun mds-output-mode ()
+(defun mds-out-mode ()
   "Major mode for the mds output buffer."
   (kill-all-local-variables)
-  (setq mode-name "mds-output")
-  (use-local-map mds-output-mode-map)
+  (setq mode-name "mds-out")
+  (use-local-map mds-out-mode-map)
   (font-lock-mode t)
-  (run-hooks 'mds-output-mode-hook))
+  (run-hooks 'mds-out-mode-hook))
 
 ;;}}}
 
-(provide 'mds-output)
+(provide 'mds-out)
 
-;; mds-output.el ends here
+;; mds-out.el ends here
