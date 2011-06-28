@@ -43,22 +43,22 @@
   :group 'mds)
 
 (defface mds-face-arg
-  '((((class color) (background dark)) (:foreground "magenta")))
+  '((((class color) (background dark)) :foreground "magenta"))
   "Face for arguments in a showstat buffer."
   :group 'mds-faces)
 
 (defface mds-face-prompt
-  '((((class color) (background dark)) (:foreground "Green")))
+  '((((class color) (background dark)) :foreground "Green"))
   "Face for the prompt in an mds buffer."
   :group 'mds-faces)
 
 (defface mds-face-procname-entered
-  '((((class color) (background dark)) (:foreground "Cyan")))
+  '((((class color) (background dark)) :foreground "Cyan"))
   "Face for the procname at entry in a debugger output buffer."
   :group 'mds-faces)
 
 (defface mds-face-procname-cont
-  '((((class color) (background dark)) (:foreground "LightBlue")))
+  '((((class color) (background dark)) :foreground "LightBlue"))
   "Face for the procname when continued in a debugger output buffer."
   :group 'mds-faces)
 

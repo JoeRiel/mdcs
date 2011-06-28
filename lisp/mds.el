@@ -158,8 +158,8 @@ Do not touch `mds-log-buffer'."
 	    (mds-writeto-log proc "accepted client"))
 
 	   ((null status)
-	    ;; Not yet registered
-	    (mds-client-add (mds-client-create proc "anonymous"))
+	    ;; not yet registered
+	    (mds-add-client (mds-create-client proc '("anonymous" "unknown" "unknown")))
 	    (mds-login proc msg))
 
 	   ((eq status 'rejected)
