@@ -42,13 +42,13 @@
 
 ;;}}}
 
-;;{{{ constants
+;;{{{ customizations
 
 (defgroup mds-wm nil
   "Maple Debugger Server Window Manager"
   :group 'mds)
 
-(defcustom mds-wm-side-by-side nil
+(defcustom mds-wm-side-by-side t
   "If non-nil, the showstat and output windows are displayed 
 side-by-side in a single client view."
   :type 'boolean
