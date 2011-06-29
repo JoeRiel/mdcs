@@ -41,6 +41,27 @@
 (declare-function mds-client-out-buf  "mds")
 
 ;;}}}
+
+;;{{{ customizations
+
+(defgroup mds-wm nil
+  "Maple Debugger Server Window Manager"
+  :group 'mds)
+
+(defcustom mds-wm-side-by-side t
+  "If non-nil, the showstat and output windows are displayed 
+side-by-side in a single client view."
+  :type 'boolean
+  :group 'mds-wm)
+
+(defcustom mds-wm-ss-size nil
+  "If non-nil, specifies the size of the showstat window.
+The size is the width of the window when `mds-wm-side-by-side'
+is non-nil, otherwise it is the height.  If nil, then the
+window is set to the same size as the output window."
+  :type 'boolean
+  :group 'mds-wm)
+
 ;;{{{ variables
 
 (defvar mds-frame nil "Frame used by mds")
@@ -56,11 +77,14 @@ are not in sublists.")
 
 (defun mds-wm-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
-The buffers are displayed in side-by-side windows that fill the
-frame, the showstat buffer on the left.  Return the client."
+The split direction and initial size of the showstat window are
+determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
+the client."
   (select-frame mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
-  (set-window-buffer (split-window-horizontally) (mds-client-out-buf client))
+  (set-window-buffer
+   (split-window nil mds-wm-ss-size mds-wm-side-by-side)
+   (mds-client-out-buf client))
   client)
 
 

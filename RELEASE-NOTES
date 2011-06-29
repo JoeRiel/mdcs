@@ -8,6 +8,9 @@
    Be sure to update any key bindings that use these.
 
 ** Split mds-client.el out of mds.el
+** install script modified:
+   Lisp files now go in ~/.emacs.d/mds.  It will remove the old ones.
+** Added options to set split direction and size of ss/output windows
 
 * mdcs-0.1.1.2:  Fixed bug with wmctrl; improved client and server documentation
 

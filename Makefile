@@ -4,7 +4,7 @@
 
 SHELL := /bin/bash
 
-VERSION := 0.1.1.3
+VERSION := 0.1.1.4
 
 include help-system.mak
 
@@ -131,7 +131,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds-client mds-menu mds
+ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds-client mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)
@@ -271,7 +271,7 @@ install-maple: $(mla)
 
 PHONY: zip
 
-dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README install
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES README install
 
 zip: $(dist)
 	zip mdcs-$(VERSION).zip $+

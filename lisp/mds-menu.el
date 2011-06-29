@@ -20,11 +20,6 @@
   :type 'boolean
   :group 'mds)
 
-(defcustom mds-menu-compact-output nil
-  "If non-nil, then use the compact form for the output."
-  :type 'boolean
-  :group 'mds)
-
 (defcustom mds-login-allow-anon nil
   "If non-nil, then allow anonymous login"
   :type 'boolean
@@ -67,7 +62,7 @@ TITLE is enabled|disabled."
       ,(mds-menu-toggle "Echo input"  mds-menu-echo-input)
       ,(mds-menu-toggle "Truncate showstat" mds-menu-truncate-showstat)
       ,(mds-menu-toggle "Truncate output" mds-menu-truncate-output)
-      ,(mds-menu-toggle "Compact output" mds-menu-compact-output)
+      ,(mds-menu-toggle "Side by Side" mds-wm-side-by-side)
       )
      "---"
      ["Debugger help" mds-help t]
