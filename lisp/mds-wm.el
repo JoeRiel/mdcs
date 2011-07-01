@@ -31,6 +31,9 @@
 
 ;;; Code
 
+(eval-when-compile
+  (require 'mds-client))
+
 ;;{{{ declarations
 
 ;; avoid compiler warnings
