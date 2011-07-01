@@ -12,7 +12,9 @@
 
 ;;;
 
-(require 'mds-re)
+(eval-when-compile
+  (require 'mds-re)
+  (require 'mds-client))
 
 ;;{{{ declarations
 
@@ -22,7 +24,7 @@
 (declare-function mds-goto-state "mds-ss")
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
-(declare-function mds-send-client "mds")
+(declare-function mds-client-send "mds")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
 
@@ -100,9 +102,6 @@ The first group matches the statement, with some indentation.")
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-client nil
-  "Client associated with the output buffer.")
-
 (defvar mds-out-track-input t
   "If non-nil, track (echo) the input line to the output after each command.")
 
@@ -127,7 +126,7 @@ The first group matches the statement, with some indentation.")
   (let ((buf (mds-client-out-buf mds-client)))
     (when (bufferp buf)
       (with-current-buffer buf
-	(delete-region (point-min) (point-max))))))
+	(erase-buffer)))))
 
 ;;}}}
 
@@ -225,7 +224,7 @@ Optional TAG identifies the message type."
 		  (if mds-out-track-input
 		      (insert (buffer-local-value 'mds-ss-statement live-buf)))
 		  (insert "\n")
-		  (mds-send-client mds-client (concat trace-mode "\n")))))
+		  (mds-client-send mds-client (concat trace-mode "\n")))))
 
 	     ((eq tag 'output)
 	      (insert msg))

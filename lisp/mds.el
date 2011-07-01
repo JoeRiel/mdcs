@@ -41,15 +41,16 @@
 
 ;;{{{ Lisp Requirements
 
+(require 'maplev)
 (require 'mds-client)
 (require 'mds-cp)
-(require 'mds-re)
+;;(require 'mds-edit)
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
+(require 'mds-re)
 (require 'mds-ss)
 (require 'mds-wm)
-(require 'maplev)
 (eval-when-compile
   (require 'hl-line))
 
@@ -273,15 +274,6 @@ If found, pass it to the function in the queue."
 	    (let ((proc (mds-queue-proc queue)))
 	      (with-current-buffer (mds-client-live-buf (assq proc mds-clients))
 		(mds-handle-stream proc msg)))))))))
-
-;;}}}
-
-;;{{{ mds-send-client
-
-(defun mds-send-client (client msg)
-  "Send MSG to CLIENT."
-  (let ((proc (mds-client-proc client)))
-    (process-send-string proc msg)))
 
 ;;}}}
 

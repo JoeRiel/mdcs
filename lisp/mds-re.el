@@ -1,3 +1,37 @@
+;;; mds-re.el
+
+;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
+
+;; Author:     Joseph S. Riel <jriel@maplesoft.com>
+;; Created:    Jan 2011
+;; Keywords:   maple, debugger 
+;;
+;;; Commentary:
+
+;; This file contains the source for the Emacs Maple debugger server.
+;; It is a part of the Maple Debugger Client Server package.
+
+;;{{{ License
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software
+;; Foundation, Inc.,  51 Franklin St, Fifth Floor, Boston, MA
+;; 02110-1301, USA.
+
+;;}}}
+
+
+
 (defconst mds--addr-tag-re "<\\([0-9]+\\)>"
   "Regexp that matches an address tag.  The first group matches the address,
 the total match includes the delimiters.")
@@ -44,6 +78,12 @@ The first group matches the address, the second matches the
 procedure name, the third group matches the state number,
 the fourth group matches the statement.")
 
+(defconst mds-procname-assignment-re "^\\([^ \t\n]+\\) := *"
+  "Match an assignment to a procedure.
+The procname is flush left.  See diatribe in
+`mds-ss-where-procname-re'.")
+
+
 (defconst mds-start-tag-re "^<\\([^>]+\\)>"
   "Regular expression that matches start tag.
 The tag has format <tag-name>.  Group 0 matches the tag,
@@ -54,6 +94,9 @@ group 1 matches tag-name.")
 The first group identifies SOMETHING.")
 
 (defconst mds-end-of-msg-re "---EOM---")
+
+(defconst mds-ss-mark-re "^ +[0-9]+[*!]?"
+  "Regexp that matches the statement mark added by showstat.")
 
 (defun mds-activate-addr-procname (&optional button)
   "If looking at an address-procname, hide the address and apply
@@ -71,3 +114,5 @@ the address and procname."
       (cons addr procname))))
 
 (provide 'mds-re)
+
+;; mds-re.el ends ehre

@@ -84,7 +84,7 @@ The process calls the executable given by `mds-where-swhere'."
     (with-current-buffer buffer
       (if proc (delete-process proc))
       (setq buffer-read-only nil)
-      (delete-region (point-min) (point-max))
+      (erase-buffer)
       (insert (format "%s:\n" name)))
     (set-process-sentinel
      (setq proc (start-process "swhere"
@@ -140,7 +140,7 @@ it is the complete perforce path specification."
     (with-current-buffer buffer
       (if proc (delete-process proc))
       (setq buffer-read-only nil)
-      (delete-region (point-min) (point-max)))
+      (erase-buffer))
     (set-process-sentinel
      (setq proc (start-process "p4"
 			       buffer

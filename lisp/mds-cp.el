@@ -139,7 +139,7 @@ to using the key-binding in the active client's live showstat buffer."
   :group 'mds
 
   
-  (delete-region (point-min) (point-max))
+  (erase-buffer)
 
   ;;{{{ create widgets
   (widget-create 'push-button

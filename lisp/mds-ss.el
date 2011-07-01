@@ -12,11 +12,12 @@
 
 ;;; Code:
 
-(require 'maplev)
-(require 'mds-out)
-(require 'mds-wm)
 (eval-when-compile
-  (require 'hl-line))
+  (require 'hl-line)
+  (require 'maplev)
+  (require 'mds-out)
+  (require 'mds-re)
+  (require 'mds-wm))
 
 ;;{{{ declarations
 
@@ -25,7 +26,7 @@
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-dead-buf "mds")
-(declare-function mds-send-client "mds")
+(declare-function mds-client-send "mds")
 
 ;;}}}
 
@@ -93,9 +94,6 @@ with a colon.  The colon is omitted from the group-one match.
 A more precise regular expression would allow spaces inside backquotes,
 however, such an abomination should break something.")
 
-(defconst mds-ss-procname-assignment-re "^\\([^ \t\n]+\\) :="
-  "Match an assignment to a procedure in the showstat buffer.
-The procname is flush left.  See diatribe in `mds-ss-where-procname-re'.")
 
 ;;}}}
 ;;{{{ variables
@@ -106,10 +104,9 @@ The procname is flush left.  See diatribe in `mds-ss-where-procname-re'.")
 ;; (defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
 
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
-(defvar mds-client                  nil "Client structure associated with buffer.")
 (defvar mds-ss-addr           nil "Address of displayed showstat procedure.")
 (defvar mds-ss-last-debug-cmd ""  "The previous debugger command.")
-(defvar mds-ss-live	    nil "Store current state of active procedure")
+(defvar mds-ss-live	      nil "Store current state of active procedure")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure.")
 (defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
@@ -143,7 +140,7 @@ The procname is flush left.  See diatribe in `mds-ss-where-procname-re'.")
 ;; in the debugged code.
 
 (defun mds-ss-send-client (msg)
-  (mds-send-client mds-client msg))
+  (mds-client-send mds-client msg))
 
 (defun mds-ss-eval-debug-code (cmd &optional hide)
   "Send CMD, with appended newline, to the Maple process and to the output buffer.
@@ -308,7 +305,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 
     (let ((buffer-read-only nil))
       ;; Delete old contents then insert the new.
-      (delete-region (point-min) (point-max))
+      (erase-buffer)
       (insert proc)
 
       ;; Hide the address and assign `mds-ss-addr'
@@ -914,7 +911,8 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Evaluation"
        ["Evaluate expression"			mds-eval-and-display-expr t]
        ["Evaluate expression in global context" mds-eval-and-display-expr-global t]
-       ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t] )
+       ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t] 
+       ["Edit procedure"                        mds-edit-ss-to-proc t] )
 
       ("Information"
        ["Display parameters and values" mds-show-args-as-equations t]
@@ -926,9 +924,8 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Show exception raw"		(mds-showexception t) t] )
 
       ("Miscellaneous"
-       ;;["Pop to Mds buffer"        mds-pop-to-mds-buffer t]
-       ["Clear debugger output"    mds-out-clear t]
-       ["Toggle truncate lines"    mds-toggle-truncate-lines t]
+       ["Clear debugger output"         mds-out-clear t]
+       ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t] )
       
 

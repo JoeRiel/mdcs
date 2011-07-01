@@ -33,7 +33,7 @@
 (declare-function mds-kill-buffer "mds")
 
 
-
+(defvar mds-client nil "Buffer-local client structure.")
 
 (defvar mds-clients '() 
   "Assoc-list containing info of accepted clients, indexed by the associated process.
@@ -100,11 +100,16 @@ kill the buffers, and decrement `mds-clients-number'."
   (setq mds-clients (cons client mds-clients)
 	mds-clients-number (1+ mds-clients-number)))
 
+(defun mds-client-send (client msg)
+  "Send MSG to CLIENT."
+  (let ((proc (mds-client-proc client)))
+    (process-send-string proc msg)))
+
+
+
 (defun mds-clients-kill ()
   "Kill all clients in `mds-clients'."
   (while mds-clients
       (mds-client-delete (car mds-clients))))
-
-
 
 (provide 'mds-client)
