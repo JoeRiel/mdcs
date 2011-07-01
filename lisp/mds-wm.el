@@ -88,8 +88,12 @@ window."
       (let ((win (get-buffer-window (mds-client-out-buf mds-client))))
 	(if (null win)
 	    (switch-to-buffer ss-buf)
-	  (select-window win)
-	  (switch-to-buffer-other-window ss-buf))))))
+	  (if (= 1 (length (window-list)))
+	      ;; out-buf is only window displayed,
+	      ;; so just start over.  Hackish.
+	      (mds-wm-display-client mds-client)
+	    (select-window win)
+	    (switch-to-buffer-other-window ss-buf)))))))
 
 ;;}}}
 	  
