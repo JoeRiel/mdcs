@@ -378,7 +378,10 @@ POINT is moved to the indentation of the current line."
 	  ;; Move point to indentation of the current line (not including the state number).
 	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
 	;; Ensure marker is visible in buffer.
-	(set-window-point (get-buffer-window) (point)))))
+	(set-window-point (get-buffer-window) (point))
+	;; Ensure live-ss-buf is displayed.
+	(mds-wm-display-live-buf))))
+
 
 ;;}}}
 

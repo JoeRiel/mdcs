@@ -41,7 +41,6 @@
 (declare-function mds-client-out-buf  "mds")
 
 ;;}}}
-
 ;;{{{ customizations
 
 (defgroup mds-wm nil
@@ -62,6 +61,7 @@ window is set to the same size as the output window."
   :type 'boolean
   :group 'mds-wm)
 
+;;}}}
 ;;{{{ variables
 
 (defvar mds-frame nil "Frame used by mds")
@@ -72,6 +72,24 @@ together are combined in a sublist.  Clients that are not grouped
 are not in sublists.")
 
 ;;}}}
+
+;;{{{ Display particular buffers
+
+(defun mds-wm-display-live-buf ()
+  "Display the live showstat buffer.
+If the buffer is already displayed, do nothing.  If the output
+buffer is diplayed, display the showstat buffer in another
+window."
+  (let ((ss-buf (mds-client-live-buf mds-client)))
+    (unless (get-buffer-window ss-buf) ;; what about on other frame?
+      (let ((win (get-buffer-window (mds-client-out-buf mds-client))))
+	(if (null win)
+	    (switch-to-buffer ss-buf)
+	  (select-window win)
+	  (switch-to-buffer-other-window ss-buf))))))
+
+;;}}}
+	  
 
 ;;{{{ display single client
 
@@ -152,7 +170,6 @@ assign the list to `mds-wm-grouped-clients'."
   (setq mds-wm-grouped-clients (mds-wm-group-clients mds-clients)))
 
 ;;}}}
-
 ;;{{{ mds-wm-cycle-clients
 
 (defun mds-wm-cycle-clients (&optional backwards)
