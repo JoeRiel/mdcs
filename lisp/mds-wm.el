@@ -31,12 +31,12 @@
 
 ;;; Code
 
-(eval-when-compile
-  (require 'mds-client))
-
-;;{{{ declarations
+;;{{{ requirements and declarations
 
 ;; avoid compiler warnings
+
+(eval-when-compile
+  (require 'mds-client))
 
 (declare-function mds-client-id "mds")
 (declare-function mds-client-live-buf "mds")
