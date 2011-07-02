@@ -32,11 +32,11 @@
 
 ;;; Code
 
-(require 'widget)
 (eval-when-compile
   (require 'mds-client)
-  (require 'mds-wm)
-  (require 'wid-edit))
+  (require 'wid-edit)
+  (require 'widget)
+  (require 'mds-wm))
   
 
 ;;{{{ declarations

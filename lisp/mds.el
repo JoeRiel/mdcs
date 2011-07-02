@@ -51,8 +51,6 @@
 (require 'mds-re)
 (require 'mds-ss)
 (require 'mds-wm)
-(eval-when-compile
-  (require 'hl-line))
 
 ;;}}}
 
