@@ -66,6 +66,7 @@ Texts.  A copy of the license is included in the section entitled
 * Launching MDS::               Starting the server
 * Showstat Buffer::             Stepping through code
 * Output Buffer::               Maple output
+* Debugging Tips::              Useful tips and technique
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
 * Command and Variable Index::  Indices of commands and variables
@@ -845,7 +846,7 @@ with the default the word under then cursor.
 
 
 
-@node Output Buffer, , Showstat Buffer, Top
+@node Output Buffer, Debugging Tips, Showstat Buffer, Top
 @chapter Output Buffer
 @cindex output buffer
 
@@ -876,11 +877,11 @@ buffer, the procedure at the appropriate statement that generated that output.
 
 
 
-@node  Debugging Hints, Main Index, Output Buffer, Top
-@chapter Debugging Hints
-@cindex debugging hints
+@node  Debugging Tips, Main Index, Output Buffer, Top
+@chapter Debugging Tips
+@cindex debugging tips
 
-MDS provides some convenient ways to debug Maple code.
+MDS provides convenient ways to debug Maple code.
 
 @itemize @bullet
 
@@ -898,7 +899,7 @@ debugger and reexecute the code in Maple.  The debugger will then stop
 
 
 
-@node Main Index, Key Index, Debugging Hints, Top
+@node Main Index, Key Index, Debugging Tips, Top
 @unnumbered Main Index
 @printindex cp
 
