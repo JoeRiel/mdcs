@@ -157,20 +157,10 @@ hdb := mdc.hdb
 hdb: $(call print-help,hdb,Create Maple help database)
 hdb: mdc.hdb
 
-# mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
-# 	mpldoc -c nightly $+
-# 	shelp -h $@ create
-# 	ls maple/mhelp/*.i | xargs -n1 shelp -h $@ load
-
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	mpldoc -c nightly $+
 	shelp -h $@ create
-	maple -c "makehelp(\"mdc\",\"maple/mhelp/mdc.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[mdc]\",\"maple/mhelp/mdc-mdc.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid]\",\"maple/mhelp/mdc-Grid.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid][CodeString]\",\"maple/mhelp/mdc-Grid-CodeString.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid][Procedure]\",\"maple/mhelp/mdc-Grid-Procedure.mw\",\"$@\")" \
-	      -c done
+	echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | maple 
 
 # }}}
 
@@ -214,7 +204,7 @@ INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISP_FILES)))
 INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
 
 install: $(call print-help,install,Install everything)
-install: $(addprefix install-,dev html info lisp maple)
+install: $(addprefix install-,dev hdb html info lisp maple)
 
 install-dev: $(call print-help,install-dev,Install everything but hdb)
 install-dev: install-elc install-info install-maple
@@ -284,14 +274,14 @@ zip: $(dist)
 
 clean: $(call print-help,clean,Remove built files)
 clean:
-	-$(RM) lisp/*.elc maple/src/_preview_.mm
+	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
 	-$(RM) $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
 	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
-	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla)
+	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla) $(MAPLE_INSTALL_DIR)/$(hdb)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}
