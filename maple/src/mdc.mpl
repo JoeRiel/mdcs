@@ -19,10 +19,10 @@
 ##-- A common, full-featured, debugger interface that can be used
 ##  whether running Maple from the GUI or the command-line.
 ##
-##-- Remote debugging; client (Maple) can be run on one machine,
+##-- Remote debugging; the client (Maple) can be run on one machine,
 ##  the server on another. Communication is via standard TCP.
 ##
-##-- Concurrent debugging; Maple processes can debugged
+##-- Concurrent debugging; Maple processes can be debugged
 ##  simultaneously. This permits interactively comparing the actions
 ##  of different versions of code, or comparing code run on machines
 ##  with different operating systems. It also permits independently or
@@ -102,7 +102,7 @@
 ##  clients, are identical, the clients are grouped in the server.
 ##  The basename is the substring of `label` that matches
 ##  the first group in the regular expression ~^([^-]+)-[0-9]+$~,
-##  that is, everything before a hypen followed by digits
+##  that is, everything before a hyphen followed by digits
 ##  that terminate the string.  For example, ~"foo-1"~ and ~"foo-2"~
 ##  share a common basename, ~"foo"~, and so would be grouped together.
 ##  The default label is the return value of _kernelopts('username')_.
@@ -475,7 +475,7 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1.1.3";
+    Version := "0.1.1.4";
 
 #}}}
 

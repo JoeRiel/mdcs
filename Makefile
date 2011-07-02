@@ -2,9 +2,9 @@
 #
 # Maintainer: Joe Riel <jriel@maplesoft.com>
 
-SHELL := /bin/sh
+SHELL := /bin/bash
 
-VERSION := 0.1.1.3
+VERSION := 0.1.1.4
 
 include help-system.mak
 
@@ -131,7 +131,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-regexps mds-showstat mds-output mds-windows mds-login mds
+ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds-client mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)
@@ -140,9 +140,12 @@ byte-compile: $(call print-help,byte-compile,Byte compile $(LISP_FILES))
 byte-compile: $(ELC_FILES)
 
 %.elc : %.el
-	$(RM) $@
+	@$(RM) $@
 	@echo Byte-compiling $+
-	@$(ELC) $<
+	@err=$$($(ELC) $< 2>&1 > /dev/null | sed '/^Wrote/d') ; \
+		if [ ! -z "$$err" ]; then \
+			echo $(call warn,$$err); \
+		fi
 
 # }}}
 
@@ -154,20 +157,10 @@ hdb := mdc.hdb
 hdb: $(call print-help,hdb,Create Maple help database)
 hdb: mdc.hdb
 
-# mdc.hdb : maple/src/mdc.mpl maple/src/*.mm
-# 	mpldoc -c nightly $+
-# 	shelp -h $@ create
-# 	ls maple/mhelp/*.i | xargs -n1 shelp -h $@ load
-
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	mpldoc -c nightly $+
 	shelp -h $@ create
-	maple -c "makehelp(\"mdc\",\"maple/mhelp/mdc.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[mdc]\",\"maple/mhelp/mdc-mdc.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid]\",\"maple/mhelp/mdc-Grid.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid][CodeString]\",\"maple/mhelp/mdc-Grid-CodeString.mw\",\"$@\")" \
-	      -c "makehelp(\"mdc[Grid][Procedure]\",\"maple/mhelp/mdc-Grid-Procedure.mw\",\"$@\")" \
-	      -c done
+	echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | maple 
 
 # }}}
 
@@ -211,7 +204,7 @@ INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISP_FILES)))
 INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
 
 install: $(call print-help,install,Install everything)
-install: $(addprefix install-,dev html info lisp maple)
+install: $(addprefix install-,dev hdb html info lisp maple)
 
 install-dev: $(call print-help,install-dev,Install everything but hdb)
 install-dev: install-elc install-info install-maple
@@ -268,7 +261,7 @@ install-maple: $(mla)
 
 PHONY: zip
 
-dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) README install
+dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES README install
 
 zip: $(dist)
 	zip mdcs-$(VERSION).zip $+
@@ -281,14 +274,14 @@ zip: $(dist)
 
 clean: $(call print-help,clean,Remove built files)
 clean:
-	-$(RM) lisp/*.elc maple/src/_preview_.mm
+	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
 	-$(RM) $(filter-out doc/mds.texi,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
 	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
-	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla)
+	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla) $(MAPLE_INSTALL_DIR)/$(hdb)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}

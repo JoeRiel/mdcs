@@ -20,11 +20,6 @@
   :type 'boolean
   :group 'mds)
 
-(defcustom mds-menu-compact-output nil
-  "If non-nil, then use the compact form for the output."
-  :type 'boolean
-  :group 'mds)
-
 (defcustom mds-login-allow-anon nil
   "If non-nil, then allow anonymous login"
   :type 'boolean
@@ -34,6 +29,17 @@
   "If non-nil, then allow anonymous login"
   :type 'boolean
   :group 'mds)
+
+(defmacro mds-menu-toggle (title flag)
+  "Create menu entry, with TITLE, that toggles FLAG variable.
+When activated, it toggles the variable and displays the message
+TITLE is enabled|disabled."
+  `[,title
+    (progn 
+      (setq ,flag (not ,flag))
+      (message "%s is %s" ',title (if ,flag "enabled" "disabled")))
+    :style toggle
+    :selected ,flag])
 
 
 (defvar maple-menu-keymap (make-sparse-keymap))
@@ -56,7 +62,7 @@
       ,(mds-menu-toggle "Echo input"  mds-menu-echo-input)
       ,(mds-menu-toggle "Truncate showstat" mds-menu-truncate-showstat)
       ,(mds-menu-toggle "Truncate output" mds-menu-truncate-output)
-      ,(mds-menu-toggle "Compact output" mds-menu-compact-output)
+      ,(mds-menu-toggle "Side by Side" mds-wm-side-by-side)
       )
      "---"
      ["Debugger help" mds-help t]
@@ -69,22 +75,9 @@
     ))
 
 ;; This will go elsewhere; maybe in .emacs.
-(easy-menu-add-item global-map '("menu-bar") maple-menu "help-menu") 
+;;(easy-menu-add-item global-map '("menu-bar") maple-menu "help-menu") 
   
-(defmacro mds-menu-toggle (title flag)
-  "Create menu entry, with TITLE, that toggles FLAG variable.
-When activated, it toggles the variable and displays the message
-TITLE is enabled|disabled."
-  `[,title
-    (progn 
-      (setq ,flag (not ,flag))
-      (message "%s is %s" ',title (if ,flag "enabled" "disabled")))
-    :style toggle
-    :selected ,flag])
-
-(macroexpand '(mds-menu-toggle "Beep" mds-menu-beep))
-
-
+;;(macroexpand '(mds-menu-toggle "Beep" mds-menu-beep))
 
 (defun mds-read-numeric (prompt initial &optional min max )
   (let (n)
@@ -113,3 +106,4 @@ TITLE is enabled|disabled."
   (setq mds-port (mds-read-numeric "max clients: " mds-max-number-clients 1)))
 
 
+(provide 'mds-menu)
