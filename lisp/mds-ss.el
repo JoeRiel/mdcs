@@ -889,7 +889,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Step"		mds-step t]
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
-       ["Quit"		mds-step t]
+       ["Quit"		mds-step t])
 
       ("Stop points"
        ["Set breakpoint at point"    mds-breakpoint t]
