@@ -775,7 +775,6 @@ the `mds-ss-buffer'."
       (make-text-button (match-beginning 1) (match-end 1) 
 			:type 'mds-ss-open-button)))
 
-
 (defun mds-help-debugger ()
   "Display the Maple help page for the tty debugger."
   (interactive)
@@ -829,8 +828,6 @@ the `mds-ss-buffer'."
 	   ("x" . mds-showexception)
 	   ("X" . mds-showerror)
 	   ("." . mds-eval-and-prettyprint)
-	   ("\C-c\C-c" . mds-kill-maple)
-	   ;;("\C-c\C-o" . mds-pop-to-mds-buffer)
 	   )))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
@@ -893,7 +890,6 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
        ["Quit"		mds-step t]
-       ["Kill"		mds-kill-maple t])
 
       ("Stop points"
        ["Set breakpoint at point"    mds-breakpoint t]
@@ -929,13 +925,13 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Miscellaneous"
        ["Clear debugger output"         mds-out-clear t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
-       ["Toggle display of arguments"   mds-toggle-show-args t] )
-      
+       ["Toggle display of arguments"   mds-toggle-show-args t]
+
+       )
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]
        ["Info for Mds mode"        mds-info t])
-
       )))
 
 ;;}}}
@@ -956,7 +952,6 @@ Tracing
 \\[mds-return] (return) continue executing until current procedure returns
 \\[mds-cycle-trace] select auto-trace mode
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
-\\[mds-kill-maple] kill and restart the Maple process
 
 Stop points
 -----------

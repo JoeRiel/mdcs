@@ -112,4 +112,20 @@ kill the buffers, and decrement `mds-clients-number'."
   (while mds-clients
       (mds-client-delete (car mds-clients))))
 
+
+(defun mds-client-interrupt (client)
+  ;; Interrupt the kernel.  Alas, I don't know a general way to do
+  ;; this, one that works across OSes, Maple interfaces, etc.  More
+  ;; exactly, I only know of one method that works for one case; when
+  ;; the process is local (and permission is available), sending
+  ;; SIGINT to the tty controlling the mserver works.
+  ;;
+  ;; We should be able to interrupt Maple running on a different
+  ;; machine.  We can communicate with the process (maybe).  Is there
+  ;; a way to force it to interrupt?  That currently is *not* handled
+  ;; by the Debugger code.
+  (ding)
+  (message "Interrupting is currently not implemented.  Use quit to close the debugger connection, then manually interrupt Maple."))
+
+
 (provide 'mds-client)
