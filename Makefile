@@ -67,8 +67,9 @@ MAPLE_INSTALL_DIR := $(HOME)/maple/lib
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
- LISP_DIR := $(shell cygpath --mixed "$(LISP_DIR)")
- INFO_DIR := $(shell cygpath --mixed "$(INFO_DIR)")
+ LISP_BASE := $(shell cygpath --mixed "$(LISP_BASE)")
+ LISP_DIR  := $(shell cygpath --mixed "$(LISP_DIR)")
+ INFO_DIR  := $(shell cygpath --mixed "$(INFO_DIR)")
  MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
 # MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
@@ -163,8 +164,8 @@ mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
             if [ ! -z "$$err" ]; then \
 		echo $(call warn,$$err); \
             fi
-	@shelp -h $@ create
-	@echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | maple -q 
+	#@shelp -h $@ create
+	@echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | $(MAPLE) -q 
 
 # }}}
 
