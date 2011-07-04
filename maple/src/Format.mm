@@ -69,7 +69,7 @@ local indexed2slashed
 ##
 ##EXAMPLES
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
-##> macro(printargs=\MOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
+##> macro(printargs=\MOD:-\SUBMOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
 ##> f(3);
 ##> f(3,4,keyword);
@@ -346,9 +346,6 @@ local indexed2slashed
 ##  names of procedures that require the
 ##  use of ~kernelopts(opaquemodules=false)~
 ##  to access.
-##
-##EXAMPLES
-##> \MOD:-\CMD("int");
 ##
 ##TEST
 ## $include <AssignFunc.mi>

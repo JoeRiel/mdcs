@@ -17,6 +17,7 @@ if [ ! -f $zipfile ]; then
 fi
 
 make cleanall
+rm -rf ~/.emacs.d/mds
 rm --force --recursive tmp
 mkdir tmp
 cp $zipfile tmp
