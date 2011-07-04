@@ -18,12 +18,14 @@ emacs --no-site-file \
       lisp/*.el
 
 CP="cp --preserve --verbose"
+MKDIR="mkdir --parent"
 RM="rm --force --verbose"
 
 # remove old mds stuff; now in mds subdirectory
 $RM $LISP_DIR/mds*.el $LISP_DIR/mds*.elc
 
 echo -e "\nInstalling lisp files"
+$MKDIR $LISP_DIR
 $CP lisp/*.el lisp/*.elc $LISP_DIR
 echo -e "\nInstalling info files"
 $CP doc/mds $INFO_DIR
