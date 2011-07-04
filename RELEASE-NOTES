@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-0.1.1.4 
+** info: added section on output buffer, started tips section
+** ensure live-ss-buf is displayed
 * mdcs-0.1.1.3:
 
 ** Renamed many of the functions and some of the files.
