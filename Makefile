@@ -164,7 +164,7 @@ mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
             if [ ! -z "$$err" ]; then \
 		echo $(call warn,$$err); \
             fi
-	#@shelp -h $@ create
+	@shelp -h $@ create
 	@echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | $(MAPLE) -q 
 
 # }}}

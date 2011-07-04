@@ -17,7 +17,6 @@ emacs --no-site-file \
       --funcall=batch-byte-compile \
       lisp/*.el
 
-exit 1
 CP="cp --preserve --verbose"
 RM="rm --force --verbose"
 
