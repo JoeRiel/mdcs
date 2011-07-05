@@ -158,9 +158,8 @@ hdb: $(call print-help,hdb,Create Maple help database)
 hdb: mdc.hdb
 
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
-	mpldoc -c nightly $+
-	shelp -h $@ create
-	echo "read \"maple/etc/makehelp.mpl\":MakeHelpAll(\"maple/mhelp\",\"$@\");" | maple 
+	@mpldoc -c nightly $+
+	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 # }}}
 
@@ -275,7 +274,7 @@ zip: $(dist)
 clean: $(call print-help,clean,Remove built files)
 clean:
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
-	-$(RM) $(filter-out doc/mds.texi,$(wildcard doc/*))
+	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)

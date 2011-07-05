@@ -1,5 +1,6 @@
 *~
 /doc/*
+!/doc/MapleHelp_en.xml
 !/doc/*.texi
 TAGS
 
