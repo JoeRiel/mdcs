@@ -50,14 +50,6 @@
 (declare-function mds-wm-display-dead "mds-wm")
 
 ;;}}}
-;;{{{ faces
-
-(defface mds-cp-face
-  '((((class color) (background dark)) (:foreground "lawn green")))
-  "Face for stack arguments."
-  :group 'mds-faces)
-
-;;}}}
 ;;{{{ constants
 
 ;;}}}

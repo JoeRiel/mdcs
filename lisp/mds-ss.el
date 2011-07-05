@@ -31,7 +31,7 @@
 ;;}}}
 
 ;;{{{ customization
-
+ 
 (defgroup mds nil
   "Maple Debugger Server."
   :group 'tools)
@@ -41,34 +41,6 @@
   :group 'boolean
   :group 'mds)
 
-
-;;{{{ (*) faces
-
-(defgroup mds-faces nil
-  "Faces for mds and related modes."
-  :group 'mds)
-
-(defface mds-face-arg
-  '((((class color) (background dark)) :foreground "magenta"))
-  "Face for arguments in a showstat buffer."
-  :group 'mds-faces)
-
-(defface mds-face-prompt
-  '((((class color) (background dark)) :foreground "Green"))
-  "Face for the prompt in an mds buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-entered
-  '((((class color) (background dark)) :foreground "Cyan"))
-  "Face for the procname at entry in a debugger output buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-cont
-  '((((class color) (background dark)) :foreground "LightBlue"))
-  "Face for the procname when continued in a debugger output buffer."
-  :group 'mds-faces)
-
-;;}}}
 ;;{{{ (*) cursors
 
 (defcustom mds-cursor-waiting 'hollow
@@ -647,14 +619,6 @@ The result is returned in the message area."
 				  mds-thisproc)))
 
 (defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
-
-(defun mds-prettify-args-as-equations (beg end)
-  "Font lock the argument names in the region from BEG to END."
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward mds--flush-left-arg-re end t)
-      (put-text-property (match-beginning 1) (match-end 1) 'face 'mds-face-arg))))
 
 (defun mds-showstack ()
   "Send the 'showstack' command to the debugger.
