@@ -1,5 +1,11 @@
 -*- org -*-
 
+* mdcs-0.1.1.5
+** Fixed bug pretty-printing tables
+** Fixed bug that restricted length of inactive showstat output
+** Added tips to mds info page
+** Defined colors for light background
+** Eliminate unused faces
 * mdcs-0.1.1.4 
 ** info: added section on output buffer, started tips section
 ** ensure live-ss-buf is displayed

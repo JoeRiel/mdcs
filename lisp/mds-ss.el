@@ -77,7 +77,7 @@ however, such an abomination should break something.")
 
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-addr           nil "Address of displayed showstat procedure.")
-(defvar mds-ss-last-debug-cmd ""  "The previous debugger command.")
+(defvar mds-ss-last-debug-cmd nil "The previous debugger command.")
 (defvar mds-ss-live	      nil "Store current state of active procedure")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure.")
@@ -690,7 +690,10 @@ the number of activation levels to display."
   (interactive)
   ;; This uses the debugger history and only works when we haven't
   ;; done anything behind the scenes.  Need to save last command.
-  (mds-ss-send-client "\n"))
+  (if mds-ss-last-debug-cmd
+      (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
+    (beep)
+    (message "no previous command")))
   
 
 ;;}}}

@@ -79,10 +79,10 @@ c (cont) continue execution until next breakpoint
 n (next) execute next statement at current nesting level
 i (into) execute next statement at any level in current procedure
 o (outfrom) execute current statement sequence or until breakpoint
-s (step) execute next statement at any level
 r (return) continue executing until current procedure returns
+s (step) execute next statement at any level
+t (trace) set tracing mode
 q (quit) terminate debugging, return to mdb buffer
-C-c C-c kill and restart the Maple process
 
 Breakpoints
 -----------
