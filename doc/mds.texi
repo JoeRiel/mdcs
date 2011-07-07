@@ -881,23 +881,64 @@ buffer, the procedure at the appropriate statement that generated that output.
 @chapter Debugging Tips
 @cindex debugging tips
 
-MDS provides convenient ways to debug Maple code.
 
-@itemize @bullet
+@section Set breakpoint in calling procedure
+
+After using @command{stoperror} to stop the debugger at the location of
+an error, it is apparent that the real problem lies in an ``upstream''
+procedure.  To debug it, you want to set a breakpoint in that procedure.
+
+@enumerate
+@item
+Use the @command{mds-where} command (@kbd{W}) to display the
+stack contents in the output buffer.
 
 @item
-Use @command{stoperror} to cause the debugger to stop at the statement
-that raises an error.  Frequently the cause of the error is ``upstream''
-in the source, possibly in a calling procedure.  To quickly set a
-breakpoint in the calling procedure execute @command{mds-where}
-(@kbd{w}) to display the stack contents in the output buffer, click on
-the relevant calling procedure, then, in the showstat-dead buffer, set a
-breakpoint at an appropriate statement in that procedure.  Quit the
-debugger and reexecute the code in Maple.  The debugger will then stop
+Click on the relevant calling procedure.  The procedure is
+displayed in the showstat-dead buffer
 
-@end itemize
+@item
+In the showstat-dead buffer, set a breakpoint at an appropriate
+statement in the calling procedure.
 
+@item
+Quit the debugger (@kbd{q}) and reexecute the code in Maple.  
+The debugger will halt in the procedure of interest.
 
+@end enumerate
+
+@section Locate source of unexpected result
+
+A computation gives the wrong result, but it is not apparent which
+procedure, or what line of code, is the culprit.  
+
+@enumerate
+
+@item
+Instrument and execute the initial procedure.  
+
+@item
+In the debugger, use the @command{mds-trace} command to select
+@strong{step} as the tracing mode. Execute @command{step} to begin
+tracing.  Every procedure that is called will be traced and the results
+written to the output buffer.  Tracing halts when the debugger exits.
+
+@item
+Use the @command{mds-trace} command to disable tracing.  
+
+@item
+In Maple, reexecute the code to reestablish debugging.  
+
+@item
+In the debugger output buffer, use the search facility of Emacs to find
+the first appearance of the undesired expression.
+
+@item
+Right-click on the expression in the output buffer; the showstat-dead
+buffer will open and display the procedure and statement that produced
+the result.
+
+@end enumerate
 
 @node Main Index, Key Index, Debugging Tips, Top
 @unnumbered Main Index
