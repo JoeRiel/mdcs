@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1.1.4
+@set VERSION 0.1.1.5
 @set DATE June 2011
 
 @dircategory Emacs
@@ -560,7 +560,16 @@ operational and permit quickly moving to places of interest.
 @kindex @key{SPACE}
 @findex mds-send-last-command
 @item @key{SPACE} (@code{mds-send-last-command})
-Re-execute the last command that executes a program statement.
+Re-execute the last command that executed a program statement.
+The saved commands are
+@command{cont},
+@command{into},
+@command{next},
+@command{outfrom},
+@command{return},
+@command{step},
+and
+@command{return}.
 
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple

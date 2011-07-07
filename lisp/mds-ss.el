@@ -31,7 +31,7 @@
 ;;}}}
 
 ;;{{{ customization
-
+ 
 (defgroup mds nil
   "Maple Debugger Server."
   :group 'tools)
@@ -41,34 +41,6 @@
   :group 'boolean
   :group 'mds)
 
-
-;;{{{ (*) faces
-
-(defgroup mds-faces nil
-  "Faces for mds and related modes."
-  :group 'mds)
-
-(defface mds-face-arg
-  '((((class color) (background dark)) :foreground "magenta"))
-  "Face for arguments in a showstat buffer."
-  :group 'mds-faces)
-
-(defface mds-face-prompt
-  '((((class color) (background dark)) :foreground "Green"))
-  "Face for the prompt in an mds buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-entered
-  '((((class color) (background dark)) :foreground "Cyan"))
-  "Face for the procname at entry in a debugger output buffer."
-  :group 'mds-faces)
-
-(defface mds-face-procname-cont
-  '((((class color) (background dark)) :foreground "LightBlue"))
-  "Face for the procname when continued in a debugger output buffer."
-  :group 'mds-faces)
-
-;;}}}
 ;;{{{ (*) cursors
 
 (defcustom mds-cursor-waiting 'hollow
@@ -105,7 +77,7 @@ however, such an abomination should break something.")
 
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-addr           nil "Address of displayed showstat procedure.")
-(defvar mds-ss-last-debug-cmd ""  "The previous debugger command.")
+(defvar mds-ss-last-debug-cmd nil "The previous debugger command.")
 (defvar mds-ss-live	      nil "Store current state of active procedure")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure.")
@@ -648,14 +620,6 @@ The result is returned in the message area."
 
 (defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
 
-(defun mds-prettify-args-as-equations (beg end)
-  "Font lock the argument names in the region from BEG to END."
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward mds--flush-left-arg-re end t)
-      (put-text-property (match-beginning 1) (match-end 1) 'face 'mds-face-arg))))
-
 (defun mds-showstack ()
   "Send the 'showstack' command to the debugger.
 Note that the string displayed in the echo area has the current
@@ -726,7 +690,10 @@ the number of activation levels to display."
   (interactive)
   ;; This uses the debugger history and only works when we haven't
   ;; done anything behind the scenes.  Need to save last command.
-  (mds-ss-send-client "\n"))
+  (if mds-ss-last-debug-cmd
+      (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
+    (beep)
+    (message "no previous command")))
   
 
 ;;}}}
@@ -774,7 +741,6 @@ the `mds-ss-buffer'."
   (if (looking-at mds-ss-where-procname-re)
       (make-text-button (match-beginning 1) (match-end 1) 
 			:type 'mds-ss-open-button)))
-
 
 (defun mds-help-debugger ()
   "Display the Maple help page for the tty debugger."
@@ -829,8 +795,6 @@ the `mds-ss-buffer'."
 	   ("x" . mds-showexception)
 	   ("X" . mds-showerror)
 	   ("." . mds-eval-and-prettyprint)
-	   ("\C-c\C-c" . mds-kill-maple)
-	   ;;("\C-c\C-o" . mds-pop-to-mds-buffer)
 	   )))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
@@ -892,8 +856,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Step"		mds-step t]
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
-       ["Quit"		mds-step t]
-       ["Kill"		mds-kill-maple t])
+       ["Quit"		mds-step t])
 
       ("Stop points"
        ["Set breakpoint at point"    mds-breakpoint t]
@@ -929,13 +892,13 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Miscellaneous"
        ["Clear debugger output"         mds-out-clear t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
-       ["Toggle display of arguments"   mds-toggle-show-args t] )
-      
+       ["Toggle display of arguments"   mds-toggle-show-args t]
+
+       )
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]
        ["Info for Mds mode"        mds-info t])
-
       )))
 
 ;;}}}
@@ -956,7 +919,6 @@ Tracing
 \\[mds-return] (return) continue executing until current procedure returns
 \\[mds-cycle-trace] select auto-trace mode
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
-\\[mds-kill-maple] kill and restart the Maple process
 
 Stop points
 -----------

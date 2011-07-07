@@ -69,7 +69,7 @@ local indexed2slashed
 ##
 ##EXAMPLES
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
-##> macro(printargs=\MOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
+##> macro(printargs=\MOD:-\SUBMOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
 ##> f(3);
 ##> f(3,4,keyword);
@@ -214,9 +214,14 @@ local indexed2slashed
 ##- Need to provide a means to indicate the type.
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(Format:-prettyprint):
+## AssignFUNC(mdc:-Format:-prettyprint):
+## kernelopts(opaquemodules=false):
+## mdc:-Debugger:-Printf := printf:
+## mdc:-Format:-showstat := (x->x):
+## kernelopts(opaquemodules=true):
+##
 ## $define T true
-## Try("t", FUNC(T));
+## Try("t", FUNC(T), "NULL");
 ## Try("exprseq", FUNC(T,a,b,c), a,b,c);
 ## Try("set", FUNC(T,{a,b}), a,b);
 ## Try("list", FUNC(T,[a,b]), a,b);
@@ -225,51 +230,57 @@ local indexed2slashed
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, fld, ix, typ, opacity;
+    local eqs, ex, fld, ix, typ, opacity, rest;
     global _fake_name;
+
         if nargs > 2 then
-            seq(procname(false,ex), ex in [_rest]);
-        elif _rest :: set then
-            if top then Debugger:-Printf("(*set: %d*)\n", nops(_rest));
-                return `if`(_rest = []
+            return seq(procname(false,ex), ex in [_rest]);
+        end if;
+
+        # Assign _rest; using it directly does not always work.
+        rest := _rest;
+
+        if rest :: set then
+            if top then Debugger:-Printf("(*set: %d*)\n", nops(rest));
+                return `if`(rest = []
                             , Debugger:-Printf("NULL\n")
-                            , _rest[]
+                            , rest[]
                            );
             else
-                return _rest;
+                return rest;
             end if;
-        elif _rest :: list then
-            if top then Debugger:-Printf("(*list: %d*)\n", nops(_rest));
-                return `if`(_rest = []
+        elif rest :: list then
+            if top then Debugger:-Printf("(*list: %d*)\n", nops(rest));
+                return `if`(rest = []
                             , Debugger:-Printf("NULL\n")
-                            , _rest[]
+                            , rest[]
                            );
             else
-                return _rest;
+                return rest;
             end if;
 
-        elif _rest :: 'record' then
-            eqs := seq(`if`(assigned(_rest[fld])
-                            , fld = procname(false, _rest[fld])
+        elif rest :: 'record' then
+            eqs := seq(`if`(assigned(rest[fld])
+                            , fld = procname(false, rest[fld])
                             , fld
                            )
-                       , fld in [exports(_rest)]);
+                       , fld in [exports(rest)]);
             if top then
                 return Debugger:-Printf("(*record*)\n"), eqs;
             else
                 return 'record'(eqs);
             end if;
 
-        elif _rest :: `module` then
+        elif rest :: `module` then
             # type/object won't work for some older maples.
-            if attributes(_rest)='object' then
+            if attributes(rest)='object' then
                 try
                     if top then
                         Debugger:-Printf("(*object*)\n");
                     end if;
                     opacity := kernelopts('opaquemodules'=false);
-                    _rest:-ModulePrint;
-                    return ModulePrint(_rest);
+                    rest:-ModulePrint;
+                    return ModulePrint(rest);
                 catch:
                     Debugger:-Printf("object(...)\n");
                 finally
@@ -278,30 +289,30 @@ local indexed2slashed
                 return NULL;
             elif top then
                 Debugger:-Printf("(*module*)\n");
-                return seq(fld = procname(false, _rest[fld]), fld in [exports(_rest)]);
+                return seq(fld = procname(false, rest[fld]), fld in [exports(rest)]);
             else
                 return `module() ... end module`; # questionable
             end if;
 
-        elif _rest :: table then
-            typ := op(0,eval(_rest));
-            eqs := seq(ix = procname(false, _rest[ix[]]), ix in [indices(_rest)]);
+        elif rest :: table then
+            typ := op(0,eval(rest));
+            eqs := seq(ix[] = procname(false, rest[ix[]]), ix in [indices(rest)]);
             if top then
                 return (Debugger:-Printf("(*%a*)\n", typ), eqs);
             else
                 return (typ -> 'typ'(eqs))(typ);
             end if;
 
-        elif _rest :: procedure then
+        elif rest :: procedure then
             if top then
-                if _rest :: name then
-                    Format:-showstat(convert(_rest,string));
+                if rest :: name then
+                    Format:-showstat(convert(rest,string));
                 else
-                    # _rest is an evaluated _restession.  Assign to
+                    # rest is an evaluated expression.  Assign to
                     # a the global name _fake_name, which is then
                     # displayed.  This is done because
                     # debugopts(procdump) requires a name.
-                    _fake_name := _rest;
+                    _fake_name := rest;
                     Format:-showstat("_fake_name");
                 end if;
                 return NULL;
@@ -309,12 +320,12 @@ local indexed2slashed
                 # this can be improved.
                 return `proc() ... end proc`;
             end if;
-        elif _rest = NULL then
+        elif rest = NULL then
             return "NULL";
-        elif _rest :: 'name = anything' then
-            return lhs(_rest) = procname(false,rhs(_rest));
+        elif rest :: 'name = anything' then
+            return lhs(rest) = procname(false,rhs(rest));
         else
-            return _rest;
+            return rest;
         end if;
     end proc:
 
@@ -346,9 +357,6 @@ local indexed2slashed
 ##  names of procedures that require the
 ##  use of ~kernelopts(opaquemodules=false)~
 ##  to access.
-##
-##EXAMPLES
-##> \MOD:-\CMD("int");
 ##
 ##TEST
 ## $include <AssignFunc.mi>
