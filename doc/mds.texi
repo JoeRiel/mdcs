@@ -894,7 +894,7 @@ buffer, the procedure at the appropriate statement that generated that output.
 @section Set breakpoint in calling procedure
 
 After using @command{stoperror} to stop the debugger at the location of
-an error, it is apparent that the real problem lies in an ``upstream''
+an error, you realize that the real problem lies in an ``upstream''
 procedure.  To debug it, you want to set a breakpoint in that procedure.
 
 @enumerate
@@ -948,6 +948,10 @@ buffer will open and display the procedure and statement that produced
 the result.
 
 @end enumerate
+
+Because @strong{cont} tracing mode generates a lot of output, you may
+find it more practical to instrument the suspected procedures and
+use @strong{into} tracing mode.
 
 @node Main Index, Key Index, Debugging Tips, Top
 @unnumbered Main Index
