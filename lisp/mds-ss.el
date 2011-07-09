@@ -31,7 +31,7 @@
 ;;}}}
 
 ;;{{{ customization
- 
+
 (defgroup mds nil
   "Maple Debugger Server."
   :group 'tools)
@@ -186,20 +186,20 @@ new procedure."
       (setq cursor-type mds-cursor-ready))
 
     (if (string= addr mds-ss-addr)
-	  ;; procname has not changed.
-	  ;; move the arrow
+	;; procname has not changed.
+	;; move the arrow
 	(unless mds-ss-trace
 	  (mds-ss-display-state state))
 
       ;; New procedure; send procname to the output buffer.
       (mds-out-display (mds-client-out-buf mds-client)
-			  (format "<%s>\n%s" addr procname)
-			  'addr-procname)
+		       (format "<%s>\n%s" addr procname)
+		       'addr-procname)
 
       (unless mds-ss-trace
 	;; Call Maple showstat routine to update the showstat buffer.
 	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))))
-      
+    
     ;; Update the buffer-local status
     (setq mds-ss-addr     addr
 	  mds-ss-procname procname
@@ -212,19 +212,55 @@ new procedure."
 ;;{{{ (*) mds-ss-determine-state
 
 (defun mds-ss-determine-state (statement)
-  "Search buffer for STATEMENT and return the statement number."
-
-  ;; FIXME.  This is not robust.  The problem is that STATEMENT
-  ;; is the Maple statement, with no new-lines and no statement numbers.
-  
+  "Search buffer for STATEMENT and return the statement number.
+Two search routines are used; the second only if the first fails.
+Both go to the first match and do not check for additional matches."
   (goto-char (point-min))
-  (if (search-forward (concat " " statement) nil t)
+  (let ((case-fold-search nil))
+    ;; Try simple technique first; works for one-liners.
+    ;; FIXME: generate warning if multiple matches.
+    (if (search-forward (concat " " statement) nil t)
       (progn
-	;; clear statement
+	;; clear buffer-local `mds-ss-statement'
 	(setq mds-ss-statement "")
 	(mds-ss-get-state))
-    (message "cannot find statement in procedure body")
-    nil))
+
+      ;; Search technique suitable for multiline `statement'; that
+      ;; typically occurs when the procedure on the stack occurs in
+      ;; the controlling part (condition of conditional, etc) of the
+      ;; statement.  Create str by catenating statements of procedure,
+      ;; removing statement numbers, etc.  Store the position of the
+      ;; beginning of each line in bols.
+
+      (let (str bols line)
+	(while (re-search-forward mds-ss-statement-re nil 'move)
+	  (setq	bols (cons (length str) bols)
+		line (match-string-no-properties 2)
+		str (concat str " " line)))
+	
+	;; NB: There is a bug in debugopts(callstack); the `statement'
+	;; it returns may have more than one space following a
+	;; semicolon.  The following replaces multiple spaces
+	;; following a semicolon with a single space.  It does not
+	;; test whether that occurs inside a string.
+	
+	(let* ((state-re (regexp-quote (replace-regexp-in-string ";  +" "; " statement)))
+	       (pos (string-match state-re str))) 
+	  (if (null pos)
+	      (message "cannot find statement in procedure body")
+	    (setq bols (nreverse bols))
+	    (goto-char (point-min))
+	    (re-search-forward mds-ss-statement-re)
+	    (while (and bols
+			(>= pos (car bols)))
+	      (setq bols (cdr bols))
+	      (forward-line))
+	    ;; move backward to end of preceding line
+	    (backward-char)
+	    ;; clear buffer-local `mds-ss-statement'
+	    (setq mds-ss-statement "")
+	    (mds-ss-get-state)))))))
+
 
 ;;}}}
 
@@ -240,7 +276,7 @@ number from STATEMENT."
       (if (string= procname mds-ss-procname)
 	  ;; Already displaying the procedure; just update the arrow.
 	  (mds-ss-display-state (or state
-					  (mds-ss-determine-state statement)))
+				    (mds-ss-determine-state statement)))
 
 	;; Need to fetch from Maple.
 	;; Set the buffer locals state info.
@@ -313,11 +349,11 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	  mds-ss-statement "")
 	;; Move the state arrow
 	(mds-ss-display-state mds-ss-state))))
-      
-      ;; Make buffer visible
-      (if mds-ss-live
-	  (display-buffer buf)
-	(mds-wm-display-dead mds-client))))
+    
+    ;; Make buffer visible
+    (if mds-ss-live
+	(display-buffer buf)
+      (mds-wm-display-dead mds-client))))
 
 ;;}}}
 ;;{{{ (*) mds-ss-display-state
@@ -524,8 +560,8 @@ Query for local variable, using symbol at point as default."
     (if (string= var "")
 	(mds-ss-eval-expr cmd)
       (mds-ss-eval-debug-code (format "debugopts('%s'=[pointto(%s),'%s'])"
-					    (if clear "delwatch" "addwatch")
-					    mds-ss-addr var) 'hide))))
+				      (if clear "delwatch" "addwatch")
+				      mds-ss-addr var) 'hide))))
 
 (defun mds-stopwhen-global (clear)
   "Set or clear, if CLEAR is non-nil, watchpoint on a variable.
@@ -535,7 +571,7 @@ Query for global variable, using symbol at point as default."
 	 (var (mds--query-stop-var cmd "var" 'mds-ss-stopwhen-history-list)))
     (if (string= var "")
 	(mds-ss-eval-debug-code cmd)
-    (mds-ss-eval-debug-code (format "%s %s" cmd var)))))
+      (mds-ss-eval-debug-code (format "%s %s" cmd var)))))
 
 (defun mds-stopwhenif ()
   "Query and set a conditional watchpoint on a global variable."
@@ -543,9 +579,9 @@ Query for global variable, using symbol at point as default."
   (let* ((cmd "stopwhenif")
 	 (var (mds--query-stop-var cmd "var" 'mds-ss-stopwhen-history-list))
 	 (val (read-string "value: ")))
-;;    (if (string= var "")
-;;	(error "stopwhenif requires a variable and a value")
-      (mds-ss-eval-expr (format "%s(%s,%s)" cmd var val))))
+    ;;    (if (string= var "")
+    ;;	(error "stopwhenif requires a variable and a value")
+    (mds-ss-eval-expr (format "%s(%s,%s)" cmd var val))))
 
 (defun mds-stopwhen-clear ()
   "Query and clear a watchpoint on a variable."
@@ -616,7 +652,7 @@ The result is returned in the message area."
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
   (mds-ss-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
-				  mds-thisproc)))
+			      mds-thisproc)))
 
 (defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
 
@@ -694,7 +730,7 @@ the number of activation levels to display."
       (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
     (beep)
     (message "no previous command")))
-  
+
 
 ;;}}}
 ;;{{{ (*) View
@@ -713,10 +749,10 @@ the number of activation levels to display."
   "Move cursor to the current state in the showstat buffer."
   (pop-to-buffer (mds-client-live-buf mds-client))
   (mds-ss-update (current-buffer)
-		       mds-ss-addr
-		       mds-ss-procname
-		       mds-ss-state))
-   
+		 mds-ss-addr
+		 mds-ss-procname
+		 mds-ss-state))
+
 
 (defun mds-goto-state (state)
   "Move POINT to STATE.
@@ -834,8 +870,8 @@ to work, `face-remapping-alist' must be buffer-local."
 				    :foreground ,(face-attribute 'mode-line :foreground t)
 				    :background ,(face-attribute 'mode-line :background t)))
 				 ))))
-		 
-  
+
+
 
 ;;}}}
 
@@ -984,3 +1020,4 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 (provide 'mds-ss)
 
 ;; mds-ss.el ends here
+

@@ -98,6 +98,12 @@ The first group identifies SOMETHING.")
 (defconst mds-ss-mark-re "^ +[0-9]+[*!]?"
   "Regexp that matches the statement mark added by showstat.")
 
+(defconst mds-ss-statement-re "^\\( +\\(?:[0-9]+[!*]? +\\)?\\)\\(.*\\)"
+  "Regexp that matches the start of a line in a showstat buffer.
+The first group contains the indentation, including a statement number and flags.
+The second group is the actual line.")
+
+
 (defun mds-activate-addr-procname (&optional button)
   "If looking at an address-procname, hide the address and apply
 BUTTON to the procname.  If the procname is TopLevel, then just
