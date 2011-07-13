@@ -6,6 +6,7 @@
 ** Added tips to mds info page
 ** Defined colors for light background
 ** Eliminate unused faces
+** Improved ability to find state in dead-showstat buffer
 * mdcs-0.1.1.4 
 ** info: added section on output buffer, started tips section
 ** ensure live-ss-buf is displayed
