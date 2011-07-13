@@ -22,7 +22,7 @@ Here is where I put the various files:
 
    $HOME/maple/lib    :  mdc.mla mdc.hdb
    $HOME/.emacs.d/mds :  lisp/mds*.el
-   $HOME/share/info   :  doc/mds (same here, don't include the "doc/")
+   $HOME/share/info   :  doc/mds (do not include the "doc/")
 
 Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot
