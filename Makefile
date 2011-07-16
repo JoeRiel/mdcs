@@ -199,7 +199,7 @@ tags:
 
 # {{{ install
 
-.PHONY: install $(addprefix install-,dev el elc html info lisp maple)
+.PHONY: install $(addprefix install-,dev el elc hdb html info lisp maple)
 
 INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISP_FILES)))
 INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
