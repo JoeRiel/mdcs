@@ -944,8 +944,8 @@ to work, `face-remapping-alist' must be buffer-local."
 (define-derived-mode mds-ss-mode maplev-proc-mode "showstat-mode"
   "Major mode for stepping through a debugged Maple procedure.
 
-Tracing
--------
+Execution
+---------
 \\[mds-send-last-command] repeat the last tracing command
 \\[mds-cont] (cont) continue execution until next stop point
 \\[mds-next] (next) execute next statement at current nesting level
