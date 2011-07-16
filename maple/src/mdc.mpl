@@ -240,6 +240,7 @@ $endif
                  , { stoperror :: truefalse := false }
                  , { traperror :: truefalse := false }
                  , { unstopat :: {string,name,set(string,name)} := "" }
+                 , { unstoperror :: truefalse := false }
                  , { usegrid :: truefalse := false }
                  #, { usethreads :: truefalse := false }
                  , { verbose :: truefalse := false }
@@ -296,9 +297,12 @@ $endif
             Debugger:-unstopat(unstopat);
         end if;
 
-
         if stoperror then
             :-stoperror('all');
+        end if;
+
+        if unstoperror then
+            debugopts('delerror' = 'all');
         end if;
 
         if traperror then
