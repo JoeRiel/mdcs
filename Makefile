@@ -158,10 +158,19 @@ hdb := mdc.hdb
 hdb: $(call print-help,hdb,Create Maple help database)
 hdb: install-mla mdc.hdb
 
-mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
+mdc-new.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
 	@mpldoc -c nightly $+
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
+
+mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
+	@echo "Creating Maple help database"
+	@err=$$(mpldoc --config etc/mpldoc/doti.xml $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p' ; ) ; \
+		if [ ! -z "$$err" ]; then \
+			echo $(call warn,$$err); \
+		fi
+	@cp maple/etc/empty.hdb $@
+	ls maple/doti/*.i | xargs shelp -h $@ load
 
 # }}}
 

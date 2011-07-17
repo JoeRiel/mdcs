@@ -1,0 +1,17 @@
+<stylesheet>
+	<name>helpmw</name>
+	<xsl/>
+</stylesheet>
+<stylesheet>
+	<name>doti</name>
+	<xsl>${MPLDOC_ROOT}/xsl/help_doti.xsl</xsl>
+	<output>%d/../doti/%n.i</output>
+</stylesheet>
+<stylesheet>
+	<name>spec</name>
+	<xsl/>
+</stylesheet>
+<stylesheet>
+	<name>test</name>
+	<xsl/>
+</stylesheet>

@@ -1,11 +1,11 @@
 *~
 /doc/*
-!/doc/MapleHelp_en.xml
 !/doc/*.texi
 TAGS
 
 # for now
 /maple/Browser
+/maple/doti/
 /maple/mdoc/
 /maple/mhelp/
 /maple/mtest/
@@ -16,7 +16,6 @@ TAGS
 *.hdb
 *.zip
 *.tags
-*.xml
 
 /lisp/*.elc
 /lisp/tst
