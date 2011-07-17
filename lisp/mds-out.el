@@ -35,10 +35,10 @@
   "Faces for mds and related modes."
   :group 'mds)
 
-
 (defface mds-args
-  '((((class color) (background dark))  :foreground "lawn green")
-    (((class color) (background light)) :foreground "dark green"))
+  '((((min-colors 88) (class color) (background dark))  :foreground "lawn green")
+    (((min-colors 88) (class color) (background light)) :foreground "dark green")
+    (((class color)) :foreground "green"))
   "Face for stack arguments."
   :group 'mds-faces)
 
@@ -75,14 +75,17 @@
 
 (defface mds-maple-error
   '((((class color) (background dark))  :foreground "orange red")
-    (((class color) (background light)) :foreground "red"))
+    (((class color) (background light)) :foreground "red")
+    (((class color) :foreground "red")))
   "Face for Maple errors."
   :group 'mds-faces)
 
 (defface mds-prompt
-  '((((class color) (background dark))  :foreground "gray40")
-    (((class color) (background light)) :foreground "gray60"))
-  "Face for prompt."
+  '((((min-colors 88) (class color) (background dark))  :foreground "gray40")
+    (((min-colors 88) (class color) (background light)) :foreground "gray60")
+    (((class color) (background dark))  :foreground "blue")
+    (((class color) (background light)) :foreground "yellow"))
+  "Face for prompt.  Intentionally hard to see."
   :group 'mds-faces)
 
 (defface mds-user-input
