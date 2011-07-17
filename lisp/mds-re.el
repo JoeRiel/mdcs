@@ -32,7 +32,7 @@
 
 
 
-(defconst mds--addr-tag-re "<\\([0-9]+\\)>"
+(defconst mds--addr-tag-re "<\\(-?[0-9]+\\)>"
   "Regexp that matches an address tag.  The first group matches the address,
 the total match includes the delimiters.")
 

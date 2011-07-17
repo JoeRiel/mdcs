@@ -70,8 +70,6 @@ however, such an abomination should break something.")
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-thisproc "thisproc" "Set to procname if Maple version < 14")
-
 ;; Removed because of timing issues that killed debugger
 ;; (defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
 
@@ -652,7 +650,7 @@ The result is returned in the message area."
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
   (mds-ss-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
-			      mds-thisproc)))
+			      mds-ss-addr)))
 
 (defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
 
