@@ -403,7 +403,7 @@ use them to route the message."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert (format "%s: %s\n" proc msg))
-    (set-window-point (get-buffer-window) (point))))
+    (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
     
