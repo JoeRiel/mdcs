@@ -107,7 +107,7 @@ The second group is the actual line.")
 (defun mds-activate-addr-procname (&optional button)
   "If looking at an address-procname, hide the address and apply
 BUTTON to the procname.  If the procname is TopLevel, then just
-change its face to `mds-inctive-link-face'.  Return a cons cell of
+change its face to `mds-inctive-link'.  Return a cons cell of
 the address and procname."
   (if (looking-at mds--addr-procname-re)
     (let ((addr (match-string 2))
@@ -115,7 +115,7 @@ the address and procname."
       (put-text-property (match-beginning 1) (match-end 1) 'invisible t)
       (if button
 	  (if (string= procname "TopLevel")
-	      (put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link-face)
+	      (put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link)
 	    (make-text-button (match-beginning 3) (match-end 3) :type button)))
       (cons addr procname))))
 

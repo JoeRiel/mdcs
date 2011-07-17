@@ -36,68 +36,68 @@
   :group 'mds)
 
 
-(defface mds-args-face
+(defface mds-args
   '((((class color) (background dark))  :foreground "lawn green")
     (((class color) (background light)) :foreground "dark green"))
   "Face for stack arguments."
   :group 'mds-faces)
 
-(defface mds-debugger-cmd-face
+(defface mds-debugger-cmd
   '((((class color) (background dark))  :foreground "yellow")
     (((class color) (background light)) :foreground "brown"))
   "Face for debugger commands."
   :group 'mds-faces)
 
-(defface mds-debugger-info-face
+(defface mds-debugger-info
   '((((class color) (background dark))  :foreground "light green")
     (((class color) (background light)) :foreground "dark green"))
   "Face for debugger information."
   :group 'mds-faces)
 
-(defface mds-entry-procname-face
+(defface mds-entry-procname
   '((((class color) (background dark))  :foreground "magenta1" :underline t)
     (((class color) (background light)) :foreground "magenta1" :underline t)
     (t :underline t ))
   "Face for entry procnames (those printed on entering a procedure) in output buffer."
   :group 'mds-faces)
 
-(defface mds-inactive-link-face
+(defface mds-inactive-link
   '((((class color) (background dark))  :foreground "cyan1")
     (((class color) (background light)) :foreground "blue"))
   "Face for inactive links in output buffer."
   :group 'mds-faces)
 
-(defface mds-info-face
+(defface mds-info
   '((((class color) (background dark))  :foreground "sandy brown")
     (((class color) (background light)) :foreground "sandy brown"))
   "Face for debugger information."
   :group 'mds-faces)
 
-(defface mds-maple-error-face
+(defface mds-maple-error
   '((((class color) (background dark))  :foreground "orange red")
     (((class color) (background light)) :foreground "red"))
   "Face for Maple errors."
   :group 'mds-faces)
 
-(defface mds-prompt-face
+(defface mds-prompt
   '((((class color) (background dark))  :foreground "gray40")
     (((class color) (background light)) :foreground "gray60"))
   "Face for prompt."
   :group 'mds-faces)
 
-(defface mds-user-input-face
+(defface mds-user-input
   '((((class color) (background dark))  :foreground "lime green")
     (((class color) (background light)) :foreground "darkgreen"))
   "Face for user input (sort-of)."
   :group 'mds-faces)
   
-(defface mds-warning-face
+(defface mds-warning
   '((((class color) (background dark))  :foreground "pink")
     (((class color) (background light)) :foreground "DeepPink"))
   "Face for warning messages in output buffer."
   :group 'mds-faces)
 
-(defface mds-watch-face
+(defface mds-watch
   '((((class color) (background dark))  :foreground "spring green")
     (((class color) (background light)) :foreground "ForestGreen"))
   "Face for watched variables in output buffer."
@@ -220,7 +220,7 @@ Optional TAG identifies the message type."
 	     
 	     ((eq tag 'cmd)
 	      ;; Command
-	      (mds-insert-and-font-lock msg 'mds-debugger-cmd-face)
+	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if mds-out-track-input
 		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
@@ -232,7 +232,7 @@ Optional TAG identifies the message type."
 	      (beginning-of-line)
 	      (setq beg (point))
 	      (insert "(*" msg "*) ")
-	      (mds-put-face beg (point) 'mds-prompt-face)
+	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
 	      (let* ((live-buf (mds-client-live-buf mds-client))
 		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
@@ -259,7 +259,7 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'args)
 	      ;; args
-	      (mds-insert-and-font-lock msg 'mds-args-face))
+	      (mds-insert-and-font-lock msg 'mds-args))
 
 	     ((eq tag 'printf)
 	      ;; Insert msg, but no newline; this could screw-up format
@@ -268,26 +268,26 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'warn)
 	      ;; warning
-	      (mds-insert-and-font-lock msg 'mds-warning-face))
+	      (mds-insert-and-font-lock msg 'mds-warning))
 
 	     ((eq tag 'maple-err)
 	      ;; maple error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
+	      (mds-insert-and-font-lock msg 'mds-maple-error))
 	     
 	     ((eq tag 'parse-err) 
 	      ;; maple debugger parse error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
+	      (mds-insert-and-font-lock msg 'mds-maple-error))
 
 	     ((eq tag 'stop)
 	      (ding) (sleep-for 0.2) (ding)
-	      (mds-insert-and-font-lock msg 'mds-info-face))
+	      (mds-insert-and-font-lock msg 'mds-info))
 
 	     ((or (eq tag 'watch-conds)
 		  (eq tag 'watch-errs))
-	      (mds-insert-and-font-lock msg 'mds-watch-face))
+	      (mds-insert-and-font-lock msg 'mds-watch))
 
 	     ((eq tag 'debug-info)
-	      (mds-insert-and-font-lock msg 'mds-debugger-info-face))
+	      (mds-insert-and-font-lock msg 'mds-debugger-info))
 
 	     ((and tag (symbolp tag))
 	      ;; unknown tag
@@ -309,7 +309,7 @@ Optional TAG identifies the message type."
   'help-echo "Open procedure"
   'action 'mds-out-view-proc
   'follow-link t
-  'face 'mds-entry-procname-face)
+  'face 'mds-entry-procname)
 
 ;; define button used to hyperlink showstack/where procnames
 (define-button-type 'mds-out-goto-proc
