@@ -1,6 +1,10 @@
 -*- org -*-
 
-* mdcs-0.1.1.5
+* mdc-0.1.1.7
+** Allow negative addresses
+** Extend to work with Maple 10
+
+* mdcs-0.1.1.6
 ** Now works (mostly) with Maple 12 and 13 and Emacs 22.3.
 ** Modified help database to work with Maple 12/13 tty help.
 ** Defined mds-args and mdb-prompt faces to display (lightly) in console emacs.
@@ -31,11 +35,8 @@
    Lisp files now go in ~/.emacs.d/mds.  It will remove the old ones.
 ** Added options to set split direction and size of ss/output windows
 
-
 * mdcs-0.1.1.2:  Fixed bug with wmctrl; improved client and server documentation
 
-
 * mdsc-0.1.1.1:  Emergency release; include missing *.el file
-
 
 * mdcs-0.1.1.0:  Initial alpha
