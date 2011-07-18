@@ -665,7 +665,7 @@ $define RETURN return
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: posint, {dead :: truefalse := false} )
+    ShowstatAddr := proc( addr :: integer, {dead :: truefalse := false} )
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
