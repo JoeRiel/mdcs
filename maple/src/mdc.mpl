@@ -229,7 +229,7 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { config :: {string,identical(maplet)} := NULL }
+                 { config :: {string,identical(maplet)} := "" }
                  , { exit :: truefalse := false }
                  , { host :: string := Host }
                  , { label :: string := kernelopts('username') }
@@ -251,7 +251,7 @@ $endif
     global `debugger/width`;
     local lbl;
 
-        if config <> NULL then
+        if config <> "" then
             error "currently the 'config' option is disabled.  Use optional parameters."
         end if;
 
