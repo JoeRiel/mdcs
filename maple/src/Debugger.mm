@@ -62,7 +62,7 @@ $endif
         # Newer version of Maple, 14+, allow a the keyword 'debugger'
         # passed to 'parse', which does something, not sure what.
         ver := kernelopts('version');
-        ver := sscanf(substring(ver, 7..searchtext(".",ver)-1),"%d")[1];
+        ver := sscanf(ver, "%s %d")[2];
         if ver < 14 then
             parse_debugger := NULL;
         else
