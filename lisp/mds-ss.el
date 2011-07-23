@@ -262,21 +262,21 @@ Both go to the first match and do not check for additional matches."
 
 ;;{{{ mds-ss-view-dead-proc
 
-(defun mds-ss-view-dead-proc (addr procname statement &optional state)
-  "View procedure with name PROCNAME and address ADDR in the dead buffer.
-If the optional string STATE is provided, use that as
-the state number to display.  Otherwise, find the statement
-number from STATEMENT."
+(defun mds-ss-view-dead-proc (addr procname state statement)
+  "View procedure with address ADDR and name PROCNAME in the dead buffer.
+If the STATE is non-nil, use that as the state number to display.  
+Otherwise, find the statement number from STATEMENT."
   (with-current-buffer (mds-client-dead-buf mds-client)
     (unless (string= procname "")
-      (if (string= procname mds-ss-procname)
+      (if (string= addr mds-ss-addr)
 	  ;; Already displaying the procedure; just update the arrow.
 	  (mds-ss-display-state (or state
 				    (mds-ss-determine-state statement)))
 
 	;; Need to fetch from Maple.
 	;; Set the buffer locals state info.
-	(setq mds-ss-procname   procname
+	(setq mds-ss-addr  addr
+	      mds-ss-procname   procname
 	      mds-ss-statement  statement)
    	(if state (setq mds-ss-state state))
 	
