@@ -169,13 +169,12 @@ If ALIVE is non-nil, create a live buffer."
 ;;{{{ (*) mds-ss-update
 
 (defun mds-ss-update (buf addr procname state &optional statement)
-  "Update the showstat buffer and the buffer local variables
-`mds-ss-addr', `mds-ss-procname', and
-`mds-ss-state'.  ADDR is the address of PROCNAME, which is
-the name of the procedure, STATE is the current state; all are
-strings.  If the buffer is already displaying PROCNAME, then just
-move the arrow; otherwise call (maple) showstat to display the
-new procedure."
+  "Update the showstat buffer BUF and the buffer local variables
+`mds-ss-addr', `mds-ss-procname', and `mds-ss-state'.  ADDR is
+the address of PROCNAME, which is the name of the procedure,
+STATE is the current state; all are strings.  If the buffer is
+already displaying PROCNAME, then just move the arrow; otherwise
+call (maple) showstat to display the new procedure."
 
   (with-current-buffer buf
 
@@ -184,12 +183,11 @@ new procedure."
       (setq cursor-type mds-cursor-ready))
 
     (if (string= addr mds-ss-addr)
-	;; procname has not changed.
-	;; move the arrow
+	;; Address has not changed; move the arrow
 	(unless mds-ss-trace
 	  (mds-ss-display-state state))
 
-      ;; New procedure; send procname to the output buffer.
+      ;; New procedure; send address and procname to the output buffer.
       (mds-out-display (mds-client-out-buf mds-client)
 		       (format "<%s>\n%s" addr procname)
 		       'addr-procname)
@@ -287,20 +285,6 @@ number from STATEMENT."
 
 ;;}}}
 
-;;{{{ (*) mds-ss-send-showstat
-
-(defun mds-ss-send-showstat (procname statement &optional state)
-  "Query the client to send the showstat information for PROCNAME.
-The output will be displayed in the dead showstat buffer.
-Set the buffer-local variables `mds-ss-procname' and `mds-ss-statement'."
-  (with-current-buffer (mds-client-dead-buf mds-client)
-    (setq mds-ss-procname procname
-	  mds-ss-statement statement)
-    (if state
-	(setq mds-ss-state state)))
-  (mds-ss-send-client (format "mdc:-Format:-showstat(\"%s\")" procname)))
-
-;;}}}
 ;;{{{ (*) mds-ss-display
 
 (defun mds-ss-display (buf proc)
@@ -640,7 +624,6 @@ The result is returned in the message area."
   (interactive)
   (mds-ss-eval-expr "args"))
 
-
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
@@ -651,8 +634,6 @@ The result is returned in the message area."
 					; Alternatively, a module export could be used.
   (mds-ss-send-client (format "mdc:-Format:-ArgsToEqs(%s, [seq([_params[`_|_`]],`_|_`=1.._nparams)],[_rest],[_options])\n"
 			      mds-ss-addr)))
-
-(defconst mds--flush-left-arg-re "^\\([a-zA-Z%_][a-zA-Z0-9_]*\\??\\) =")
 
 (defun mds-showstack ()
   "Send the 'showstack' command to the debugger.
@@ -675,28 +656,6 @@ otherwise hyperlink the raw message."
       (mds-ss-eval-debug-code "mdc:-Debugger:-ShowError()")
     (mds-ss-send-client "showerror\n")
     ))
-
-(defconst mds-link-error-re "^\\[\\([^\"].*?\\), ")
-
-(defun mds-showerror-link (beg end)
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (if (looking-at mds-link-error-re)
-	(make-text-button (match-beginning 1) (match-end 1) 
-			  :type 'mds-showerror-view-proc-button))))
-
-(define-button-type 'mds-showerror-view-procbutton
-  'help-echo "Open procedure"
-  'action 'mds-showerror-view-procedure
-  'follow-link t
-  'face 'link)
-
-(defun mds-showerror-view-procedure (button)
-  (save-excursion
-    (beginning-of-line)
-    (if (looking-at mds-link-error-re)
-	(mds-ss-send-showstat (match-string-no-properties 1) nil))))
 
 (defun mds-showexception (raw)
   "Send the 'showexception' command to the debugger.
@@ -721,9 +680,8 @@ the number of activation levels to display."
 ;;{{{ (*) Short cuts
 
 (defun mds-send-last-command ()
+  "Reexecute the last command that executes code."
   (interactive)
-  ;; This uses the debugger history and only works when we haven't
-  ;; done anything behind the scenes.  Need to save last command.
   (if mds-ss-last-debug-cmd
       (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
     (beep)
