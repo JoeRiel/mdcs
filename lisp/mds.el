@@ -94,7 +94,7 @@ Name given by `mds-log-buffer-name'.")
 (defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
 
-(defvar mds-log-messages 't
+(defvar mds-log-messages nil
   "When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
