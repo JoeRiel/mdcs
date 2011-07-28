@@ -929,7 +929,7 @@ Execution
 \\[mds-outfrom] (outfrom) execute current statement sequence or until stop point
 \\[mds-step] (step) execute next statement at any level
 \\[mds-return] (return) continue executing until current procedure returns
-\\[mds-cycle-trace] select auto-trace mode
+\\[mds-cycle-trace] cycle through trace modes
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
 
 Stop points

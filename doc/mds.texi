@@ -543,17 +543,20 @@ nesting level, in the body of a control structure (for example,
 @kindex t
 @findex mds-trace
 @item t (@code{mds-trace})
-Cycle through tracing modes.
-The tracing mode, @strong{into} or @strong{step}, determines
-the output in the output buffer.  When the tracing mode is @strong{into},
-only the output from procedures that have been instrumented is shown.
-When the tracing mode is @strong{step}, the output of all procedures is shown.
+Cycle through tracing modes.  The selected tracing mode, @strong{cont},
+@strong{into}, or @strong{step}, determines where the debugger
+temporarily halts and what output is displayed in the output buffer.
+The selected mode is equivalent to continually executing the
+corresponding debugging command.  With @strong{cont} selected, the
+debugger halts at each breakpoint; with @strong{into}, it halts at each
+statement following a breakpoint; with @strong{step}, it halts at each
+statement in all procedures.
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
 until the client exits.  At that point, the tracing mode should be
 manually disabled by selecting the @strong{disabled} mode.  Reissuing
-the original Maple command (in Maple) will cause the debugger to
+the original Maple command (in Maple) causes the debugger to
 recommence, at which time the hyperlinks in the output buffer become
 operational and permit quickly moving to places of interest.
 
