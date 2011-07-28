@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1.1.8
+@set VERSION 0.1.1.9
 @set DATE June 2011
 
 @dircategory Emacs
