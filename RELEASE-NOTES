@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdc-0.1.1.8
+** ModuleLoad: simplify computation of ver (version); now works with experimental kernels
+** Prevent queueing of input commands; issue an error if Maple is busy or debugger has exited
 * mdc-0.1.1.7
 ** Allow negative addresses
 ** Extend to work with Maple 10
