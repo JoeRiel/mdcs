@@ -312,7 +312,8 @@ use them to route the message."
       ;; Extract the state-number and pass it along
       (mds-out-display out-buf 
 			  (buffer-local-value 'mds-ss-state live-buf)
-			  'prompt))
+			  'prompt)
+      (mds-ss-allow-input live-buf t))
      
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  

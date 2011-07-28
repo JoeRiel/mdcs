@@ -230,7 +230,7 @@ Optional TAG identifies the message type."
 	     
 	     ((eq tag 'prompt)
 	      ;; Insert prompt, with statement number (msg) embedded.
-	      ;; Goto to beginning of line and replace line, that way
+	      ;; Goto beginning of line and replace line, that way
 	      ;; an existing prompt is replaced.
 	      (beginning-of-line)
 	      (setq beg (point))

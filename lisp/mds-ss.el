@@ -70,11 +70,9 @@ however, such an abomination should break something.")
 ;;}}}
 ;;{{{ variables
 
-;; Removed because of timing issues that killed debugger
-;; (defvar mds-show-args-on-entry t  "Non-nil means print the arguments to a procedure when entering it." )
-
-(defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-addr           nil "Address of displayed showstat procedure.")
+(defvar mds-ss-allow-input-flag t   "Boolean variable")
+(defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-last-debug-cmd nil "The previous debugger command.")
 (defvar mds-ss-live	      nil "Store current state of active procedure")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
@@ -87,6 +85,7 @@ however, such an abomination should break something.")
 (mapc #'make-variable-buffer-local
       '(mds-client
 	mds-ss-addr
+	mds-ss-allow-input-flag
 	mds-ss-arrow-position
 	mds-ss-last-debug-cmd
 	mds-ss-live
@@ -104,10 +103,7 @@ however, such an abomination should break something.")
 
 ;;{{{ send strings to maple client
 
-;; Each of these functions send a string to the maple engine,
-;; using mds-ss-send.  The second argument is a flag;
-;; when non-nil it indicates that the string executes a command
-;; in the debugged code.
+;; Each of these functions sends a string to the maple engine.
 
 (defun mds-ss-send-client (msg)
   (mds-client-send mds-client msg))
@@ -115,6 +111,7 @@ however, such an abomination should break something.")
 (defun mds-ss-eval-debug-code (cmd &optional hide)
   "Send CMD, with appended newline, to the Maple process and to the output buffer.
 Echo the command to the output buffer unless HIDE is non-nil."
+  (mds-ss-check-allow-input)
   (unless hide
     (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd-face))
   (mds-ss-send-client (concat cmd "\n")))
@@ -122,6 +119,7 @@ Echo the command to the output buffer unless HIDE is non-nil."
 (defun mds-ss-eval-expr (expr)
   "Send EXPR, with appended newline, to the Maple process and to the output buffer.
 This function is intended to be used for evaluating Maple expressions."
+  (mds-ss-check-allow-input)
   (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input-face)
   (mds-ss-send-client (concat expr "\n")))
 
@@ -133,6 +131,7 @@ cursor type to `mds-cursor-waiting', which indicates we are
 waiting for a response from Maple.  This function assumes we are
 in the appropriate `mds-ss-buffer'.  This function is
 to be used with commands that cause Maple to execute procedural code."
+  (mds-ss-check-allow-input)
   (if save (setq mds-ss-last-debug-cmd cmd))
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
@@ -201,7 +200,6 @@ call (maple) showstat to display the new procedure."
 	  mds-ss-procname procname
 	  mds-ss-state    state
 	  mds-ss-statement statement)))
-
 
 ;;}}}
 
@@ -408,11 +406,31 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 ;;}}}
 
+;;{{{ allow input
+
+;; These permit access to the buffer-local variable `mds-allow-input-flag',
+;; which in turn allows sending input to the Maple engine.
+
+(defun mds-ss-allow-input (buf allow)
+  "In buffer BUF, set buffer-local variable `mds-allow-input-flag' to ALLOW."
+  (with-current-buffer buf
+    (setq mds-ss-allow-input-flag allow)))
+
+(defun mds-ss-check-allow-input ()
+  "If `mds-ss-allow-input-flag' is non-nil, clear it.
+Otherwise raise error indicating Maple is not available."
+  (with-current-buffer (mds-client-live-buf mds-client)
+    (if mds-ss-allow-input-flag
+	(setq mds-ss-allow-input-flag nil)
+      (error "Maple busy or debugging finished"))))
+
+;;}}}
+
 ;;{{{ commands
 
 ;; Define the interactive commands bound to keys
 
-;;{{{ (*) Tracing
+;;{{{ (*) Execution
 
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
@@ -439,7 +457,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
 Otherwise delete the dead showstat window."
   (interactive)
   (if mds-ss-live
-      (mds-ss-eval-expr "quit")
+      (mds-ss-eval-proc-statement "quit")
     (delete-window (get-buffer-window (mds-client-dead-buf mds-client)))))
 
 (defun mds-return ()
@@ -627,6 +645,7 @@ The result is returned in the message area."
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
   (interactive)
+  (mds-ss-check-allow-input)
   (if current-prefix-arg (mds-out-clear))
   (mds-out-append-input (mds-client-out-buf mds-client) "Args:" 'mds-args-face)
 					; We need to use a global variable for the index,
@@ -654,17 +673,18 @@ otherwise hyperlink the raw message."
   (interactive "P")
   (if fmt
       (mds-ss-eval-debug-code "mdc:-Debugger:-ShowError()")
-    (mds-ss-send-client "showerror\n")
-    ))
+    (mds-ss-check-allow-input)
+    (mds-ss-send-client "showerror\n")))
 
 (defun mds-showexception (raw)
   "Send the 'showexception' command to the debugger.
 If RAW (prefix arg) is non-nil, display the raw output, 
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
-  (if raw
-      (mds-ss-send-client "showexception\n")
-    (mds-ss-eval-debug-code "mdc:-Debugger:-ShowException()")))
+  (if (not raw)
+      (mds-ss-eval-debug-code "mdc:-Debugger:-ShowException()")
+    (mds-ss-check-allow-input)
+    (mds-ss-send-client "showexception\n")))
 
 (defun mds-where (&optional depth)
   "Send the 'where' command to the debugger.
@@ -684,7 +704,7 @@ the number of activation levels to display."
   (interactive)
   (if mds-ss-last-debug-cmd
       (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
-    (beep)
+    (ding)
     (message "no previous command")))
 
 
@@ -848,7 +868,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Step"		mds-step t]
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
-       ["Quit"		mds-step t])
+       ["Quit"		mds-quit t])
 
       ("Stop points"
        ["Set breakpoint at point"    mds-breakpoint t]
