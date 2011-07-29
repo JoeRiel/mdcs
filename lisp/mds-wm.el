@@ -61,7 +61,7 @@ side-by-side in a single client view."
 The size is the width of the window when `mds-wm-side-by-side'
 is non-nil, otherwise it is the height.  If nil, then the
 window is set to the same size as the output window."
-  :type 'boolean
+  :type 'integer
   :group 'mds-wm)
 
 ;;}}}
