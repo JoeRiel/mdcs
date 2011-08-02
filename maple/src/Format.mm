@@ -80,7 +80,7 @@ local indexed2slashed
 ##
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(Format:-ArgsToEqs):
+## AssignFUNC(mdc:-Format:-ArgsToEqs):
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.1.0", proc(x,y) end, 'assign' = "proc1_1");
@@ -407,7 +407,7 @@ local indexed2slashed
 ##- If a name is not indexed it is returned as is.
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(Format:-indexed2slashed);
+## AssignFUNC(mdc:-Format:-indexed2slashed);
 ## $define NE testnoerror
 ## #stopat(FUNC):
 ## Try("1.0", FUNC(a), a);
