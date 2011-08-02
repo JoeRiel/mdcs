@@ -56,12 +56,12 @@ side-by-side in a single client view."
   :type 'boolean
   :group 'mds-wm)
 
-(defcustom mds-wm-ss-size nil
-  "If non-nil, specifies the size of the showstat window.
-The size is the width of the window when `mds-wm-side-by-side'
-is non-nil, otherwise it is the height.  If nil, then the
-window is set to the same size as the output window."
-  :type 'integer
+(defcustom mds-wm-ss-fractional-size nil
+  "If non-nil, specifies the fractional size of the showstat
+window in relation to the frame size.  Width is used when
+`mds-wm-side-by-side' is non-nil, otherwise height is used.  If
+nil, then the window is set to half the frame size."
+  :type 'float
   :group 'mds-wm)
 
 ;;}}}
@@ -108,7 +108,13 @@ the client."
   (select-frame mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
   (set-window-buffer
-   (split-window nil mds-wm-ss-size mds-wm-side-by-side)
+   (split-window nil
+		 (and mds-wm-ss-fractional-size
+		      (round (* mds-wm-ss-fractional-size
+				(if mds-wm-side-by-side
+				    (window-width)
+				  (window-height)))))
+		 mds-wm-side-by-side)
    (mds-client-out-buf client))
   client)
 

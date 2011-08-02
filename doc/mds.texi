@@ -326,12 +326,11 @@ A boolean value that, when non-nil, causes the @b{live-showstat}
 and @b{output} windows to appear side-by-side when displayed
 in a single client view.  That is the default.
 
-@vindex mds-wm-ss-size
-@item @code{mds-wm-ss-size}
-Specifies the size of the showstat-live window when it is displayed.
-The size is the width of the window when @code{mds-wm-side-by-side} is
-non-nil, otherwise it is the height.  If nil, the window is set to
-the same size as the output window.
+@vindex mds-wm-ss-fractional-size
+@item @code{mds-wm-ss-fractional-size}
+Specifies the fractional size of the showstat-live window to the full frame size.
+Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
+If nil, the window is set to half the frame size.
 
 @end table
 
@@ -952,7 +951,7 @@ the result.
 
 @end enumerate
 
-Because @strong{cont} tracing mode generates a lot of output, you may
+Because @strong{step} tracing mode generates a lot of output, you may
 find it more practical to instrument the suspected procedures and
 use @strong{into} tracing mode.
 
