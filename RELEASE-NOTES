@@ -6,6 +6,7 @@
    as before.
 ** Added (missing) 'cont' to description of 'trace' mode in info
   
+** Extended mdc options stopat and unstopat to take a list with statement number
 * mdcs-0.1.1.8
 ** ModuleLoad: simplify computation of ver (version); now works with experimental kernels
 ** Prevent queueing of input commands; issue an error if Maple is busy or debugger has exited
