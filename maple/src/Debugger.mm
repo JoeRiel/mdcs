@@ -770,7 +770,7 @@ $define RETURN return
 ##CALLINGSEQUENCE
 ##- \CMD('p', 'n', 'cond')
 ##PARAMETERS
-##- 'p'    : ::{name,string}::; procedure to instrument
+##- 'p'    : ::{name,string,list}::; procedure to instrument
 ##- 'n'    : (optional) ::posint::; statement number
 ##- 'cond' : (optional) ::uneval::; condition
 ##RETURNS
@@ -785,6 +785,7 @@ $define RETURN return
 ##-- If 'p' is a string it is parsed.
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
+##-- If 'p' is a list then _\CMD(op(p))_ is returned.
 ##
 ##TEST
 ## $include <AssignFunc.mi>
@@ -796,7 +797,7 @@ $define RETURN return
 ## Try    ("2.1", FUNC(f,1,i>3));
 ## Try    ("2.2", f());
 
-    stopat := proc(p :: {name,string}
+    stopat := proc(p :: {name,string,list}
                    , n :: posint
                    , cond :: uneval
                    , $ )
@@ -805,6 +806,9 @@ $define RETURN return
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
             return orig_stopat();
+        end if;
+        if p :: list then
+            return procname(op(p));
         end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
@@ -817,12 +821,15 @@ $define RETURN return
 #}}}
 #{{{ unstopat
 
-    unstopat := proc(p :: {name,string}
+    unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
                      , $ )
 
     local pnam,st;
+        if p :: list then
+            return procname(op(p));
+        end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, -st])

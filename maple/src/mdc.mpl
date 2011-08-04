@@ -119,11 +119,12 @@
 ##  Must match the value used the server.
 ##  The default is 10000.
 ##
-##opt(stopat, name\comma string\comma or set of names and strings)
+##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
-##  so this provides a convenient means to instrument
-##  local procedures of a module.  See the `unstopat` option.
+##  so this provides a convenient means to instrument local procedures of a module.
+##  A list is used to specify a procedure, a statement number, and (optionally) a condition.
+##  See the `unstopat` option.
 ##  Using this option may be considerably faster than
 ##  calling the "stopat" procedure.
 ##
@@ -135,9 +136,10 @@
 ##  If *true*, stop at trapped errors.
 ##  The default is *false*.
 ##
-##opt(unstopat, name\comma string\comma or set of names and strings)
+##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
+##  A list is used to specify a procedure and a statement number.
 ##  See the `stopat` option.
 ##
 ##opt(usegrid,truefalse)
@@ -236,10 +238,10 @@ $endif
                  , { maxlength :: nonnegint := max_length }
                  #, { password :: string := "" }
                  , { port :: posint := Port }
-                 , { stopat :: {string,name,set({string,name})} := "" }
+                 , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: truefalse := false }
                  , { traperror :: truefalse := false }
-                 , { unstopat :: {string,name,set(string,name)} := "" }
+                 , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: truefalse := false }
                  , { usegrid :: truefalse := false }
                  #, { usethreads :: truefalse := false }
