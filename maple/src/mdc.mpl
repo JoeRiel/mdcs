@@ -333,29 +333,38 @@ $endif
                     , port :: posint
                     , id :: string
                     , { verbose :: truefalse := false }
+                    , { launch_emacs :: truefalse := false }
                     , $
                    )
     local line;
         if sid <> -1 then
             Sockets:-Close(sid);
         end if;
-        sid := Sockets:-Open(host, port);
+        try
+            sid := Sockets:-Open(host, port);
+        catch:
+            if launch_emacs then
+                system("emacs --funcall mds &");
+                system("sleep 1");
+                sid := Sockets:-Open(host, port);
+            end if;
+        end try;
         Host := host;
         Port := port;
-        # handle login (hack for now)
-        line := Sockets:-Read(sid);
-        # printf("%s\n", line);
-        if line = "userid: " then
-            Sockets:-Write(sid, id);
+            # handle login (hack for now)
             line := Sockets:-Read(sid);
-            printf("%s\n", line);
-            if verbose then
-                printf("Connected to %s on port %d, with id %s\n"
-                       , host, port, id );
+            # printf("%s\n", line);
+            if line = "userid: " then
+                Sockets:-Write(sid, id);
+                line := Sockets:-Read(sid);
+                printf("%s\n", line);
+                if verbose then
+                    printf("Connected to %s on port %d, with id %s\n"
+                           , host, port, id );
+                end if;
+                return NULL;
             end if;
-            return NULL;
-        end if;
-        error "could not connect";
+            # error "could not connect";
     end proc;
 
 #}}}
