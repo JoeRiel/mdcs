@@ -262,6 +262,15 @@ This is only appropriate for a linux system."
 
 ;;}}}
 
+(defun mds-wm-toggle-focus-ss-out ()
+  "Toggle focus between ss-live and output buffer."
+  (interactive)
+  (let ((liv (mds-client-live-buf mds-client)))
+    (if liv
+	(pop-to-buffer (if (eq liv (current-buffer))
+			   (mds-client-out-buf mds-client)
+			 liv)))))
+
 (provide 'mds-wm)
 
 ;; mds-wm.el ends here
