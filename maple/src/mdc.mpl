@@ -194,6 +194,7 @@ export Authenticate
     ,  Grid
     ,  mdc
     ,  Version
+    ,  Sleep
     ;
 
 #{{{ local declarations
@@ -484,6 +485,44 @@ $endif
 #{{{ Version
 
     Version := "0.1.1.9";
+
+#}}}
+
+#{{{ Sleep
+
+##DEFINE CMD Sleep
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE pause execution of the engine
+##AUTHOR   Joe Riel
+##DATE     Aug 2011
+##CALLINGSEQUENCE
+##- \CMD('t')
+##PARAMETERS
+##- 't' : ::nonnegint::; number of seconds to sleep
+##DESCRIPTION
+##- The `\CMD` command pauses the execution of the Maple engine
+##  a specified length of time.  While paused it does not use CPU
+##  resources.
+##
+##- The 't' parameter is the duration to pause, in seconds.
+##SEEALSO
+##- "Threads[Sleep]"
+
+Sleep := proc( t :: nonnegint )
+local cmd,sys;
+    try
+        Threads:-Sleep( t )
+    catch:
+        sys := kernelopts('platform');
+        if sys = "windows" or sys = "dos" then
+            cmd := sprintf("timeout \t %d \nobreak", t);
+        else
+            cmd := sprintf("sleep %d", t);
+        end if;
+        system(cmd);
+    end try;
+    return NULL;
+end proc;
 
 #}}}
 
