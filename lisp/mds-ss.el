@@ -113,14 +113,14 @@ however, such an abomination should break something.")
 Echo the command to the output buffer unless HIDE is non-nil."
   (mds-ss-check-allow-input)
   (unless hide
-    (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd-face))
+    (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd))
   (mds-ss-send-client (concat cmd "\n")))
 
 (defun mds-ss-eval-expr (expr)
   "Send EXPR, with appended newline, to the Maple process and to the output buffer.
 This function is intended to be used for evaluating Maple expressions."
   (mds-ss-check-allow-input)
-  (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input-face)
+  (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input)
   (mds-ss-send-client (concat expr "\n")))
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
@@ -647,7 +647,7 @@ The result is returned in the message area."
   (interactive)
   (mds-ss-check-allow-input)
   (if current-prefix-arg (mds-out-clear))
-  (mds-out-append-input (mds-client-out-buf mds-client) "Args:" 'mds-args-face)
+  (mds-out-append-input (mds-client-out-buf mds-client) "Args:" 'mds-args)
 					; We need to use a global variable for the index,
 					; one that isn't likely to appear in an expression.
 					; Alternatively, a module export could be used.
