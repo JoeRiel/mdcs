@@ -191,9 +191,9 @@ export Authenticate
     ,  Debugger
     ,  Format
     ,  Grid
+    ,  Sleep
     ,  mdc
     ,  Version
-    ,  Sleep
     ;
 
 #{{{ local declarations
@@ -235,7 +235,7 @@ $endif
                  , { host :: string := GetDefault(':-host',"localhost") }
                  , { label :: string := kernelopts('username') }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
-                 #, { password :: string := "" }
+                 , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: truefalse := GetDefault(':-stoperror',false) }
@@ -273,7 +273,7 @@ $endif
 
         if sid = -1 then
             try
-                Connect(host, port, CreateID(lbl));
+                Connect(host, port, CreateID(lbl), _options['launch_emacs']);
             catch:
                 Debugger:-Restore();
                 error;
@@ -336,7 +336,7 @@ $endif
                     , { launch_emacs :: truefalse := false }
                     , $
                    )
-    local line;
+    local line,connected;
         if sid <> -1 then
             Sockets:-Close(sid);
         end if;
@@ -344,9 +344,21 @@ $endif
             sid := Sockets:-Open(host, port);
         catch:
             if launch_emacs then
-                system("emacs --funcall mds &");
-                system("sleep 1");
-                sid := Sockets:-Open(host, port);
+                if 0 <> system("emacs --funcall mds &") then
+                    error "problem launching emacs"
+                end if;
+                to 5 do
+                    try
+                        sid := Sockets:-Open(host, port);
+                        connected := true;
+                        break;
+                    catch:
+                        Sleep(1);
+                    end try;
+                end do;
+                if connected <> true then
+                    error "could not connect to Maple Debugger Server";
+                end if;
             end if;
         end try;
         Host := host;
