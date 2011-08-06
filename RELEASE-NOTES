@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-0.1.1.10
+** Fix face names
 * mdcs-0.1.1.9
 ** Changed customizable variable mds-wm-ss-size to mds-wm-ss-fractional-size
    It now sets the ratio of window size to frame size.  Default (nil) splits the frame,
