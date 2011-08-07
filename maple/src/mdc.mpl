@@ -353,7 +353,7 @@ $endif
                     , { emacs :: string := "emacs" }
                     , $
                    )
-    local line,connected;
+    local cmd,connected,line,sys;
         if sid <> -1 then
             Sockets:-Close(sid);
         end if;
@@ -361,7 +361,15 @@ $endif
             sid := Sockets:-Open(host, port);
         catch:
             if launch_emacs then
-                if 0 <> system(sprintf("%s --funcall mds &", emacs)) then
+                sys := kernelopts('platform');
+                if sys = "windows" then
+                    cmd := sprintf("start /b %s --funcall mds", emacs);
+                elif sys = "dos" then
+                    error "cannot launch emacs from dos";
+                else
+                    cmd := sprintf("%s --funcall mds &", emacs);
+                end if;
+                if system(cmd) <> 0 then
                     error "problem launching emacs"
                 end if;
                 to 5 do
