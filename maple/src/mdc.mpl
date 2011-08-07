@@ -78,14 +78,13 @@
 ##  section.
 ##
 ##OPTIONS
-##opt(config,maplet or string)
-##  Specifies a method for configuring the client.
-##  If a string, then the configuration is read
-##  from that filename.  If the symbol is `maplet`,
-##  then a "Maplet" is launched that queries
-##  for the configuration.
-##  If 'config' is not specified, then all defaults
-##  are used.
+##- Some of the following keyword options have defaults that can
+##  be overriden by assigning an entry to the global table
+##  'mdc_default', using the name of the option as the index.
+##  For example, to override the default for `port` to 12345,
+##  assign ~mdc_default['port'] := 12345~. Entering this assignment
+##  in a Maple initialization file makes it available for
+##  all sessions.
 ##
 ##opt(exit,truefalse)
 ##  If *true*, shutdown the TCP connection
@@ -94,7 +93,7 @@
 ##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
-##  The default is _"localhost"_.
+##  The default is _"localhost"_; it can be overridden.
 ##
 ##opt(label,string)
 ##  Label passed to server for identification and grouping of the client.
@@ -112,12 +111,12 @@
 ##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
-##  The default is 10000.
+##  The default is 10000; it can be overridden.
 ##
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used the server.
-##  The default is 10000.
+##  The default is 10000; it can be overriden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -130,11 +129,11 @@
 ##
 ##opt(stoperror,truefalse)
 ##  If *true*, stop at any error.
-##  The default is *false*.
+##  The default is *false*; it can be overridden.
 ##
 ##opt(traperror,truefalse)
 ##  If *true*, stop at trapped errors.
-##  The default is *false*.
+##  The default is *false*; it can be overridden.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -151,7 +150,7 @@
 ##opt(view,truefalse)
 ##  If *true*, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is *false*.
+##  The default is *false*; it can be overridden.
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
@@ -202,6 +201,7 @@ export Authenticate
 local Connect
     , Disconnect
     , CreateID
+    , GetDefault
     , ModuleApply
     , ModuleUnload
     , Read
@@ -211,12 +211,11 @@ local Connect
     # Module-local variables.  Seems unlikely that the debugger
     # will ever be thread-safe, so this is not serious.
 
-    , max_length := 10\000 # too small?
-    , Port := MDS_DEFAULT_PORT
-    , Host := "localhost"
-
+    , Host
+    , max_length
+    , Port
     , sid := -1
-    , view_flag := false
+    , view_flag
     ;
 
 #}}}
@@ -232,31 +231,24 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { config :: {string,identical(maplet)} := "" }
-                 , { exit :: truefalse := false }
-                 , { host :: string := Host }
+                 { exit :: truefalse := false }
+                 , { host :: string := GetDefault(':-host',"localhost") }
                  , { label :: string := kernelopts('username') }
-                 , { maxlength :: nonnegint := max_length }
+                 , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  #, { password :: string := "" }
-                 , { port :: posint := Port }
+                 , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
-                 , { stoperror :: truefalse := false }
-                 , { traperror :: truefalse := false }
+                 , { stoperror :: truefalse := GetDefault(':-stoperror',false) }
+                 , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: truefalse := false }
                  , { usegrid :: truefalse := false }
-                 #, { usethreads :: truefalse := false }
-                 , { verbose :: truefalse := false }
-                 , { view :: truefalse := false }
+                 , { view :: truefalse := GetDefault(':-view',false) }
                  , $
                )
 
     global `debugger/width`;
     local lbl;
-
-        if config <> "" then
-            error "currently the 'config' option is disabled.  Use optional parameters."
-        end if;
 
         if exit then
             Debugger:-Restore();
@@ -524,6 +516,17 @@ local cmd,sys;
     return NULL;
 end proc;
 
+#}}}
+
+#{{{ GetDefault
+
+    GetDefault := proc( opt :: name, default, $ )
+        if assigned(mdc_default[opt]) then
+            return mdc_default[opt];
+        else
+            return default;
+        end if;
+    end proc;
 #}}}
 
 end module:
