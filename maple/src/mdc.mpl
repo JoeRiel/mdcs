@@ -78,13 +78,19 @@
 ##  section.
 ##
 ##OPTIONS
-##- Some of the following keyword options have defaults that can
-##  be overriden by assigning an entry to the global table
+##-(lead="indent")
+##  Some of the following keyword options have defaults that can
+##  be overridden by assigning an entry to the global table
 ##  'mdc_default', using the name of the option as the index.
 ##  For example, to override the default for `port` to 12345,
 ##  assign ~mdc_default['port'] := 12345~. Entering this assignment
 ##  in a Maple initialization file makes it available for
 ##  all sessions.
+##
+##opt(emacs,string)
+##  Executable used to launch emacs.
+##  Only used if `launch_emacs` is true.
+##  Default is ~"emacs"~; it can be overridden.
 ##
 ##opt(exit,truefalse)
 ##  If *true*, shutdown the TCP connection
@@ -106,6 +112,12 @@
 ##  share a common basename, ~"foo"~, and so would be grouped together.
 ##  The default label is the return value of _kernelopts('username')_.
 ##
+##opt(launch_emacs,truefalse)
+##  If true and unable to connect to a Maple Debugger Server,
+##  then launch emacs and start a Maple Debugger Server.
+##  See the `emacs` option.
+##  The default if false; it can be overridden.
+##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client will transmit.
 ##  If a string is longer than `maxlength`, it is replaced
@@ -116,7 +128,7 @@
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used the server.
-##  The default is 10000; it can be overriden.
+##  The default is 10000; it can be overridden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -236,6 +248,7 @@ $endif
                  , { label :: string := kernelopts('username') }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
+                 , { emacs :: string := GetDefault(':-emacs', "emacs") }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: truefalse := GetDefault(':-stoperror',false) }
@@ -273,7 +286,10 @@ $endif
 
         if sid = -1 then
             try
-                Connect(host, port, CreateID(lbl), _options['launch_emacs']);
+                Connect(host, port, CreateID(lbl)
+                        , _options['launch_emacs']
+                        , _options['emacs']
+                       );
             catch:
                 Debugger:-Restore();
                 error;
@@ -334,6 +350,7 @@ $endif
                     , id :: string
                     , { verbose :: truefalse := false }
                     , { launch_emacs :: truefalse := false }
+                    , { emacs :: string := "emacs" }
                     , $
                    )
     local line,connected;
@@ -344,7 +361,7 @@ $endif
             sid := Sockets:-Open(host, port);
         catch:
             if launch_emacs then
-                if 0 <> system("emacs --funcall mds &") then
+                if 0 <> system(sprintf("%s --funcall mds &", emacs)) then
                     error "problem launching emacs"
                 end if;
                 to 5 do
