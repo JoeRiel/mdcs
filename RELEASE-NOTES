@@ -1,14 +1,40 @@
 -*- org -*-
 
+* mdcs-0.1.1.10
+** Fix face names
+* mdcs-0.1.1.9
+** Changed customizable variable mds-wm-ss-size to mds-wm-ss-fractional-size
+   It now sets the ratio of window size to frame size.  Default (nil) splits the frame,
+   as before.
+** Added (missing) 'cont' to description of 'trace' mode in info
+  
+** Extended mdc options stopat and unstopat to take a list with statement number
+* mdcs-0.1.1.8
+** ModuleLoad: simplify computation of ver (version); now works with experimental kernels
+** Prevent queueing of input commands; issue an error if Maple is busy or debugger has exited
+* mdcs-0.1.1.7
+** Allow negative addresses
+** Extend to work with Maple 10
+
+* mdcs-0.1.1.6
+** Now works (mostly) with Maple 12 and 13 and Emacs 22.3.
+** Modified help database to work with Maple 12/13 tty help.
+** Defined mds-args and mdb-prompt faces to display (lightly) in console emacs.
+** Changed face names, removed -face.
+** Added 'unstoperror' as keyword option to mdc.
+
 * mdcs-0.1.1.5
 ** Fixed bug pretty-printing tables
 ** Fixed bug that restricted length of inactive showstat output
 ** Added tips to mds info page
 ** Defined colors for light background
 ** Eliminate unused faces
+** Improved ability to find state in dead-showstat buffer
+
 * mdcs-0.1.1.4 
 ** info: added section on output buffer, started tips section
 ** ensure live-ss-buf is displayed
+
 * mdcs-0.1.1.3:
 
 ** Renamed many of the functions and some of the files.

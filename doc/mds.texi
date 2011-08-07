@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1.1.5
+@set VERSION 0.1.1.10
 @set DATE June 2011
 
 @dircategory Emacs
@@ -326,12 +326,11 @@ A boolean value that, when non-nil, causes the @b{live-showstat}
 and @b{output} windows to appear side-by-side when displayed
 in a single client view.  That is the default.
 
-@vindex mds-wm-ss-size
-@item @code{mds-wm-ss-size}
-Specifies the size of the showstat-live window when it is displayed.
-The size is the width of the window when @code{mds-wm-side-by-side} is
-non-nil, otherwise it is the height.  If nil, the window is set to
-the same size as the output window.
+@vindex mds-wm-ss-fractional-size
+@item @code{mds-wm-ss-fractional-size}
+Specifies the fractional size of the showstat-live window to the full frame size.
+Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
+If nil, the window is set to half the frame size.
 
 @end table
 
@@ -543,17 +542,20 @@ nesting level, in the body of a control structure (for example,
 @kindex t
 @findex mds-trace
 @item t (@code{mds-trace})
-Cycle through tracing modes.
-The tracing mode, @strong{into} or @strong{step}, determines
-the output in the output buffer.  When the tracing mode is @strong{into},
-only the output from procedures that have been instrumented is shown.
-When the tracing mode is @strong{step}, the output of all procedures is shown.
+Cycle through tracing modes.  The selected tracing mode, @strong{cont},
+@strong{into}, or @strong{step}, determines where the debugger
+temporarily halts and what output is displayed in the output buffer.
+The selected mode is equivalent to continually executing the
+corresponding debugging command.  With @strong{cont} selected, the
+debugger halts at each breakpoint; with @strong{into}, it halts at each
+statement following a breakpoint; with @strong{step}, it halts at each
+statement in all procedures.
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
 until the client exits.  At that point, the tracing mode should be
 manually disabled by selecting the @strong{disabled} mode.  Reissuing
-the original Maple command (in Maple) will cause the debugger to
+the original Maple command (in Maple) causes the debugger to
 recommence, at which time the hyperlinks in the output buffer become
 operational and permit quickly moving to places of interest.
 
@@ -894,7 +896,7 @@ buffer, the procedure at the appropriate statement that generated that output.
 @section Set breakpoint in calling procedure
 
 After using @command{stoperror} to stop the debugger at the location of
-an error, it is apparent that the real problem lies in an ``upstream''
+an error, you realize that the real problem lies in an ``upstream''
 procedure.  To debug it, you want to set a breakpoint in that procedure.
 
 @enumerate
@@ -948,6 +950,10 @@ buffer will open and display the procedure and statement that produced
 the result.
 
 @end enumerate
+
+Because @strong{step} tracing mode generates a lot of output, you may
+find it more practical to instrument the suspected procedures and
+use @strong{into} tracing mode.
 
 @node Main Index, Key Index, Debugging Tips, Top
 @unnumbered Main Index

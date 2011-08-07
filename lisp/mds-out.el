@@ -35,69 +35,72 @@
   "Faces for mds and related modes."
   :group 'mds)
 
-
-(defface mds-args-face
-  '((((class color) (background dark))  :foreground "lawn green")
-    (((class color) (background light)) :foreground "dark green"))
+(defface mds-args
+  '((((min-colors 88) (class color) (background dark))  :foreground "lawn green")
+    (((min-colors 88) (class color) (background light)) :foreground "dark green")
+    (((class color)) :foreground "green"))
   "Face for stack arguments."
   :group 'mds-faces)
 
-(defface mds-debugger-cmd-face
+(defface mds-debugger-cmd
   '((((class color) (background dark))  :foreground "yellow")
     (((class color) (background light)) :foreground "brown"))
   "Face for debugger commands."
   :group 'mds-faces)
 
-(defface mds-debugger-info-face
+(defface mds-debugger-info
   '((((class color) (background dark))  :foreground "light green")
     (((class color) (background light)) :foreground "dark green"))
   "Face for debugger information."
   :group 'mds-faces)
 
-(defface mds-entry-procname-face
+(defface mds-entry-procname
   '((((class color) (background dark))  :foreground "magenta1" :underline t)
     (((class color) (background light)) :foreground "magenta1" :underline t)
     (t :underline t ))
   "Face for entry procnames (those printed on entering a procedure) in output buffer."
   :group 'mds-faces)
 
-(defface mds-inactive-link-face
+(defface mds-inactive-link
   '((((class color) (background dark))  :foreground "cyan1")
     (((class color) (background light)) :foreground "blue"))
   "Face for inactive links in output buffer."
   :group 'mds-faces)
 
-(defface mds-info-face
+(defface mds-info
   '((((class color) (background dark))  :foreground "sandy brown")
     (((class color) (background light)) :foreground "sandy brown"))
   "Face for debugger information."
   :group 'mds-faces)
 
-(defface mds-maple-error-face
+(defface mds-maple-error
   '((((class color) (background dark))  :foreground "orange red")
-    (((class color) (background light)) :foreground "red"))
+    (((class color) (background light)) :foreground "red")
+    (((class color) :foreground "red")))
   "Face for Maple errors."
   :group 'mds-faces)
 
-(defface mds-prompt-face
-  '((((class color) (background dark))  :foreground "gray40")
-    (((class color) (background light)) :foreground "gray60"))
-  "Face for prompt."
+(defface mds-prompt
+  '((((min-colors 88) (class color) (background dark))  :foreground "gray40")
+    (((min-colors 88) (class color) (background light)) :foreground "gray60")
+    (((class color) (background dark))  :foreground "blue")
+    (((class color) (background light)) :foreground "yellow"))
+  "Face for prompt.  Intentionally hard to see."
   :group 'mds-faces)
 
-(defface mds-user-input-face
+(defface mds-user-input
   '((((class color) (background dark))  :foreground "lime green")
     (((class color) (background light)) :foreground "darkgreen"))
   "Face for user input (sort-of)."
   :group 'mds-faces)
   
-(defface mds-warning-face
+(defface mds-warning
   '((((class color) (background dark))  :foreground "pink")
     (((class color) (background light)) :foreground "DeepPink"))
   "Face for warning messages in output buffer."
   :group 'mds-faces)
 
-(defface mds-watch-face
+(defface mds-watch
   '((((class color) (background dark))  :foreground "spring green")
     (((class color) (background light)) :foreground "ForestGreen"))
   "Face for watched variables in output buffer."
@@ -220,19 +223,19 @@ Optional TAG identifies the message type."
 	     
 	     ((eq tag 'cmd)
 	      ;; Command
-	      (mds-insert-and-font-lock msg 'mds-debugger-cmd-face)
+	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if mds-out-track-input
 		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
 	     
 	     ((eq tag 'prompt)
 	      ;; Insert prompt, with statement number (msg) embedded.
-	      ;; Goto to beginning of line and replace line, that way
+	      ;; Goto beginning of line and replace line, that way
 	      ;; an existing prompt is replaced.
 	      (beginning-of-line)
 	      (setq beg (point))
 	      (insert "(*" msg "*) ")
-	      (mds-put-face beg (point) 'mds-prompt-face)
+	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
 	      (let* ((live-buf (mds-client-live-buf mds-client))
 		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
@@ -259,7 +262,7 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'args)
 	      ;; args
-	      (mds-insert-and-font-lock msg 'mds-args-face))
+	      (mds-insert-and-font-lock msg 'mds-args))
 
 	     ((eq tag 'printf)
 	      ;; Insert msg, but no newline; this could screw-up format
@@ -268,26 +271,26 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'warn)
 	      ;; warning
-	      (mds-insert-and-font-lock msg 'mds-warning-face))
+	      (mds-insert-and-font-lock msg 'mds-warning))
 
 	     ((eq tag 'maple-err)
 	      ;; maple error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
+	      (mds-insert-and-font-lock msg 'mds-maple-error))
 	     
 	     ((eq tag 'parse-err) 
 	      ;; maple debugger parse error
-	      (mds-insert-and-font-lock msg 'mds-maple-error-face))
+	      (mds-insert-and-font-lock msg 'mds-maple-error))
 
 	     ((eq tag 'stop)
 	      (ding) (sleep-for 0.2) (ding)
-	      (mds-insert-and-font-lock msg 'mds-info-face))
+	      (mds-insert-and-font-lock msg 'mds-info))
 
 	     ((or (eq tag 'watch-conds)
 		  (eq tag 'watch-errs))
-	      (mds-insert-and-font-lock msg 'mds-watch-face))
+	      (mds-insert-and-font-lock msg 'mds-watch))
 
 	     ((eq tag 'debug-info)
-	      (mds-insert-and-font-lock msg 'mds-debugger-info-face))
+	      (mds-insert-and-font-lock msg 'mds-debugger-info))
 
 	     ((and tag (symbolp tag))
 	      ;; unknown tag
@@ -309,7 +312,7 @@ Optional TAG identifies the message type."
   'help-echo "Open procedure"
   'action 'mds-out-view-proc
   'follow-link t
-  'face 'mds-entry-procname-face)
+  'face 'mds-entry-procname)
 
 ;; define button used to hyperlink showstack/where procnames
 (define-button-type 'mds-out-goto-proc
@@ -330,8 +333,7 @@ optional statement (call) from the output generated by the
 	(let ((addr     (match-string-no-properties 2))
 	      (procname (match-string-no-properties 3))
 	      (statement (buffer-substring-no-properties (match-end 0) (line-end-position))))
-	  (mds-out-display-proc addr procname statement (and (string= statement "")
-								"1")))))))
+	  (mds-out-display-proc addr procname (and (string= statement "") "1") statement))))))
 
 ;;}}}
 
@@ -349,9 +351,9 @@ optional statement (call) from the output generated by the
 
 (defun mds-out-goto-source-line (pos)
   "Goto the line of source corresponding to the output at
-position POS in the output buffer.  This works by finding
-the closest prompt, extracting the line number, then finding
-the previous procedure name.  To make this less likely to fail,
+position POS in the output buffer.  This works by finding the
+closest prompt, extracting the line number, then finding the
+previous procedure name.  To make this less likely to fail,
 evaluating expressions should remove (or tag) the corresponding
 prompt so that it is later not matched."
   (interactive "d")
@@ -363,15 +365,15 @@ prompt so that it is later not matched."
 	    (message "position does not correspond to output from procedure")
 	  (let ((addr-procname (mds-out-get-enclosing-addr-procname)))
 	    (if addr-procname
-		(mds-out-display-proc (car addr-procname) (cdr addr-procname) "0" state)
+		(mds-out-display-proc (car addr-procname) (cdr addr-procname) state "")
 	      (ding)
 	      (message "no procedure found in buffer")))))))
 
-(defun mds-out-display-proc (addr procname statement &optional state)
-  "Display procedure PROCNAME, with address ADDR, in the dead buffer.  Put arrow at STATEMENT.
-If STATEMENT is the string \"0\", then use STATE." ;; FIXME may be a bad choice
+(defun mds-out-display-proc (addr procname state statement)
+  "Display procedure PROCNAME, with address ADDR, in the dead buffer.  
+Put arrow at STATEMENT."
   (when procname
-    (mds-ss-view-dead-proc addr procname statement state)
+    (mds-ss-view-dead-proc addr procname state statement)
     (mds-wm-display-dead mds-client)))
   
 

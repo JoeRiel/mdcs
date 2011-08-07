@@ -45,16 +45,33 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , _print
     , orig_print
     , orig_stopat
-
     , getname
     , replaced := false
     , logfile  := "readline.log"
 $ifdef LOG_READLINE
     , logpid
 $endif
+    , parse_debugger
+    , ModuleLoad
     ;
 
-# module local: sid
+#{{{ ModuleLoad
+
+    ModuleLoad := proc()
+    local ver;
+        # Newer version of Maple, 14+, allow a the keyword 'debugger'
+        # passed to 'parse', which does something, not sure what.
+        ver := kernelopts('version');
+        ver := sscanf(ver, "%s %d")[2];
+        if ver < 14 then
+            parse_debugger := NULL;
+        else
+            parse_debugger := 'debugger';
+        end if;
+        NULL;
+    end proc;
+
+#}}}
 
 #{{{ Replace
 
@@ -409,11 +426,11 @@ $define RETURN return
                 line := traperror(sscanf(original,"%a := %1000c"));
                 if line <> lasterror and nops(line) = 2 then
                     if member(line[1],{anames('environment')}) then
-                        line := [cmd,sprintf("%a",line[1]),traperror(parse(line[2],'debugger'))];
+                        line := [cmd,sprintf("%a",line[1]),traperror(parse(line[2],parse_debugger))];
                         cmd := "setenv"
                     else
                         original := sprintf("assign('%a',%a)",line[1]
-                                            , traperror(parse(line[2],'debugger')));
+                                            , traperror(parse(line[2],parse_debugger)));
                         cmd := ""
                     fi
                 fi
@@ -457,7 +474,7 @@ $define RETURN return
             elif cmd = "stopat" then
                 if nops(line) = 4 then
                     try
-                        parse(line[4],'debugger');
+                        parse(line[4],parse_debugger);
                         line := [line[1],line[2],line[3],err];
                     catch:
                         err := lasterror;
@@ -570,7 +587,7 @@ $define RETURN return
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
                 try
-                    line := parse(original,'statement','debugger');
+                    line := parse(original,'statement',parse_debugger);
                     # *** Avoid returning `line` unevaluated (due to LNED) by
                     # evaluating if line refers to a procedure. Note that the check
                     # for type procedure also evaluates line if it happens to be a
@@ -587,7 +604,7 @@ $define RETURN return
             else
                 try
                     # Must be an expression to evaluate.
-                    line := parse(original,'debugger');
+                    line := parse(original,parse_debugger);
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
                         RETURN eval(line);
@@ -648,7 +665,7 @@ $define RETURN return
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: posint, {dead :: truefalse := false} )
+    ShowstatAddr := proc( addr :: integer, {dead :: truefalse := false} )
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
@@ -753,7 +770,7 @@ $define RETURN return
 ##CALLINGSEQUENCE
 ##- \CMD('p', 'n', 'cond')
 ##PARAMETERS
-##- 'p'    : ::{name,string}::; procedure to instrument
+##- 'p'    : ::{name,string,list}::; procedure to instrument
 ##- 'n'    : (optional) ::posint::; statement number
 ##- 'cond' : (optional) ::uneval::; condition
 ##RETURNS
@@ -768,6 +785,7 @@ $define RETURN return
 ##-- If 'p' is a string it is parsed.
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
+##-- If 'p' is a list then _\CMD(op(p))_ is returned.
 ##
 ##TEST
 ## $include <AssignFunc.mi>
@@ -779,7 +797,7 @@ $define RETURN return
 ## Try    ("2.1", FUNC(f,1,i>3));
 ## Try    ("2.2", f());
 
-    stopat := proc(p :: {name,string}
+    stopat := proc(p :: {name,string,list}
                    , n :: posint
                    , cond :: uneval
                    , $ )
@@ -788,6 +806,9 @@ $define RETURN return
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
             return orig_stopat();
+        end if;
+        if p :: list then
+            return procname(op(p));
         end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
@@ -800,12 +821,15 @@ $define RETURN return
 #}}}
 #{{{ unstopat
 
-    unstopat := proc(p :: {name,string}
+    unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
                      , $ )
 
     local pnam,st;
+        if p :: list then
+            return procname(op(p));
+        end if;
         pnam := getname(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, -st])

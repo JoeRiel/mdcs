@@ -80,7 +80,7 @@ local indexed2slashed
 ##
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(Format:-ArgsToEqs):
+## AssignFUNC(mdc:-Format:-ArgsToEqs):
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.1.0", proc(x,y) end, 'assign' = "proc1_1");
@@ -107,7 +107,7 @@ local indexed2slashed
 ## Try("5.1.1", [proc5_1()], [x="NULL",y=[1]]);
 ##
 
-    ArgsToEqs := proc(prc :: {string,procedure}
+    ArgsToEqs := proc(prc :: {string,procedure,integer}
                       , pargs :: list
                       , rargs :: list
                       , oargs :: list
@@ -115,10 +115,11 @@ local indexed2slashed
     local defparams, opacity, params, p, pos, i, m, n, ppargs;
 
         # Assign params the procedure's formal parameters.
-        if prc :: procedure then
+        if prc :: integer then
+            params := [op(1,eval(pointto(prc)))];
+        elif prc :: procedure then
             params := [op(1,eval(prc))];
-        else
-            # prc is a string; attempt to parse ...
+        else (* prc is a string, attempt to parse *)
             try
                 opacity := kernelopts('opaquemodules'=false);
                 params := [op(1,eval(parse(prc)))];
@@ -406,7 +407,7 @@ local indexed2slashed
 ##- If a name is not indexed it is returned as is.
 ##TEST
 ## $include <AssignFunc.mi>
-## AssignFUNC(Format:-indexed2slashed);
+## AssignFUNC(mdc:-Format:-indexed2slashed);
 ## $define NE testnoerror
 ## #stopat(FUNC):
 ## Try("1.0", FUNC(a), a);

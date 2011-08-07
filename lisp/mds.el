@@ -77,7 +77,7 @@ installed. Automatically assigned to nil if wmctrl is not available."
 
 ;;{{{ Constants
 
-(defconst mds-version "0.1.1.5" "Version number of mds.")
+(defconst mds-version "0.1.1.10" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -94,7 +94,7 @@ Name given by `mds-log-buffer-name'.")
 (defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
 
-(defvar mds-log-messages 't
+(defvar mds-log-messages nil
   "When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
@@ -312,7 +312,8 @@ use them to route the message."
       ;; Extract the state-number and pass it along
       (mds-out-display out-buf 
 			  (buffer-local-value 'mds-ss-state live-buf)
-			  'prompt))
+			  'prompt)
+      (mds-ss-allow-input live-buf t))
      
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
@@ -403,7 +404,7 @@ use them to route the message."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert (format "%s: %s\n" proc msg))
-    (set-window-point (get-buffer-window) (point))))
+    (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
     

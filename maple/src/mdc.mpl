@@ -119,11 +119,12 @@
 ##  Must match the value used the server.
 ##  The default is 10000.
 ##
-##opt(stopat, name\comma string\comma or set of names and strings)
+##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
-##  so this provides a convenient means to instrument
-##  local procedures of a module.  See the `unstopat` option.
+##  so this provides a convenient means to instrument local procedures of a module.
+##  A list is used to specify a procedure, a statement number, and (optionally) a condition.
+##  See the `unstopat` option.
 ##  Using this option may be considerably faster than
 ##  calling the "stopat" procedure.
 ##
@@ -135,9 +136,10 @@
 ##  If *true*, stop at trapped errors.
 ##  The default is *false*.
 ##
-##opt(unstopat, name\comma string\comma or set of names and strings)
+##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
+##  A list is used to specify a procedure and a statement number.
 ##  See the `stopat` option.
 ##
 ##opt(usegrid,truefalse)
@@ -192,6 +194,7 @@ export Authenticate
     ,  Grid
     ,  mdc
     ,  Version
+    ,  Sleep
     ;
 
 #{{{ local declarations
@@ -229,17 +232,18 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { config :: {string,identical(maplet)} := NULL }
+                 { config :: {string,identical(maplet)} := "" }
                  , { exit :: truefalse := false }
                  , { host :: string := Host }
                  , { label :: string := kernelopts('username') }
                  , { maxlength :: nonnegint := max_length }
                  #, { password :: string := "" }
                  , { port :: posint := Port }
-                 , { stopat :: {string,name,set({string,name})} := "" }
+                 , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: truefalse := false }
                  , { traperror :: truefalse := false }
-                 , { unstopat :: {string,name,set(string,name)} := "" }
+                 , { unstopat :: {string,name,list,set(string,name,list)} := "" }
+                 , { unstoperror :: truefalse := false }
                  , { usegrid :: truefalse := false }
                  #, { usethreads :: truefalse := false }
                  , { verbose :: truefalse := false }
@@ -250,7 +254,7 @@ $endif
     global `debugger/width`;
     local lbl;
 
-        if config <> NULL then
+        if config <> "" then
             error "currently the 'config' option is disabled.  Use optional parameters."
         end if;
 
@@ -296,9 +300,12 @@ $endif
             Debugger:-unstopat(unstopat);
         end if;
 
-
         if stoperror then
             :-stoperror('all');
+        end if;
+
+        if unstoperror then
+            debugopts('delerror' = 'all');
         end if;
 
         if traperror then
@@ -477,7 +484,45 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1.1.5";
+    Version := "0.1.1.10";
+
+#}}}
+
+#{{{ Sleep
+
+##DEFINE CMD Sleep
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE pause execution of the engine
+##AUTHOR   Joe Riel
+##DATE     Aug 2011
+##CALLINGSEQUENCE
+##- \CMD('t')
+##PARAMETERS
+##- 't' : ::nonnegint::; number of seconds to sleep
+##DESCRIPTION
+##- The `\CMD` command pauses the execution of the Maple engine
+##  a specified length of time.  While paused it does not use CPU
+##  resources.
+##
+##- The 't' parameter is the duration to pause, in seconds.
+##SEEALSO
+##- "Threads[Sleep]"
+
+Sleep := proc( t :: nonnegint )
+local cmd,sys;
+    try
+        Threads:-Sleep( t )
+    catch:
+        sys := kernelopts('platform');
+        if sys = "windows" or sys = "dos" then
+            cmd := sprintf("timeout \t %d \nobreak", t);
+        else
+            cmd := sprintf("sleep %d", t);
+        end if;
+        system(cmd);
+    end try;
+    return NULL;
+end proc;
 
 #}}}
 
