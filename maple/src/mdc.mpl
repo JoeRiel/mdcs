@@ -93,9 +93,9 @@
 ##  Default is ~"emacs"~; it can be overridden.
 ##
 ##opt(exit,truefalse)
-##  If *true*, shutdown the TCP connection
+##  If true, shutdown the TCP connection
 ##  and restore the original debugger procedures.
-##  The default is *false*.
+##  The default is false.
 ##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
@@ -116,10 +116,10 @@
 ##  If true and unable to connect to a Maple Debugger Server,
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
-##  The default if false; it can be overridden.
+##  The default is false; it can be overridden.
 ##
 ##opt(maxlength,nonnegint)
-##  Limits the length of string the client will transmit.
+##  Limits the length of string the client sends to the server.
 ##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
@@ -127,7 +127,7 @@
 ##
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
-##  Must match the value used the server.
+##  Must match the value used by the server.
 ##  The default is 10000; it can be overridden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
@@ -140,12 +140,12 @@
 ##  calling the "stopat" procedure.
 ##
 ##opt(stoperror,truefalse)
-##  If *true*, stop at any error.
-##  The default is *false*; it can be overridden.
+##  If true, stop at any error.
+##  The default is false; it can be overridden.
 ##
 ##opt(traperror,truefalse)
-##  If *true*, stop at trapped errors.
-##  The default is *false*; it can be overridden.
+##  If true, stop at trapped errors.
+##  The default is false; it can be overridden.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -154,15 +154,15 @@
 ##  See the `stopat` option.
 ##
 ##opt(usegrid,truefalse)
-##  If *true*, append the "Grid" node number to the label.
+##  If true, append the "Grid" node-number to the label.
 ##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
-##  The default is *false*.
+##  The default is false.
 ##
 ##opt(view,truefalse)
-##  If *true*, the remote debugging session is echoed on the client machine.
+##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is *false*; it can be overridden.
+##  The default is false; it can be overridden.
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
