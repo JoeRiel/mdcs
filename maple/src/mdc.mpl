@@ -84,7 +84,7 @@
 ##  'mdc_default', using the name of the option as the index.
 ##  For example, to override the default for `port` to 12345,
 ##  assign ~mdc_default['port'] := 12345~. Entering this assignment
-##  in a Maple initialization file makes it available for
+##  in a "Maple initialization file" makes it available for
 ##  all sessions.
 ##
 ##opt(emacs,string)
@@ -180,6 +180,7 @@
 ##
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
+##- "Maple initialization file" : Help:worksheet,reference,initialization
 ##- "mds info" : file://{HOME}/maple/lib/mds.html
 ##
 ##SEEALSO
