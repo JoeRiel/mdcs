@@ -80,18 +80,18 @@ $endif
             # Save these
             orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
-
             # Reassign library debugger procedures
-            unprotect(debugger_procs);
-            debugger            := eval(_debugger);
+            unprotect(debugger_procs, :-stopat);
+            :-debugger          := eval(_debugger);
             `debugger/printf`   := eval(debugger_printf);
             `debugger/readline` := eval(debugger_readline);
-            showstat            := eval(_showstat);
-            showstop            := eval(_showstop);
-            where               := eval(_where);
-            #print               := eval(_print);
-            #printf              := eval(_printf);
-            protect(debugger_procs);
+            :-showstat          := eval(_showstat);
+            :-showstop          := eval(_showstop);
+            :-stopat            := eval(stopat);
+            :-where             := eval(_where);
+            #print              := eval(_print);
+            #printf             := eval(_printf);
+            protect(debugger_procs, :-stopat);
             replaced := true;
 $ifdef LOG_READLINE
             logpid := fopen(logfile,'APPEND','TEXT');
@@ -106,7 +106,7 @@ $endif
     Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced then
-            map( p -> kernelopts('unread' = p), [debugger_procs] );
+            map( p -> kernelopts('unread' = p), [debugger_procs, :-stopat] );
             replaced := false;
         end if;
         return NULL;
@@ -862,7 +862,7 @@ $define RETURN return
             end if;
 
             # Use eval in order to make sure everything is loaded from
-            # the library. pnm is not actually used (below) because
+            # the library. pnm is not returned (below) because
             # debugopts(stopat) needs a name if it is to return the
             # name on the lhs of the assignment in the string.
             pnm := eval(pn);
