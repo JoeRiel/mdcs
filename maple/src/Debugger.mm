@@ -297,8 +297,6 @@ $endif
 #}}}
 #{{{ debugger
 
-$define RETURN return
-
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
 
@@ -440,37 +438,37 @@ $define RETURN return
             #{{{ parse cmd (else is arbitrary expression)
 
             if cmd = "cont" then
-                RETURN
+                return
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
-                RETURN
+                return
             elif cmd = "step" then
                 debugopts('steplevel'=999999999);
-                RETURN
+                return
             elif cmd = "into" then
                 debugopts('steplevel'=evalLevel+6);
-                RETURN
+                return
             elif cmd = "outfrom" then
                 debugopts('steplevel'=evalLevel-2);
-                RETURN
+                return
             elif cmd = "return" then
                 debugopts('steplevel'=evalLevel-statLevel*5);
-                RETURN
+                return
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
                 # debugger_printf('DBG_STOP',"stopping\n");
                 # ssystem("sleep 1"); FIXME: may need to delay here.
                 debugopts('interrupt'=true)
             elif cmd = "where" then
                 if nops(line) = 1 then
-                    RETURN 'debugopts'('callstack')
+                    return 'debugopts'('callstack')
                 else
-                    RETURN 'debugopts'('callstack'=line[2])
+                    return 'debugopts'('callstack'=line[2])
                 fi
             elif cmd = "showstack" then
                 n := debugopts('callstack');
                 n := [op(1,n),op(5..-1,n)];
                 n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
-                RETURN n;
+                return n;
             elif cmd = "stopat" then
                 if nops(line) = 4 then
                     try
@@ -504,7 +502,7 @@ $define RETURN return
                             err := lasterror
                         end
                     fi;
-                    if err <> lasterror then RETURN []; (* stopat() *) fi
+                    if err <> lasterror then return []; (* stopat() *) fi
                 fi
             elif cmd = "unstopat" then
                 pName := procName;
@@ -519,7 +517,7 @@ $define RETURN return
                 catch:
                     err := lasterror;
                 end try;
-                if err <> lasterror then RETURN err fi
+                if err <> lasterror then return err fi
             elif cmd = "showstat" or cmd = "list" then
                 if procName = 0 then
                     debugger_printf('DBG_WARN',"Error, not currently in a procedure\n");
@@ -552,22 +550,22 @@ $define RETURN return
                     err := lasterror;
                 end try;
             elif cmd = "stopwhen" then
-                RETURN 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stopwhenif" then
-                RETURN 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "unstopwhen" then
-                RETURN 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+                return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
                 try
                     line := sscanf(original,"%s %1000c");
-                    RETURN 'stoperror'(seq(line[i],i=2..nops(line)))
+                    return 'stoperror'(seq(line[i],i=2..nops(line)))
                 catch:
                     err := lasterror;
                 end try;
             elif cmd = "unstoperror" then
                 try
                     line := sscanf(original,"%s %1000c");
-                    RETURN 'unstoperror'(seq(line[i],i=2..nops(line)));
+                    return 'unstoperror'(seq(line[i],i=2..nops(line)));
                 catch:
                     err := lasterror;
                 end try;
@@ -578,11 +576,11 @@ $define RETURN return
                     err := lasterror;
                 end try;
             elif cmd = "showerror" then
-                RETURN ['debugopts'('lasterror')]
+                return ['debugopts'('lasterror')]
             elif cmd = "showexception" then
-                RETURN ['debugopts'('lastexception')]
+                return ['debugopts'('lastexception')]
             elif cmd = "setenv" then
-                RETURN 'debugopts'('setenv'=[line[2],line[3]])
+                return 'debugopts'('setenv'=[line[2],line[3]])
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
@@ -594,9 +592,9 @@ $define RETURN return
                     # TABLEREF, which can mess up MEMBER binding, so don't check
                     # for type procedure if it is a TABLEREF (i.e. type indexed).
                     if not line :: indexed and line :: procedure then
-                        RETURN eval(line);
+                        return eval(line);
                     else
-                        RETURN line;
+                        return line;
                     fi;
                 catch:
                     err := lasterror;
@@ -607,9 +605,9 @@ $define RETURN return
                     line := parse(original,parse_debugger);
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
-                        RETURN eval(line);
+                        return eval(line);
                     else
-                        RETURN line;
+                        return line;
                     fi;
                 catch:
                     err := lasterror;
