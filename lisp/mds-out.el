@@ -411,6 +411,13 @@ found, return nil, and leave point at beginning of buffer."
 
 ;;}}}
 
+(defun mds-out-write-buffer (filename)
+  "Write the output buffer to FILENAME."
+  (interactive "FClone to file: ")
+  (with-current-buffer (mds-client-out-buf mds-client)
+    (write-region nil nil filename nil nil nil 'confirm)))
+
+
 (provide 'mds-out)
 
 ;; mds-out.el ends here
