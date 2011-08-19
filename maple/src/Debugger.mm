@@ -545,7 +545,7 @@ $endif
                 fi
             elif cmd = "showstop" then
                 try
-                    showstat['nonl']();
+                    showstop['nonl']();
                 catch:
                     err := lasterror;
                 end try;
