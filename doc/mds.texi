@@ -696,9 +696,9 @@ Maple distinguishes two types of watchpoints: @emph{global} and @emph{local}.
 Global watchpoints apply to global variables, local watchpoints to local variables.
 
 @strong{Nota Bene:}
-The Maple debugger has a bug in that it does not properly handle watchpoints
-for variables that are local to a module-local procedure.
-Attempting to set a watchpoint on such a variable returns the error
+The Maple debugger has a bug; it does not properly handle watchpoints
+for variables that are local to a module, or to a procedure of a module.
+Attempting to set a local watchpoint on such a variable returns the error
 
 @example
 Error, global name or [proc name, local name] expected
