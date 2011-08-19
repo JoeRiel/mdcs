@@ -233,7 +233,6 @@ local indexed2slashed
     prettyprint := proc(top :: truefalse := true)
     local eqs, ex, fld, ix, typ, opacity, rest;
     global _fake_name;
-
         if nargs > 2 then
             return seq(procname(false,ex), ex in [_rest]);
         end if;
@@ -242,7 +241,8 @@ local indexed2slashed
         rest := _rest;
 
         if rest :: set then
-            if top then Debugger:-Printf("(*set: %d*)\n", nops(rest));
+            if top then
+                Debugger:-Printf("(*set: %d*)\n", nops(rest));
                 return `if`(rest = []
                             , Debugger:-Printf("NULL\n")
                             , rest[]
@@ -251,7 +251,8 @@ local indexed2slashed
                 return rest;
             end if;
         elif rest :: list then
-            if top then Debugger:-Printf("(*list: %d*)\n", nops(rest));
+            if top then
+                Debugger:-Printf("(*list: %d*)\n", nops(rest));
                 return `if`(rest = []
                             , Debugger:-Printf("NULL\n")
                             , rest[]
@@ -325,6 +326,14 @@ local indexed2slashed
             return "NULL";
         elif rest :: 'name = anything' then
             return lhs(rest) = procname(false,rhs(rest));
+        elif rest :: Vector then
+            if top then
+                local i,n := op(1,rest);
+                Debugger:-Printf("(*Vector: %d*)\n", n);
+                return seq(rest[i], i=1..n);
+            else
+                return rest;
+            end if;
         else
             return rest;
         end if;
