@@ -1,5 +1,12 @@
 -*- org -*-
 
+* mdcs-0.1.1.11
+** improve help page (link to initialization file)
+** replace stopat with mdc:-stopat to allow strings as procedure names
+** add mds-out-write-function (useful for writing output buffer)
+** extend prettyprint to handle Vectors
+** info: clarify bug in stopwhen
+** fix bug in command loop handling of showstop
 * mdcs-0.1.1.10
 ** Fix face names
 ** Add launch_emacs keyword option to mdc
