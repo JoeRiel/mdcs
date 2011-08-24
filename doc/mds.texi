@@ -103,6 +103,10 @@ Showstat Mode
 * Miscellaneous::               Miscellaneous commands
 * Help::                        Getting help
 
+Output Buffer
+
+* Output buffer commands::      
+
 Command and Variable Index
 
 * Command Index::               An index of commands
@@ -885,6 +889,18 @@ after the debugger command.  This provides a visual trace of the commands execut
 
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
+
+@menu
+* Output buffer commands::      
+@end menu
+
+@node  Output buffer commands,  , Output Buffer, Output Buffer
+@section Output buffer commands
+
+@findex maplev-proc-at-point
+The @command{mds-out-write-buffer} command writes the output buffer
+to a specified file.  Unlike @command{write-file}, the buffer name
+does not change.
 
 
 

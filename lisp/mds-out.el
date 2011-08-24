@@ -413,9 +413,17 @@ found, return nil, and leave point at beginning of buffer."
 
 (defun mds-out-write-buffer (filename)
   "Write the output buffer to FILENAME."
-  (interactive "FClone to file: ")
+  (interactive "FWrite output buffer to file: ")
   (with-current-buffer (mds-client-out-buf mds-client)
-    (write-region nil nil filename nil nil nil 'confirm)))
+    ;; Copy contents of output buffer to temporary buffer and remove
+    ;; all address tags before writing to file.
+    (let ((contents (buffer-substring-no-properties (point-min) (point-max))))
+      (with-temp-buffer
+	(insert contents)
+	(goto-char (point-min))
+	(while (re-search-forward (concat "^" mds--addr-tag-re) nil t)
+	  (delete-region (match-beginning 0) (1+ (match-end 0))))
+	(write-region nil nil filename nil nil nil 'confirm)))))
 
 
 (provide 'mds-out)

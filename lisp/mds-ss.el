@@ -902,9 +902,10 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Show exception raw"		(mds-showexception t) t] )
 
       ("Miscellaneous"
-       ["Clear debugger output"         mds-out-clear t]
+       ["Clear output buffer"           mds-out-clear t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
+       ["Write output buffer"           mds-out-write-buffer t]
 
        )
 
