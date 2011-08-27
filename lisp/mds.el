@@ -381,7 +381,9 @@ use them to route the message."
 
      ((string= tag "DBG_STOP")
       (mds-out-display out-buf msg 'stop))
-     
+
+     ((string= tag "DBG_NULL"))
+
      ;; otherwise print to debugger output buffer
      (t (mds-out-display out-buf msg tag)))))
 

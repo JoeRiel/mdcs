@@ -650,7 +650,7 @@ $endif
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
 
-            map[3](debugger_printf, 'DBG_SHOW', "\n%s", [res]);
+            map[3](debugger_printf, 'DBG_SHOW_INACTIVE', "\n%s", [res]);
 
             # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
