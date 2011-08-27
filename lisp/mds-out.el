@@ -411,8 +411,11 @@ found, return nil, and leave point at beginning of buffer."
 
 ;;}}}
 
+;;{{{ miscellaneous
+
 (defun mds-out-write-buffer (filename)
-  "Write the output buffer to FILENAME."
+  "Write the output buffer to FILENAME.  If the filename
+is not supplied, it is interactively queried."
   (interactive "FWrite output buffer to file: ")
   (with-current-buffer (mds-client-out-buf mds-client)
     ;; Copy contents of output buffer to temporary buffer and remove
@@ -425,6 +428,7 @@ found, return nil, and leave point at beginning of buffer."
 	  (delete-region (match-beginning 0) (1+ (match-end 0))))
 	(write-region nil nil filename nil nil nil 'confirm)))))
 
+;;}}}
 
 (provide 'mds-out)
 
