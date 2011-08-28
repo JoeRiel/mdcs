@@ -44,7 +44,7 @@
 (defcustom mds-where-p4 "p4" "Perforce command-line executable")
 (defcustom mds-where-swhere "swhere" "Executable for running swhere")
 
-;;}}
+;;}}}
 ;;{{{ Constants
 
 (defconst mds-where-eom "^Process swhere finished")
