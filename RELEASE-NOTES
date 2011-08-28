@@ -2,6 +2,7 @@
 
 * mdcs-0.1.1.12
 ** mds-out-write-buffer: remove address tags.  Document in info.  Add to ss menu.
+** fix _showstat bug; showstat now works in showstat-buffer
 * mdcs-0.1.1.11
 ** improve help page (link to initialization file)
 ** replace stopat with mdc:-stopat to allow strings as procedure names
