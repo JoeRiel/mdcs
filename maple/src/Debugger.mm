@@ -20,6 +20,7 @@ $define DBG_EVAL1 DBG_EVAL
 $define DBG_EVAL2 DBG_EVAL
 $define DBG_EVAL3 DBG_EVAL
 $define DBG_EVAL4 DBG_EVAL
+$define LOGFILE "readline.log"
 
 Debugger := module()
 
@@ -35,8 +36,7 @@ export Printf
 
 global DEBUGGER_PROCS;
 
-local debugger_procs := 'DEBUGGER_PROCS' # macro
-    , _debugger
+local _debugger
     , debugger_printf
     , debugger_readline
     , _showstat
@@ -46,8 +46,7 @@ local debugger_procs := 'DEBUGGER_PROCS' # macro
     , orig_print
     , orig_stopat
     , getname
-    , replaced := false
-    , logfile  := "readline.log"
+    , replaced
 $ifdef LOG_READLINE
     , logpid
 $endif
@@ -61,6 +60,7 @@ $endif
     local ver;
         # Newer version of Maple, 14+, allow a the keyword 'debugger'
         # passed to 'parse', which does something, not sure what.
+        replaced := false;
         ver := kernelopts('version');
         ver := sscanf(ver, "%s %d")[2];
         if ver < 14 then
@@ -81,7 +81,7 @@ $endif
             orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
             # Reassign library debugger procedures
-            unprotect(debugger_procs, :-stopat);
+            unprotect('DEBUGGER_PROCS', :-stopat);
             :-debugger          := eval(_debugger);
             `debugger/printf`   := eval(debugger_printf);
             `debugger/readline` := eval(debugger_readline);
@@ -91,10 +91,10 @@ $endif
             :-where             := eval(_where);
             #print              := eval(_print);
             #printf             := eval(_printf);
-            protect(debugger_procs, :-stopat);
+            protect('DEBUGGER_PROCS', :-stopat);
             replaced := true;
 $ifdef LOG_READLINE
-            logpid := fopen(logfile,'APPEND','TEXT');
+            logpid := fopen(LOGFILE,'APPEND','TEXT');
 $endif
         end if;
         return NULL;
@@ -106,7 +106,7 @@ $endif
     Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced then
-            map( p -> kernelopts('unread' = p), [debugger_procs, :-stopat] );
+            map( p -> kernelopts('unread' = p), ['DEBUGGER_PROCS', :-stopat] );
             replaced := false;
         end if;
         return NULL;
