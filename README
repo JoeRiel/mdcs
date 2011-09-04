@@ -65,9 +65,7 @@ For those in hurry, just do
 > int(x,x);
 
 If you then go to Emacs, you should see an mds-showstat
-and mds-output buffer displayed.  The operation is
-similar to that of mdb, but the mds-output buffer
-looks substantially different.   
+and mds-output buffer displayed.
 
 In the mds-showstat buffer, type C-h m to get the following help,
 which briefly describes what each key does.
@@ -82,7 +80,7 @@ o (outfrom) execute current statement sequence or until breakpoint
 r (return) continue executing until current procedure returns
 s (step) execute next statement at any level
 t (trace) set tracing mode
-q (quit) terminate debugging, return to mdb buffer
+q (quit) terminate debugging
 
 Breakpoints
 -----------
@@ -115,10 +113,9 @@ E evalute a Maple expression in a global context
 
 Miscellaneous
 -------------
-C-c C-o pop to the mdb buffer
 C clear the debugger output buffer
 h display help page for the Maple debugger
-H display info page for Mdb
+H display info page for mds
 T toggle-truncate-lines (C-u for output buffer)
 ? display a Maple help page
 M-? display a Maple procedure
