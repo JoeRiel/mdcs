@@ -46,6 +46,7 @@
 ##- "debugger"
 ##- "\MOD[\MOD]"
 ##- "\MOD[Grid]"
+##- "\MOD[Count]"
 ##- "Grid"
 ##ENDMPLDOC
 
@@ -150,7 +151,7 @@
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
-##  A list is used to specify a procedure and a statement number.
+##  A list is used to specify a procedure and statement number.
 ##  See the `stopat` option.
 ##
 ##opt(usegrid,truefalse)
@@ -178,6 +179,23 @@
 ##- When finished debugging, shutdown the client, restoring the debugger procedures.
 ##> mdc(exit):
 ##
+##- Assign a procedure that computes the fibonacci function
+##>> fib := proc(n::nonnegint)
+##>> option remember;
+##>>    if n < 2 then n
+##>>    else fib(n-2) + fib(n-1)
+##>>    end if;
+##>> end proc:
+##- Set a conditional breakpoint so that debugging begins
+##  when `fib` is called with argument `n` equal to 10.
+##> mdc(stopat=[fib,1,'n=10']):
+##>(noexecute) fib(20);
+##- Clear the conditional breakpoint.
+##> mdc(unstopat=[fib,1]):
+##- Use "mdc[Count]" in a conditional breakpoint to begin debugging on the eighth call to fib.
+##  Forward quotes are used to prevent premature evaluation.
+##> mdc(stopat=[fib,1,'mdc:-Count()=8']):
+##>(noexecute) fib(10);
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
@@ -187,6 +205,7 @@
 ##- "\MOD"
 ##- "debugger"
 ##- "\MOD[Grid]"
+##- "\MOD[Count]"
 ##ENDMPLDOC
 
 #}}}
@@ -201,6 +220,7 @@ unprotect('mdc'):
 module mdc()
 
 export Authenticate
+    ,  Count
     ,  Debugger
     ,  Format
     ,  Grid
@@ -224,6 +244,7 @@ local Connect
     # Module-local variables.  Seems unlikely that the debugger
     # will ever be thread-safe, so this is not serious.
 
+    , cnt
     , Host
     , max_length
     , Port
@@ -565,6 +586,63 @@ end proc;
 
 #}}}
 
+#{{{ Count
+
+##DEFINE CMD Count
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE increment a counter
+##AUTHOR   Joe Riel
+##DATE     Sep 2011
+##CALLINGSEQUENCE
+##- \CMD('indices','opts')
+##PARAMETERS
+##- 'indices' : (optional) arguments used to identify counter
+##param_opts(\CMD)
+##DESCRIPTION
+##- The `\CMD` command increments a counter and returns the result.
+##  It is intended to be used with the conditional form of the
+##  `stopat` option to "mdc[mdc]" to stop the debugger inside a
+##  procedure after a specified number of calls.
+##
+##- The counter incremented is local to the "mdc" module.  Different
+##  counters can be specified by passing arbitrary arguments
+##  ('indices') to \CMD.  These arguments are used to index a table
+##  that stores the counters.
+##
+##OPTIONS
+##opt(reset,truefalse)
+##  If true, clear all the counters.
+##  The default is false.
+##
+##EXAMPLES
+##- Exercise a couple of counters.
+##> mdc:-Count(), mdc:-Count();
+##> mdc:-Count(12), mdc:-Count(), mdc:-Count(12);
+##- Reset all counters.
+##> mdc:-Count(reset):
+##- Assign a procedure that calls itself endlessly.
+##> f := proc(x) procname(x+1) end proc:
+##- Configure debugging to begin at statement 1 of the 23rd call to f.
+##  Forward-quotes are used to prevent premature evaluation of the condition.
+##>(noexecute) mdc(stopat=[f, 1, 'mdc:-Count()=23']);
+##>(noexecute) f(0);
+##SEEALSO
+##- "mdc[mdc]"
+##- "stopat"
+
+Count := proc( { reset :: truefalse := false } )
+    if reset then
+        cnt := table();
+        return NULL;
+    end if;
+    if assigned(cnt[_passed]) then
+        cnt[_passed] := cnt[_passed] + 1;
+    else
+        cnt[_passed] := 1;
+    end if;
+end proc:
+
+#}}}
 #{{{ GetDefault
 
     GetDefault := proc( opt :: name, default, $ )
@@ -575,6 +653,7 @@ end proc;
         end if;
     end proc;
 #}}}
+
 
 end module:
 
