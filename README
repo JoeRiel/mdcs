@@ -39,8 +39,8 @@ Modify your .emacs file.  I have the following
 
 (push "/home/joe/.emacs.d/mds" load-path)
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
-(global-set-key [f12] 'mds-windows-cycle-clients)
-(global-set-key [C-f12] 'mds-windows-cycle-groups)
+(global-set-key [f12] 'mds-wm-cycle-clients)
+(global-set-key [C-f12] 'mds-wm-cycle-groups)
 
 The binding to the f12 key is to permit quickly cycling through the
 connected clients.  Use C-f12 to cycle through groups of clients

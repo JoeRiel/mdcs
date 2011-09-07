@@ -233,7 +233,7 @@ package, but it is dated.
 
 Installation consists of unzipping the zip file,
 @file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
-copying the files to the appropriate directories.  Include in the zip
+copying the files to the appropriate directories.  Included in the zip
 file is a bash script, @file{install}, that byte-compiles the
 files in the @file{lisp} subdirectory and then copies all files to the
 standard locations.  Modify it per your setup then execute it with
@@ -299,7 +299,7 @@ To access them load MDS (@code{M-x mds}) then run
 @code{M-x customize-group} and enter @code{mds} or
 @code{mds-faces}.
 
-The most useful customizations are the following.
+The most useful customizations are the following:
 
 @table @asis
 
@@ -314,7 +314,7 @@ transferred to Emacs.
 
 @vindex mds-port
 @item @code{mds-port}
-An integer that is the port number used for communication.
+An integer that is the TCP port number used for communication.
 The default is 10000.
 
 @vindex mds-truncate-lines
