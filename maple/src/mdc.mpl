@@ -140,8 +140,11 @@
 ##  Using this option may be considerably faster than
 ##  calling the "stopat" procedure.
 ##
-##opt(stoperror,truefalse)
+##opt(stoperror,truefalse\comma string\comma or set of strings)
+##  If false, ignore.
 ##  If true, stop at any error.
+##  If a string, stop at that error message.
+##  If a set of strings, stop at any of those error messages.
 ##  The default is false; it can be overridden.
 ##
 ##opt(traperror,truefalse)
@@ -153,6 +156,14 @@
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~.
 ##  A list is used to specify a procedure and statement number.
 ##  See the `stopat` option.
+##
+##opt(unstoperror,truefalse\comma string\comma or set of strings)
+##  Clear stops set by "stoperror".
+##  If false, ignore.
+##  If true, clear all stoperrors.
+##  If a string, clear that error message.
+##  If a set of strings, clear those error messages.
+##  The default is false.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
@@ -273,10 +284,10 @@ $endif
                  , { emacs :: string := GetDefault(':-emacs', "emacs") }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
-                 , { stoperror :: truefalse := GetDefault(':-stoperror',false) }
+                 , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
-                 , { unstoperror :: truefalse := false }
+                 , { unstoperror :: {truefalse,string,set} := false }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
@@ -330,12 +341,20 @@ $endif
             Debugger:-unstopat(unstopat);
         end if;
 
-        if stoperror then
+        if stoperror = true then
             :-stoperror('all');
+        elif stoperror :: string then
+            :-stoperror(stoperror)
+        elif stoperror :: set then
+            map(:-stoperror, stoperror);
         end if;
 
-        if unstoperror then
+        if unstoperror = true then
             debugopts('delerror' = 'all');
+        elif unstoperror :: string then
+            :-unstoperror(unstoperror);
+        elif unstoperror :: set then
+            map(:-unstoperror, unstoperror);
         end if;
 
         if traperror then
