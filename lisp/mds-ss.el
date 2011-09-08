@@ -275,8 +275,8 @@ Otherwise, find the statement number from STATEMENT."
 	;; Set the buffer locals state info.
 	(setq mds-ss-addr  addr
 	      mds-ss-procname   procname
-	      mds-ss-statement  statement)
-   	(if state (setq mds-ss-state state))
+	      mds-ss-statement  statement
+	      mds-ss-state      state)
 	
 	;; Update the dead buffer.
 	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
@@ -312,14 +312,18 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	(mds-ss-display-state mds-ss-state))
 
        ;; From here down, we are in the dead ss-buf
+
+       (mds-ss-state
+	(mds-ss-display-state mds-ss-state))
+
        ((string= "" mds-ss-statement)
 	(setq mds-ss-state "1")
 	(mds-ss-display-state "1"))
 
-       ((string= "0" mds-ss-statement)
-	(mds-ss-display-state mds-ss-state))
+       ;;((string= "0" mds-ss-statement)
+       ;; (mds-ss-display-state mds-ss-state))
 
-       ('t
+       (t
 	(let ((state (mds-ss-determine-state mds-ss-statement)))
 	  (when (null state)
 	    (ding)
@@ -334,6 +338,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
     (if mds-ss-live
 	(display-buffer buf)
       (mds-wm-display-dead mds-client))))
+
 
 ;;}}}
 ;;{{{ (*) mds-ss-display-state
