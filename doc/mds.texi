@@ -151,7 +151,7 @@ running Maple from the GUI, the command-line, or from a script.
 Remote debugging---the client (Maple) can be run on one machine, the
 server on another. Communication is via standard TCP.
 @item
-Concurrent debugging---multiple Maple processes can debugged
+Concurrent debugging---multiple Maple processes can be debugged
 simultaneously. This permits interactively comparing the actions of
 different versions of code, or comparing code run on machines with
 different operating systems. It also permits independently or
