@@ -278,6 +278,7 @@ $endif
     mdc := proc( (* no positional parameters *)
                  { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
+                 , { ignoretester :: truefalse := true } # undocumented
                  , { label :: string := kernelopts('username') }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
@@ -300,6 +301,12 @@ $endif
             Debugger:-Restore();
             Disconnect();
             return NULL;
+        end if;
+
+        if ignoretester then
+            if assigned(TESTER_SOURCEDIR) then
+                return NULL
+            end if;
         end if;
 
         view_flag := view and not IsWorksheetInterface();
