@@ -282,12 +282,12 @@ $endif
 
     mdc := proc( (* no positional parameters *)
                  { exit :: truefalse := false }
-                 , { host :: string := GetDefault(':-host',"localhost") }
-                 , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }o
-                 , { label :: string := kernelopts('username') }
-                 , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
-                 , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                  , { emacs :: string := GetDefault(':-emacs', "emacs") }
+                 , { host :: string := GetDefault(':-host',"localhost") }
+                 , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
+                 , { label :: string := kernelopts('username') }
+                 , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
+                 , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
