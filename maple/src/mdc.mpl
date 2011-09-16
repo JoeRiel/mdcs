@@ -102,6 +102,11 @@
 ##  The name of the host machine that is running the Maple Debugger Server.
 ##  The default is _"localhost"_; it can be overridden.
 ##
+##opt(ignoretester,truefalse)
+##  If true, then do nothing when called from the Maplesoft tester.
+##  This is intended for internal use.
+##  The default is true; it can be overridden.
+##
 ##opt(label,string)
 ##  Label passed to server for identification and grouping of the client.
 ##  If the basename of two or more labels, from independent
@@ -278,7 +283,7 @@ $endif
     mdc := proc( (* no positional parameters *)
                  { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
-                 , { ignoretester :: truefalse := true } # undocumented
+                 , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }o
                  , { label :: string := kernelopts('username') }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
