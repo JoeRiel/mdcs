@@ -370,6 +370,8 @@ and
 the @b{debugger output buffer}, 
 which displays Maple output during debugging.
 
+@findex mds-stop
+To stop the server, use @kbd{M-x mds-stop}.
 
 @node Showstat Buffer, Output Buffer, Launching MDS, Top
 @chapter Showstat Buffer
