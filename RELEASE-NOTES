@@ -8,6 +8,8 @@
 ** Expanded stoperror option to mdc to allow a string or a set of strings
 ** Added unstoperror option to mdc.
 ** Added ignoretester option for simplifying debugging of tester code.
+** Improve error message when cannot connect
+** Document mds-stop
 * mdcs-0.1.1.12
 ** mds-out-write-buffer: remove address tags.  Document in info.  Add to ss menu.
 ** fix _showstat bug; showstat now works in showstat-buffer
