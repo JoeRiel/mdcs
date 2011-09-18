@@ -441,20 +441,24 @@ $endif
         end try;
         Host := host;
         Port := port;
-            # handle login (hack for now)
+        # handle login (hack for now)
+        try
             line := Sockets:-Read(sid);
-            # printf("%s\n", line);
-            if line = "userid: " then
-                Sockets:-Write(sid, id);
-                line := Sockets:-Read(sid);
-                printf("%s\n", line);
-                if verbose then
-                    printf("Connected to %s on port %d, with id %s\n"
-                           , host, port, id );
-                end if;
-                return NULL;
+        catch "invalid socket ID":
+            error "cannot connect to Debugger server.  Server may not be running."
+        end try;
+        # printf("%s\n", line);
+        if line = "userid: " then
+            Sockets:-Write(sid, id);
+            line := Sockets:-Read(sid);
+            printf("%s\n", line);
+            if verbose then
+                printf("Connected to %s on port %d, with id %s\n"
+                       , host, port, id );
             end if;
-            # error "could not connect";
+            return NULL;
+        end if;
+        # error "could not connect";
     end proc;
 
 #}}}
