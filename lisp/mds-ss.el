@@ -66,7 +66,6 @@ with a colon.  The colon is omitted from the group-one match.
 A more precise regular expression would allow spaces inside backquotes,
 however, such an abomination should break something.")
 
-
 ;;}}}
 ;;{{{ variables
 
@@ -303,7 +302,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	      mds-ss-procname (cdr addr-procname)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
-      (mds-ss-set-mode-line mds-ss-procname)
+      (mds-ss-set-mode-line mds-ss-procname (car (mds-client-id mds-client)))
 
       (cond
        (mds-ss-live
@@ -338,7 +337,6 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
     (if mds-ss-live
 	(display-buffer buf)
       (mds-wm-display-dead mds-client))))
-
 
 ;;}}}
 ;;{{{ (*) mds-ss-display-state
@@ -821,15 +819,18 @@ the `mds-ss-buffer'."
 
 ;;{{{ mode-line
 
-(defun mds-ss-set-mode-line (proc)
+(defun mds-ss-set-mode-line (proc &optional label)
   "Set the mode-line of an mds-ss buffer.
 PROC is a string corresponding to the displayed procedure, 
-it is displayed in bold after the mode name."
+it is displayed in square brackets after the mode name.
+
+"
   (setq mode-line-format
 	(list
 	 mode-line-buffer-identification
 	 "   "
 	 mode-line-modes
+	 (and label (concat "---" (propertize (format "[%s]" label) 'face 'bold)))
 	 "---"
 	 (propertize (format "[%s]" proc) 'face 'bold)
 	 "-%-")))
