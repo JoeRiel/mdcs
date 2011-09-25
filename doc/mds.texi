@@ -63,7 +63,7 @@ Texts.  A copy of the license is included in the section entitled
 
 @menu
 * Introduction::                
-* Launching MDS::               Starting the server
+* Launching and Stopping MDS::  
 * Showstat Buffer::             Stepping through code
 * Output Buffer::               Maple output
 * Debugging Tips::              Useful tips and technique
@@ -115,7 +115,7 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Launching MDS, Top, Top
+@node Introduction, Launching and Stopping MDS, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -354,9 +354,10 @@ including the version information of Emacs (@kbd{C-h v emacs-version}),
 MDS, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
 
 
-@node Launching MDS, Showstat Buffer, Introduction, Top
-@chapter Launching MDS
+@node Launching and Stopping MDS, Showstat Buffer, Introduction, Top
+@chapter Launching and Stopping MDS
 @cindex launching mds
+@cindex stopping mds
 
 @findex mds
 The @kbd{M-x mds} command starts the Maple Debugger Server.  If the
@@ -373,7 +374,7 @@ which displays Maple output during debugging.
 @findex mds-stop
 To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Launching MDS, Top
+@node Showstat Buffer, Output Buffer, Launching and Stopping MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
