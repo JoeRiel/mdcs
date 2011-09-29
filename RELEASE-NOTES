@@ -1,8 +1,9 @@
 -*- org -*-
 
-* mds-0.1.1.14
+* mdcs-0.1.1.14
 ** texi: change title 'Launching MDS' to 'Launching and Stopping MDS'
 ** add label to mode line in live showstat buffer
+** add cycle-client commands to menu
 * mdcs-0.1.1.13
 ** README: remove references to mdb
 ** mdcs.texi: minor cleanup

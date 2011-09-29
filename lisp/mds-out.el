@@ -73,6 +73,12 @@
   "Face for debugger information."
   :group 'mds-faces)
 
+(defface mds-mode-label
+  '((((class color) (background dark))  :foreground "lightblue")
+    (((class color) (background light)) :foreground "blue"))
+  "Face for debugger information."
+  :group 'mds-faces)
+
 (defface mds-maple-error
   '((((class color) (background dark))  :foreground "orange red")
     (((class color) (background light)) :foreground "red")

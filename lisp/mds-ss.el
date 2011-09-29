@@ -15,6 +15,7 @@
 (eval-when-compile
   (require 'hl-line)
   (require 'maplev)
+  (require 'mds-client)
   (require 'mds-out)
   (require 'mds-re)
   (require 'mds-wm))
@@ -822,16 +823,14 @@ the `mds-ss-buffer'."
 (defun mds-ss-set-mode-line (proc &optional label)
   "Set the mode-line of an mds-ss buffer.
 PROC is a string corresponding to the displayed procedure, 
-it is displayed in square brackets after the mode name.
-
-"
+it is displayed in square brackets after the mode name."
   (setq mode-line-format
 	(list
 	 mode-line-buffer-identification
+;;	 "   "
+;;	 mode-line-modes
+	 (and label (concat "   " (propertize (format "[%s]" label) 'face 'bold)))
 	 "   "
-	 mode-line-modes
-	 (and label (concat "---" (propertize (format "[%s]" label) 'face 'bold)))
-	 "---"
 	 (propertize (format "[%s]" proc) 'face 'bold)
 	 "-%-")))
 
@@ -843,17 +842,16 @@ change).  The purpose is to distinguish the window when
 multiwindows are present and the control panel is used.  For this
 to work, `face-remapping-alist' must be buffer-local."
   (with-current-buffer buf
-    (setq face-remapping-alist (if off
-				   `((mode-line-inactive
-				      :foreground ,(face-attribute 'mode-line-inactive :foreground t)
-				      :background ,(face-attribute 'mode-line-inactive :background t)))
-				 `((mode-line-inactive
-				    ;; make customizable
-				    :foreground ,(face-attribute 'mode-line :foreground t)
-				    :background ,(face-attribute 'mode-line :background t)))
-				 ))))
-
-
+    (setq face-remapping-alist 
+	  (if off
+	      `((mode-line-inactive
+		 :foreground ,(face-attribute 'mode-line-inactive :foreground t)
+		 :background ,(face-attribute 'mode-line-inactive :background t)))
+	    `((mode-line-inactive
+	       ;; make customizable
+	       :foreground ,(face-attribute 'mode-line :foreground t)
+	       :background ,(face-attribute 'mode-line :background t)))
+	    ))))
 
 ;;}}}
 
@@ -912,8 +910,12 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Write output buffer"           mds-out-write-buffer t]
-
        )
+
+      ("Clients"
+       ["Cycle clients"                 mds-wm-cycle-clients t]
+       ["Cycle groups"                  mds-wm-cycle-groups  t]
+      )
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]
