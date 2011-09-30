@@ -14,7 +14,8 @@
 
 (eval-when-compile
   (require 'mds-re)
-  (require 'mds-client))
+  (require 'mds-client)
+  (defvar mds-truncate-lines))
 
 ;;{{{ declarations
 
@@ -142,7 +143,9 @@ The first group matches the statement, with some indentation.")
   (let ((buf (generate-new-buffer "*mds-out*")))
     (with-current-buffer buf
       (mds-out-mode)
-      (setq mds-client client))
+      (setq mds-client client)
+      (if mds-truncate-lines
+	  (toggle-truncate-lines 1)))
     buf))
 
 (defun mds-out-clear ()

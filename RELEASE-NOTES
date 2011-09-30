@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-0.1.1.15
+** change menu section "Tracing" to "Execution"
+** use mds-truncate-lines when creating output buffer
 * mdcs-0.1.1.14
 ** texi: change title 'Launching MDS' to 'Launching and Stopping MDS'
 ** add label to mode line in live showstat buffer

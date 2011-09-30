@@ -861,10 +861,10 @@ to work, `face-remapping-alist' must be buffer-local."
 (unless mds-ss-menu
   (easy-menu-define
     mds-ss-menu mds-ss-mode-map
-    "Menu for Mds showstat mode"
+    "Menu for mds showstat mode"
     `("Showstat"
 
-      ("Tracing"
+      ("Execution"
        ["Continue"	mds-cont t]
        ["Next"		mds-next t]
        ["Into"		mds-into t]
