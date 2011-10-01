@@ -15,6 +15,7 @@
 (eval-when-compile
   (require 'hl-line)
   (require 'maplev)
+  (require 'mds-client)
   (require 'mds-out)
   (require 'mds-re)
   (require 'mds-wm))
@@ -65,7 +66,6 @@ It is flush-left, presumably contains no spaces, and is terminated
 with a colon.  The colon is omitted from the group-one match.
 A more precise regular expression would allow spaces inside backquotes,
 however, such an abomination should break something.")
-
 
 ;;}}}
 ;;{{{ variables
@@ -275,8 +275,8 @@ Otherwise, find the statement number from STATEMENT."
 	;; Set the buffer locals state info.
 	(setq mds-ss-addr  addr
 	      mds-ss-procname   procname
-	      mds-ss-statement  statement)
-   	(if state (setq mds-ss-state state))
+	      mds-ss-statement  statement
+	      mds-ss-state      state)
 	
 	;; Update the dead buffer.
 	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
@@ -303,7 +303,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	      mds-ss-procname (cdr addr-procname)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
-      (mds-ss-set-mode-line mds-ss-procname)
+      (mds-ss-set-mode-line mds-ss-procname (car (mds-client-id mds-client)))
 
       (cond
        (mds-ss-live
@@ -312,14 +312,18 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	(mds-ss-display-state mds-ss-state))
 
        ;; From here down, we are in the dead ss-buf
+
+       (mds-ss-state
+	(mds-ss-display-state mds-ss-state))
+
        ((string= "" mds-ss-statement)
 	(setq mds-ss-state "1")
 	(mds-ss-display-state "1"))
 
-       ((string= "0" mds-ss-statement)
-	(mds-ss-display-state mds-ss-state))
+       ;;((string= "0" mds-ss-statement)
+       ;; (mds-ss-display-state mds-ss-state))
 
-       ('t
+       (t
 	(let ((state (mds-ss-determine-state mds-ss-statement)))
 	  (when (null state)
 	    (ding)
@@ -816,16 +820,17 @@ the `mds-ss-buffer'."
 
 ;;{{{ mode-line
 
-(defun mds-ss-set-mode-line (proc)
+(defun mds-ss-set-mode-line (proc &optional label)
   "Set the mode-line of an mds-ss buffer.
 PROC is a string corresponding to the displayed procedure, 
-it is displayed in bold after the mode name."
+it is displayed in square brackets after the mode name."
   (setq mode-line-format
 	(list
 	 mode-line-buffer-identification
+;;	 "   "
+;;	 mode-line-modes
+	 (and label (concat "   " (propertize (format "[%s]" label) 'face 'bold)))
 	 "   "
-	 mode-line-modes
-	 "---"
 	 (propertize (format "[%s]" proc) 'face 'bold)
 	 "-%-")))
 
@@ -837,17 +842,16 @@ change).  The purpose is to distinguish the window when
 multiwindows are present and the control panel is used.  For this
 to work, `face-remapping-alist' must be buffer-local."
   (with-current-buffer buf
-    (setq face-remapping-alist (if off
-				   `((mode-line-inactive
-				      :foreground ,(face-attribute 'mode-line-inactive :foreground t)
-				      :background ,(face-attribute 'mode-line-inactive :background t)))
-				 `((mode-line-inactive
-				    ;; make customizable
-				    :foreground ,(face-attribute 'mode-line :foreground t)
-				    :background ,(face-attribute 'mode-line :background t)))
-				 ))))
-
-
+    (setq face-remapping-alist 
+	  (if off
+	      `((mode-line-inactive
+		 :foreground ,(face-attribute 'mode-line-inactive :foreground t)
+		 :background ,(face-attribute 'mode-line-inactive :background t)))
+	    `((mode-line-inactive
+	       ;; make customizable
+	       :foreground ,(face-attribute 'mode-line :foreground t)
+	       :background ,(face-attribute 'mode-line :background t)))
+	    ))))
 
 ;;}}}
 
@@ -857,10 +861,10 @@ to work, `face-remapping-alist' must be buffer-local."
 (unless mds-ss-menu
   (easy-menu-define
     mds-ss-menu mds-ss-mode-map
-    "Menu for Mds showstat mode"
+    "Menu for mds showstat mode"
     `("Showstat"
 
-      ("Tracing"
+      ("Execution"
        ["Continue"	mds-cont t]
        ["Next"		mds-next t]
        ["Into"		mds-into t]
@@ -906,8 +910,12 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Write output buffer"           mds-out-write-buffer t]
-
        )
+
+      ("Clients"
+       ["Cycle clients"                 mds-wm-cycle-clients t]
+       ["Cycle groups"                  mds-wm-cycle-groups  t]
+      )
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]

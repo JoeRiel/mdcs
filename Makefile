@@ -4,7 +4,7 @@
 
 SHELL := /bin/bash
 
-VERSION := 0.1.1.13
+VERSION := 0.1.1.15
 
 include help-system.mak
 
@@ -273,6 +273,7 @@ PHONY: zip
 
 dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES README install
 
+zip: $(call print-help,zip,Create zipfile)
 zip: $(dist)
 	zip mdcs-$(VERSION).zip $+
 

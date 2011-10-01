@@ -14,7 +14,8 @@
 
 (eval-when-compile
   (require 'mds-re)
-  (require 'mds-client))
+  (require 'mds-client)
+  (defvar mds-truncate-lines))
 
 ;;{{{ declarations
 
@@ -70,6 +71,12 @@
 (defface mds-info
   '((((class color) (background dark))  :foreground "sandy brown")
     (((class color) (background light)) :foreground "sandy brown"))
+  "Face for debugger information."
+  :group 'mds-faces)
+
+(defface mds-mode-label
+  '((((class color) (background dark))  :foreground "lightblue")
+    (((class color) (background light)) :foreground "blue"))
   "Face for debugger information."
   :group 'mds-faces)
 
@@ -136,7 +143,9 @@ The first group matches the statement, with some indentation.")
   (let ((buf (generate-new-buffer "*mds-out*")))
     (with-current-buffer buf
       (mds-out-mode)
-      (setq mds-client client))
+      (setq mds-client client)
+      (if mds-truncate-lines
+	  (toggle-truncate-lines 1)))
     buf))
 
 (defun mds-out-clear ()

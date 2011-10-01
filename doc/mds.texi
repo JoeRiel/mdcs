@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 0.1.1.13
+@set VERSION 0.1.1.15
 @set DATE June 2011
 
 @dircategory Emacs
@@ -63,7 +63,7 @@ Texts.  A copy of the license is included in the section entitled
 
 @menu
 * Introduction::                
-* Launching MDS::               Starting the server
+* Launching and Stopping MDS::  
 * Showstat Buffer::             Stepping through code
 * Output Buffer::               Maple output
 * Debugging Tips::              Useful tips and technique
@@ -115,7 +115,7 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Launching MDS, Top, Top
+@node Introduction, Launching and Stopping MDS, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -151,7 +151,7 @@ running Maple from the GUI, the command-line, or from a script.
 Remote debugging---the client (Maple) can be run on one machine, the
 server on another. Communication is via standard TCP.
 @item
-Concurrent debugging---multiple Maple processes can debugged
+Concurrent debugging---multiple Maple processes can be debugged
 simultaneously. This permits interactively comparing the actions of
 different versions of code, or comparing code run on machines with
 different operating systems. It also permits independently or
@@ -233,7 +233,7 @@ package, but it is dated.
 
 Installation consists of unzipping the zip file,
 @file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
-copying the files to the appropriate directories.  Include in the zip
+copying the files to the appropriate directories.  Included in the zip
 file is a bash script, @file{install}, that byte-compiles the
 files in the @file{lisp} subdirectory and then copies all files to the
 standard locations.  Modify it per your setup then execute it with
@@ -299,7 +299,7 @@ To access them load MDS (@code{M-x mds}) then run
 @code{M-x customize-group} and enter @code{mds} or
 @code{mds-faces}.
 
-The most useful customizations are the following.
+The most useful customizations are the following:
 
 @table @asis
 
@@ -314,7 +314,7 @@ transferred to Emacs.
 
 @vindex mds-port
 @item @code{mds-port}
-An integer that is the port number used for communication.
+An integer that is the TCP port number used for communication.
 The default is 10000.
 
 @vindex mds-truncate-lines
@@ -354,9 +354,10 @@ including the version information of Emacs (@kbd{C-h v emacs-version}),
 MDS, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
 
 
-@node Launching MDS, Showstat Buffer, Introduction, Top
-@chapter Launching MDS
+@node Launching and Stopping MDS, Showstat Buffer, Introduction, Top
+@chapter Launching and Stopping MDS
 @cindex launching mds
+@cindex stopping mds
 
 @findex mds
 The @kbd{M-x mds} command starts the Maple Debugger Server.  If the
@@ -370,8 +371,10 @@ and
 the @b{debugger output buffer}, 
 which displays Maple output during debugging.
 
+@findex mds-stop
+To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Launching MDS, Top
+@node Showstat Buffer, Output Buffer, Launching and Stopping MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
