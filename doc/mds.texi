@@ -306,7 +306,7 @@ The most useful customizations are the following.
 @vindex mds-get-focus-function
 @item @code{mds-get-focus-function}
 A function that calls the window manager to transfer
-focus to Emacs.  This is called when a client begins debugging.
+focus to Emacs.  This is called when a Maple client begins debugging.
 The default is nil unless the command @command{wmctrl}
 is available, then it is set to @code{mds-windows-get-focus-wmctrl}.
 The nil value means that focus will not automatically be
