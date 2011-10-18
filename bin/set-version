@@ -66,19 +66,16 @@ fi
 #{{{ Update source files
 
 # Update lisp
-
 file="lisp/mds.el"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/defconst mds-version/{$sed_cmd}" "$file"
 
 # Update maple
-
 file="maple/src/mdc.mpl"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/Version := /$sed_cmd" "$file"
 
 # Update texinfo
-
 file="doc/mds.texi"
 [ "$check" ] && echo -ne "$file:\t"
 sed $sed_opt "/^@set VERSION /$sed_cmd" "$file"
