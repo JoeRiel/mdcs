@@ -63,7 +63,7 @@ HTML_DIR := $(HOME)/maple/lib
 INFO_DIR := $(HOME)/share/info
 
 # where the maple archive goes
-MAPLE_INSTALL_DIR := $(HOME)/maple/toolbox/mdcs/lib
+MAPLE_INSTALL_DIR := $(HOME)/maple/toolbox/mdc/lib
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
