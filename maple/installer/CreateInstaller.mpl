@@ -28,8 +28,13 @@ local installer, version;
                                             , "lisp/mds-ss.el" = "lisp/mds-ss.el"
                                             , "lisp/mds-wm.el" = "lisp/mds-wm.el"
                                             , "lisp/mds.el" = "lisp/mds.el"
+                                            , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
 
                                             , "doc/mds" = "info/mds"
+                                            , "doc/mds.html" = "doc/mds.html"
+
+                                            , "../maplev/doc/maplev" = "info/maplev"
+                                            , "../maplev/doc/maplev.html" = "doc/maplev.html"
 
                                            ]
                             , 'welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the Maple Debugger Client/Server, version %s.\n", version)
@@ -39,7 +44,7 @@ local installer, version;
 
                                           ]
                             , 'installation' = [NULL
-                                                , 'text' = "Installing the Maple package mdc and the Emacs package mds."
+                                                , 'text' = "Installing the Maple package mdc and the Emacs packages mds and maplev."
                                                 , 'script' = proc()
                                                              local elispdir
                                                                  , dirsep
