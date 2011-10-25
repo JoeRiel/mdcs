@@ -152,11 +152,15 @@
 ##  If a set of strings, stop at any of those error messages.
 ##  The default is false; it can be overridden.
 ##
-##opt(stopwarning, string or set of strings)
+##opt(stopwarning, string\comma set of strings\comma or true)
+##  Add strings that stop the debugger when a matching warning occurs.
 ##  Each string is a "regular expression" that is matched
 ##  against the formatted warning messages.  If a match occurs,
 ##  the debugger is halted inside a modified WARNING procedure.
 ##  To match any warning, use the string ~"."~.
+##  The set of all regular expressions is printed whenever
+##  `mdc` is called with this option.  Calling `mdc` with
+##  just this option, ~mdc(stopwarning)~, prints the regular expressions.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
@@ -177,8 +181,10 @@
 ##  The default is false.
 ##
 ##opt(unstopwarning, string or set of strings)
-##  Removes one or more strings from the set of warnings
-##  that stop the debugger.  See `stopwarning` option.
+##  Removes one or more strings from the set of regular expressions
+##  that are matched against warnings.
+##  See `stopwarning` option.
+##  The remaining regular are printed.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
