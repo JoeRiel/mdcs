@@ -189,7 +189,7 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 %.mla: maple/src/%.mpl maple/src/*.mm
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $^ ) ; \
+	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $< ) ; \
 		if [ ! -z "$$err" ]; then \
 			echo $(call warn,$$err); \
 		fi
@@ -203,6 +203,20 @@ tags: $(call print-help,tags,Create TAGS file)
 tags:
 	bin/mtags maple/src/*
 	etags --append --language=lisp lisp/*.el
+
+# }}}
+
+# {{{ installer
+
+.PHONY: installer
+
+installer := $(pkg)-Installer.mla
+
+installer: $(call print-help,installer,Create Maple installer: $(installer))
+installer: $(installer)
+
+$(installer): hdb mla
+	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
 # }}}
 
