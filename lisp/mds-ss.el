@@ -71,15 +71,16 @@ however, such an abomination should break something.")
 ;;{{{ variables
 
 (defvar mds-ss-addr           nil "Address of displayed showstat procedure.")
-(defvar mds-ss-allow-input-flag t   "Boolean variable")
-(defvar mds-ss-arrow-position nil "Marker for state arrow.")
-(defvar mds-ss-last-debug-cmd nil "The previous debugger command.")
+(defvar mds-ss-allow-input-flag t "Boolean variable")
+(defvar mds-ss-arrow-position nil "Marker for state arrow")
+(defvar mds-ss-show-args-flag nil "Show args when entering a procedure")
+(defvar mds-ss-last-debug-cmd nil "The previous debugger command")
 (defvar mds-ss-live	      nil "Store current state of active procedure")
-(defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
-(defvar mds-ss-state          "1" "Current state of procedure.")
+(defvar mds-ss-procname       nil "Name of displayed showstat procedure")
+(defvar mds-ss-state          "1" "Current state of procedure")
 (defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
 (defvar mds-ss-trace          nil "Valid values are nil, cont, into, and step")
-(defvar mds-ss-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names,the values are additional alists.")
+(defvar mds-ss-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names, the values are additional alists.")
 
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
@@ -87,6 +88,7 @@ however, such an abomination should break something.")
 	mds-ss-addr
 	mds-ss-allow-input-flag
 	mds-ss-arrow-position
+	mds-ss-show-args-flag
 	mds-ss-last-debug-cmd
 	mds-ss-live
 	mds-ss-procname
@@ -412,11 +414,11 @@ Minibuffer completion is used if COMPLETE is non-nil."
 
 ;;{{{ allow input
 
-;; These permit access to the buffer-local variable `mds-allow-input-flag',
+;; These permit access to the buffer-local variable `mds-ss-allow-input-flag',
 ;; which in turn allows sending input to the Maple engine.
 
 (defun mds-ss-allow-input (buf allow)
-  "In buffer BUF, set buffer-local variable `mds-allow-input-flag' to ALLOW."
+  "In buffer BUF, set buffer-local variable `mds-ss-allow-input-flag' to ALLOW."
   (with-current-buffer buf
     (setq mds-ss-allow-input-flag allow)))
 
@@ -429,6 +431,17 @@ Otherwise raise error indicating Maple is not available."
       (error "Maple busy or debugging finished"))))
 
 ;;}}}
+;;{{{ mds-show-args
+
+(defun mds-ss-show-args-assign (liv-buf val)
+  (with-current-buffer liv-buf
+    (setq mds-ss-show-args-flag val)))
+
+(defun mds-ss-show-args-value (liv-buf)
+  (buffer-local-value 'mds-ss-show-args-flag liv-buf))
+
+;;}}}
+
 
 ;;{{{ commands
 

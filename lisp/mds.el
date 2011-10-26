@@ -330,7 +330,8 @@ use them to route the message."
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-      (mds-ss-display live-buf msg))
+      (mds-ss-display live-buf msg)
+      (mds-ss-show-args-assign live-buf t))
 
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
