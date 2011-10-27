@@ -154,12 +154,12 @@
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings that stop the debugger when a matching warning
-##  occurs.  Each string is a "regular expression" that is matched
-##  against the formatted warning message.  If a match occurs, the
-##  debugger is halted inside a modified "WARNING" procedure.  If
-##  true, then the set of regular expressions is assigned ~{""}~,
-##  which matches any warning.  If false, then WARNING is restored
-##  and no warning will stop the debugger.
+##  occurs.  The "WARNING" procedure is replaced with one that matches
+##  each regular expression against the formatted warning message.  If
+##  a match occurs, execution stops inside WARNING.
+##  If `stopwarning` is true, the set of regular expressions is
+##  assigned ~{""}~, which matches any warning.
+##  If `stopwarning` is false, WARNING is restored.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
