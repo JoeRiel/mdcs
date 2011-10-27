@@ -156,11 +156,11 @@
 ##  Add strings that stop the debugger when a matching warning occurs.
 ##  Each string is a "regular expression" that is matched
 ##  against the formatted warning messages.  If a match occurs,
-##  the debugger is halted inside a modified WARNING procedure.
-##  To match any warning, use the string ~"."~.
+##  the debugger is halted inside a modified "WARNING" procedure.
+##
 ##  The set of all regular expressions is printed whenever
 ##  `mdc` is called with this option.  Calling `mdc` with
-##  just this option, ~mdc(stopwarning)~, prints the regular expressions.
+##  just this option, ~mdc(stopwarning)~, adds
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
@@ -179,12 +179,6 @@
 ##  If a string, clear that error message.
 ##  If a set of strings, clear those error messages.
 ##  The default is false.
-##
-##opt(unstopwarning, string or set of strings)
-##  Removes one or more strings from the set of regular expressions
-##  that are matched against warnings.
-##  See `stopwarning` option.
-##  The remaining regular are printed.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
@@ -312,11 +306,11 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
-                 , { stopwarning :: {string,set(string),identical(true)} := "" }
+                 , { stopwarning :: {string,set(string),identical(true)} := NULL }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
-                 , { unstoperror :: {truefalse,string,set} := false }
-                 , { unstopwarning :: {string,set(string)} := "" }
+                 , { unstoperror :: {truefalse,string,set,identical(true)} := false }
+                 , { unstopwarning :: {string,set(string)} := NULL }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
@@ -384,25 +378,25 @@ $endif
             map(:-stoperror, stoperror);
         end if;
 
-        if stopwarning <> "" then
-            if stopwarning <> true then
-                unprotect('WARNING');
-                WARNING := proc()
-                local msg;
-                uses ST = StringTools;
-                    WARNING_orig(_passed);
-                    msg := ST:-FormatMessage(_passed);
-                    if ormap(ST:-RegMatch, Warnings, msg) then
-                        DEBUG();
-                    end if;
-                    NULL;
-                end proc;
-                protect('WARNING');
-                Warnings := Warnings union `if`(stopwarning :: set
-                                                , stopwarning
-                                                , {stopwarning}
-                                               );
-            end if;
+        if stopwarning <> NULL then
+            unprotect('WARNING');
+            WARNING := proc()
+            local msg;
+                WARNING_orig(_passed);
+                msg := StringTools:-FormatMessage(_passed);
+                if ormap(StringTools:-RegMatch, Warnings, msg) then
+                    DEBUG();
+                end if;
+                NULL;
+            end proc;
+            protect('WARNING');
+            Warnings := Warnings union `if`(stopwarning :: set
+                                            , stopwarning
+                                            , `if`(stopwarning = true
+                                                   , {""}
+                                                   , {stopwarning}
+                                                  )
+                                           );
             printf("Stopped warnings = %a\n", Warnings);
         end if;
 
@@ -414,12 +408,16 @@ $endif
             map(:-unstoperror, unstoperror);
         end if;
 
-        if unstopwarning <> "" then
-            Warnings := Warnings minus `if`(unstopwarning :: set
-                                            , unstopwarning
-                                            , {unstopwarning}
-                                           );
-            printf("Stopped warnings = %a\n", Warnings);
+        if unstopwarning <> NULL then
+            if unstopwarning = true then
+                Warnings := {};
+            else
+                Warnings := Warnings minus `if`(unstopwarning :: set
+                                                , unstopwarning
+                                                , {unstopwarning}
+                                               );
+                printf("Stopped warnings = %a\n", Warnings);
+            end if;
         end if;
 
 
