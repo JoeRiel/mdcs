@@ -160,7 +160,7 @@
 ##
 ##  The set of all regular expressions is printed whenever
 ##  `mdc` is called with this option.  Calling `mdc` with
-##  just this option, ~mdc(stopwarning)~, adds
+##  just this option, ~mdc(stopwarning)~, adds prints the regular expressions.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
@@ -179,6 +179,12 @@
 ##  If a string, clear that error message.
 ##  If a set of strings, clear those error messages.
 ##  The default is false.
+##
+##opt(unstopwarning, string, set of strings, or true)
+##  Removes one or more strings from the set of regular expressions
+##  that are matched against warnings.
+##  See `stopwarning` option.
+##  The remaining regular are printed.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
