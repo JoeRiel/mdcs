@@ -303,6 +303,14 @@ The most useful customizations are the following:
 
 @table @asis
 
+@vindex mds-show-args-flag
+@findex mds-toggle-show-args
+@item @code{mds-show-args-flag}
+A boolean variable that when non-nil causes the arguments
+to a procedure to be automatically displayed when first
+entering the procedure.  The default is t.
+The command @code{mds-toggle-show-args} toggles this variable.
+
 @vindex mds-get-focus-function
 @item @code{mds-get-focus-function}
 A function that calls the window manager to transfer
@@ -322,7 +330,6 @@ The default is 10000.
 A boolean value that, when non-nil, causes lines in the showstat and 
 output windows to be truncated at the right edge of the screen 
 rather than wrapping.   The default truncates lines.
-
 
 @vindex mds-wm-side-by-side
 @item @code{mds-wm-side-by-side}

@@ -442,7 +442,6 @@ Otherwise raise error indicating Maple is not available."
 
 ;;}}}
 
-
 ;;{{{ commands
 
 ;; Define the interactive commands bound to keys
