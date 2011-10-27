@@ -152,6 +152,15 @@
 ##  If a set of strings, stop at any of those error messages.
 ##  The default is false; it can be overridden.
 ##
+##opt(stopwarning, string\comma set of strings\comma or truefalse)
+##  Assign strings that stop the debugger when a matching warning
+##  occurs.  The "WARNING" procedure is replaced with one that matches
+##  each regular expression against the formatted warning message.  If
+##  a match occurs, execution stops inside WARNING.
+##  If `stopwarning` is true, the set of regular expressions is
+##  assigned ~{""}~, which matches any warning.
+##  If `stopwarning` is false, WARNING is restored.
+##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
 ##  The default is false; it can be overridden.
@@ -212,10 +221,17 @@
 ##  Forward quotes are used to prevent premature evaluation.
 ##> mdc(stopat=[fib,1,'mdc:-Count()=8']):
 ##>(noexecute) fib(10);
+##
+##- Stop on any warning.
+##> mdc(stopwarning=true);
+##>(noexecute) int(1/x, x=a..1);
+##- Clear the stop-on-warning.
+##> mdc(stopwarning=false);
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
 ##- "mds info" : file://{HOME}/maple/lib/mds.html
+##- "regular expression" : Help:Regular_Expressions
 ##
 ##SEEALSO
 ##- "\MOD"
@@ -252,6 +268,7 @@ local Connect
     , CreateID
     , GetDefault
     , ModuleApply
+    , ModuleLoad
     , ModuleUnload
     , Read
     , Write
@@ -266,6 +283,8 @@ local Connect
     , Port
     , sid := -1
     , view_flag
+    , Warnings
+    , WARNING_orig
     ;
 
 #}}}
@@ -277,6 +296,7 @@ $include <src/Grid.mm>
 $endif
 
     ModuleApply := mdc;
+    Warnings := {};
 
 #{{{ mdc
 
@@ -291,15 +311,16 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
+                 , { stopwarning :: {string,set(string),truefalse} := NULL }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
-                 , { unstoperror :: {truefalse,string,set} := false }
+                 , { unstoperror :: {truefalse,string,set,identical(true)} := false }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
                )
 
-    global `debugger/width`;
+    global `debugger/width`, WARNING;
     local lbl;
 
         if exit then
@@ -361,6 +382,32 @@ $endif
             map(:-stoperror, stoperror);
         end if;
 
+        if stopwarning <> NULL then
+            unprotect('WARNING');
+            if stopwarning = false then
+                WARNING := eval(WARNING_orig);
+                Warnings := {};
+            else
+                WARNING := proc()
+                local msg;
+                    WARNING_orig(_passed);
+                    msg := StringTools:-FormatMessage(_passed);
+                    if ormap(StringTools:-RegMatch, Warnings, msg) then
+                        DEBUG();
+                    end if;
+                    NULL;
+                end proc;
+                Warnings := `if`(stopwarning :: set
+                                 , stopwarning
+                                 , `if`(stopwarning = true
+                                        , {""}
+                                        , {stopwarning}
+                                       )
+                                );
+            end if;
+            protect('WARNINGS');
+        end if;
+
         if unstoperror = true then
             debugopts('delerror' = 'all');
         elif unstoperror :: string then
@@ -375,6 +422,14 @@ $endif
 
         return NULL;
 
+    end proc;
+
+#}}}
+
+#{{{ ModuleLoad
+
+    ModuleLoad := proc()
+        WARNING_orig := eval(WARNING);
     end proc;
 
 #}}}
@@ -603,21 +658,21 @@ $endif
 ##SEEALSO
 ##- "Threads[Sleep]"
 
-Sleep := proc( t :: nonnegint )
-local cmd,sys;
-    try
-        Threads:-Sleep( t )
-    catch:
-        sys := kernelopts('platform');
-        if sys = "windows" or sys = "dos" then
-            cmd := sprintf("timeout \t %d \nobreak", t);
-        else
-            cmd := sprintf("sleep %d", t);
-        end if;
-        system(cmd);
-    end try;
-    return NULL;
-end proc;
+    Sleep := proc( t :: nonnegint )
+    local cmd,sys;
+        try
+            Threads:-Sleep( t )
+        catch:
+            sys := kernelopts('platform');
+            if sys = "windows" or sys = "dos" then
+                cmd := sprintf("timeout \t %d \nobreak", t);
+            else
+                cmd := sprintf("sleep %d", t);
+            end if;
+            system(cmd);
+        end try;
+        return NULL;
+    end proc;
 
 #}}}
 
@@ -665,17 +720,17 @@ end proc;
 ##- "mdc[mdc]"
 ##- "stopat"
 
-Count := proc( { reset :: truefalse := false } )
-    if reset then
-        cnt := table();
-        return NULL;
-    end if;
-    if assigned(cnt[_passed]) then
-        cnt[_passed] := cnt[_passed] + 1;
-    else
-        cnt[_passed] := 1;
-    end if;
-end proc:
+    Count := proc( { reset :: truefalse := false } )
+        if reset then
+            cnt := table();
+            return NULL;
+        end if;
+        if assigned(cnt[_passed]) then
+            cnt[_passed] := cnt[_passed] + 1;
+        else
+            cnt[_passed] := 1;
+        end if;
+    end proc:
 
 #}}}
 #{{{ GetDefault
