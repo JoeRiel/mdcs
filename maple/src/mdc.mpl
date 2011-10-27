@@ -152,13 +152,14 @@
 ##  If a set of strings, stop at any of those error messages.
 ##  The default is false; it can be overridden.
 ##
-##opt(stopwarning, string\comma set of strings\comma or true)
+##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings that stop the debugger when a matching warning
 ##  occurs.  Each string is a "regular expression" that is matched
 ##  against the formatted warning message.  If a match occurs, the
 ##  debugger is halted inside a modified "WARNING" procedure.  If
 ##  true, then the set of regular expressions is assigned ~{""}~,
-##  which matches any warning.
+##  which matches any warning.  If false, then WARNING is restored
+##  and no warning will stop the debugger.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
@@ -220,6 +221,12 @@
 ##  Forward quotes are used to prevent premature evaluation.
 ##> mdc(stopat=[fib,1,'mdc:-Count()=8']):
 ##>(noexecute) fib(10);
+##
+##- Stop on any warning.
+##> mdc(stopwarning=true);
+##>(noexecute) int(1/x, x=a..1);
+##- Clear the stop-on-warning.
+##> mdc(stopwarning=false);
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
@@ -304,7 +311,7 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
-                 , { stopwarning :: {string,set(string),identical(true)} := NULL }
+                 , { stopwarning :: {string,set(string),truefalse} := NULL }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: {truefalse,string,set,identical(true)} := false }
@@ -377,23 +384,28 @@ $endif
 
         if stopwarning <> NULL then
             unprotect('WARNING');
-            WARNING := proc()
-            local msg;
-                WARNING_orig(_passed);
-                msg := StringTools:-FormatMessage(_passed);
-                if ormap(StringTools:-RegMatch, Warnings, msg) then
-                    DEBUG();
-                end if;
-                NULL;
-            end proc;
-            protect('WARNING');
-            Warnings := `if`(stopwarning :: set
-                             , stopwarning
-                             , `if`(stopwarning = true
-                                    , {""}
-                                    , {stopwarning}
-                                   )
-                            );
+            if stopwarning = false then
+                WARNING := eval(WARNING_orig);
+                Warnings := {};
+            else
+                WARNING := proc()
+                local msg;
+                    WARNING_orig(_passed);
+                    msg := StringTools:-FormatMessage(_passed);
+                    if ormap(StringTools:-RegMatch, Warnings, msg) then
+                        DEBUG();
+                    end if;
+                    NULL;
+                end proc;
+                Warnings := `if`(stopwarning :: set
+                                 , stopwarning
+                                 , `if`(stopwarning = true
+                                        , {""}
+                                        , {stopwarning}
+                                       )
+                                );
+            end if;
+            protect('WARNINGS');
         end if;
 
         if unstoperror = true then
