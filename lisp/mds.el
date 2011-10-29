@@ -48,6 +48,7 @@
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
+(require 'mds-patch)
 (require 'mds-re)
 (require 'mds-ss)
 (require 'mds-wm)

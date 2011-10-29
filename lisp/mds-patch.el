@@ -1,4 +1,49 @@
-(defun mds-ss-patch ()
+;;; mds-patch.el
+
+;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
+
+;; Author:     Joseph S. Riel <jriel@maplesoft.com>
+;; Created:    Jan 2011
+;; Keywords:   maple, debugger 
+;;
+;;; Commentary:
+
+;; This file contains the live-patching elisp code for the Emacs Maple
+;; debugger server.  It is a part of the Maple Debugger Client-Server
+;; package.
+
+;; Purpose:
+;;
+;; The live-patching code permits modifying a Maple procedure.
+
+;;{{{ License
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; if not, write to the Free Software
+;; Foundation, Inc.,  51 Franklin St, Fifth Floor, Boston, MA
+;; 02110-1301, USA.
+
+;;}}}
+
+(eval-when-compile
+  (require 'maplev)
+  (require 'mds-client)
+  (require 'mds-re)
+  (require 'mds-ss)
+)
+
+;;{{{ Create patch buffer
+(defun mds-patch ()
   "Copy the showstat buffer to a new buffer for patching."
   (interactive)
   ;; Save point position, begin editing there.
@@ -27,33 +72,47 @@
 	    mds-client client)
       (maplev-indent-buffer)
       (toggle-truncate-lines 1))
-    (switch-to-buffer (current-buffer)))))
-
-(define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
-  "Major mode for live patching a Maple procedure."
-  :group 'mds
-  )
-
-(defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
-  "Regexp that matches from the left margin to the ...")
+    (switch-to-buffer (current-buffer))))
+;;}}}
+;;{{{ Cleanup buffer
 
 (defun mds-patch-remove-numbers ()
-  "Remove the statement numbers and debug mark from buffer."
+  "Remove the statement numbers and debug marks from buffer."
   (interactive)
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward mds--statement-number-and-marks-re nil t)
       (replace-match ""))))
-      
+
+;;}}}
+;;{{{ Install patch
 (defun mds-patch-install ()
+  "Install the patch in the patch buffer."
   (interactive)
   (save-excursion
     (goto-char (point-min))
     (re-search-forward ":= " (line-end-position))
     (let ((str (buffer-substring-no-properties
 		(point) (point-max))))
-      (setq str (replace-regexp-in-string "\"" "\\\\\"" str))
       (mds-client-send mds-client
-		   (format "mdcInstallPatch(%s,\"%s\")\n"
-			   mds-ss-addr
-			   str)))))
+		   (format "statement mdc:-InstallPatch(%s,%s)\n"
+			   mds-ss-addr str)))))
+;;}}}
+;;{{{ menu
+(defvar mds-patch-menu nil)
+(unless mds-patch-menu
+  (easy-menu-define
+    mds-patch-menu nil
+    "Menu for mds patch mode"
+    `("Patch"
+      ["Install"  mds-patch-install t]
+      )))
+;;}}}
+;;{{{ mode
+(define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
+  "Major mode for live patching a Maple procedure."
+  :group 'mds
+  )
+;;}}}
+
+(provide 'mds-patch)

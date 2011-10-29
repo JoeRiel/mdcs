@@ -256,6 +256,7 @@ export Authenticate
     ,  Debugger
     ,  Format
     ,  Grid
+    ,  InstallPatch
     ,  Sleep
     ,  mdc
     ,  Version
@@ -293,6 +294,7 @@ $ifdef BUILD_MLA
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
+$include <src/InstallPatch.mm>
 $endif
 
     ModuleApply := mdc;

@@ -207,7 +207,11 @@ $endif
         od;
 
         #}}}
-
+        #{{{ Hande statement
+        if sscanf(res, "%s") = ["statement"] then
+            return res;
+        end if;
+        #}}}
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -251,7 +255,7 @@ $endif
                     break
                 fi
             fi
-        od;
+        end do;
 
         #}}}
         #{{{ Record whether or not the command ended in a colon.
@@ -271,9 +275,9 @@ $endif
                     debugger_printf('DBG_WARN',"Warning, extra characters at end of parsed string\n");
                     debugger_printf('DBG_WARN',"Extra stuff: %q\n", res[i]);
                     break
-                fi
-            od
-        fi;
+                end if;
+            end do;
+        end if;
 
         #}}}
         #{{{ Strip trailing whitespace.

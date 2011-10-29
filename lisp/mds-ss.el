@@ -737,6 +737,10 @@ the number of activation levels to display."
 
 ;;{{{ (*) Miscellaneous
 
+(defun mds-ss-refresh (buf)
+  "Refresh the showstat buffer, BUF."
+  )
+
 (defun mds-goto-current-state ()
   (interactive)
   "Move cursor to the current state in the showstat buffer."
@@ -811,6 +815,7 @@ the `mds-ss-buffer'."
 	   ("n" . mds-next)
 	   ("o" . mds-outfrom)
 	   ("p" . mds-showstop)
+	   ("P" . mds-patch)
 	   ("q" . mds-quit)
 	   ("r" . mds-return)
 	   ("R" . mds-stoperror)
@@ -922,6 +927,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Clear output buffer"           mds-out-clear t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
+       ["Patch procedure"               mds-patch t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
 
@@ -999,6 +1005,8 @@ Miscellaneous
 \\[maplev-proc-at-point] display a Maple procedure
 \\[mds-toggle-truncate-lines] toggle whether to fold or truncate long lines
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
+\\[mds-toggle-show-args] toggle the displaying of arguments when entering a procedure
+\\[mds-patch] patch procedure in the buffer
 "
   :group 'mds
 
