@@ -102,7 +102,7 @@
 (defvar mds-patch-menu nil)
 (unless mds-patch-menu
   (easy-menu-define
-    mds-patch-menu nil
+    mds-patch-menu maplev-mode-map
     "Menu for mds patch mode"
     `("Patch"
       ["Install"  mds-patch-install t]

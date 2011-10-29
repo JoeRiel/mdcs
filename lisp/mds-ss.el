@@ -258,7 +258,6 @@ Both go to the first match and do not check for additional matches."
 	    (setq mds-ss-statement "")
 	    (mds-ss-get-state)))))))
 
-
 ;;}}}
 
 ;;{{{ mds-ss-view-dead-proc
@@ -737,9 +736,10 @@ the number of activation levels to display."
 
 ;;{{{ (*) Miscellaneous
 
-(defun mds-ss-refresh (buf)
+(defun mds-ss-refresh ()
   "Refresh the showstat buffer, BUF."
-  )
+  (interactive)
+  (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" mds-ss-addr)))
 
 (defun mds-goto-current-state ()
   (interactive)
@@ -812,6 +812,7 @@ the `mds-ss-buffer'."
 	   ("k" . mds-showstack)
 	   ("K" . mds-where)
 	   ("l" . mds-goto-current-state)
+	   ("L" . mds-ss-refresh)
 	   ("n" . mds-next)
 	   ("o" . mds-outfrom)
 	   ("p" . mds-showstop)
@@ -928,6 +929,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Patch procedure"               mds-patch t]
+       ["Refresh procedure"             mds-ss-refresh t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
 
@@ -1007,6 +1009,7 @@ Miscellaneous
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 \\[mds-toggle-show-args] toggle the displaying of arguments when entering a procedure
 \\[mds-patch] patch procedure in the buffer
+\\[mds-ss-refresh] refresh procedure in the buffer
 "
   :group 'mds
 
