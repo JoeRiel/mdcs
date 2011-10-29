@@ -108,6 +108,7 @@ however, such an abomination should break something.")
 ;; Each of these functions sends a string to the maple engine.
 
 (defun mds-ss-send-client (msg)
+  "Send MSG to the Maple client."
   (mds-client-send mds-client msg))
 
 (defun mds-ss-eval-debug-code (cmd &optional hide)
@@ -127,7 +128,7 @@ This function is intended to be used for evaluating Maple expressions."
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
   "Send CMD, with appended newline, to the Maple process and to
-the output buffer, tagged as 'cmd.  If SAVE is non-nil, the save
+the output buffer, tagged as 'cmd.  If SAVE is non-nil, then save
 it as the last command `mds-ss-last-debug-cmd'.  Change
 cursor type to `mds-cursor-waiting', which indicates we are
 waiting for a response from Maple.  This function assumes we are
