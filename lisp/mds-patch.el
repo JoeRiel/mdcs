@@ -6,17 +6,20 @@
   ;; Remove statement numbers and debug symbols
   ;; Store address in buffer-local variable (mds-patch-address)
   ;; Indent the code
-  (let ((ss-buf (current-buffer) ; assume we are in a ss-buf
+  (let ((ss-buf (current-buffer)) ; assume we are in a ss-buf
 	(point (point)))
     (set-buffer (get-buffer-create mds-ss-procname))
     (erase-buffer)
     (insert-buffer-substring ss-buf)
-    (mds-patch-remove-numbers)
-    (mds-patch-mode)
-    (goto-char (point))
+    (goto-char point)
+    (save-excursion
+      (mds-patch-remove-numbers)
+      (mds-patch-mode)
+      (maplev-indent-buffer)
+      (toggle-truncate-lines 1))
     (switch-to-buffer (current-buffer)))))
 
-(define-derived-mode mds-patch-mode maplev-proc-mode "Maple Patch Mode"
+(define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
   "Major mode for live patching a Maple procedure."
   :group 'mds
   )
@@ -25,9 +28,10 @@
   "Regexp that matches from the left margin to the ...")
 
 (defun mds-patch-remove-numbers ()
-  "Remove the statement numbers and debug markers from a buffer."
+  "Remove the statement numbers and debug mark from buffer."
+  (interactive)
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward mds-patch-state mds--statement-number-and-marks-re nil t)
-      ;; replace match with spaces
+    (while (re-search-forward mds--statement-number-and-marks-re nil t)
+      (replace-match ""))))
       
