@@ -37,7 +37,6 @@
 (defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
   "Regexp that matches from the left margin to the ...")
 
-
 (defun mds-patch-remove-numbers ()
   "Remove the statement numbers and debug mark from buffer."
   (interactive)
@@ -58,4 +57,3 @@
 		   (format "mdcInstallPatch(%s,\"%s\")\n"
 			   mds-ss-addr
 			   str)))))
-
