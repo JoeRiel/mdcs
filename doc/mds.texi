@@ -63,7 +63,7 @@ Texts.  A copy of the license is included in the section entitled
 
 @menu
 * Introduction::                
-* Launching and Stopping MDS::  
+* Starting and Stopping MDS::   
 * Showstat Buffer::             Stepping through code
 * Output Buffer::               Maple output
 * Debugging Tips::              Useful tips and technique
@@ -101,6 +101,7 @@ Showstat Mode
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
+* Patching::                    Live patching Maple procedures
 * Help::                        Getting help
 
 Output Buffer
@@ -115,7 +116,7 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Launching and Stopping MDS, Top, Top
+@node Introduction, Starting and Stopping MDS, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -361,9 +362,9 @@ including the version information of Emacs (@kbd{C-h v emacs-version}),
 MDS, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
 
 
-@node Launching and Stopping MDS, Showstat Buffer, Introduction, Top
-@chapter Launching and Stopping MDS
-@cindex launching mds
+@node Starting and Stopping MDS, Showstat Buffer, Introduction, Top
+@chapter Starting and Stopping MDS
+@cindex starting mds
 @cindex stopping mds
 
 @findex mds
@@ -381,7 +382,7 @@ which displays Maple output during debugging.
 @findex mds-stop
 To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Launching and Stopping MDS, Top
+@node Showstat Buffer, Output Buffer, Starting and Stopping MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
@@ -470,6 +471,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
+* Patching::                    Live patching Maple procedures
 * Help::                        Getting help
 @end menu
 
@@ -818,11 +820,20 @@ c = NULL
 
 @end table
 
-@node Miscellaneous, Help, Evaluation, Showstat Mode
+@node  Miscellaneous, Patching, Evaluation, Showstat Mode
 @subsection Miscellaneous
 @cindex miscellaneous
 
 @table @asis
+
+@kindex L
+@findex mds-ss-refresh
+@item L (@code{mds-ss-refresh})
+Refresh the procedure.
+This is frequently needed after patching a procedure
+(@pxref{Patching}).
+MDS does not automatically redraw a procedure upon entry,
+that happens only if the name of the procedure has changed.
 
 @kindex T
 @findex mds-toggle-truncate-lines
@@ -832,7 +843,52 @@ With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
 @end table
 
-@node Help,  , Miscellaneous, Showstat Mode
+@node Patching, Help, Miscellaneous, Showstat Mode
+@subsection Patching
+@cindex patching
+
+MDS can temporarily modify the procedure it is debugging.
+This is an experimental feature---its operation is subject to change.
+The following commands are currently assigned.
+
+@table @asis
+@kindex P
+@findex mds-patch
+@findex mds-patch-mode
+@item P (@code{mds-patch})
+Patch a procedure.  This is executed from the live showstat buffer.
+It opens a buffer that contains a copy of the current procedure.
+The name of the buffer is that of the procedure.
+The buffer has major-mode @code{mds-patch-mode}, which is
+a derivative of @code{maplev-mode}.  
+@inforef{Top,,maplev}.
+Edit this buffer as desired then execute @cod{mds-patch-install}
+to install the patch.
+
+@kindex @kbd{C-c P}
+@findex mds-patch-install
+@item @kbd{C-c P} (@code{mds-patch-install})
+Install the patch in the patch buffer.
+This is executed from the patch buffer.
+
+@end table
+
+To patch a procedure, stop the debugger in the procedure and
+execute the @code{mds-patch} command (@kbd{P}) from the showstat buffer.
+This opens a buffer that contains a copy of the procedure.
+Edit the buffer to the desired form, then install the patch 
+by executing @code{mds-patch-install} (@kbd{C-c P}, or use the 
+@strong{Install} entry in the @strong{Patch} menu).
+Return to the Maple debugger showstat buffer.  
+The buffer does not reflect the modified procedure; 
+to effect the change, 
+quit the debugger (@code{mds-quit}),
+then rerun the Maple command that started the debugging.  
+You will usually have to instrument the procedure 
+so that the debugger stops inside it.
+
+
+@node Help,  , Patching, Showstat Mode
 @subsection Help
 @cindex help
 
