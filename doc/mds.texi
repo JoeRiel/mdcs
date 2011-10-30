@@ -862,30 +862,47 @@ The name of the buffer is that of the procedure.
 The buffer has major-mode @code{mds-patch-mode}, which is
 a derivative of @code{maplev-mode}.  
 @inforef{Top,,maplev}.
-Edit this buffer as desired then execute @cod{mds-patch-install}
+Edit this buffer as desired then execute @code{mds-patch-install}
 to install the patch.
 
-@kindex @kbd{C-c P}
+@kindex @kbd{C-c C-p}
 @findex mds-patch-install
-@item @kbd{C-c P} (@code{mds-patch-install})
+@item @kbd{C-c C-p} (@code{mds-patch-install})
 Install the patch in the patch buffer.
 This is executed from the patch buffer.
 
 @end table
 
-To patch a procedure, stop the debugger in the procedure and
-execute the @code{mds-patch} command (@kbd{P}) from the showstat buffer.
+The following steps explain how to patch a procedure.
+
+@enumerate
+@item
+Stop the debugger in the procedure to be patched.
+@item
+Execute @code{mds-patch} (@kbd{P}).
 This opens a buffer that contains a copy of the procedure.
-Edit the buffer to the desired form, then install the patch 
-by executing @code{mds-patch-install} (@kbd{C-c P}, or use the 
-@strong{Install} entry in the @strong{Patch} menu).
-Return to the Maple debugger showstat buffer.  
-The buffer does not reflect the modified procedure; 
-to effect the change, 
-quit the debugger (@code{mds-quit}),
-then rerun the Maple command that started the debugging.  
-You will usually have to instrument the procedure 
+@item
+Edit the procedure.
+@item
+Execute @code{mds-patch-install}
+(@kbd{C-c C-p}, or use the @strong{Install} entry in the @strong{Patch} menu).
+@item
+Return to the Maple debugger showstat buffer.
+@item 
+Quit the debugger (@kbd{q}).
+@item
+Rerun the Maple code.
+@end enumerate
+
+You will usually have to re-instrument the procedure 
 so that the debugger stops inside it.
+
+If the patched procedure is a module local, or accesses module locals,
+it may be necessary to execute, in Maple,
+@code{kernelopts(opaquemodules=false)}
+to permit the patched procedure to operate properly.
+
+The patched procedure remains in effect until Maple is restarted.
 
 
 @node Help,  , Patching, Showstat Mode

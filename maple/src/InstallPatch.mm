@@ -14,7 +14,7 @@
 ##DESCRIPTION
 ##- The `\CMD` command replaces a procedure.
 ##  This command is used by the Maple debugger server (mds) and
-##  is not intended users.
+##  is not intended to be directly called by users.
 ##
 ##- The 'addr' parameter is the address of the
 ##  procedure that is to be replaced.
@@ -22,8 +22,8 @@
 ##- The 'prc' parameter is the new procedure.
 ##
 ##NOTES
-##- If the replaced procedure uses module-local variables,
-##  it will be necessary to assign ~kernelopts(opaqumodules=false)~
+##- If the replaced procedure uses module-local variables, it will be
+##  generally be necessary to assign ~kernelopts(opaqumodules=false)~
 ##  to use it.
 ##
 ##TEST

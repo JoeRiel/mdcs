@@ -73,7 +73,7 @@
 	    mds-client client)
       (maplev-indent-buffer)
       (toggle-truncate-lines 1))
-    (switch-to-buffer (current-buffer))))
+    (switch-to-buffer-other-window (current-buffer))))
 ;;}}}
 ;;{{{ Cleanup buffer
 
@@ -119,7 +119,7 @@
 
   (let ((map mds-patch-mode-map)
 	(bindings
-	 '(([(control c) ?P] . mds-patch-install))))
+	 '(([(control c) (control p)] . mds-patch-install))))
     ;; assign bindings
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
