@@ -3,6 +3,9 @@
 * mdcs-0.1.1.15
 ** change menu section "Tracing" to "Execution"
 ** use mds-truncate-lines when creating output buffer
+** add stopwhen option to mdc
+** add mds-show-args-flag (and mds-toggle-show-args); default is to show args on entry to procedure.
+** add live patching capability.  This is experimental.
 * mdcs-0.1.1.14
 ** texi: change title 'Launching MDS' to 'Launching and Stopping MDS'
 ** add label to mode line in live showstat buffer

@@ -195,6 +195,9 @@ Breakpoints can be set or cleared directly in the buffer.
 A trace mode permits rapidly tracing through instrumented procedures.
 That, coupled with the ability to jump from the ouput to
 the corresponding statement in the code, facilitates debugging.
+@item
+Debugged procedures can be @emph{live-patched}, that is, modified in-place.  
+This permits testing changes without access to the full source code.
 @end itemize
 
 While the core of MDS is based on @command{mdb}@footnote{@inforef{mdb,Emacs Maple Debugger,mdb}},
