@@ -153,7 +153,7 @@
 ##  The default is false; it can be overridden.
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
-##  Assign strings that stop the debugger when a matching warning
+##  Assign strings ("regular expressions") that stop the debugger when a matching warning
 ##  occurs.  The "WARNING" procedure is replaced with one that matches
 ##  each regular expression against the formatted warning message.  If
 ##  a match occurs, execution stops inside WARNING.
@@ -231,7 +231,7 @@
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
 ##- "mds info" : file://{HOME}/maple/lib/mds.html
-##- "regular expression" : Help:Regular_Expressions
+##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
 ##- "\MOD"
@@ -269,7 +269,6 @@ local Connect
     , CreateID
     , GetDefault
     , ModuleApply
-    , ModuleLoad
     , ModuleUnload
     , Read
     , Write
@@ -285,7 +284,6 @@ local Connect
     , sid := -1
     , view_flag
     , Warnings
-    , WARNING_orig
     ;
 
 #}}}
@@ -387,17 +385,21 @@ $endif
         if stopwarning <> NULL then
             unprotect('WARNING');
             if stopwarning = false then
-                WARNING := eval(WARNING_orig);
+                WARNING := proc(msg::{string, symbol})
+                    print(INTERFACE_WARN(1,msg,args[2 .. -1]))
+                end proc(args);
                 Warnings := {};
             else
                 WARNING := proc()
-                local msg;
-                    WARNING_orig(_passed);
+                local msg, WARNING;
                     msg := StringTools:-FormatMessage(_passed);
                     if ormap(StringTools:-RegMatch, Warnings, msg) then
-                        DEBUG();
+                        WARNING := proc(msg::{string, symbol})
+                            DEBUG();
+                            print(INTERFACE_WARN(1,msg,args[2 .. -1]))
+                        end proc;
+                        WARNING(args);
                     end if;
-                    NULL;
                 end proc;
                 Warnings := `if`(stopwarning :: set
                                  , stopwarning
@@ -428,13 +430,6 @@ $endif
 
 #}}}
 
-#{{{ ModuleLoad
-
-    ModuleLoad := proc()
-        WARNING_orig := eval(WARNING);
-    end proc;
-
-#}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
