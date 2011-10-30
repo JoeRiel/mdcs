@@ -4,7 +4,7 @@
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
-;; Keywords:   maple, debugger 
+;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
@@ -51,6 +51,8 @@
   ;; Remove statement numbers and debug symbols
   ;; Store address in buffer-local variable (mds-patch-address)
   ;; Indent the code
+
+  ;; delete invisible address string
   (let ((ss-buf (current-buffer)) ; assume we are in a ss-buf
 	(ss-addr mds-ss-addr)
 	(client mds-client)
@@ -58,14 +60,13 @@
     (set-buffer (get-buffer-create mds-ss-procname))
     (erase-buffer)
     (insert-buffer-substring ss-buf)
-    ;; delete invisible address string
-    (goto-char (point-min))
-    (forward-line)
-    (delete-region (point-min) (point))
-    
-    ;; remove numbers and marks, change mode, indent
     (goto-char point)
     (save-excursion
+      ;; remove hidden address
+      (goto-char (point-min))
+      (forward-line)
+      (delete-region (point-min) (point))
+      ;; remove numbers and marks, change mode, indent
       (mds-patch-remove-numbers)
       (mds-patch-mode)
       (setq mds-ss-addr ss-addr
@@ -96,8 +97,10 @@
 		(point) (point-max))))
       (mds-client-send mds-client
 		   (format "statement mdc:-InstallPatch(%s,%s)\n"
-			   mds-ss-addr str)))))
+			   mds-ss-addr str))
+      (message "Installed patch"))))
 ;;}}}
+
 ;;{{{ menu
 (defvar mds-patch-menu nil)
 (unless mds-patch-menu
@@ -109,10 +112,20 @@
       )))
 ;;}}}
 ;;{{{ mode
+
 (define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
   "Major mode for live patching a Maple procedure."
   :group 'mds
+
+  (let ((map mds-patch-mode-map)
+	(bindings
+	 '(([(control c) ?P] . mds-patch-install))))
+    ;; assign bindings
+    (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
+	  bindings)
+    (setq mds-patch-mode-map map))
   )
+
 ;;}}}
 
 (provide 'mds-patch)

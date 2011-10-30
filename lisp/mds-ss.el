@@ -737,9 +737,12 @@ the number of activation levels to display."
 ;;{{{ (*) Miscellaneous
 
 (defun mds-ss-refresh ()
-  "Refresh the showstat buffer, BUF."
+  "Refresh the showstat buffer."
   (interactive)
-  (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" mds-ss-addr)))
+  (let ((cmd (format "mdc:-Debugger:-ShowstatAddr(%s)" mds-ss-addr)))
+    (setq mds-ss-addr "")
+    (mds-ss-send-client cmd)
+    (message "Refreshed showstat buffer")))
 
 (defun mds-goto-current-state ()
   (interactive)
