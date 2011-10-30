@@ -55,22 +55,25 @@ export BIN_INSTALL_DIR := $(HOME)/bin
 LISP_BASE := $(HOME)/.emacs.d
 LISP_DIR := $(LISP_BASE)/mds
 
-# where html files go.
-# there is no standard place for this.
-HTML_DIR := $(HOME)/maple/lib
-
 # where info files go
 INFO_DIR := $(HOME)/share/info
 
+# Maple toolbox directory
+MDS_TOOLBOX_DIR := $(HOME)/maple/toolbox/mdc
+
+# where html files go.
+# there is no standard place for this.
+HTML_DIR := $(MDS_TOOLBOX_DIR)/doc
+
 # where the maple archive goes
-MAPLE_INSTALL_DIR := $(HOME)/maple/toolbox/mdc/lib
+MAPLE_LIB_DIR := $(MDS_TOOLBOX_DIR)/lib
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
  LISP_BASE := $(shell cygpath --mixed "$(LISP_BASE)")
  LISP_DIR  := $(shell cygpath --mixed "$(LISP_DIR)")
  INFO_DIR  := $(shell cygpath --mixed "$(INFO_DIR)")
- MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
+ MAPLE_LIB_DIR := $(shell cygpath --mixed "$(MAPLE_LIB_DIR)")
 # MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
 
@@ -235,11 +238,11 @@ install-elc: $(ELC_FILES)
 	@$(CP) $+ $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
 
-install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_INSTALL_DIR))
+install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_LIB_DIR))
 install-hdb: hdb
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple help data base $(hdb) into $(MAPLE_INSTALL_DIR)/"
-	@$(CP) $(hdb) $(MAPLE_INSTALL_DIR)
+	@$(MKDIR) $(MAPLE_LIB_DIR)
+	@echo "Installing Maple help data base $(hdb) into $(MAPLE_LIB_DIR)"
+	@$(CP) $(hdb) $(MAPLE_LIB_DIR)
 
 install-html: $(call print-help,install-html,Install html files in $(HTML_DIR) and update dir)
 install-html: $(HTML_FILES)
@@ -262,11 +265,11 @@ install-lisp: $(LISP_FILES) $(ELC_FILES)
 	@$(RM) $(INSTALLED_EL_FILES)
 	@$(CP) $+ $(LISP_DIR)
 
-install-mla: $(call print-help,install-mla,Install mla in $(MAPLE_INSTALL_DIR))
+install-mla: $(call print-help,install-mla,Install mla in $(MAPLE_LIB_DIR))
 install-mla: $(mla)
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple archive $(mla) into $(MAPLE_INSTALL_DIR)/"
-	@$(CP) $+ $(MAPLE_INSTALL_DIR)
+	@$(MKDIR) $(MAPLE_LIB_DIR)
+	@echo "Installing Maple archive $(mla) into $(MAPLE_LIB_DIR)/"
+	@$(CP) $+ $(MAPLE_LIB_DIR)
 
 # }}}
 # {{{ zip
@@ -294,7 +297,8 @@ clean:
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
 	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES) 
-	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla) $(MAPLE_INSTALL_DIR)/$(hdb)
+	-$(RM) $(MAPLE_LIB_DIR)/$(mla) $(MAPLE_LIB_DIR_DIR)/$(hdb)
+	-$(RM) $(MAPLE_TOOLBOX_DIR)/doc/*
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}
