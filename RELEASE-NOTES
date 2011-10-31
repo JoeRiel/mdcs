@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-0.1.1.16
+** add option and description statements to showstat procedure
+** change stopwarning so WARNING procedures appears simple
 * mdcs-0.1.1.15
 ** change menu section "Tracing" to "Execution"
 ** use mds-truncate-lines when creating output buffer
