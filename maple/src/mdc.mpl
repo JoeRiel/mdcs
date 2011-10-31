@@ -91,21 +91,21 @@
 ##opt(emacs,string)
 ##  Executable used to launch emacs.
 ##  Only used if `launch_emacs` is true.
-##  Default is ~"emacs"~; it can be overridden.
+##  default value is ~"emacs"~; it can be overridden.
 ##
 ##opt(exit,truefalse)
 ##  If true, shutdown the TCP connection
 ##  and restore the original debugger procedures.
-##  The default is false.
+##  The default value is false.
 ##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
-##  The default is _"localhost"_; it can be overridden.
+##  The default value is _"localhost"_; it can be overridden.
 ##
 ##opt(ignoretester,truefalse)
 ##  If true, then do nothing when called from the Maplesoft tester.
 ##  This is intended for internal use.
-##  The default is true; it can be overridden.
+##  The default value is true; it can be overridden.
 ##
 ##opt(label,string)
 ##  Label passed to server for identification and grouping of the client.
@@ -122,19 +122,19 @@
 ##  If true and unable to connect to a Maple Debugger Server,
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
 ##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
-##  The default is 10000; it can be overridden.
+##  The default value is 10000; it can be overridden.
 ##
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
-##  The default is 10000; it can be overridden.
+##  The default value is 10000; it can be overridden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -150,20 +150,22 @@
 ##  If true, stop at any error.
 ##  If a string, stop at that error message.
 ##  If a set of strings, stop at any of those error messages.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings ("regular expressions") that stop the debugger when a matching warning
 ##  occurs.  The "WARNING" procedure is replaced with one that matches
 ##  each regular expression against the formatted warning message.  If
 ##  a match occurs, execution stops inside WARNING.
-##  If `stopwarning` is true, the set of regular expressions is
-##  assigned ~{""}~, which matches any warning.
-##  If `stopwarning` is false, WARNING is restored.
+##  If `stopwarning` is true, or passed by itself,
+##  the set of regular expressions is assigned ~{""}~,
+##  which matches any warning.
+##  If `stopwarning` is false, `WARNING` is restored.
+##  The default action is to not change the previous condition.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -177,18 +179,18 @@
 ##  If true, clear all stoperrors.
 ##  If a string, clear that error message.
 ##  If a set of strings, clear those error messages.
-##  The default is false.
+##  The default value is false.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
 ##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
-##  The default is false.
+##  The default value is false.
 ##
 ##opt(view,truefalse)
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
@@ -699,7 +701,7 @@ $endif
 ##OPTIONS
 ##opt(reset,truefalse)
 ##  If true, clear all the counters.
-##  The default is false.
+##  The default value is false, which does not clear counters.
 ##
 ##EXAMPLES
 ##- Exercise a couple of counters.
