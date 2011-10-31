@@ -667,14 +667,45 @@ $endif
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: integer, {dead :: truefalse := false} )
+    ShowstatAddr := proc( addr :: integer
+                          , {dead :: truefalse := false}
+                          , $
+                        )
+    local desc, opts, pos, prc, pstr;
+        prc := pointto(addr);
+        pstr := convert(debugopts('procdump' = prc),string);
+
+        # Create description string
+        desc := op(5, eval(prc));
+        if desc = NULL then
+            desc := "";
+        else
+            desc := sprintf("description %a;\n", desc);
+        end if;
+
+        # Create option string
+        opts := op(3, eval(prc));
+        if opts = NULL then
+            opts := "";
+        else
+            opts := sprintf("option %q;\n", opts);
+        end if;
+
+        # Split at first statement and insert desc and opts
+        pos := StringTools:-Search("\n   1", pstr);
+        pstr := cat(pstr[..pos]
+                    , desc
+                    , opts
+                    , pstr[pos+1..]
+                   );
+
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
                       )
                   , "<%d>\n%A"
                   , addr
-                  , debugopts('procdump' = pointto(addr))
+                  , pstr
                  );
         NULL;
     end proc;
