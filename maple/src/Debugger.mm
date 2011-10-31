@@ -691,7 +691,7 @@ $endif
             desc := sprintf("description %a;\n", desc);
         end if;
 
-        # Split at first statement and insert desc and opts
+        # Split at first statement and insert opts and desc
         pos := StringTools:-Search("\n   1", pstr);
         pstr := cat(pstr[..pos]
                     , opts
