@@ -675,14 +675,6 @@ $endif
         prc := pointto(addr);
         pstr := convert(debugopts('procdump' = prc),string);
 
-        # Create description string
-        desc := op(5, eval(prc));
-        if desc = NULL then
-            desc := "";
-        else
-            desc := sprintf("description %a;\n", desc);
-        end if;
-
         # Create option string
         opts := op(3, eval(prc));
         if opts = NULL then
@@ -691,11 +683,19 @@ $endif
             opts := sprintf("option %q;\n", opts);
         end if;
 
+        # Create description string
+        desc := op(5, eval(prc));
+        if desc = NULL then
+            desc := "";
+        else
+            desc := sprintf("description %a;\n", desc);
+        end if;
+
         # Split at first statement and insert desc and opts
         pos := StringTools:-Search("\n   1", pstr);
         pstr := cat(pstr[..pos]
-                    , desc
                     , opts
+                    , desc
                     , pstr[pos+1..]
                    );
 
