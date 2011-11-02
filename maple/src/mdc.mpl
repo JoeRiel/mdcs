@@ -68,15 +68,15 @@
 ##  procedures that transfer debugging control to the server.
 ##
 ##- Debugging is invoked in the usual way, by instrumenting a target
-##  procedure with "stopat", "stopwhen", or "stoperror", the executing
+##  procedure with "stopat", "stopwhen", or "stoperror", then executing
 ##  code that calls the procedure. In the standard Maple GUI the
 ##  debugger may also be invoked by clicking the *debug icon* on the
 ##  toolbar during a running computation.
 ##
 ##- The target procedures can also be instrumented by passing the
-##  `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.  These,
-##  as well as configuration are, options described in the *Options*
-##  section.
+##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
+##  `\CMD`.  These, as well as configuration options, are described in
+##  the *Options* section.
 ##
 ##OPTIONS
 ##-(lead="indent")
@@ -163,6 +163,24 @@
 ##  If `stopwarning` is false, `WARNING` is restored.
 ##  The default action is to not change the previous condition.
 ##
+##opt(stopwhen,name\comma list\comma or set)
+##  Causes the debugger to halt when a specified variable changes.
+##  A name corresponds to a global variable.
+##  A list corresponds to variable local to a procedure,
+##  the first element is the procedure name, the second the variable name.
+##  A set is mapped over.
+##  This is equivalent to calling the "stopwhen" command.
+##  To clear, see the see the `unstopwhen` option, below.
+##
+##opt(stopwhenif,name\comma list\comma or set)
+##  Causes the debugger to halt when a specified global variable
+##  is assigned a specified value.
+##  The first element is the global variable,
+##  the second is the value that stops the debugger.
+##  A set is mapped over.
+##  This is equivalent to calling the "stopwhenif" command.
+##  To clear, see the `unstopwhen` option, below.
+##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
 ##  The default value is false; it can be overridden.
@@ -181,7 +199,11 @@
 ##  If a set of strings, clear those error messages.
 ##  The default value is false.
 ##
-##opt(usegrid,truefalse)
+##opt(unstopwhen,name\comma list\comma or set)
+##  Clears one or more `stopwhen` or `stopwhenif` triggers.
+##  This is equivalent to calling the "unstopwhen" command.
+##  See the `stopwhen` and `stopwhenif` options, above.
+##
 ##  If true, append the "Grid" node-number to the label.
 ##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
@@ -314,9 +336,12 @@ $endif
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
                  , { stopwarning :: {string,set(string),truefalse} := NULL }
+                 , { stopwhen :: { name, list, set } := NULL }
+                 , { stopwhenif :: { list, set(list) } := NULL }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: {truefalse,string,set,identical(true)} := false }
+                 , { unstopwhen :: { name, list, set } := NULL }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
@@ -420,6 +445,24 @@ $endif
             :-unstoperror(unstoperror);
         elif unstoperror :: set then
             map(:-unstoperror, unstoperror);
+        end if;
+
+        if stopwhen :: '{name,list}' then
+            ':-stopwhen'(stopwhen);
+        elif stopwhen :: set then
+            map(':-stopwhen', stopwhen);
+        end if;
+
+        if stopwhenif :: list then
+            ':-stopwhenif'(stopwhenif);
+        elif stopwhenif :: set(list) then
+            map(':-stopwhenif', stopwhenif);
+        end if;
+
+        if unstopwhen :: '{name,list}' then
+            ':-unstopwhen'(unstopwhen);
+        elif unstopwhen :: set then
+            map(':-unstopwhen', unstopwhen);
         end if;
 
         if traperror then
