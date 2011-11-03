@@ -12,6 +12,8 @@ TAGS
 /maple/tst/
 /maple/sandbox/
 
+/scrs/
+
 *.mla
 *.hdb
 *.zip
@@ -27,3 +29,6 @@ _preview_.mm
 readline.log
 /releases/
 /tmp/
+/bin/byte-compile
+/bin/emacs
+/demo/mdcs-debugger-demo.mw
