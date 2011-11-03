@@ -448,21 +448,21 @@ $endif
         end if;
 
         if stopwhen :: '{name,list}' then
-            ':-stopwhen'(stopwhen);
+            :-stopwhen(stopwhen);
         elif stopwhen :: set then
-            map(':-stopwhen', stopwhen);
+            map(:-stopwhen, stopwhen);
         end if;
 
         if stopwhenif :: list then
-            ':-stopwhenif'(stopwhenif);
+            proc(x,v) :-stopwhenif(x,v) end proc(op(stopwhenif));
         elif stopwhenif :: set(list) then
-            map(':-stopwhenif', stopwhenif);
+            map( l -> :-stopwhenif(op(l)), stopwhenif);
         end if;
 
         if unstopwhen :: '{name,list}' then
-            ':-unstopwhen'(unstopwhen);
+            :-unstopwhen(unstopwhen);
         elif unstopwhen :: set then
-            map(':-unstopwhen', unstopwhen);
+            map(:-unstopwhen, unstopwhen);
         end if;
 
         if traperror then
