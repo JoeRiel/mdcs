@@ -193,7 +193,7 @@ are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
 Breakpoints can be set or cleared directly in the buffer.
 @item
 A trace mode permits rapidly tracing through instrumented procedures.
-That, coupled with the ability to jump from the ouput to
+That, coupled with the ability to jump from the output to
 the corresponding statement in the code, facilitates debugging.
 @item
 Debugged procedures can be @emph{live-patched}, that is, modified in-place.  
@@ -239,7 +239,7 @@ Installation consists of unzipping the zip file,
 @file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
 copying the files to the appropriate directories.  Included in the zip
 file is a bash script, @file{install}, that byte-compiles the
-files in the @file{lisp} subdirectory and then copies all files to the
+files in the @file{lisp} sub-directory and then copies all files to the
 standard locations.  Modify it per your setup then execute it with
 
 @example
@@ -561,14 +561,11 @@ nesting level, in the body of a control structure (for example,
 @kindex t
 @findex mds-trace
 @item t (@code{mds-trace})
-Cycle through tracing modes.  The selected tracing mode, @strong{cont},
-@strong{into}, or @strong{step}, determines where the debugger
-temporarily halts and what output is displayed in the output buffer.
-The selected mode is equivalent to continually executing the
-corresponding debugging command.  With @strong{cont} selected, the
-debugger halts at each breakpoint; with @strong{into}, it halts at each
-statement following a breakpoint; with @strong{step}, it halts at each
-statement in all procedures.
+Cycle through tracing modes.  The selected tracing mode, 
+@strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
+determines where the debugger temporarily halts and what output 
+is displayed in the output buffer. The selected mode is equivalent 
+to continually executing the corresponding debugging command.  
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
@@ -630,7 +627,7 @@ An optional prefix argument can be passed; it specifies the number of levels to 
 For example @kbd{C-u 2 K} displays the lowest two levels.
 
 The procedure names are active links.  Clicking on a link opens the
-procedure in the @strong{showstat dead} buffer, at the callling line.  
+procedure in the @strong{showstat dead} buffer, at the calling line.  
 Breakpoints can be set in the opened procedure.
 Use @code{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
@@ -966,7 +963,7 @@ The following is representative of the output buffer content
 
 The line ``@b{fibonacci}'' is the name of the procedure that is being debugged.
 Whenever a procedure is entered, the name of it is printed in the output buffer.
-The name is hyperlinked; clicking on it (mouse-1) displayes the procedure
+The name is hyperlinked; clicking on it (mouse-1) displays the procedure
 in the showstat dead buffer.
 
 Debugger commands that evaluate program code are echoed in the buffer.
