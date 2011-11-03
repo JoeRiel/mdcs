@@ -170,7 +170,7 @@
 ##  the first element is the procedure name, the second the variable name.
 ##  A set is mapped over.
 ##  This is equivalent to calling the "stopwhen" command.
-##  To clear, see the see the `unstopwhen` option, below.
+##  To clear, see the `unstopwhen` option, below.
 ##
 ##opt(stopwhenif,name\comma list\comma or set)
 ##  Causes the debugger to halt when a specified global variable
@@ -204,6 +204,7 @@
 ##  This is equivalent to calling the "unstopwhen" command.
 ##  See the `stopwhen` and `stopwhenif` options, above.
 ##
+##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
 ##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
