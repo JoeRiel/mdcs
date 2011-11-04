@@ -671,12 +671,21 @@ $endif
                           , {dead :: truefalse := false}
                           , $
                         )
-    local desc, opts, pos, prc, pstr;
+$ifdef DONTUSE
+    local prc, pstr;
+
         prc := pointto(addr);
         pstr := convert(debugopts('procdump' = prc),string);
 
+        # Alas, this does not work.  Eval'ing (or op'ing)
+        # the procedure can cause the debugger to execute.
+
+        # Eval'ing (or op'ing) prc can cause the
+        # debugger to run ahead the first time this is done
+        # in a module local procedure.
+
         # Create option string
-        opts := op(3, eval(prc));
+        opts := op(3, op(prc));
         if opts = NULL then
             opts := "";
         else
@@ -684,7 +693,7 @@ $endif
         end if;
 
         # Create description string
-        desc := op(5, eval(prc));
+        desc := op(5, op(prc));
         if desc = NULL then
             desc := "";
         else
@@ -698,14 +707,14 @@ $endif
                     , desc
                     , pstr[pos+1..]
                    );
-
+$endif
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
                       )
-                  , "<%d>\n%A"
+                  , "<%d>\n%As"
                   , addr
-                  , pstr
+                  , debugopts('procdump' = pointto(addr))
                  );
         NULL;
     end proc;
