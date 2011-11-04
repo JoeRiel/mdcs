@@ -712,7 +712,7 @@ $endif
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
                       )
-                  , "<%d>\n%As"
+                  , "<%d>\n%A"
                   , addr
                   , debugopts('procdump' = pointto(addr))
                  );
