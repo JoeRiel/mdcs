@@ -362,7 +362,7 @@ comments, or ideas, please mail them to Joe Riel, @email{jriel@@maplesoft.com}.
 
 For bug reports, please provide as much information as possible,
 including the version information of Emacs (@kbd{C-h v emacs-version}),
-MDS, (@kbd{C-h v mds-version}), and Maple (@code{version()}).
+MDS, (@kbd{M-x mds-version}), and Maple (@code{version()}).
 
 
 @node Starting and Stopping MDS, Showstat Buffer, Introduction, Top

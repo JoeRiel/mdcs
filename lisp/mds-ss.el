@@ -788,6 +788,11 @@ the `mds-ss-buffer'."
   (interactive)
   (info "mds"))
 
+(defun mds-version ()
+  "Display the version of mds."
+  (interactive)
+  (message "mds version: %s" mds-version))
+
 ;;}}}
 
 ;;}}}
@@ -943,7 +948,9 @@ to work, `face-remapping-alist' must be buffer-local."
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]
-       ["Info for Mds mode"        mds-info t])
+       ["Info for Mds mode"        mds-info t]
+       ["Version"                  mds-version])
+      
       )))
 
 ;;}}}
