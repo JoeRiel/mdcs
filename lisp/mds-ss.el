@@ -29,6 +29,7 @@
 (declare-function mds-client-dead-buf "mds")
 (declare-function mds-client-send "mds")
 
+
 ;;}}}
 
 ;;{{{ customization
@@ -787,11 +788,6 @@ the `mds-ss-buffer'."
   "Display the info page for MDS."
   (interactive)
   (info "mds"))
-
-(defun mds-version ()
-  "Display the version of mds."
-  (interactive)
-  (message "mds version: %s" mds-version))
 
 ;;}}}
 

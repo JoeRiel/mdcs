@@ -428,7 +428,12 @@ controls the automatic display of arguments when entering a procedure."
 	   (if (setq mds-show-args-flag (not mds-show-args-flag))
 	       "enabled"
 	     "disabled")))
-	       
+
+(defun mds-version ()
+  "Display the version of mds."
+  (interactive)
+  (message "mds version: %s" mds-version))
+
 
 ;;}}}    
 
