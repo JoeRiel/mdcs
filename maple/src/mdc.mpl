@@ -172,12 +172,13 @@
 ##  This is equivalent to calling the "stopwhen" command.
 ##  To clear, see the `unstopwhen` option, below.
 ##
-##opt(stopwhenif,name\comma list\comma or set)
+##opt(stopwhenif, list\comma or set of lists)
 ##  Causes the debugger to halt when a specified global variable
 ##  is assigned a specified value.
-##  The first element is the global variable,
+##  The first element of a list is the global variable,
 ##  the second is the value that stops the debugger.
-##  A set is mapped over.
+##  A set of lists may be used to specify conditions for multiple
+##  variables (but a specific variable can only have one halting value).
 ##  This is equivalent to calling the "stopwhenif" command.
 ##  To clear, see the `unstopwhen` option, below.
 ##
