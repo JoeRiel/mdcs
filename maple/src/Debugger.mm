@@ -402,8 +402,13 @@ $endif
                 debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
+
             local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
-            module_flag := StringTools:-RegMatch("\n *[0-9]*[ ?!*]* *(return )?module", dbg_state);
+            # Set module_flag true if next statement appears to
+            # evaluate a module, which causes a debugger error if one
+            # attempt to step into it.  The test is simple and uses
+            # builtins to keep this fast.
+            module_flag := evalb(SearchText("module ()", dbg_state)<>0);
             debugger_printf('DBG_STATE', "<%d>\n%A"
                             , addressof(procName)
                             , dbg_state
