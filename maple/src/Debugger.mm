@@ -310,7 +310,7 @@ $endif
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
     local procName, statNumber, evalLevel, i, j, n, line, original, statLevel,
-        pName, lNum, cond, cmd, err;
+        pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop, `debugger/no_output`;
 
         evalLevel := kernelopts('level') - 21;
@@ -402,9 +402,11 @@ $endif
                 debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
+            local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
+            module_flag := StringTools:-RegMatch("\n *[0-9]*[ ?!*]* *(return )?module", dbg_state);
             debugger_printf('DBG_STATE', "<%d>\n%A"
                             , addressof(procName)
-                            , debugopts('procdump'=[procName, 0..statNumber])
+                            , dbg_state
                            );
         end if;
 
@@ -446,10 +448,10 @@ $endif
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
                 return
-            elif cmd = "step" then
+            elif cmd = "step" and not module_flag then
                 debugopts('steplevel'=999999999);
                 return
-            elif cmd = "into" then
+            elif cmd = "into" or cmd = "step" and module_flag then
                 debugopts('steplevel'=evalLevel+6);
                 return
             elif cmd = "outfrom" then
