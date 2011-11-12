@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-0.1.1.20
+** Modified _debugger to prevent stepping into a module,
+   which raises an error.  Test isn't perfect but is fast and
+   should generally work; fails with named modules (hah).
 * mdcs-0.1.1.19
 ** Fix bug introduced in 1.1.18 (extra 's' at end of showstat buffer)
 * mdcs-0.1.1.18
