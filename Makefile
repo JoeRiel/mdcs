@@ -48,9 +48,6 @@ TEXI2HTML := makeinfo --html --number-sections
 # }}}
 # {{{ Directories
 
-# where executables go
-export BIN_INSTALL_DIR := $(HOME)/bin
-
 # where lisp files go
 LISP_BASE := $(HOME)/.emacs.d
 LISP_DIR := $(LISP_BASE)/mds
