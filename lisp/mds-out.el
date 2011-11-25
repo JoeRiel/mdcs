@@ -22,10 +22,12 @@
 ;; avoid compiler warnings
 
 (defvar mds-ss-state nil)
-(declare-function mds-goto-state "mds-ss")
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-send "mds")
+(declare-function mds-goto-state "mds-ss")
+(declare-function mds-ss-eval-expr "mds-ss")
+(declare-function mds-ss-show-args-assign "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
 
@@ -40,7 +42,7 @@
   '((((min-colors 88) (class color) (background dark))  :foreground "lawn green")
     (((min-colors 88) (class color) (background light)) :foreground "dark green")
     (((class color)) :foreground "green"))
-  "Face for stack arguments."
+  "Face for arguments of calls on stack (displayed via mds-where)."
   :group 'mds-faces)
 
 (defface mds-debugger-cmd
@@ -247,7 +249,11 @@ Optional TAG identifies the message type."
 	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
 	      (let* ((live-buf (mds-client-live-buf mds-client))
-		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
+		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf))
+		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
+		(when show-args
+		  (mds-ss-show-args-assign live-buf nil)
+		  (mds-ss-eval-expr "args"))
 		(when trace-mode
 		  (if mds-out-track-input
 		      (insert (buffer-local-value 'mds-ss-statement live-buf)))

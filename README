@@ -1,4 +1,4 @@
-VERSION 0.1.1.15
+VERSION 0.1.1.20
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -20,9 +20,9 @@ INSTALLATION
 Copy the files to locations appropriate on your system.
 Here is where I put the various files:
 
-   $HOME/maple/lib    :  mdc.mla mdc.hdb
-   $HOME/.emacs.d/mds :  lisp/mds*.el
-   $HOME/share/info   :  doc/mds (do not include the "doc/")
+   $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb
+   $HOME/.emacs.d/mds             :  lisp/mds*.el
+   $HOME/share/info               :  doc/mds (do not include the "doc/")
 
 Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot

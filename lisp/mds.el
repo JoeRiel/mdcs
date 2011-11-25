@@ -48,6 +48,7 @@
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
+(require 'mds-patch)
 (require 'mds-re)
 (require 'mds-ss)
 (require 'mds-wm)
@@ -73,11 +74,17 @@ installed. Automatically assigned to nil if wmctrl is not available."
   :type 'function
   :group 'mds)
 
+(defcustom mds-show-args-flag t
+  "If non-nil, display args on entry to procedure."
+  :type 'boolean
+  :group 'mds)
+  
+
 ;;}}}
 
 ;;{{{ Constants
 
-(defconst mds-version "0.1.1.15" "Version number of mds.")
+(defconst mds-version "0.1.1.20" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -98,7 +105,6 @@ Name given by `mds-log-buffer-name'.")
   "When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
-
 
 ;;{{{ Start and stop server
 
@@ -330,7 +336,9 @@ use them to route the message."
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-      (mds-ss-display live-buf msg))
+      (mds-ss-display live-buf msg)
+      (if mds-show-args-flag
+	  (mds-ss-show-args-assign live-buf t)))
 
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
@@ -409,7 +417,25 @@ use them to route the message."
     (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
-    
+
+;;{{{ miscellaneous
+
+(defun mds-toggle-show-args ()
+  "Toggle the variable `mds-show-args-flag', which
+controls the automatic display of arguments when entering a procedure."
+  (interactive)
+  (message "display args: %s"
+	   (if (setq mds-show-args-flag (not mds-show-args-flag))
+	       "enabled"
+	     "disabled")))
+
+(defun mds-version ()
+  "Display the version of mds."
+  (interactive)
+  (message "mds version: %s" mds-version))
+
+
+;;}}}    
 
 (provide 'mds)
 

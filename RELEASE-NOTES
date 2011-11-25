@@ -1,8 +1,24 @@
 -*- org -*-
 
+* mdcs-0.1.1.20
+** Modified _debugger to prevent stepping into a module,
+   which raises an error.  Test isn't perfect but is fast and
+   should generally work; fails with named modules (hah).
+* mdcs-0.1.1.19
+** Fix bug introduced in 1.1.18 (extra 's' at end of showstat buffer)
+* mdcs-0.1.1.18
+** Back-out addition of 'option' and 'description' to showstat buffer
+* mdcs-0.1.1.17
+** add stopwhen, stopwhenif, and unstopwhen options to mdc.
+* mdcs-0.1.1.16
+** add option and description statements to showstat procedure
+** change stopwarning so WARNING procedures appears simple
 * mdcs-0.1.1.15
 ** change menu section "Tracing" to "Execution"
 ** use mds-truncate-lines when creating output buffer
+** add stopwhen option to mdc
+** add mds-show-args-flag (and mds-toggle-show-args); default is to show args on entry to procedure.
+** add live patching capability.  This is experimental.
 * mdcs-0.1.1.14
 ** texi: change title 'Launching MDS' to 'Launching and Stopping MDS'
 ** add label to mode line in live showstat buffer

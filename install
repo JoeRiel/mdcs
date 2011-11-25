@@ -2,10 +2,10 @@
 
 # Simple installation script for mdcs
 
-LISP_BASE=$HOME/.emacs.d           # location of maplev.el[c]
-LISP_DIR=$LISP_BASE/mds            # place to install mds lisp files
-INFO_DIR=$HOME/share/info          # for the info file
-MAPLE_INSTALL_DIR=$HOME/maple/lib  # for the Maple archive and help database
+LISP_BASE=$HOME/.emacs.d           	       # location of maplev.el[c]
+LISP_DIR=$LISP_BASE/mds            	       # place to install mds lisp files
+INFO_DIR=$HOME/share/info          	       # for the info file
+MAPLE_INSTALL_DIR=$HOME/maple/toolbox/mdc/lib  # for the Maple archive and help database
 
 echo "Byte-compiling mds lisp files"
 # Byte-compile lisp/*.el

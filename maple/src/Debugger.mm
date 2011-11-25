@@ -207,7 +207,11 @@ $endif
         od;
 
         #}}}
-
+        #{{{ Hande statement
+        if sscanf(res, "%s") = ["statement"] then
+            return res;
+        end if;
+        #}}}
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -251,7 +255,7 @@ $endif
                     break
                 fi
             fi
-        od;
+        end do;
 
         #}}}
         #{{{ Record whether or not the command ended in a colon.
@@ -271,9 +275,9 @@ $endif
                     debugger_printf('DBG_WARN',"Warning, extra characters at end of parsed string\n");
                     debugger_printf('DBG_WARN',"Extra stuff: %q\n", res[i]);
                     break
-                fi
-            od
-        fi;
+                end if;
+            end do;
+        end if;
 
         #}}}
         #{{{ Strip trailing whitespace.
@@ -306,7 +310,7 @@ $endif
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
     local procName, statNumber, evalLevel, i, j, n, line, original, statLevel,
-        pName, lNum, cond, cmd, err;
+        pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop, `debugger/no_output`;
 
         evalLevel := kernelopts('level') - 21;
@@ -398,9 +402,16 @@ $endif
                 debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
+
+            local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
+            # Set module_flag true if next statement appears to
+            # evaluate a module, which causes a debugger error if one
+            # attempt to step into it.  The test is simple and uses
+            # builtins to keep this fast.
+            module_flag := evalb(SearchText("module ()", dbg_state)<>0);
             debugger_printf('DBG_STATE', "<%d>\n%A"
                             , addressof(procName)
-                            , debugopts('procdump'=[procName, 0..statNumber])
+                            , dbg_state
                            );
         end if;
 
@@ -442,10 +453,10 @@ $endif
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
                 return
-            elif cmd = "step" then
+            elif cmd = "step" and not module_flag then
                 debugopts('steplevel'=999999999);
                 return
-            elif cmd = "into" then
+            elif cmd = "into" or cmd = "step" and module_flag then
                 debugopts('steplevel'=evalLevel+6);
                 return
             elif cmd = "outfrom" then
@@ -663,7 +674,47 @@ $endif
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: integer, {dead :: truefalse := false} )
+    ShowstatAddr := proc( addr :: integer
+                          , {dead :: truefalse := false}
+                          , $
+                        )
+$ifdef DONTUSE
+    local prc, pstr;
+
+        prc := pointto(addr);
+        pstr := convert(debugopts('procdump' = prc),string);
+
+        # Alas, this does not work.  Eval'ing (or op'ing)
+        # the procedure can cause the debugger to execute.
+
+        # Eval'ing (or op'ing) prc can cause the
+        # debugger to run ahead the first time this is done
+        # in a module local procedure.
+
+        # Create option string
+        opts := op(3, op(prc));
+        if opts = NULL then
+            opts := "";
+        else
+            opts := sprintf("option %q;\n", opts);
+        end if;
+
+        # Create description string
+        desc := op(5, op(prc));
+        if desc = NULL then
+            desc := "";
+        else
+            desc := sprintf("description %a;\n", desc);
+        end if;
+
+        # Split at first statement and insert opts and desc
+        pos := StringTools:-Search("\n   1", pstr);
+        pstr := cat(pstr[..pos]
+                    , opts
+                    , desc
+                    , pstr[pos+1..]
+                   );
+$endif
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'

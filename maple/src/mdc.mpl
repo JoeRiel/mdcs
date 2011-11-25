@@ -68,15 +68,15 @@
 ##  procedures that transfer debugging control to the server.
 ##
 ##- Debugging is invoked in the usual way, by instrumenting a target
-##  procedure with "stopat", "stopwhen", or "stoperror", the executing
+##  procedure with "stopat", "stopwhen", or "stoperror", then executing
 ##  code that calls the procedure. In the standard Maple GUI the
 ##  debugger may also be invoked by clicking the *debug icon* on the
 ##  toolbar during a running computation.
 ##
 ##- The target procedures can also be instrumented by passing the
-##  `stopat`, `stopwhen`, and `stoperror` options to `\CMD`.  These,
-##  as well as configuration are, options described in the *Options*
-##  section.
+##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
+##  `\CMD`.  These, as well as configuration options, are described in
+##  the *Options* section.
 ##
 ##OPTIONS
 ##-(lead="indent")
@@ -91,21 +91,21 @@
 ##opt(emacs,string)
 ##  Executable used to launch emacs.
 ##  Only used if `launch_emacs` is true.
-##  Default is ~"emacs"~; it can be overridden.
+##  default value is ~"emacs"~; it can be overridden.
 ##
 ##opt(exit,truefalse)
 ##  If true, shutdown the TCP connection
 ##  and restore the original debugger procedures.
-##  The default is false.
+##  The default value is false.
 ##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
-##  The default is _"localhost"_; it can be overridden.
+##  The default value is _"localhost"_; it can be overridden.
 ##
 ##opt(ignoretester,truefalse)
 ##  If true, then do nothing when called from the Maplesoft tester.
 ##  This is intended for internal use.
-##  The default is true; it can be overridden.
+##  The default value is true; it can be overridden.
 ##
 ##opt(label,string)
 ##  Label passed to server for identification and grouping of the client.
@@ -122,19 +122,19 @@
 ##  If true and unable to connect to a Maple Debugger Server,
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
 ##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
-##  The default is 10000; it can be overridden.
+##  The default value is 10000; it can be overridden.
 ##
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
-##  The default is 10000; it can be overridden.
+##  The default value is 10000; it can be overridden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -150,17 +150,41 @@
 ##  If true, stop at any error.
 ##  If a string, stop at that error message.
 ##  If a set of strings, stop at any of those error messages.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
-##opt(stopwarning, string or set of strings)
-##  Each string is a "regular expression" that is matched
-##  against the formatted warning messages.  If a match occurs,
-##  the debugger is halted inside a modified WARNING procedure.
-##  To match any warning, use the string ~"."~.
+##opt(stopwarning, string\comma set of strings\comma or truefalse)
+##  Assign strings ("regular expressions") that stop the debugger when a matching warning
+##  occurs.  The "WARNING" procedure is replaced with one that matches
+##  each regular expression against the formatted warning message.  If
+##  a match occurs, execution stops inside WARNING.
+##  If `stopwarning` is true, or passed by itself,
+##  the set of regular expressions is assigned ~{""}~,
+##  which matches any warning.
+##  If `stopwarning` is false, `WARNING` is restored.
+##  The default action is to not change the previous condition.
+##
+##opt(stopwhen,name\comma list\comma or set)
+##  Causes the debugger to halt when a specified variable changes.
+##  A name corresponds to a global variable.
+##  A list corresponds to variable local to a procedure,
+##  the first element is the procedure name, the second the variable name.
+##  A set is mapped over.
+##  This is equivalent to calling the "stopwhen" command.
+##  To clear, see the `unstopwhen` option, below.
+##
+##opt(stopwhenif, list\comma or set of lists)
+##  Causes the debugger to halt when a specified global variable
+##  is assigned a specified value.
+##  The first element of a list is the global variable,
+##  the second is the value that stops the debugger.
+##  A set of lists may be used to specify conditions for multiple
+##  variables (but a specific variable can only have one halting value).
+##  This is equivalent to calling the "stopwhenif" command.
+##  To clear, see the `unstopwhen` option, below.
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -174,22 +198,23 @@
 ##  If true, clear all stoperrors.
 ##  If a string, clear that error message.
 ##  If a set of strings, clear those error messages.
-##  The default is false.
+##  The default value is false.
 ##
-##opt(unstopwarning, string or set of strings)
-##  Removes one or more strings from the set of warnings
-##  that stop the debugger.  See `stopwarning` option.
+##opt(unstopwhen,name\comma list\comma or set)
+##  Clears one or more `stopwhen` or `stopwhenif` triggers.
+##  This is equivalent to calling the "unstopwhen" command.
+##  See the `stopwhen` and `stopwhenif` options, above.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
 ##  This option is  added by the "mdc[Grid]" exports to instrument
 ##  procedures for use with Grid.
-##  The default is false.
+##  The default value is false.
 ##
 ##opt(view,truefalse)
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default is false; it can be overridden.
+##  The default value is false; it can be overridden.
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
@@ -222,11 +247,17 @@
 ##  Forward quotes are used to prevent premature evaluation.
 ##> mdc(stopat=[fib,1,'mdc:-Count()=8']):
 ##>(noexecute) fib(10);
+##
+##- Stop on any warning.
+##> mdc(stopwarning=true);
+##>(noexecute) int(1/x, x=a..1);
+##- Clear the stop-on-warning.
+##> mdc(stopwarning=false);
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
 ##- "mds info" : file://{HOME}/maple/lib/mds.html
-##- "regular expression" : Help:Regular_Expressions
+##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
 ##- "\MOD"
@@ -251,6 +282,7 @@ export Authenticate
     ,  Debugger
     ,  Format
     ,  Grid
+    ,  InstallPatch
     ,  Sleep
     ,  mdc
     ,  Version
@@ -263,7 +295,6 @@ local Connect
     , CreateID
     , GetDefault
     , ModuleApply
-    , ModuleLoad
     , ModuleUnload
     , Read
     , Write
@@ -279,7 +310,6 @@ local Connect
     , sid := -1
     , view_flag
     , Warnings
-    , WARNING_orig
     ;
 
 #}}}
@@ -288,6 +318,7 @@ $ifdef BUILD_MLA
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
+$include <src/InstallPatch.mm>
 $endif
 
     ModuleApply := mdc;
@@ -306,11 +337,13 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
-                 , { stopwarning :: {string,set(string),identical(true)} := "" }
+                 , { stopwarning :: {string,set(string),truefalse} := NULL }
+                 , { stopwhen :: { name, list, set } := NULL }
+                 , { stopwhenif :: { list, set(list) } := NULL }
                  , { traperror :: truefalse := GetDefault(':-traperror',false) }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
-                 , { unstoperror :: {truefalse,string,set} := false }
-                 , { unstopwarning :: {string,set(string)} := "" }
+                 , { unstoperror :: {truefalse,string,set,identical(true)} := false }
+                 , { unstopwhen :: { name, list, set } := NULL }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
@@ -378,26 +411,34 @@ $endif
             map(:-stoperror, stoperror);
         end if;
 
-        if stopwarning <> "" then
-            if stopwarning <> true then
-                unprotect('WARNING');
+        if stopwarning <> NULL then
+            unprotect('WARNING');
+            if stopwarning = false then
+                WARNING := proc(msg::{string, symbol})
+                    print(INTERFACE_WARN(1,msg,args[2 .. -1]))
+                end proc(args);
+                Warnings := {};
+            else
                 WARNING := proc()
-                local msg;
-                uses ST = StringTools;
-                    WARNING_orig(_passed);
-                    msg := ST:-FormatMessage(_passed);
-                    if ormap(ST:-RegMatch, Warnings, msg) then
-                        DEBUG();
+                local msg, WARNING;
+                    msg := StringTools:-FormatMessage(_passed);
+                    if ormap(StringTools:-RegMatch, Warnings, msg) then
+                        WARNING := proc(msg::{string, symbol})
+                            DEBUG();
+                            print(INTERFACE_WARN(1,msg,args[2 .. -1]))
+                        end proc;
+                        WARNING(args);
                     end if;
-                    NULL;
                 end proc;
-                protect('WARNING');
-                Warnings := Warnings union `if`(stopwarning :: set
-                                                , stopwarning
-                                                , {stopwarning}
-                                               );
+                Warnings := `if`(stopwarning :: set
+                                 , stopwarning
+                                 , `if`(stopwarning = true
+                                        , {""}
+                                        , {stopwarning}
+                                       )
+                                );
             end if;
-            printf("Stopped warnings = %a\n", Warnings);
+            protect('WARNINGS');
         end if;
 
         if unstoperror = true then
@@ -408,14 +449,23 @@ $endif
             map(:-unstoperror, unstoperror);
         end if;
 
-        if unstopwarning <> "" then
-            Warnings := Warnings minus `if`(unstopwarning :: set
-                                            , unstopwarning
-                                            , {unstopwarning}
-                                           );
-            printf("Stopped warnings = %a\n", Warnings);
+        if stopwhen :: '{name,list}' then
+            :-stopwhen(stopwhen);
+        elif stopwhen :: set then
+            map(:-stopwhen, stopwhen);
         end if;
 
+        if stopwhenif :: list then
+            proc(x,v) :-stopwhenif(x,v) end proc(op(stopwhenif));
+        elif stopwhenif :: set(list) then
+            map( l -> :-stopwhenif(op(l)), stopwhenif);
+        end if;
+
+        if unstopwhen :: '{name,list}' then
+            :-unstopwhen(unstopwhen);
+        elif unstopwhen :: set then
+            map(:-unstopwhen, unstopwhen);
+        end if;
 
         if traperror then
             :-stoperror(':-traperror');
@@ -427,13 +477,6 @@ $endif
 
 #}}}
 
-#{{{ ModuleLoad
-
-    ModuleLoad := proc()
-        WARNING_orig := eval(WARNING);
-    end proc;
-
-#}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
@@ -635,7 +678,7 @@ $endif
 
 #{{{ Version
 
-    Version := "0.1.1.15";
+    Version := "0.1.1.20";
 
 #}}}
 
@@ -703,7 +746,7 @@ $endif
 ##OPTIONS
 ##opt(reset,truefalse)
 ##  If true, clear all the counters.
-##  The default is false.
+##  The default value is false, which does not clear counters.
 ##
 ##EXAMPLES
 ##- Exercise a couple of counters.
