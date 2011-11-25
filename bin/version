@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Assign a version number to the mdcs source files
+# Assign a version number to the source files
 
 script="$0"
 
