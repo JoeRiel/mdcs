@@ -210,15 +210,18 @@ tags:
 
 # {{{ installer
 
-.PHONY: installer
+.PHONY: installer installer-zip
 
-installer := $(pkg)-Installer-$(VERSION).mla
+installer := mdcs-installer-$(VERSION).mla
 
 installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
 $(installer): doc hdb mla
 	$(MAPLE) -q maple/installer/CreateInstaller.mpl
+
+installer-zip: $(installer)
+	zip mdcs-installer-$(VERSION).zip $(installer)
 
 # }}}
 
