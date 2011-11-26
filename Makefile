@@ -56,14 +56,14 @@ LISP_DIR := $(LISP_BASE)/mds
 INFO_DIR := $(HOME)/share/info
 
 # Maple toolbox directory
-MDS_TOOLBOX_DIR := $(HOME)/maple/toolbox/mdc
+MDC_TOOLBOX_DIR := $(HOME)/maple/toolbox/mdc
 
 # where html files go.
 # there is no standard place for this.
-HTML_DIR := $(MDS_TOOLBOX_DIR)/doc
+HTML_DIR := $(MDC_TOOLBOX_DIR)/doc
 
 # where the maple archive goes
-MAPLE_LIB_DIR := $(MDS_TOOLBOX_DIR)/lib
+MAPLE_LIB_DIR := $(MDC_TOOLBOX_DIR)/lib
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
@@ -212,12 +212,12 @@ tags:
 
 .PHONY: installer
 
-installer := $(pkg)-Installer.mla
+installer := $(pkg)-Installer-$(VERSION).mla
 
 installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
-$(installer): hdb mla
+$(installer): doc hdb mla
 	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
 # }}}
@@ -302,14 +302,13 @@ zip: $(dist)
 clean: $(call print-help,clean,Remove built files)
 clean:
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
-	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml,$(wildcard doc/*))
+	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml doc/README-installer,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES) 
-	-$(RM) $(MAPLE_LIB_DIR)/$(mla) $(MAPLE_LIB_DIR_DIR)/$(hdb)
-	-$(RM) $(MAPLE_TOOLBOX_DIR)/doc/*
+	-$(RM) -r $(LISP_DIR)
+	-$(RM) -r $(MDC_TOOLBOX_DIR)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}

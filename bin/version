@@ -89,6 +89,11 @@ file="Makefile"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/^VERSION := /$sed_cmd" "$file"
 
+# Update CreateInstaller.mpl
+file="maple/installer/CreateInstaller.mpl"
+[ -z "$version" ] && echo -ne "$file:\t"
+sed $sed_opt "/version := /$sed_cmd" "$file"
+
 
 #}}}
 
