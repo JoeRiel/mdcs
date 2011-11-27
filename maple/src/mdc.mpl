@@ -256,7 +256,7 @@
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
-##- "mds info" : file://{HOME}/maple/lib/mds.html
+##- "mds info" : file://{HOME}/maple/toolbox/mdc/doc/mds.html
 ##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
