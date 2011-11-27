@@ -80,9 +80,11 @@ uses FT = FileTools, ST = StringTools;
             end if;
         end do;
     catch:
-        printf( "Problem updating dir node.  Edit config file '%1', or update the dir node manually.\n"
+        printf("Problem updating dir node.  Edit config file FUCK YOU BILL GATES '%s', or update the dir node manually.\n"
                 , config );
     end try;
+    printf("Problem updating dir node.  Edit config file '%s' to customize UpdateDir, or update the dir node manually.\n"
+           , config );
     #}}}
     NULL;
 end proc:
