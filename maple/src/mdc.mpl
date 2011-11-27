@@ -79,15 +79,51 @@
 ##  the *Options* section.
 ##
 ##OPTIONS
-##-(lead="indent")
-##  Some of the following keyword options have defaults that can
-##  be overridden by assigning an entry to the global table
-##  'mdc_default', using the name of the option as the index.
-##  For example, to override the default for `port` to 12345,
-##  assign ~mdc_default['port'] := 12345~. Entering this assignment
-##  in a "Maple initialization file" makes it available for
-##  all sessions.
 ##
+##SUBSECTION(collapsed) Instrumentation Options
+##-(lead="indent")
+##  These options are used to instrument procedures for debugging.
+##  Most correspond to a standard Maple procedure of the same name.
+##  The corresponding procedure can also be used;
+##  these options may provide additional functionality.
+##- `stopat`
+##- `stoperror`
+##- `stopwarning`
+##- `stopwhen`
+##- `stopwhenif`
+##- `traperror`
+##- `unstopat`
+##- `unstoperror`
+##- `unstopwhen`
+##ENDSUBSECTION
+##
+##SUBSECTION(collapsed) Configuration Options
+##-(lead="indent")
+##  These options configure the debugger.
+##  They are *sticky*, meaning they remain
+##  in effect until changed by an explicit
+##  use of the option.
+##
+##-(lead="indent")
+##  The initial value of these options can be overridden by assigning
+##  an entry to the global table 'mdc_default', using the name of the
+##  option as the index.  For example, to override the default for
+##  `port` to 12345, assign ~mdc_default['port'] := 12345~. Entering
+##  this assignment in a "Maple initialization file" makes it
+##  available for all sessions.
+
+##
+##- `emacs` : executable for starting Emacs
+##- `host` : id of debugger server
+##- `ignoretester` : used with the Maplesoft test environment
+##- `launch_emacs` : enables auto-launch of Emacs
+##- `maxlength` : maximum string length sent to server
+##- `port` : TCP port number
+##- `showoptions` : displays `options` and `description` statements in procedure listings
+##- `view` : enables echoing of commands
+##ENDSUBSECTION
+##
+##SUBSECTION(collapsed) Option Details
 ##opt(emacs,string)
 ##  Executable used to launch emacs.
 ##  Only used if `launch_emacs` is true.
@@ -135,6 +171,15 @@
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
 ##  The default value is 10000; it can be overridden.
+##
+##opt(showoptions,truefalse)
+##  When true, the **options** and **description** statements
+##  in procedures are displayed in the showstat listing.
+##  *Because of a debug kernel deficiency, when this option
+##  is in effect, the debugger may occasionally continue to
+##  the end when first debugging a procedure.*
+##  The second time the debugger enters the procedure, it should work properly.
+##  The initial default is false; it can be overridden.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -215,6 +260,8 @@
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
 ##  The default value is false; it can be overridden.
+##
+##ENDSUBSECTION
 ##
 ##EXAMPLES(noexecute)
 ##- Launch the Maple debugger client, instrumenting "int".
@@ -309,6 +356,7 @@ local Connect
     , Port
     , sid := -1
     , view_flag
+    , show_options_flag
     , Warnings
     ;
 
@@ -335,6 +383,7 @@ $endif
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                 , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
                  , { stopwarning :: {string,set(string),truefalse} := NULL }
@@ -389,6 +438,10 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
+        end if;
+
+        if showoptions :: truefalse then
+            show_options_flag := showoptions;
         end if;
 
         if stopat :: set then
@@ -600,6 +653,18 @@ $endif
 #}}}
 #{{{ WriteTagf
 
+##DEFINE PROC WriteTagf
+##PROCEDURE \MOD[\PROC]
+##AUTHOR   Joe Riel
+##DATE     Nov 2011
+##CALLINGSEQUENCE
+##- \PROC('tag','rest')
+##PARAMETERS
+##- 'tag'  : ::name::
+##- 'rest' : (optiona) arguments to "sprintf"
+##RETURNS
+##- `NULL`
+
     WriteTagf := proc(tag)
     uses Write = Sockets:-Write;
     local msg,len;
@@ -787,7 +852,6 @@ $endif
         end if;
     end proc;
 #}}}
-
 
 end module:
 
