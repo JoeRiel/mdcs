@@ -220,6 +220,7 @@ installer: $(installer)
 $(installer): doc hdb mla
 	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
+installer-zip: $(call print-help,installer-zip,Create Maple installer zip file)
 installer-zip: $(installer)
 	zip mdcs-installer-$(VERSION).zip $(installer)
 
