@@ -111,7 +111,7 @@
 ##  `port` to 12345, assign ~mdc_default['port'] := 12345~. Entering
 ##  this assignment in a "Maple initialization file" makes it
 ##  available for all sessions.
-
+##
 ##
 ##- `emacs` : executable for starting Emacs
 ##- `host` : id of debugger server
@@ -127,7 +127,7 @@
 ##opt(emacs,string)
 ##  Executable used to launch emacs.
 ##  Only used if `launch_emacs` is true.
-##  default value is ~"emacs"~; it can be overridden.
+##  The default value is ~"emacs"~; this option is sticky.
 ##
 ##opt(exit,truefalse)
 ##  If true, shutdown the TCP connection
@@ -136,12 +136,12 @@
 ##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
-##  The default value is _"localhost"_; it can be overridden.
+##  The default value is _"localhost"_; this option is sticky.
 ##
 ##opt(ignoretester,truefalse)
 ##  If true, then do nothing when called from the Maplesoft tester.
 ##  This is intended for internal use.
-##  The default value is true; it can be overridden.
+##  The default value is true; this option is sticky.
 ##
 ##opt(label,string)
 ##  Label passed to server for identification and grouping of the client.
@@ -158,19 +158,19 @@
 ##  If true and unable to connect to a Maple Debugger Server,
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
-##  The default value is false; it can be overridden.
+##  The default value is false; this option is sticky.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
 ##  If a string is longer than `maxlength`, it is replaced
 ##  with a message indicating the problem and the original length.
 ##  0 means no limit.
-##  The default value is 10000; it can be overridden.
+##  The default value is 10000; this option is sticky.
 ##
 ##opt(port,posint)
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
-##  The default value is 10000; it can be overridden.
+##  The default value is 10000; this option is sticky.
 ##
 ##opt(showoptions,truefalse)
 ##  When true, the **options** and **description** statements
@@ -179,7 +179,7 @@
 ##  is in effect, the debugger may occasionally continue to
 ##  the end when first debugging a procedure.*
 ##  The second time the debugger enters the procedure, it should work properly.
-##  The initial default is false; it can be overridden.
+##  The initial default is false; this option is sticky.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -195,7 +195,7 @@
 ##  If true, stop at any error.
 ##  If a string, stop at that error message.
 ##  If a set of strings, stop at any of those error messages.
-##  The default value is false; it can be overridden.
+##  The default value is false; this option is sticky.
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings ("regular expressions") that stop the debugger when a matching warning
@@ -229,7 +229,7 @@
 ##
 ##opt(traperror,truefalse)
 ##  If true, stop at trapped errors.
-##  The default value is false; it can be overridden.
+##  The default value is false; this option is sticky.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -259,7 +259,7 @@
 ##opt(view,truefalse)
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
-##  The default value is false; it can be overridden.
+##  The default value is false; this option is sticky.
 ##
 ##ENDSUBSECTION
 ##
