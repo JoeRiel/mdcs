@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs-0.1.1.21
+** Create an Maple installer
+** Update help pages
+** Add 'showoptions' optional argument to mdc
+** Show args (if enabled) when reentering a procedure
 * mdcs-0.1.1.20
 ** Modified _debugger to prevent stepping into a module,
    which raises an error.  Test isn't perfect but is fast and
