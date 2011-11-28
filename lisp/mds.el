@@ -331,14 +331,15 @@ use them to route the message."
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
-	  (mds-ss-update live-buf addr procname state statement))))
+	  (mds-ss-update live-buf addr procname state statement)
+	  (when mds-show-args-flag
+	    (mds-ss-allow-input live-buf t)
+	    (mds-ss-show-args-assign live-buf t)))))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
-      (mds-ss-display live-buf msg)
-      (if mds-show-args-flag
-	  (mds-ss-show-args-assign live-buf t)))
+      (mds-ss-display live-buf msg))
 
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.

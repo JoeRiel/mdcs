@@ -43,6 +43,7 @@ local _debugger
     , _showstop
     , _where
     , _print
+    , last_state
     , orig_print
     , orig_stopat
     , getname
@@ -309,8 +310,8 @@ $endif
     description
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
-    local procName, statNumber, evalLevel, i, j, n, line, original, statLevel,
-        pName, lNum, cond, cmd, err, module_flag;
+    local procName, statNumber, evalLevel, i, j, n, line, original, statLevel
+        , state, pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop, `debugger/no_output`;
 
         evalLevel := kernelopts('level') - 21;
@@ -409,10 +410,11 @@ $endif
             # attempt to step into it.  The test is simple and uses
             # builtins to keep this fast.
             module_flag := evalb(SearchText("module ()", dbg_state)<>0);
-            debugger_printf('DBG_STATE', "<%d>\n%A"
-                            , addressof(procName)
-                            , dbg_state
-                           );
+            state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
+            if state <> last_state then
+                last_state := state;
+                debugger_printf('DBG_STATE', "%s", state);
+            end if;
         end if;
 
         #}}}
