@@ -332,7 +332,8 @@ use them to route the message."
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
 	  (mds-ss-update live-buf addr procname state statement)
-	  (when mds-show-args-flag
+	  (when (and mds-show-args-flag
+		     (string= state "1"))
 	    (mds-ss-allow-input live-buf t)
 	    (mds-ss-show-args-assign live-buf t)))))
 
