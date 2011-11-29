@@ -11,18 +11,18 @@ MakePath := () -> StringTools:-Join([_passed], kernelopts(':-dirsep')):
 # default locations, but this file is not used unless it has been
 # renamed as described above.
 
-# MapleDir : directory where *.mla and *.hdb files are stored (~/maple/toolbox/mdc)
+# MapleLib : directory where *.mla and *.hdb files are stored (~/maple/toolbox/mdc)
 # LispDir : directory where lisp files are stored (~/.emacs.d/mds/)
 # InfoDir : directory where info files are stored (~/share/info/)
 # DirFile : file used to update the dir node for the info system (~/share/info/dir)
 
-MapleLib := MakePath(kernelopts('homedir'), "maple" "toolbox" "mdc"):
+MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib"):
 LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "mds"):
 InfoDir := MakePath(kernelopts('homedir'), "share", "info"):
 DirFile := MakePath(InfoDir, "dir"):
 
 # Emacs executable (used to byte-compile the lisp files)
-EMACS := "emacs":
+Emacs := "emacs":
 
 # Procedure to update dir/info entries.
 # This (the default) uses the O/S command ginstall-info

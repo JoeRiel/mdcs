@@ -1,6 +1,9 @@
 #{{{ InstallScript
 InstallScript :=  proc()
-local config
+local cmd
+    , config
+    , elfiles
+    , Emacs
     , file
     , Install
     , is_system
@@ -11,7 +14,7 @@ local config
     , srcdir
     , tboxdir
     ;
-global LispDir, InfoDir, DirFile, UpdateDir;
+global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
 
 uses FT = FileTools, ST = StringTools;
 
@@ -42,6 +45,8 @@ uses FT = FileTools, ST = StringTools;
     end proc;
     #}}}
     #{{{ Assign Defaults
+    Emacs := "emacs";
+    MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib");
     LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "mds");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
@@ -63,11 +68,46 @@ uses FT = FileTools, ST = StringTools;
         printf("Configuration file %s does not exist, using default locations.\n", config);
     end if;
     #}}}
+    #{{{ Install Maple files
+    if assigned(MapleLib) then
+        srcdir := MakePath(tboxdir,"lib");
+        if MapleLib <> srcdir then
+            printf("\nInstalling Maple files...\n");
+            Install(srcdir, MapleLib, ["mdc.mla", "mdc.hdb"]);
+        end if;
+    end if;
+    #}}}
     #{{{ Install lisp files
+
+    printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
-    Install(srcdir, LispDir, FT:-ListDirectory(srcdir,'returnonly'="*.el"));
+    elfiles := FT:-ListDirectory(srcdir,'returnonly'="*.el");
+    Install(srcdir, LispDir, elfiles);
+    #}}}
+    #{{{ Byte-compile lisp files
+
+    printf("\nByte-compiling lisp files...\n");
+
+    elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
+
+    cmd := sprintf("%s --batch --no-site-file --no-init-file "
+                   "--eval \"(push \\\"%A\\\" load-path)\" "
+                   "--funcall=batch-byte-compile "
+                   "%{}s"
+                   , Emacs
+                   , LispDir
+                   , < elfiles >
+                  );
+    printf("%s\n", cmd);
+    result := ssystem(cmd);
+    if result[1] <> 0 then
+        printf("Problem byte-compiling lisp files.\n");
+    end if;
+
     #}}}
     #{{{ Install info files
+
+    printf("\nInstalling info files...\n");
     Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
     #}}}
     #{{{ Update dir node
@@ -80,16 +120,16 @@ uses FT = FileTools, ST = StringTools;
             end if;
         end do;
     catch:
-        printf("Problem updating dir node.  Edit config file FUCK YOU BILL GATES '%s', or update the dir node manually.\n"
+        printf("Problem updating dir node.  Edit config file '%s', or update the dir node manually.\n"
                 , config );
     end try;
-    printf("Problem updating dir node.  Edit config file '%s' to customize UpdateDir, or update the dir node manually.\n"
-           , config );
+
     #}}}
     NULL;
 end proc:
 #}}}
 #{{{ CreateInstaller
+
 CreateInstaller := proc()
 
 local installer, version;
@@ -111,14 +151,18 @@ local installer, version;
                                             , "mdc.mla" = "lib/mdc.mla"
                                             , "mdc.hdb" = "lib/mdc.hdb"
 
-                                            , "lisp/mds-client.el" = "lisp/mds-client.el"
-                                            , "lisp/mds-cp.el" = "lisp/mds-cp.el"
-                                            , "lisp/mds-login.el" = "lisp/mds-login.el"
-                                            , "lisp/mds-out.el" = "lisp/mds-out.el"
-                                            , "lisp/mds-re.el" = "lisp/mds-re.el"
-                                            , "lisp/mds-ss.el" = "lisp/mds-ss.el"
-                                            , "lisp/mds-wm.el" = "lisp/mds-wm.el"
-                                            , "lisp/mds.el" = "lisp/mds.el"
+                                            , seq(`=`(sprintf("lisp/%s",file)$2)
+                                                  , file = [NULL
+                                                            , "mds-client.el"
+                                                            , "mds-cp.el"
+                                                            , "mds-login.el"
+                                                            , "mds-out.el"
+                                                            , "mds-patch.el"
+                                                            , "mds-re.el"
+                                                            , "mds-ss.el"
+                                                            , "mds-wm.el"
+                                                            , "mds.el"
+                                                           ])
 
                                             , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
 
@@ -158,6 +202,7 @@ local installer, version;
                             , 'width' = 1000
                            );
 end proc:
+
 #}}}
 
 CreateInstaller();
