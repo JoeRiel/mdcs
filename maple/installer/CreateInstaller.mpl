@@ -135,7 +135,7 @@ CreateInstaller := proc()
 local installer, version;
 
     # This is updated by bin/version
-    version := "0.1.1.21";
+    version := "0.1.1.22";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
