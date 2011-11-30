@@ -69,10 +69,6 @@ help pages, ?mdc[Grid]).
    you can use the html versions.  They are unpacked in
    $HOME/maple/toolbox/mdc/doc.
 
-9. Consider byte-compiling the installed lisp files.  This is not
-   necessary but they will load faster if byte-compiled.
-
-
 USAGE
 -----
 Fire up Emacs and launch the Mmaple debugger server:
