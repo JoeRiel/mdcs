@@ -90,8 +90,8 @@ uses FT = FileTools, ST = StringTools;
     printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
     elfiles := remove(`=`, FT:-ListDirectory(srcdir,'returnonly'="*.el"), "maplev.el");
-    Install(srcdir, LispDirMds, elfiles, 'clear');
-    Install(srcdir, LispDirMaplev, ["maplev.el"], 'clear');
+    Install(srcdir, LispDirMds, elfiles);
+    Install(srcdir, LispDirMaplev, ["maplev.el"]);
 
     #}}}
     #{{{ Byte-compile lisp files
