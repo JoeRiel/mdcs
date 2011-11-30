@@ -14,7 +14,7 @@ local cmd
     , srcdir
     , tboxdir
     ;
-global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
+global LispDirMds, LispDirMaplev, InfoDir, DirFile, MapleLib, UpdateDir;
 
 uses FT = FileTools, ST = StringTools;
 
@@ -29,12 +29,19 @@ uses FT = FileTools, ST = StringTools;
     tboxdir := MakePath(pdir, ToolboxInstaller:-Data:-Get("toolbox_name"));
     #}}}
     #{{{ Assign Install procedure
-    Install := proc(srcdir, dstdir, files :: list)
-    local file, src, dst;
+    Install := proc(srcdir, dstdir, files :: list, { clear :: truefalse := false } )
+    local content, file, src, dst;
     uses FT=FileTools;
         if not FT:-Exists(dstdir) then
             printf("Creating directory %s\n", dstdir);
             FT:-MakeDirectory(dstdir, 'recurse'=true);
+        elif clear then
+            content := FT:-ListDirectory(dstdir);
+            for file in content do
+                file := MakePath(dstdir,file);
+                printf("Deleting file %s\n", file);
+                FT:-Remove(file);
+            end do;
         end if;
         for file in files do
             src := MakePath(srcdir,file);
@@ -47,7 +54,8 @@ uses FT = FileTools, ST = StringTools;
     #{{{ Assign Defaults
     Emacs := "emacs";
     MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib");
-    LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "mds");
+    LispDirMds := MakePath(kernelopts('homedir'), ".emacs.d", "mds");
+    LispDirMaplev := MakePath(kernelopts('homedir'), ".emacs.d", "maplev");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
     UpdateDir := proc(dirfile::string, file::string)
@@ -81,21 +89,26 @@ uses FT = FileTools, ST = StringTools;
 
     printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
-    elfiles := FT:-ListDirectory(srcdir,'returnonly'="*.el");
-    Install(srcdir, LispDir, elfiles);
+    elfiles := remove(`=`, FT:-ListDirectory(srcdir,'returnonly'="*.el"), "maplev.el");
+    Install(srcdir, LispDirMds, elfiles, 'clear');
+    Install(srcdir, LispDirMaplev, ["maplev.el"], 'clear');
+
     #}}}
     #{{{ Byte-compile lisp files
 
     printf("\nByte-compiling lisp files...\n");
 
-    elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
+    elfiles := map[3](cat, LispDirMds, kernelopts('dirsep'), elfiles);
+    elfiles := [op(elfiles), cat(LispDirMaplev, kernelopts('dirsep'), "maplev.el")];
 
     cmd := sprintf("%s --batch --no-site-file --no-init-file "
+                   "--eval \"(push \\\"%A\\\" load-path)\" "
                    "--eval \"(push \\\"%A\\\" load-path)\" "
                    "--funcall=batch-byte-compile "
                    "%{}s"
                    , Emacs
-                   , LispDir
+                   , LispDirMds
+                   , LispDirMaplev
                    , < elfiles >
                   );
     printf("%s\n", cmd);
@@ -135,7 +148,7 @@ CreateInstaller := proc()
 local installer, version;
 
     # This is updated by bin/version
-    version := "0.1.1.22";
+    version := "0.1.1.23";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 

@@ -1,4 +1,4 @@
-VERSION 0.1.1.22
+VERSION 0.1.1.23
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -31,8 +31,10 @@ INSTALLATION
 
 6. CUSTOMIZATION
    By default, the installer uses the following locations
-   Lisp files:
+   MDS Lisp files:
      $HOME/.emacs.d/mds
+   Maplev Lisp files:
+     $HOME/.emacs.d/maplev
    Info files:
      $HOME/share/info
    Maple archive and hdb
@@ -44,6 +46,10 @@ INSTALLATION
 
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
    the following statements
+
+;; maplev package
+(setq load-path (cons (format "%s/.emacs.d/maplev" (getenv "HOME")) load-path))
+(autoload 'maplev-mode "maplev" "Maple editing mode" t)
 
 ;; mds package
 (setq load-path (cons (format "%s/.emacs.d/mds" (getenv "HOME")) load-path))

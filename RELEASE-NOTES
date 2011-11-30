@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-0.1.1.23
+** Modify installer to put maplev.el in separate directory ($HOME/.emacs.d/maplev)
+** Add instructions to README-installer
 * mdcs-0.1.1.22
 ** Add missing file to installer (mds-patch.el)
 ** Update maplev.el so it compiles with no warnings
