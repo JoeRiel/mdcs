@@ -50,7 +50,7 @@ TEXI2HTML := makeinfo --html --number-sections
 
 # where lisp files go
 LISP_BASE := $(HOME)/.emacs.d
-LISP_DIR := $(LISP_BASE)/mds
+LISP_DIR := $(LISP_BASE)/maple
 
 # where info files go
 INFO_DIR := $(HOME)/share/info
