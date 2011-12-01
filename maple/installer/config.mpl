@@ -12,14 +12,12 @@ MakePath := () -> StringTools:-Join([_passed], kernelopts(':-dirsep')):
 # renamed as described above.
 
 # MapleLib : directory where *.mla and *.hdb files are stored (~/maple/toolbox/mdc)
-# LispDirMds : directory where mds lisp files are stored (~/.emacs.d/mds)
-# LispDirMaplev : directory where maplev lisp files are stored (~/.emacs.d/maplev)
+# LispDir : directory where maple lisp files are stored (~/.emacs.d/maple)
 # InfoDir : directory where info files are stored (~/share/info/)
 # DirFile : file used to update the dir node for the info system (~/share/info/dir)
 
 MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib"):
-LispDirMds := MakePath(kernelopts('homedir'), ".emacs.d", "mds"):
-LispDirMaplev := MakePath(kernelopts('homedir'), ".emacs.d", "maplev"):
+LispDir  := MakePath(kernelopts('homedir'), ".emacs.d", "maple"):
 InfoDir := MakePath(kernelopts('homedir'), "share", "info"):
 DirFile := MakePath(InfoDir, "dir"):
 

@@ -339,10 +339,13 @@ $endif
         #{{{ process args
 
         for i from 1 to n do
-            if _passed[i] = lasterror then
+            # Use addressof to prevent an object from overriding
+            # equality.
+            if addressof(_passed[i]) = addressof(lasterror) then
                 debugger_printf(MPL_ERR, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..]))
             elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
+                `listing`;
                 if _passed[i][1] = 'DEBUGSTACK' then
                     j := nops(_passed[i]) - 2;
                     while j > 2 do

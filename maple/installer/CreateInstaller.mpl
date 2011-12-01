@@ -14,7 +14,7 @@ local cmd
     , srcdir
     , tboxdir
     ;
-global LispDirMds, LispDirMaplev, InfoDir, DirFile, MapleLib, UpdateDir;
+global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
 
 uses FT = FileTools, ST = StringTools;
 
@@ -54,8 +54,7 @@ uses FT = FileTools, ST = StringTools;
     #{{{ Assign Defaults
     Emacs := "emacs";
     MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib");
-    LispDirMds := MakePath(kernelopts('homedir'), ".emacs.d", "mds");
-    LispDirMaplev := MakePath(kernelopts('homedir'), ".emacs.d", "maplev");
+    LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "maple");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
     UpdateDir := proc(dirfile::string, file::string)
@@ -89,26 +88,22 @@ uses FT = FileTools, ST = StringTools;
 
     printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
-    elfiles := remove(`=`, FT:-ListDirectory(srcdir,'returnonly'="*.el"), "maplev.el");
-    Install(srcdir, LispDirMds, elfiles);
-    Install(srcdir, LispDirMaplev, ["maplev.el"]);
+    elfiles := FT:-ListDirectory(srcdir,'returnonly'="*.el");
+    Install(srcdir, LispDir, elfiles);
 
     #}}}
     #{{{ Byte-compile lisp files
 
     printf("\nByte-compiling lisp files...\n");
 
-    elfiles := map[3](cat, LispDirMds, kernelopts('dirsep'), elfiles);
-    elfiles := [op(elfiles), cat(LispDirMaplev, kernelopts('dirsep'), "maplev.el")];
+    elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
 
     cmd := sprintf("%s --batch --no-site-file --no-init-file "
-                   "--eval \"(push \\\"%A\\\" load-path)\" "
                    "--eval \"(push \\\"%A\\\" load-path)\" "
                    "--funcall=batch-byte-compile "
                    "%{}s"
                    , Emacs
-                   , LispDirMds
-                   , LispDirMaplev
+                   , LispDir
                    , < elfiles >
                   );
     printf("%s\n", cmd);
@@ -146,6 +141,7 @@ end proc:
 CreateInstaller := proc()
 
 local installer, version;
+global InstallScript;
 
     # This is updated by bin/version
     version := "0.1.1.23";

@@ -31,10 +31,8 @@ INSTALLATION
 
 6. CUSTOMIZATION
    By default, the installer uses the following locations
-   MDS Lisp files:
-     $HOME/.emacs.d/mds
-   Maplev Lisp files:
-     $HOME/.emacs.d/maplev
+   Lisp files:
+     $HOME/.emacs.d/maple
    Info files:
      $HOME/share/info
    Maple archive and hdb
@@ -47,17 +45,17 @@ INSTALLATION
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
    the following statements
 
-;; maplev package
-(setq load-path (cons (format "%s/.emacs.d/maplev" (getenv "HOME")) load-path))
-(autoload 'maplev-mode "maplev" "Maple editing mode" t)
-
 ;; mds package
-(setq load-path (cons (format "%s/.emacs.d/mds" (getenv "HOME")) load-path))
+(setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 ;; Assign the function keys f12 and Ctrl-f12.
 ;; Choose appropriate keys.
 (global-set-key [f12] 'mds-wm-cycle-clients) 
 (global-set-key [C-f12] 'mds-wm-cycle-groups)
+
+;; maplev package
+(autoload 'maplev-mode "maplev" "Maple editing mode" t)
+
 
 The binding to the f12 key is to permit quickly cycling through the
 connected clients.  Use C-f12 to cycle through groups of clients
