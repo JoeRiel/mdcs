@@ -40,7 +40,14 @@
 
 (defcustom mds-truncate-lines t
   "When non-nil, lines in showstat buffer are initially truncated."
-  :group 'boolean
+  :type 'boolean
+  :group 'mds)
+
+(defcustom mds-wait-until-ready t
+  "When non-nil, do not send input to Maple until prompt has been received.
+Setting this to nil allows a quicker response, but prevents a notification
+that the debugger may have exited."
+  :type 'boolean
   :group 'mds)
 
 ;;{{{ (*) cursors
@@ -427,9 +434,15 @@ Minibuffer completion is used if COMPLETE is non-nil."
   "If `mds-ss-allow-input-flag' is non-nil, clear it.
 Otherwise raise error indicating Maple is not available."
   (with-current-buffer (mds-client-live-buf mds-client)
-    (if mds-ss-allow-input-flag
-	(setq mds-ss-allow-input-flag nil)
-      (error "Maple busy or debugging finished"))))
+    (if (and mds-wait-until-ready
+	     (not mds-ss-allow-input-flag))
+	(error "Maple busy or debugging finished")
+      (setq mds-ss-allow-input-flag nil))))
+
+(defun mds-toggle-wait-until-ready ()
+  "Toggle the configuration variable `mds-wait-until-ready'."
+  (interactive)
+  (setq mds-wait-until-ready (not mds-wait-until-ready)))
 
 ;;}}}
 ;;{{{ mds-show-args
@@ -934,6 +947,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
+       ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
 

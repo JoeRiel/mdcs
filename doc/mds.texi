@@ -347,6 +347,13 @@ Specifies the fractional size of the showstat-live window to the full frame size
 Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
 If nil, the window is set to half the frame size.
 
+@vindex mds-wait-until-ready
+@item @code{mds-wait-until-ready}
+A boolean value that, when non-nil, forces the debugger to wait until
+a prompt has been received to send the user's response.  Setting it
+to nil may allow a faster response, but prevents a notification when
+the debugger has exited.
+
 @end table
 
 
