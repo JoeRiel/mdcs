@@ -200,13 +200,6 @@ Debugged procedures can be @emph{live-patched}, that is, modified in-place.
 This permits testing changes without access to the full source code.
 @end itemize
 
-While the core of MDS is based on @command{mdb}@footnote{@inforef{mdb,Emacs Maple Debugger,mdb}},
-an earlier debugger that used @b{OpenMaple} as an interface between
-Emacs and Maple, it has significant improvements.  Because MDS does not 
-use @b{OpenMaple}, there is no requirement to compile an executable,
-which simplifies the installation.
-
-
 @node Requirements, Installation, Summary, Introduction
 @comment  node-name,  next,  previous,  up
 @section Requirements
