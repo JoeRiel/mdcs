@@ -307,14 +307,6 @@ The most useful customizations are the following:
 
 @table @asis
 
-@vindex mds-show-args-flag
-@findex mds-toggle-show-args
-@item @code{mds-show-args-flag}
-A boolean variable that when non-nil causes the arguments
-to a procedure to be automatically displayed when first
-entering the procedure.  The default is t.
-The command @code{mds-toggle-show-args} toggles this variable.
-
 @vindex mds-get-focus-function
 @item @code{mds-get-focus-function}
 A function that calls the window manager to transfer
@@ -329,11 +321,26 @@ transferred to Emacs.
 An integer that is the TCP port number used for communication.
 The default is 10000.
 
+@vindex mds-show-args-flag
+@findex mds-toggle-show-args
+@item @code{mds-show-args-flag}
+A boolean variable that when non-nil causes the arguments
+to a procedure to be automatically displayed when first
+entering the procedure.  The default is t.
+The command @code{mds-toggle-show-args} toggles this variable.
+
 @vindex mds-truncate-lines
 @item @code{mds-truncate-lines}
 A boolean value that, when non-nil, causes lines in the showstat and 
 output windows to be truncated at the right edge of the screen 
 rather than wrapping.   The default truncates lines.
+
+@vindex mds-wait-until-ready
+@item @code{mds-wait-until-ready}
+A boolean value that, when non-nil, forces the debugger to wait until
+a prompt has been received to send the user's response.  Setting it
+to nil may allow a faster response, but prevents a notification when
+the debugger has exited.
 
 @vindex mds-wm-side-by-side
 @item @code{mds-wm-side-by-side}
@@ -346,13 +353,6 @@ in a single client view.  That is the default.
 Specifies the fractional size of the showstat-live window to the full frame size.
 Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
 If nil, the window is set to half the frame size.
-
-@vindex mds-wait-until-ready
-@item @code{mds-wait-until-ready}
-A boolean value that, when non-nil, forces the debugger to wait until
-a prompt has been received to send the user's response.  Setting it
-to nil may allow a faster response, but prevents a notification when
-the debugger has exited.
 
 @end table
 
