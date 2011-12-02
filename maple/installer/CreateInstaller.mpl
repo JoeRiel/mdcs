@@ -113,18 +113,18 @@ uses FT = FileTools, ST = StringTools;
         printf("%s\n", cmd);
         result := ssystem(cmd);
         if result[1] <> 0 then
-            printf("Problem byte-compiling lisp files:\n%s\n"
-                   , result[2]
-                  );
+            WARNING("problem byte-compiling lisp files:\n%1"
+                    , result[2]
+                   );
         end if;
     else
-        printf("On non-Unix machines, the lisp files are not automatically\n"
-               "byte-compiled.  Byte-compiling is not a requirement, but will\n"
-               "allow the code to run faster.  You can manually byte-compile the\n"
-               "files from inside Emacs using the command byte-recompile-directory.\n"
-               "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and\n"
-               "select the directory where the lisp files were installed.\n"
-              );
+        WARNING("the lisp files were not automatically byte-compiled. "
+                "Byte-compiling is not a requirement, but will "
+                "allow the code to run faster.  You can manually byte-compile the "
+                "files from inside Emacs using the command byte-recompile-directory. "
+                "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and "
+                "select the directory where the lisp files were installed."
+               );
     end if;
     #}}}
     #{{{ Install info files
@@ -145,20 +145,21 @@ uses FT = FileTools, ST = StringTools;
                 end if;
             end do;
         catch:
-            printf("Problem updating the dir node. "
-                   "Edit config file '%s', or update the dir node manually;\n"
-                   "see README-Installer.  The following error occured:\n%s\n"
-                   , config
-                   , result[2]
+            WARNING("problem updating the dir node. "
+                    "Edit config file '%1', or update the dir node manually; "
+                    "see README-Installer.  The following error occured:\n%2"
+                    , config
+                    , result[2]
                   );
         end try;
     else
-        printf("On non-Unix machines, the dir file, used by Emac's help system to\n"
-               "provide a menu of help topics, is not automatically updated.  You\n"
-               "can do so manually.  If you cannot figure out how to do so, an html\n"
-               "version of the documenation for mds (the Emacs-based Maple Debugger\n"
-               "Server) is provided in the doc subdirectory of the installation.\n"
-              );
+        WARNING("the dir file, used by Emacs help system to "
+                "provide a menu of help topics, was not updated. "
+                "You can do so manually. If you cannot figure out how to do so, "
+                "an html version of the documentation for mds "
+                "(the Emacs-based Maple Debugger Server) "
+                "is provided in the doc subdirectory of the installation."
+               );
     end if;
     #}}}
     NULL;

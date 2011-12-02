@@ -75,15 +75,15 @@ help pages, ?mdc[Grid]).
    Launch Emacs, then type C-u 0 M-x byte-recompile-directory and
    select the directory where the lisp files were installed.
 
-9. On non-Unix machines, the dir file, used by Emac's help system to
+9. On non-Unix machines, the dir file, used by Emacs help system to
    provide a menu of help topics, is not automatically updated.  You
    can do so manually.  If you cannot figure out how to do so, an html
-   version of the documenationt for mds (the Emacs-based Maple Debugger
+   version of the documentation for mds (the Emacs-based Maple Debugger
    Server) is provided in the doc subdirectory of the installation.
 
 USAGE
 -----
-Fire up Emacs and launch the Mmaple debugger server:
+Fire up Emacs and launch the Maple debugger server:
 
 M-x mds
 
@@ -134,13 +134,13 @@ h display Maple debugger help page
 k (showstack) display abbreviated stack
 K (where) display stack of procedure calls
 l move (return) cursor to current state
-X diplay the last error
-x diplay the last exception
+X display the last error
+x display the last exception
 
 Evaluation
 ----------
-e evalute a Maple expression
-E evalute a Maple expression in a global context
+e evaluate a Maple expression
+E evaluate a Maple expression in a global context
 . evaluate and prettyprint a Maple expression
 
 Miscellaneous

@@ -223,7 +223,7 @@ Both go to the first match and do not check for additional matches."
 	(setq mds-ss-statement "")
 	(mds-ss-get-state))
 
-      ;; Search technique suitable for multiline `statement'; that
+      ;; Search technique suitable for multi-line `statement'; that
       ;; typically occurs when the procedure on the stack occurs in
       ;; the controlling part (condition of conditional, etc) of the
       ;; statement.  Create str by catenating statements of procedure,
@@ -997,9 +997,9 @@ C-u \\[mds-showexception] display the last exception (raw)
 
 Evaluation
 ----------
-\\[mds-eval-and-display-expr] evalute a Maple expression
-C-u \\[mds-eval-and-display-expr] clear output then evalute a Maple expression
-\\[mds-eval-and-display-expr-global] evalute a Maple expression in a global context
+\\[mds-eval-and-display-expr] evaluate a Maple expression
+C-u \\[mds-eval-and-display-expr] clear output then evaluate a Maple expression
+\\[mds-eval-and-display-expr-global] evaluate a Maple expression in a global context
 \\[mds-eval-and-prettyprint] evaluate and prettyprint a Maple expression
 C-u \\[mds-eval-and-prettyprint] clear output then evaluate and prettyprint a Maple expression
 
