@@ -39,8 +39,10 @@
 ##- The user interface of the *Maple Debugger Server*,
 ##  which controls the debugger, is described in its
 ##  *info* pages. If this package has been properly installed,
-##  and environmental variables configured, the "mds info"
+##  and environmental variables configured, the mds info
 ##  pages can be read by typing *info mds* in a shell.
+##  An html version of the mds info pages is available
+##  in the **doc** subdirectory of the installation.
 ##
 ##SEEALSO
 ##- "debugger"
@@ -305,7 +307,6 @@
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
-##- "mds info" : file://{HOME}/maple/toolbox/mdc/doc/mds.html
 ##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
