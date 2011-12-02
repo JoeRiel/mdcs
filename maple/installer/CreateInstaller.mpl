@@ -118,10 +118,13 @@ uses FT = FileTools, ST = StringTools;
                   );
         end if;
     else
-        printf("\nOn non-unix systems, the lisp files are not byte-compiled during installation.\n"
-               "Byte-compilation is not necessary for proper operation; it makes the packages load\n"
-               "a bit faster, but that probably is not noticeable.  You may byte-compile the files\n"
-               "manually from within Emacs.\n");
+        printf("On non-Unix machines, the lisp files are not automatically\n"
+               "byte-compiled.  Byte-compiling is not a requirement, but will\n"
+               "allow the code to run faster.  You can manually byte-compile the\n"
+               "files from inside Emacs using the command byte-recompile-directory.\n"
+               "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and\n"
+               "select the directory where the lisp files were installed.\n"
+              );
     end if;
     #}}}
     #{{{ Install info files
@@ -142,17 +145,19 @@ uses FT = FileTools, ST = StringTools;
                 end if;
             end do;
         catch:
-            printf("Problem updating dir node.  Edit config file '%s', or update the dir node manually:\n%s"
+            printf("Problem updating the dir node. "
+                   "Edit config file '%s', or update the dir node manually;\n"
+                   "see README-Installer.  The following error occured:\n%s\n"
                    , config
                    , result[2]
                   );
         end try;
     else
-        printf("\nThe dir node is not updated automatically on non-unix systems.\n"
-               "Consequently, the help pages for mds (the Emacs-based Maple Debugger Server)\n"
-               "will not be available from the info system (Emacs help system).\n"
-               "You may update the file manually, or use the html files in the doc\n"
-               "subdirectory of the installation.\n"
+        printf("On non-Unix machines, the dir file, used by Emac's help system to\n"
+               "provide a menu of help topics, is not automatically updated.  You\n"
+               "can do so manually.  If you cannot figure out how to do so, an html\n"
+               "version of the documenation for mds (the Emacs-based Maple Debugger\n"
+               "Server) is provided in the doc subdirectory of the installation.\n"
               );
     end if;
     #}}}
@@ -216,7 +221,7 @@ global InstallScript;
                                           ]
                             , 'installation' = [NULL
                                                 , 'text' = ( "Installing the Lisp and Info files.\n"
-                                                             "By default, the lisp files are installed in $HOME/.emacs.d/mds\n"
+                                                             "By default, the lisp files are installed in $HOME/.emacs.d/maple\n"
                                                              "and the info files in $HOME/share/info.\n"
                                                              "To change these defaults, stop the installation, rename the file _config.mpl\n"
                                                              "to config.mpl, edit it appropriately, and restart the installation.\n"

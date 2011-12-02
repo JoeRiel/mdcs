@@ -38,15 +38,14 @@ INSTALLATION
    Maple archive and hdb
      $HOME/maple/toolbox/mdc/lib
 
-   To modify these defaults, stop the installation after it unpacks the files, 
-   rename _config.mpl to config.mpl, and edit it appropriately for your
-   system.
+   To modify these defaults, stop the installation after it unpacks
+   the files, rename _config.mpl (located at $HOME/maple/toolbox/mdc)
+   to config.mpl, and edit it appropriately for your system.
 
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
    the following statements
 
 ;; mds package
-(setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 ;; Assign the function keys f12 and Ctrl-f12.
 ;; Choose appropriate keys.
@@ -69,9 +68,18 @@ help pages, ?mdc[Grid]).
 (add-to-list 'Info-default-directory-list 
 	(format "%s/share/info" (getenv "HOME")))
 
-8. If you cannot get the info pages to install or display,
-   you can use the html versions.  They are unpacked in
-   $HOME/maple/toolbox/mdc/doc.
+8. On non-Unix machines, the lisp files are not automatically
+   byte-compiled.  Byte-compiling is not a requirement, but will
+   allow the code to run faster.  You can manually byte-compile the
+   files from inside Emacs using the command byte-recompile-directory.
+   Launch Emacs, then type C-u 0 M-x byte-recompile-directory and
+   select the directory where the lisp files were installed.
+
+9. On non-Unix machines, the dir file, used by Emac's help system to
+   provide a menu of help topics, is not automatically updated.  You
+   can do so manually.  If you cannot figure out how to do so, an html
+   version of the documenationt for mds (the Emacs-based Maple Debugger
+   Server) is provided in the doc subdirectory of the installation.
 
 USAGE
 -----
