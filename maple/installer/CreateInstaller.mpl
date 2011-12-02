@@ -9,6 +9,7 @@ local cmd
     , is_system
     , MakePath
     , pdir
+    , platform
     , result
     , src
     , srcdir
@@ -94,24 +95,34 @@ uses FT = FileTools, ST = StringTools;
     #}}}
     #{{{ Byte-compile lisp files
 
-    printf("\nByte-compiling lisp files...\n");
+    platform := kernelopts(':-platform');
 
-    elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
+    if platform = "unix" then
+        printf("\nByte-compiling lisp files...\n");
 
-    cmd := sprintf("%s --batch --no-site-file --no-init-file "
-                   "--eval \"(push \\\"%A\\\" load-path)\" "
-                   "--funcall=batch-byte-compile "
-                   "%{}s"
-                   , Emacs
-                   , LispDir
-                   , < elfiles >
+        elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
+
+        cmd := sprintf("%s --batch --no-site-file --no-init-file "
+                       "--eval \"(push \\\"%A\\\" load-path)\" "
+                       "--funcall=batch-byte-compile "
+                       "%{}s 2>&1"
+                       , Emacs
+                       , LispDir
+                       , < elfiles >
+                      );
+        printf("%s\n", cmd);
+        result := ssystem(cmd);
+        if result[1] <> 0 then
+            printf("Problem byte-compiling lisp files:\n%s\n"
+                   , result[2]
                   );
-    printf("%s\n", cmd);
-    result := ssystem(cmd);
-    if result[1] <> 0 then
-        printf("Problem byte-compiling lisp files.\n");
+        end if;
+    else
+        printf("\nOn non-unix systems, the lisp files are not byte-compiled during installation.\n"
+               "Byte-compilation is not necessary for proper operation; it makes the packages load\n"
+               "a bit faster, but that probably is not noticeable.  You may byte-compile the files\n"
+               "manually from within Emacs.\n");
     end if;
-
     #}}}
     #{{{ Install info files
 
@@ -119,19 +130,31 @@ uses FT = FileTools, ST = StringTools;
     Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
     #}}}
     #{{{ Update dir node
-    try
-        for file in ["mds","maplev"] do
-            src := MakePath(tboxdir, "info", file);
-            result := UpdateDir(DirFile, src);
-            if result[1] <> 0 then
-                error;
-            end if;
-        end do;
-    catch:
-        printf("Problem updating dir node.  Edit config file '%s', or update the dir node manually.\n"
-                , config );
-    end try;
 
+    if platform = "unix" then
+        printf("\nUpdating info dir node...\n");
+        try
+            for file in ["mds","maplev"] do
+                src := MakePath(tboxdir, "info", file);
+                result := UpdateDir(DirFile, src);
+                if result[1] <> 0 then
+                    error result[2];
+                end if;
+            end do;
+        catch:
+            printf("Problem updating dir node.  Edit config file '%s', or update the dir node manually:\n%s"
+                   , config
+                   , result[2]
+                  );
+        end try;
+    else
+        printf("\nThe dir node is not updated automatically on non-unix systems.\n"
+               "Consequently, the help pages for mds (the Emacs-based Maple Debugger Server)\n"
+               "will not be available from the info system (Emacs help system).\n"
+               "You may update the file manually, or use the html files in the doc\n"
+               "subdirectory of the installation.\n"
+              );
+    end if;
     #}}}
     NULL;
 end proc:
