@@ -173,7 +173,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "0.1.1.23";
+    version := "1.1";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
