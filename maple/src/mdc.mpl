@@ -86,15 +86,16 @@
 ##  Most correspond to a standard Maple procedure of the same name.
 ##  The corresponding procedure can also be used;
 ##  these options may provide additional functionality.
-##- `stopat`
-##- `stoperror`
-##- `stopwarning`
-##- `stopwhen`
-##- `stopwhenif`
-##- `traperror`
-##- `unstopat`
-##- `unstoperror`
-##- `unstopwhen`
+##  The details section describes these options.
+##- `stopat` : set a watchpoint on a specified procedure
+##- `stoperror` : set a watchpoint on a specified error
+##- `stopwarning` : set a watchpoint on a specified warning
+##- `stopwhen` : set a watchpoint on a specified variable
+##- `stopwhenif` : set a conditional watchpoint on a specified variable
+##- `traperror` : stop at all trapped errors
+##- `unstopat` : clear a procedure watchpoint
+##- `unstoperror` : clear an error watchpoint
+##- `unstopwhen` : clear a conditional watchpoint
 ##ENDSUBSECTION
 ##
 ##SUBSECTION(collapsed) Configuration Options
@@ -103,6 +104,7 @@
 ##  They are *sticky*, meaning they remain
 ##  in effect until changed by an explicit
 ##  use of the option.
+##  The details section describes these options.
 ##
 ##-(lead="indent")
 ##  The initial value of these options can be overridden by assigning
@@ -661,7 +663,7 @@ $endif
 ##- \PROC('tag','rest')
 ##PARAMETERS
 ##- 'tag'  : ::name::
-##- 'rest' : (optiona) arguments to "sprintf"
+##- 'rest' : (optional) arguments to "sprintf"
 ##RETURNS
 ##- `NULL`
 
