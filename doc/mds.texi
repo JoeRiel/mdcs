@@ -62,11 +62,11 @@ Texts.  A copy of the license is included in the section entitled
 @end ifnottex
 
 @menu
-* Introduction::                
-* Starting and Stopping MDS::   
+* Introduction::                Installing and configuring
+* Launching MDS::               Starting and stopping the server
 * Showstat Buffer::             Stepping through code
 * Output Buffer::               Maple output
-* Debugging Tips::              Useful tips and technique
+* Debugging Tips::              Tips and technique
 * Main Index::                  The main index 
 * Key Index::                   Key bindings and where they are described
 * Command and Variable Index::  Indices of commands and variables
@@ -116,7 +116,7 @@ Command and Variable Index
 @end detailmenu
 @end menu
 
-@node Introduction, Starting and Stopping MDS, Top, Top
+@node Introduction, Launching MDS, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -319,21 +319,21 @@ The default is 10000.
 @item @code{mds-show-args-flag}
 A boolean variable that when non-nil causes the arguments
 to a procedure to be automatically displayed when first
-entering the procedure.  The default is t.
+entering the procedure.  The default displayes arguments.
 The command @code{mds-toggle-show-args} toggles this variable.
 
 @vindex mds-truncate-lines
 @item @code{mds-truncate-lines}
 A boolean value that, when non-nil, causes lines in the showstat and 
 output windows to be truncated at the right edge of the screen 
-rather than wrapping.   The default truncates lines.
+rather than wrapping.  The default truncates lines.
 
 @vindex mds-wait-until-ready
 @item @code{mds-wait-until-ready}
 A boolean value that, when non-nil, forces the debugger to wait until
 a prompt has been received to send the user's response.  Setting it
-to nil may allow a faster response, but prevents a notification when
-the debugger has exited.
+to nil allows pipe-lining responses, but prevents a notification when
+the debugger has exited.  The default is to wait for a prompt.
 
 @vindex mds-wm-side-by-side
 @item @code{mds-wm-side-by-side}
@@ -365,8 +365,9 @@ including the version information of Emacs (@kbd{C-h v emacs-version}),
 MDS, (@kbd{M-x mds-version}), and Maple (@code{version()}).
 
 
-@node Starting and Stopping MDS, Showstat Buffer, Introduction, Top
-@chapter Starting and Stopping MDS
+@node Launching MDS, Showstat Buffer, Introduction, Top
+@chapter Launching MDS
+@cindex launching mds
 @cindex starting mds
 @cindex stopping mds
 
@@ -385,7 +386,7 @@ which displays Maple output during debugging.
 @findex mds-stop
 To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Starting and Stopping MDS, Top
+@node Showstat Buffer, Output Buffer, Launching MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
@@ -897,12 +898,19 @@ Rerun the Maple code.
 You will usually have to re-instrument the procedure 
 so that the debugger stops inside it.
 
-If the patched procedure is a module local, or accesses module locals,
+If the patched procedure is local to a module, or accesses local variables/procedures of a module,
 it may be necessary to execute, in Maple,
 @code{kernelopts(opaquemodules=false)}
 to permit the patched procedure to operate properly.
 
 The patched procedure remains in effect until Maple is restarted.
+
+In addition to temporarily modifying the normal execution of a procedure,
+patching is also useful for enhancing debugging.  For example, 
+you may insert a print statement to display an internal expression.
+Inserting an explicit @code{DEBUG} command
+inside a custom conditional to initiate debugging when particular conditions 
+are met is another common use.
 
 
 @node Help,  , Patching, Showstat Mode
