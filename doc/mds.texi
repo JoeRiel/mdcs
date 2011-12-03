@@ -227,19 +227,12 @@ package, but it is dated.
 @comment  node-name,  next,  previous,  up
 @section Installation
 @cindex installation
+@cindex README
+@cindex README-installer
 
-Installation consists of unzipping the zip file,
-@file{mdcs-@value{VERSION}.zip}, into a temporary directory and then
-copying the files to the appropriate directories.  Included in the zip
-file is a bash script, @file{install}, that byte-compiles the
-files in the @file{lisp} sub-directory and then copies all files to the
-standard locations.  Modify it per your setup then execute it with
-
-@example
-$ ./install
-@end example
-
-Windows and Mac users may have to do that manually.
+Directions for installing MDS are in a text file included 
+with the distribution, named either 
+@file{README} or @file{README-installer}.
 
 @node Configuration, Customization, Installation, Introduction
 @comment  node-name,  next,  previous,  up
@@ -265,7 +258,9 @@ add the following lines, appropriately modified,
 to your @file{.emacs} file:
 
 @example
-(push "/home/joe/.emacs.d/mds" load-path)
+;; add ~/.emacs.d/maple to Emacs load-path
+(setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
+(autoload 'maplev-mode "maplev" "Maple editing mode" t)
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 @end example
 
@@ -284,6 +279,8 @@ commands to the @key{f12} and @key{CTRL}-@key{f12} keystrokes, do
 (global-set-key [f12] 'mds-windows-cycle-clients)
 (global-set-key [C-f12] 'mds-windows-cycle-groups)
 @end example
+
+
 
 
 @node Customization, Feedback, Configuration, Introduction

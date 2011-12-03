@@ -45,6 +45,8 @@ INSTALLATION
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
    the following statements
 
+;; add ~/.emacs.d/maple to Emacs load-path
+(setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
 ;; mds package
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 ;; Assign the function keys f12 and Ctrl-f12.
