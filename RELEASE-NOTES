@@ -1,5 +1,13 @@
 -*- org -*-
 
+* mdcs-1.1
+** bumped major release version to 1, and trimmed version number to two places.
+** Added HelpMDS command to display html version of mds help on Windows machines.
+** Improved doc in installer and in README-installer.
+** Added command mds-toggle-wait-until-ready, which toggles a new variable,
+   mds-wait-until-ready.  The default is t, which the previous operation.
+   Setting to nil allows entering debugger commands while Maple is responding.
+   That gives faster through-put, but prevents issuing warning when debugging has terminated.
 * mdcs-0.1.1.23
 ** Modify installer to put maplev.el in separate directory ($HOME/.emacs.d/maplev)
 ** Add instructions to README-installer

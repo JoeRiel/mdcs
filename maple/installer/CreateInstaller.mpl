@@ -16,9 +16,9 @@ local cmd
     , tboxdir
     ;
 global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
-
+    
 uses FT = FileTools, ST = StringTools;
-
+    
     #{{{ Assign MakePath
     MakePath := proc()
         StringTools:-Join([_passed], kernelopts(':-dirsep'));
@@ -86,22 +86,22 @@ uses FT = FileTools, ST = StringTools;
     end if;
     #}}}
     #{{{ Install lisp files
-
+    
     printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
     elfiles := FT:-ListDirectory(srcdir,'returnonly'="*.el");
     Install(srcdir, LispDir, elfiles);
-
+    
     #}}}
     #{{{ Byte-compile lisp files
-
+    
     platform := kernelopts(':-platform');
-
+    
     if platform = "unix" then
         printf("\nByte-compiling lisp files...\n");
-
+        
         elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
-
+        
         cmd := sprintf("%s --batch --no-site-file --no-init-file "
                        "--eval \"(push \\\"%A\\\" load-path)\" "
                        "--funcall=batch-byte-compile "
@@ -128,12 +128,12 @@ uses FT = FileTools, ST = StringTools;
     end if;
     #}}}
     #{{{ Install info files
-
+    
     printf("\nInstalling info files...\n");
     Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
     #}}}
     #{{{ Update dir node
-
+    
     if platform = "unix" then
         printf("\nUpdating info dir node...\n");
         try
@@ -150,7 +150,7 @@ uses FT = FileTools, ST = StringTools;
                     "see README-Installer.  The following error occured:\n%2"
                     , config
                     , result[2]
-                  );
+                   );
         end try;
     else
         WARNING("the dir file, used by Emacs help system to "
@@ -181,63 +181,69 @@ global InstallScript;
         FileTools:-Remove(installer);
     end if;
 
-    InstallerBuilder:-Build("mdc"
-                            , 'target' = installer
-                            , 'version' = version
-                            , 'author' = "Joe Riel"
-                            , 'manifest' = [NULL
-                                            , "mdc.mla" = "lib/mdc.mla"
-                                            , "mdc.hdb" = "lib/mdc.hdb"
+    InstallerBuilder:-Build(
+        "mdc"
+        , ':-target' = installer
+        , ':-version' = version
+        , ':-author' = "Joe Riel"
+        , ':-manifest' = [NULL
+                          , "mdc.mla" = "lib/mdc.mla"
+                          , "mdc.hdb" = "lib/mdc.hdb"
 
-                                            , seq(`=`(sprintf("lisp/%s",file)$2)
-                                                  , file = [NULL
-                                                            , "mds-client.el"
-                                                            , "mds-cp.el"
-                                                            , "mds-login.el"
-                                                            , "mds-out.el"
-                                                            , "mds-patch.el"
-                                                            , "mds-re.el"
-                                                            , "mds-ss.el"
-                                                            , "mds-wm.el"
-                                                            , "mds.el"
-                                                           ])
+                          , seq(`=`(sprintf("lisp/%s",file)$2)
+                                , file = [NULL
+                                          , "mds-client.el"
+                                          , "mds-cp.el"
+                                          , "mds-login.el"
+                                          , "mds-out.el"
+                                          , "mds-patch.el"
+                                          , "mds-re.el"
+                                          , "mds-ss.el"
+                                          , "mds-wm.el"
+                                          , "mds.el"
+                                         ])
 
-                                            , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
+                          , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
 
-                                            , "doc/README-installer" = "README-installer"
-                                            , "doc/mds" = "info/mds"
-                                            , "doc/mds.html" = "doc/mds.html"
+                          , "doc/README-installer" = "README-installer"
+                          , "doc/mds" = "info/mds"
+                          , "doc/mds.html" = "doc/mds.html"
 
-                                            , "../maplev/doc/maplev" = "info/maplev"
-                                            , "../maplev/doc/maplev.html" = "doc/maplev.html"
+                          , "../maplev/doc/maplev" = "info/maplev"
+                          , "../maplev/doc/maplev.html" = "doc/maplev.html"
 
-                                            , "maple/installer/config.mpl" = "_config.mpl"
+                          , "maple/installer/config.mpl" = "_config.mpl"
 
-                                           ]
-                            , 'welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the Maple Debugger Client/Server, version %s.\n", version)
-                                                          , "\n"
-                                                          , "This installer unpacks the Maple archive and help database to a folder under the user's HOME directory.\n"
-                                                        )
+                         ]
+        , ':-welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the Maple Debugger Client/Server, version %s.\n", version)
+                                        , "\n"
+                                        , "This installer unpacks the Maple archive and help database to a folder under the user's HOME directory.\n"
+                                      )
 
-                                          ]
-                            , 'installation' = [NULL
-                                                , 'text' = ( "Installing the Lisp and Info files.\n"
-                                                             "By default, the lisp files are installed in $HOME/.emacs.d/maple\n"
-                                                             "and the info files in $HOME/share/info.\n"
-                                                             "To change these defaults, stop the installation, rename the file _config.mpl\n"
-                                                             "to config.mpl, edit it appropriately, and restart the installation.\n"
-                                                             "See the file README-installer for details."
-                                                           )
-                                                , 'script' = eval(InstallScript)
-                                               ]
-                            , 'finish' = [NULL
-                                          , 'text' = ("To finish the installation, see the README-installer file.\n\n"
-                                                      "For help with mdc, type ?mdc in Maple." )
-                                          , 'script' = proc() help("mdc") end proc
-                                         ]
+                        ]
+        , ':-installation' = [NULL
+                              , 'text' = ( "Installing the Lisp and Info files...\n"
+                                           "\n"
+                                           "The default locations are\n"
+                                           "  lisp files --> HOME/.emacs.d/maple\n"
+                                           "  info files --> HOME/share/info\n"
+                                           "where HOME = kernelopts('homedir').\n"
+                                           "\n"
+                                           "To change these defaults, stop the installation,\n"
+                                           "rename the file _config.mpl to config.mpl,\n"
+                                           "edit it appropriately, and restart the installation.\n"
+                                           "See the file README-installer for details."
+                                         )
+                              , 'script' = eval(InstallScript)
+                             ]
+        , ':-finish' = [NULL
+                        , 'text' = ("To finish the installation, see the README-installer file.\n\n"
+                                    "For help with mdc, type ?mdc in Maple." )
+                        , 'script' = proc() help("mdc") end proc
+                       ]
 
 
-                            , 'width' = 1000
+        , ':-width' = 1000
                            );
 end proc:
 

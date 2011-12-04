@@ -43,12 +43,16 @@
 ##  pages can be read by typing *info mds* in a shell.
 ##  An html version of the mds info pages is available
 ##  in the **doc** subdirectory of the installation.
+##  On Windows machines, where installation of the info page
+##  is a bit more complicated, the html version can be
+##  opened with the command "HelpMDS".
 ##
 ##SEEALSO
 ##- "debugger"
 ##- "\MOD[\MOD]"
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
+##- "\MOD[HelpMDS]"
 ##- "Grid"
 ##ENDMPLDOC
 
@@ -336,6 +340,7 @@ export Authenticate
     ,  Sleep
     ,  mdc
     ,  Version
+    ,  HelpMDS
     ;
 
 #{{{ local declarations
@@ -369,6 +374,7 @@ $ifdef BUILD_MLA
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
+$include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
 $endif
 
