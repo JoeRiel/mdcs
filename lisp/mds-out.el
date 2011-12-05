@@ -251,14 +251,15 @@ Optional TAG identifies the message type."
 	      (let* ((live-buf (mds-client-live-buf mds-client))
 		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf))
 		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
-		(when show-args
-		  (mds-ss-show-args-assign live-buf nil)
-		  (mds-ss-eval-expr "args"))
-		(when trace-mode
-		  (if mds-out-track-input
-		      (insert (buffer-local-value 'mds-ss-statement live-buf)))
-		  (insert "\n")
-		  (mds-client-send mds-client (concat trace-mode "\n")))))
+		(if show-args
+		    (progn
+		      (mds-ss-show-args-assign live-buf nil)
+		      (mds-ss-eval-expr "args"))
+		  (when trace-mode
+		    (if mds-out-track-input
+			(insert (buffer-local-value 'mds-ss-statement live-buf)))
+		    (insert "\n")
+		    (mds-client-send mds-client (concat trace-mode "\n"))))))
 
 	     ((eq tag 'output)
 	      (insert msg))
