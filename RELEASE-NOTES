@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.2
+** fix bug displaying args while tracing
 * mdcs-1.1
 ** bumped major release version to 1, and trimmed version number to two places.
 ** Added HelpMDS command to display html version of mds help on Windows machines.
