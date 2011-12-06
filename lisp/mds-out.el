@@ -22,6 +22,7 @@
 ;; avoid compiler warnings
 
 (defvar mds-ss-state nil)
+(defvar mds-track-input-flag t)
 
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
