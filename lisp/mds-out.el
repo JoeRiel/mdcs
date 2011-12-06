@@ -22,6 +22,7 @@
 ;; avoid compiler warnings
 
 (defvar mds-ss-state nil)
+
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-send "mds")
@@ -130,11 +131,7 @@ The first group matches the statement, with some indentation.")
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-out-track-input t
-  "If non-nil, track (echo) the input line to the output after each command.")
-
 (make-variable-buffer-local 'mds-client)
-(make-variable-buffer-local 'mds-out-track-input)
 
 ;;}}}
 
@@ -235,7 +232,7 @@ Optional TAG identifies the message type."
 	     ((eq tag 'cmd)
 	      ;; Command
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
-	      (if mds-out-track-input
+	      (if mds-track-input-flag
 		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
 	     
@@ -256,7 +253,7 @@ Optional TAG identifies the message type."
 		      (mds-ss-show-args-assign live-buf nil)
 		      (mds-ss-eval-expr "args"))
 		  (when trace-mode
-		    (if mds-out-track-input
+		    (if mds-track-input-flag
 			(insert (buffer-local-value 'mds-ss-statement live-buf)))
 		    (insert "\n")
 		    (mds-client-send mds-client (concat trace-mode "\n"))))))

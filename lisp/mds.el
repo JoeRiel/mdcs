@@ -78,6 +78,12 @@ installed. Automatically assigned to nil if wmctrl is not available."
   "If non-nil, display args on entry to procedure."
   :type 'boolean
   :group 'mds)
+
+(defcustom mds-track-input-flag t
+  "If non-nil, track (echo) the input line to the output buffer
+after each command."
+  :type 'boolean
+  :group 'mds)
   
 
 ;;}}}
@@ -422,12 +428,22 @@ use them to route the message."
 
 ;;{{{ miscellaneous
 
+
 (defun mds-toggle-show-args ()
   "Toggle the variable `mds-show-args-flag', which
 controls the automatic display of arguments when entering a procedure."
   (interactive)
   (message "display args: %s"
 	   (if (setq mds-show-args-flag (not mds-show-args-flag))
+	       "enabled"
+	     "disabled")))
+
+(defun mds-toggle-track-input ()
+  "Toggle the variable `mds-track-input-flag', which
+controls the automatic echoing of input lines."
+  (interactive)
+  (message "track input: %s"
+	   (if (setq mds-track-input-flag (not mds-track-input-flag))
 	       "enabled"
 	     "disabled")))
 

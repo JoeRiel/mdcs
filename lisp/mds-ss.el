@@ -947,6 +947,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
+       ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
        ["Write output buffer"           mds-out-write-buffer t]
        )

@@ -204,7 +204,7 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 .PHONY: tags
 tags: $(call print-help,tags,Create TAGS file)
 tags:
-	bin/mtags maple/src/*
+	mtags maple/src/*
 	etags --append --language=lisp lisp/*.el
 
 # }}}

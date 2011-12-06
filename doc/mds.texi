@@ -318,8 +318,15 @@ The default is 10000.
 @item @code{mds-show-args-flag}
 A boolean variable that when non-nil causes the arguments
 to a procedure to be automatically displayed when first
-entering the procedure.  The default displayes arguments.
+entering the procedure.  The default displays arguments.
 The command @code{mds-toggle-show-args} toggles this variable.
+
+@vindex mds-track-input-flag
+@item @code{mds-track-input-flag}
+A boolean value that, when non-nil, causes the input line of
+the procedure being debugged to be echoed to the output buffer
+when the line is executed.  The default echos the line.
+The command @code{mds-toggle-track-input} toggles this variable.
 
 @vindex mds-truncate-lines
 @item @code{mds-truncate-lines}
@@ -974,8 +981,9 @@ The name is hyperlinked; clicking on it (mouse-1) displays the procedure
 in the showstat dead buffer.
 
 Debugger commands that evaluate program code are echoed in the buffer.
-If the `mds-???' variable is non-nil, the corresponding statement is printed
-after the debugger command.  This provides a visual trace of the commands executed.
+If the @code{mds-track-input-flag} variable is non-nil, 
+the corresponding statement is printed after the debugger command.  
+This provides a visual trace of the commands executed.
 
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
