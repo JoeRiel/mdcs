@@ -1,6 +1,7 @@
 *~
 /doc/*
 !/doc/*.texi
+/doc/fdl.texi
 TAGS
 
 # for now

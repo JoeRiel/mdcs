@@ -1087,7 +1087,7 @@ use @strong{into} tracing mode.
 
 @node GNU Free Documentation License,  , Command and Variable Index, Top
 @appendix GNU Free Documentation License
-@include /home/joe/etc/licenses/fdl.texi
+@include fdl.texi
 
 
 @bye
