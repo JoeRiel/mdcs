@@ -307,7 +307,7 @@ zip: $(dist)
 clean: $(call print-help,clean,Remove built files)
 clean:
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
-	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml doc/README-installer,$(wildcard doc/*))
+	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml doc/README-installer doc/fdl.texi,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
