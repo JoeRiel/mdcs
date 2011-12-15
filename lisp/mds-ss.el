@@ -213,7 +213,6 @@ call (maple) showstat to display the new procedure."
 	  mds-ss-statement statement)))
 
 ;;}}}
-
 ;;{{{ (*) mds-ss-determine-state
 
 (defun mds-ss-determine-state (statement)
@@ -267,8 +266,7 @@ Both go to the first match and do not check for additional matches."
 	    (mds-ss-get-state)))))))
 
 ;;}}}
-
-;;{{{ mds-ss-view-dead-proc
+;;{{{ (*) mds-ss-view-dead-proc
 
 (defun mds-ss-view-dead-proc (addr procname state statement)
   "View procedure with address ADDR and name PROCNAME in the dead buffer.
@@ -292,7 +290,6 @@ Otherwise, find the statement number from STATEMENT."
 	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
 
 ;;}}}
-
 ;;{{{ (*) mds-ss-display
 
 (defun mds-ss-display (buf proc)
