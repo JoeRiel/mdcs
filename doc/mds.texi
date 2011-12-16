@@ -322,6 +322,7 @@ entering the procedure.  The default displays arguments.
 The command @code{mds-toggle-show-args} toggles this variable.
 
 @vindex mds-track-input-flag
+@findex mds-toggle-track-input
 @item @code{mds-track-input-flag}
 A boolean value that, when non-nil, causes the input line of
 the procedure being debugged to be echoed to the output buffer
@@ -367,6 +368,7 @@ If nil, the window is set to half the frame size.
 If you find problems with MDS, or if you have questions,
 comments, or ideas, please mail them to Joe Riel, @email{jriel@@maplesoft.com}.
 
+@findex mds-version
 For bug reports, please provide as much information as possible,
 including the version information of Emacs (@kbd{C-h v emacs-version}),
 MDS, (@kbd{M-x mds-version}), and Maple (@code{version()}).
@@ -641,20 +643,20 @@ Use @code{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
 
 @kindex p
-@findex showstop
+@findex mds-showstop
 @item p (@code{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
 @kindex x
-@findex showexception
+@findex mds-showexception
 @item x (@code{mds-showexception})
 Showexception: display the value of @code{lastexception}.
 The output is formatted;
 to see the raw exception, use @kbd{C-u x}.
 
 @kindex X
-@findex showerror
+@findex mds-showerror
 @item X (@code{mds-showerror})
 Showerror: display the value of @code{lasterror}.
 The output is formatted;
@@ -886,11 +888,13 @@ The following steps explain how to patch a procedure.
 @enumerate
 @item
 Stop the debugger in the procedure to be patched.
+@findex mds-patch
 @item
 Execute @code{mds-patch} (@kbd{P}).
 This opens a buffer that contains a copy of the procedure.
 @item
 Edit the procedure.
+@findex mds-patch-install
 @item
 Execute @code{mds-patch-install}
 (@kbd{C-c C-p}, or use the @strong{Install} entry in the @strong{Patch} menu).
@@ -981,10 +985,13 @@ Whenever a procedure is entered, the name of it is printed in the output buffer.
 The name is hyperlinked; clicking on it (mouse-1) displays the procedure
 in the showstat dead buffer.
 
+@vindex mds-track-input-flag
+@findex mds-toggle-track-input
 Debugger commands that evaluate program code are echoed in the buffer.
 If the @code{mds-track-input-flag} variable is non-nil, 
 the corresponding statement is printed after the debugger command.  
 This provides a visual trace of the commands executed.
+Use @code{mds-toggle-track-input} to toggle the variable.
 
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
@@ -996,7 +1003,7 @@ buffer, the procedure at the appropriate statement that generated that output.
 @node  Output buffer commands,  , Output Buffer, Output Buffer
 @section Output buffer commands
 
-@findex maplev-proc-at-point
+@findex mds-out-write-buffer
 The @command{mds-out-write-buffer} command writes the output buffer
 to a specified file.  Unlike @command{write-file}, the buffer name
 does not change.
