@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.3
+** fix cursor when executing a one-line loop
+** add GNU Free Documentation License
+** small improvements to documentation
 * mdcs-1.2
 ** fix bug displaying args while tracing
 * mdcs-1.1
