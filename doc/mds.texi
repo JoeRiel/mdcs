@@ -345,7 +345,8 @@ the debugger has exited.  The default is to wait for a prompt.
 @item @code{mds-wm-side-by-side}
 A boolean value that, when non-nil, causes the @b{live-showstat}
 and @b{output} windows to appear side-by-side when displayed
-in a single client view.  That is the default.
+in a single client view.  That is the default.  When nil
+the windows appear one above the other.
 
 @vindex mds-wm-ss-fractional-size
 @item @code{mds-wm-ss-fractional-size}
@@ -914,7 +915,7 @@ The patched procedure remains in effect until Maple is restarted.
 In addition to temporarily modifying the normal execution of a procedure,
 patching is also useful for enhancing debugging.  For example, 
 you may insert a print statement to display an internal expression.
-Inserting an explicit @code{DEBUG} command
+Inserting an explicit @code{DEBUG()} statement
 inside a custom conditional to initiate debugging when particular conditions 
 are met is another common use.
 
