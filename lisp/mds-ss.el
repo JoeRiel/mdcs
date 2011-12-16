@@ -905,6 +905,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Step"		mds-step t]
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
+       "----"
        ["Quit"		mds-quit t])
 
       ("Stop points"
@@ -927,7 +928,6 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Evaluate expression"			mds-eval-and-display-expr t]
        ["Evaluate expression in global context" mds-eval-and-display-expr-global t]
        ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t] 
-       ["Edit procedure"                        mds-edit-ss-to-proc t] )
 
       ("Information"
        ["Display parameters and values" mds-show-args-as-equations t]
@@ -940,12 +940,12 @@ to work, `face-remapping-alist' must be buffer-local."
 
       ("Miscellaneous"
        ["Clear output buffer"           mds-out-clear t]
-       ["Toggle truncate lines"         mds-toggle-truncate-lines t]
-       ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
+       ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
+       ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
 
