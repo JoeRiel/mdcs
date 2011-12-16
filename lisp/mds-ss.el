@@ -906,7 +906,8 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
        "----"
-       ["Quit"		mds-quit t])
+       ["Quit"		mds-quit t]
+       )
 
       ("Stop points"
        ["Set breakpoint at point"    mds-breakpoint t]
@@ -928,6 +929,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Evaluate expression"			mds-eval-and-display-expr t]
        ["Evaluate expression in global context" mds-eval-and-display-expr-global t]
        ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t] 
+       )
 
       ("Information"
        ["Display parameters and values" mds-show-args-as-equations t]
@@ -936,7 +938,8 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Show error"			mds-showerror t]
        ["Show error raw"		(mds-showerror t) t]
        ["Show exception"		mds-showexception t]
-       ["Show exception raw"		(mds-showexception t) t] )
+       ["Show exception raw"		(mds-showexception t) t] 
+       )
 
       ("Miscellaneous"
        ["Clear output buffer"           mds-out-clear t]
@@ -952,12 +955,13 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Clients"
        ["Cycle clients"                 mds-wm-cycle-clients t]
        ["Cycle groups"                  mds-wm-cycle-groups  t]
-      )
+       )
 
       ("Help"
        ["Help Maple debugger"      mds-help-debugger t]
        ["Info for Mds mode"        mds-info t]
-       ["Version"                  mds-version])
+       ["Version"                  mds-version]
+       )
       
       )))
 
