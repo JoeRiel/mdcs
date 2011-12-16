@@ -312,7 +312,6 @@ clean:
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) -r $(LISP_DIR)
 	-$(RM) -r $(MDC_TOOLBOX_DIR)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
