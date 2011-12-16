@@ -167,8 +167,8 @@ by MDS, has the following features.
 
 @itemize @bullet
 @item
-The procedure being debugged is displayed in a window;
-font-locking is enabled to highlight syntactic elements.
+The procedure being debugged is displayed in a buffer
+with font-locking to highlight syntactic elements.
 @item
 Executing the code advances an @emph{overlay-arrow} 
 that points to the next statement to be executed.
@@ -398,7 +398,7 @@ To stop the server, use @kbd{M-x mds-stop}.
 
 Each client has two showstat buffers, named @verb{|*showstat live*|} and
 @verb{|*showstat dead*|}, that are used to display Maple procedures
-in @emph{showstat form}, that is, with the statements numbered.
+in @emph{showstat format}, that is, with the statements numbered.
 Both use @code{mds-showstat-mode}, though some commands are handled
 differently.
 
@@ -549,7 +549,7 @@ before the first statement to be executed after the closing @code{end if}.
 @kindex q
 @findex mds-quit
 @item q (@code{mds-quit})
-Quit: terminate execution immediately.
+Quit: terminate debugging.
 
 @kindex r
 @findex mds-return
