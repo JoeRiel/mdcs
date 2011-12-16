@@ -343,6 +343,9 @@ use them to route the message."
 	    (mds-ss-allow-input live-buf t)
 	    (mds-ss-show-args-assign live-buf t)))))
 
+     ((string= tag "DBG_SAME_STATE")
+	(mds-goto-current-state))
+
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.

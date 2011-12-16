@@ -677,7 +677,11 @@ $endif
     WriteTagf := proc(tag)
     uses Write = Sockets:-Write;
     local msg,len;
-        msg := sprintf(_rest);
+        if _npassed = 1 then
+            msg := "";
+        else
+            msg := sprintf(_rest);
+        end if;
         if  tag <> 'DBG_SHOW'
         and tag <> 'DBG_SHOW_INACTIVE'
         and 0 < max_length then

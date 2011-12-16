@@ -397,7 +397,7 @@ $endif
         od;
 
         #}}}
-        #{{{ Print the debug status
+        #{{{ print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
@@ -413,7 +413,9 @@ $endif
             # builtins to keep this fast.
             module_flag := evalb(SearchText("module ()", dbg_state)<>0);
             state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
-            if state <> last_state then
+            if state = last_state then
+                WriteTagf('DBG_SAME_STATE');
+            else
                 last_state := state;
                 debugger_printf('DBG_STATE', "%s", state);
             end if;
