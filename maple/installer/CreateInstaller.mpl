@@ -16,9 +16,9 @@ local cmd
     , tboxdir
     ;
 global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
-    
+
 uses FT = FileTools, ST = StringTools;
-    
+
     #{{{ Assign MakePath
     MakePath := proc()
         StringTools:-Join([_passed], kernelopts(':-dirsep'));
@@ -54,7 +54,7 @@ uses FT = FileTools, ST = StringTools;
     #}}}
     #{{{ Assign Defaults
     Emacs := "emacs";
-    MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "mdc", "lib");
+    MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "emacs", "lib");
     LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "maple");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
@@ -182,13 +182,14 @@ global InstallScript;
     end if;
 
     InstallerBuilder:-Build(
-        "mdc"
+        "emacs"
         , ':-target' = installer
         , ':-version' = version
         , ':-author' = "Joe Riel"
         , ':-manifest' = [NULL
                           , "mdc.mla" = "lib/mdc.mla"
                           , "mdc.hdb" = "lib/mdc.hdb"
+                          , "../maplev/maplev.mla" = "lib/maplev.mla"
 
                           , seq(`=`(sprintf("lisp/%s",file)$2)
                                 , file = [NULL

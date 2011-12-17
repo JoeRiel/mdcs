@@ -56,13 +56,13 @@ LISP_DIR := $(LISP_BASE)/maple
 INFO_DIR := $(HOME)/share/info
 
 # Maple toolbox directory
-MDC_TOOLBOX_DIR := $(HOME)/maple/toolbox/mdc
+MDC_TOOLBOX_DIR := $(HOME)/maple/toolbox/emacs
 
 # where html files go.
 # there is no standard place for this.
 HTML_DIR := $(MDC_TOOLBOX_DIR)/doc
 
-# where the maple archive goes
+# where the Maple archive goes
 MAPLE_LIB_DIR := $(MDC_TOOLBOX_DIR)/lib
 
 # Cypathify, as needed
@@ -312,7 +312,8 @@ clean:
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) -r $(MDC_TOOLBOX_DIR)
+	-$(RM) -r $(MAPLE_LIB_DIR)/$(hdb)
+	-$(RM) -r $(MAPLE_LIB_DIR)/$(mla)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}
