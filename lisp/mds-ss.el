@@ -29,6 +29,9 @@
 (declare-function mds-client-dead-buf "mds")
 (declare-function mds-client-send "mds")
 
+(eval-when-compile
+  (defvar mds-show-args-flag))
+
 
 ;;}}}
 
@@ -202,10 +205,13 @@ call (maple) showstat to display the new procedure."
 		       (format "<%s>\n%s" addr procname)
 		       'addr-procname)
 
-      (unless mds-ss-trace
-	;; Call Maple showstat routine to update the showstat buffer.
-	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))))
-    
+      ;; Call Maple showstat routine to update the showstat buffer.
+      (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))
+      (when (and mds-show-args-flag
+		 (string= state "1"))
+	;; (mds-ss-allow-input buf t)
+	(setq mds-ss-show-args-flag t)))
+
     ;; Update the buffer-local status
     (setq mds-ss-addr     addr
 	  mds-ss-procname procname
@@ -440,16 +446,6 @@ Otherwise raise error indicating Maple is not available."
   "Toggle the configuration variable `mds-wait-until-ready'."
   (interactive)
   (setq mds-wait-until-ready (not mds-wait-until-ready)))
-
-;;}}}
-;;{{{ mds-show-args
-
-(defun mds-ss-show-args-assign (liv-buf val)
-  (with-current-buffer liv-buf
-    (setq mds-ss-show-args-flag val)))
-
-(defun mds-ss-show-args-value (liv-buf)
-  (buffer-local-value 'mds-ss-show-args-flag liv-buf))
 
 ;;}}}
 
