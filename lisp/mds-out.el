@@ -15,7 +15,8 @@
 (eval-when-compile
   (require 'mds-re)
   (require 'mds-client)
-  (defvar mds-truncate-lines))
+  (defvar mds-truncate-lines)
+  (defvar mds-ss-show-args-flag))
 
 ;;{{{ declarations
 
@@ -260,13 +261,12 @@ Optional TAG identifies the message type."
 			(if (eq show-args t)
 			    (setq mds-ss-show-args-flag 'now)
 			  (setq mds-ss-show-args-flag nil)
-			  (mds-ss-eval-expr "args")))))
-		(when trace-mode
-		  (if mds-track-input-flag
-		      (let ((statement (buffer-local-value 'mds-ss-statement live-buf)))
-			(if statement (insert statement))))
-		  (insert "\n")
-		  (mds-client-send mds-client (concat trace-mode "\n")))))
+			  (mds-ss-eval-expr "args"))))
+		  (when trace-mode
+		    (if mds-track-input-flag
+			(insert (buffer-local-value 'mds-ss-statement live-buf)))
+		    (insert "\n")
+		    (mds-client-send mds-client (concat trace-mode "\n"))))))
 
 	     ((eq tag 'output)
 	      (insert msg))

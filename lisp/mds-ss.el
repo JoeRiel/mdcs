@@ -205,11 +205,11 @@ call (maple) showstat to display the new procedure."
 		       (format "<%s>\n%s" addr procname)
 		       'addr-procname)
 
-      ;; Call Maple showstat routine to update the showstat buffer.
-      (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr))
+      (unless mds-ss-trace
+	;; Call Maple showstat routine to update the showstat buffer.
+	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
       (when (and mds-show-args-flag
 		 (string= state "1"))
-	;; (mds-ss-allow-input buf t)
 	(setq mds-ss-show-args-flag t)))
 
     ;; Update the buffer-local status
@@ -752,13 +752,14 @@ the number of activation levels to display."
     (message "Refreshed showstat buffer")))
 
 (defun mds-goto-current-state ()
-  (interactive)
   "Move cursor to the current state in the showstat buffer."
+  (interactive)
   (pop-to-buffer (mds-client-live-buf mds-client))
   (mds-ss-update (current-buffer)
 		 mds-ss-addr
 		 mds-ss-procname
-		 mds-ss-state))
+		 mds-ss-state
+		 mds-ss-statement))
 
 
 (defun mds-goto-state (state)
