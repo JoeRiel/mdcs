@@ -93,6 +93,7 @@
 ##  The corresponding procedure can also be used;
 ##  these options may provide additional functionality.
 ##  The details section describes these options.
+##- `debug_builtins` : allows debugging built-in procedures
 ##- `stopat` : set a watchpoint on a specified procedure
 ##- `stoperror` : set a watchpoint on a specified error
 ##- `stopwarning` : set a watchpoint on a specified warning
@@ -132,6 +133,12 @@
 ##ENDSUBSECTION
 ##
 ##SUBSECTION(collapsed) Option Details
+##opt(debug_builtins,truefalse)
+##  If true then the `stopat` option can be used to debug built-in
+##  procedure.   The built-in procedure is replaced with a wrapper
+##  procedure that calls the original procedure.
+##  The default value is false.
+##
 ##opt(emacs,string)
 ##  Executable used to launch emacs.
 ##  Only used if `launch_emacs` is true.
@@ -359,6 +366,7 @@ local Connect
     # will ever be thread-safe, so this is not serious.
 
     , cnt
+    , debugbuiltins
     , Host
     , max_length
     , Port
@@ -384,8 +392,9 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { exit :: truefalse := false }
+                 { debug_builtins :: truefalse := false }
                  , { emacs :: string := GetDefault(':-emacs', "emacs") }
+                 , { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
                  , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                  , { label :: string := kernelopts('username') }
@@ -410,30 +419,37 @@ $endif
     global `debugger/width`, WARNING;
     local lbl;
 
+        #{{{ exit
         if exit then
             Debugger:-Restore();
             Disconnect();
             return NULL;
         end if;
-
+        #}}}
+        #{{{ ignoretester
         if ignoretester then
             if assigned(TESTER_SOURCEDIR) then
                 return NULL
             end if;
         end if;
+        #}}}
 
+        debugbuiltins := debug_builtins;
         view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
 
+        #{{{ max_length
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
-
+        #}}}
+        #{{{ usegrid
         if usegrid then
             lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
         else
             lbl := label;
         end if;
+        #}}}
 
         Debugger:-Replace();
 
@@ -449,22 +465,26 @@ $endif
             end try;
         end if;
 
+        #{{{ showoptions
         if showoptions :: truefalse then
             show_options_flag := showoptions;
         end if;
-
+        #}}}
+        #{{{ stopat
         if stopat :: set then
             map(Debugger:-stopat, stopat);
         elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
-
+        #}}}
+        #{{{ unstopat
         if unstopat :: set then
             map(Debugger:-unstopat, unstopat);
         elif unstopat <> "" then
             Debugger:-unstopat(unstopat);
         end if;
-
+        #}}}
+        #{{{ stoperror
         if stoperror = true then
             :-stoperror('all');
         elif stoperror :: string then
@@ -472,7 +492,8 @@ $endif
         elif stoperror :: set then
             map(:-stoperror, stoperror);
         end if;
-
+        #}}}
+        #{{{ stopwarning
         if stopwarning <> NULL then
             unprotect('WARNING');
             if stopwarning = false then
@@ -502,7 +523,8 @@ $endif
             end if;
             protect('WARNINGS');
         end if;
-
+        #}}}
+        #{{{ unstoperror
         if unstoperror = true then
             debugopts('delerror' = 'all');
         elif unstoperror :: string then
@@ -510,28 +532,33 @@ $endif
         elif unstoperror :: set then
             map(:-unstoperror, unstoperror);
         end if;
-
+        #}}}
+        #{{{ stopwhen
         if stopwhen :: '{name,list}' then
             :-stopwhen(stopwhen);
         elif stopwhen :: set then
             map(:-stopwhen, stopwhen);
         end if;
-
+        #}}}
+        #{{{ stopwhenif
         if stopwhenif :: list then
             proc(x,v) :-stopwhenif(x,v) end proc(op(stopwhenif));
         elif stopwhenif :: set(list) then
             map( l -> :-stopwhenif(op(l)), stopwhenif);
         end if;
-
+        #}}}
+        #{{{ unstopwhen
         if unstopwhen :: '{name,list}' then
             :-unstopwhen(unstopwhen);
         elif unstopwhen :: set then
             map(:-unstopwhen, unstopwhen);
         end if;
-
+        #}}}
+        #{{{ traperror
         if traperror then
             :-stoperror(':-traperror');
         end if;
+        #}}}
 
         return NULL;
 
@@ -756,7 +783,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.3";
+    Version := "1.4";
 
 #}}}
 

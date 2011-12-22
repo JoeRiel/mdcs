@@ -94,7 +94,7 @@ uses FT = FileTools, ST = StringTools;
     
     #}}}
     #{{{ Byte-compile lisp files
-    
+
     platform := kernelopts(':-platform');
     
     if platform = "unix" then
@@ -126,6 +126,7 @@ uses FT = FileTools, ST = StringTools;
                 "select the directory where the lisp files were installed."
                );
     end if;
+
     #}}}
     #{{{ Install info files
     
@@ -173,7 +174,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "1.3";
+    version := "1.4";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 

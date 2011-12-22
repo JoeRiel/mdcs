@@ -1,0 +1,4 @@
+#!/bin/bash
+
+VERSION=1.4
+maple -c "march(open,\"mdcs-installer-$VERSION.mla\")" -c done
