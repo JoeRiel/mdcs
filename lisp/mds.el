@@ -90,7 +90,7 @@ after each command."
 
 ;;{{{ Constants
 
-(defconst mds-version "1.3" "Version number of mds.")
+(defconst mds-version "1.4" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -102,13 +102,13 @@ after each command."
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-proc nil "Process for the server.")
+(defvar mds-proc nil "Process for the Maple debugger server.")
 
 (defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
 
 (defvar mds-log-messages nil
-  "When non-nil, write all messages to `mds-log-buffer'.")
+  "*When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
 
@@ -207,7 +207,6 @@ windows, and get the focus."
     ;; switch focus
     (if (functionp mds-get-focus-function)
       (funcall mds-get-focus-function))))
-
 
 ;;}}}
 ;;{{{ Filter
@@ -337,11 +336,7 @@ use them to route the message."
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
-	  (mds-ss-update live-buf addr procname state statement)
-	  (when (and mds-show-args-flag
-		     (string= state "1"))
-	    (mds-ss-allow-input live-buf t)
-	    (mds-ss-show-args-assign live-buf t)))))
+	  (mds-ss-update live-buf addr procname state statement))))
 
      ((string= tag "DBG_SAME_STATE")
 	(mds-goto-current-state))

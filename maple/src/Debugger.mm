@@ -841,16 +841,6 @@ $endif
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(Format:-stopat);
-## $define NE testnoerror
-##
-## Try[NE]("1.0", FUNC("int:-ModuleApply"));
-## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
-## Try    ("2.1", FUNC(f,1,i>3));
-## Try    ("2.2", f());
 
     stopat := proc(p :: {name,string,list}
                    , n :: posint
@@ -863,9 +853,20 @@ $endif
             return orig_stopat();
         end if;
         if p :: list then
-            return procname(op(p));
+            return procname(op(p), _options['debug_builtins']);
         end if;
         pnam := getname(p);
+        # debugbuiltins is a module local, which is a design flaw.
+        # Passing it as a keyword parameter is not possible
+        # because cond is optional yet is declared as 'uneval'.
+        if debugbuiltins and pnam :: 'builtin' then
+            unprotect(pnam);
+            proc(f)
+                f := subs(_f = eval(f), proc() _f(_passed) end proc);
+            end proc(pnam);
+            return procname(pnam, _passed[2..]);
+        end if;
+
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
         else                  debugopts('stopat'=[pnam, st, 'cond'])

@@ -1,4 +1,4 @@
-VERSION 1.3
+VERSION 1.4
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -16,6 +16,13 @@ REQUIREMENTS
 
 INSTALLATION
 ------------
+0. On a Linux system, with maple the command-line version of Maple,
+   you can do 
+
+   $ ./run-installer
+
+   and then skip to step 4.
+
 1. Launch standard Maple
 
 2. Select File -> Open, choose File Type: 
@@ -27,7 +34,7 @@ INSTALLATION
 
 5. LOCATION
    The installer unpacks the files it needs into the
-   subdirectory $HOME/maple/toolbox/mdc.
+   subdirectory $HOME/maple/toolbox/emacs.
 
 6. CUSTOMIZATION
    By default, the installer uses the following locations
@@ -35,11 +42,11 @@ INSTALLATION
      $HOME/.emacs.d/maple
    Info files:
      $HOME/share/info
-   Maple archive and hdb
-     $HOME/maple/toolbox/mdc/lib
+   Maple archives and help databases:
+     $HOME/maple/toolbox/emacs/lib
 
    To modify these defaults, stop the installation after it unpacks
-   the files, rename _config.mpl (located at $HOME/maple/toolbox/mdc)
+   the files, rename _config.mpl (located at $HOME/maple/toolbox/emacs)
    to config.mpl, and edit it appropriately for your system.
 
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add

@@ -15,7 +15,8 @@
 (eval-when-compile
   (require 'mds-re)
   (require 'mds-client)
-  (defvar mds-truncate-lines))
+  (defvar mds-truncate-lines)
+  (defvar mds-ss-show-args-flag))
 
 ;;{{{ declarations
 
@@ -29,7 +30,6 @@
 (declare-function mds-client-send "mds")
 (declare-function mds-goto-state "mds-ss")
 (declare-function mds-ss-eval-expr "mds-ss")
-(declare-function mds-ss-show-args-assign "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
 
@@ -213,6 +213,9 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;{{{ mds-out-display
 
+
+(defvar mds-delay-args nil)
+
 (defun mds-out-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
@@ -250,9 +253,15 @@ Optional TAG identifies the message type."
 		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf))
 		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
 		(if show-args
-		    (progn
-		      (mds-ss-show-args-assign live-buf nil)
-		      (mds-ss-eval-expr "args"))
+		    (with-current-buffer live-buf
+		      (if trace-mode
+			  (progn
+			    (setq mds-ss-show-args-flag nil)
+			    (mds-ss-eval-expr "args"))
+			(if (eq show-args t)
+			    (setq mds-ss-show-args-flag 'now)
+			  (setq mds-ss-show-args-flag nil)
+			  (mds-ss-eval-expr "args"))))
 		  (when trace-mode
 		    (if mds-track-input-flag
 			(insert (buffer-local-value 'mds-ss-statement live-buf)))
