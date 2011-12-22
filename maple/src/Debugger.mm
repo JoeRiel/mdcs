@@ -177,7 +177,7 @@ $endif
 #}}}
 #{{{ debugger_readline
 
-# Used for user input to the debugger. This lets us easily change the input
+# Used for user-input to the debugger. This lets us easily change the input
 # facilities to take advantage of special features of the Iris in future.
 
     debugger_readline := proc( )
