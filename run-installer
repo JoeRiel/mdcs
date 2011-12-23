@@ -1,4 +1,8 @@
 #!/bin/bash
 
 VERSION=1.4
-maple -c "march(open,\"mdcs-installer-$VERSION.mla\")" -c done
+# Modify per your setup.  If MAPLE is already defined, it uses the definition.
+MAPLE=${MAPLE:-/usr/local/share/maple/15/bin/maple}
+# The escaped backslashes are there to allow this work with the maple script.  
+MLA="\\\"mdcs-installer-$VERSION.mla\\\""
+$MAPLE -c "march(open,$MLA)" -c done
