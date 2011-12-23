@@ -98,7 +98,7 @@ M-x mds
 
 Now launch Maple, either tty or the GUI.  If libname
 is set properly, you should be able to access help for
-the Maple Debugger Client (mdc), but typing ?mdc.
+the Maple Debugger Client (mdc), by typing ?mdc.
 
 For those in hurry, just do
 
