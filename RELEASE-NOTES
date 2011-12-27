@@ -1,8 +1,57 @@
 -*- org -*-
 
+* mdcs-1.5
+** Handle leading tilde, used with coercion.
+* mdcs-1.4
+** Added debug-builtin option to mdc.
+** Added run-installer script to zip file
+** Fixed display of args when entering a procedure
+** Moved Maple toolbox to maple/toolbox/emacs (was maple/toolbox/mdc).
+* mdcs-1.3
+** fix cursor when executing a one-line loop
+** add GNU Free Documentation License
+** small improvements to documentation
+* mdcs-1.2
+** fix bug displaying args while tracing
+* mdcs-1.1
+** bumped major release version to 1, and trimmed version number to two places.
+** Added HelpMDS command to display html version of mds help on Windows machines.
+** Improved doc in installer and in README-installer.
+** Added command mds-toggle-wait-until-ready, which toggles a new variable,
+   mds-wait-until-ready.  The default is t, which the previous operation.
+   Setting to nil allows entering debugger commands while Maple is responding.
+   That gives faster through-put, but prevents issuing warning when debugging has terminated.
+* mdcs-0.1.1.23
+** Modify installer to put maplev.el in separate directory ($HOME/.emacs.d/maplev)
+** Add instructions to README-installer
+* mdcs-0.1.1.22
+** Add missing file to installer (mds-patch.el)
+** Update maplev.el so it compiles with no warnings
+** Add Byte Compilation to installation script (works on Linux)
+* mdcs-0.1.1.21
+** Create an Maple installer
+** Update help pages
+** Add 'showoptions' optional argument to mdc
+** Show args (if enabled) when reentering a procedure
+* mdcs-0.1.1.20
+** Modified _debugger to prevent stepping into a module,
+   which raises an error.  Test isn't perfect but is fast and
+   should generally work; fails with named modules (hah).
+* mdcs-0.1.1.19
+** Fix bug introduced in 1.1.18 (extra 's' at end of showstat buffer)
+* mdcs-0.1.1.18
+** Back-out addition of 'option' and 'description' to showstat buffer
+* mdcs-0.1.1.17
+** add stopwhen, stopwhenif, and unstopwhen options to mdc.
+* mdcs-0.1.1.16
+** add option and description statements to showstat procedure
+** change stopwarning so WARNING procedures appears simple
 * mdcs-0.1.1.15
 ** change menu section "Tracing" to "Execution"
 ** use mds-truncate-lines when creating output buffer
+** add stopwhen option to mdc
+** add mds-show-args-flag (and mds-toggle-show-args); default is to show args on entry to procedure.
+** add live patching capability.  This is experimental.
 * mdcs-0.1.1.14
 ** texi: change title 'Launching MDS' to 'Launching and Stopping MDS'
 ** add label to mode line in live showstat buffer

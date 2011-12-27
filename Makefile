@@ -4,7 +4,7 @@
 
 SHELL := /bin/bash
 
-VERSION := 0.1.1.15
+VERSION := 1.5
 
 include help-system.mak
 
@@ -48,29 +48,29 @@ TEXI2HTML := makeinfo --html --number-sections
 # }}}
 # {{{ Directories
 
-# where executables go
-export BIN_INSTALL_DIR := $(HOME)/bin
-
 # where lisp files go
 LISP_BASE := $(HOME)/.emacs.d
-LISP_DIR := $(LISP_BASE)/mds
-
-# where html files go.
-# there is no standard place for this.
-HTML_DIR := $(HOME)/maple/lib
+LISP_DIR := $(LISP_BASE)/maple
 
 # where info files go
 INFO_DIR := $(HOME)/share/info
 
-# where the maple archive goes
-MAPLE_INSTALL_DIR := $(HOME)/maple/lib
+# Maple toolbox directory
+MDC_TOOLBOX_DIR := $(HOME)/maple/toolbox/emacs
+
+# where html files go.
+# there is no standard place for this.
+HTML_DIR := $(MDC_TOOLBOX_DIR)/doc
+
+# where the Maple archive goes
+MAPLE_LIB_DIR := $(MDC_TOOLBOX_DIR)/lib
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
  LISP_BASE := $(shell cygpath --mixed "$(LISP_BASE)")
  LISP_DIR  := $(shell cygpath --mixed "$(LISP_DIR)")
  INFO_DIR  := $(shell cygpath --mixed "$(INFO_DIR)")
- MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
+ MAPLE_LIB_DIR := $(shell cygpath --mixed "$(MAPLE_LIB_DIR)")
 # MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
 
@@ -132,7 +132,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-re mds-ss mds-out mds-wm mds-login mds-cp mds-client mds
+ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-cp mds-client mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)
@@ -160,11 +160,14 @@ hdb: install-mla mdc.hdb
 
 mdc-new.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
+	@$(RM) maple/src/_preview_.mm
 	@mpldoc -c nightly $+
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
+	@$(RM) maple/src/_preview_.mm
+	@$(RM) maple/doti/*
 	@err=$$(mpldoc --config etc/mpldoc/doti.xml $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p' ; ) ; \
 		if [ ! -z "$$err" ]; then \
 			echo $(call warn,$$err); \
@@ -189,7 +192,7 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 %.mla: maple/src/%.mpl maple/src/*.mm
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $^ ) ; \
+	@err=$$($(MAPLE) -q -I maple -D BUILD_MLA $< ) ; \
 		if [ ! -z "$$err" ]; then \
 			echo $(call warn,$$err); \
 		fi
@@ -201,8 +204,26 @@ warn = "$(txtred)$(textbold)$1$(txtnormal)"
 .PHONY: tags
 tags: $(call print-help,tags,Create TAGS file)
 tags:
-	bin/mtags maple/src/*
+	mtags maple/src/*
 	etags --append --language=lisp lisp/*.el
+
+# }}}
+
+# {{{ installer
+
+.PHONY: installer installer-zip
+
+installer := mdcs-installer-$(VERSION).mla
+
+installer: $(call print-help,installer,Create Maple installer: $(installer))
+installer: $(installer)
+
+$(installer): doc hdb mla
+	$(MAPLE) -q maple/installer/CreateInstaller.mpl
+
+installer-zip: $(call print-help,installer-zip,Create Maple installer zip file)
+installer-zip: installer
+	zip mdcs-installer-$(VERSION).zip $(installer) README-installer run-installer
 
 # }}}
 
@@ -233,11 +254,11 @@ install-elc: $(ELC_FILES)
 	@$(CP) $+ $(LISP_DIR)
 	@$(RM) $(INSTALLED_EL_FILES)
 
-install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_INSTALL_DIR))
+install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_LIB_DIR))
 install-hdb: hdb
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple help data base $(hdb) into $(MAPLE_INSTALL_DIR)/"
-	@$(CP) $(hdb) $(MAPLE_INSTALL_DIR)
+	@$(MKDIR) $(MAPLE_LIB_DIR)
+	@echo "Installing Maple help data base $(hdb) into $(MAPLE_LIB_DIR)"
+	@$(CP) $(hdb) $(MAPLE_LIB_DIR)
 
 install-html: $(call print-help,install-html,Install html files in $(HTML_DIR) and update dir)
 install-html: $(HTML_FILES)
@@ -260,11 +281,11 @@ install-lisp: $(LISP_FILES) $(ELC_FILES)
 	@$(RM) $(INSTALLED_EL_FILES)
 	@$(CP) $+ $(LISP_DIR)
 
-install-mla: $(call print-help,install-mla,Install mla in $(MAPLE_INSTALL_DIR))
+install-mla: $(call print-help,install-mla,Install mla in $(MAPLE_LIB_DIR))
 install-mla: $(mla)
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple archive $(mla) into $(MAPLE_INSTALL_DIR)/"
-	@$(CP) $+ $(MAPLE_INSTALL_DIR)
+	@$(MKDIR) $(MAPLE_LIB_DIR)
+	@echo "Installing Maple archive $(mla) into $(MAPLE_LIB_DIR)/"
+	@$(CP) $+ $(MAPLE_LIB_DIR)
 
 # }}}
 # {{{ zip
@@ -286,13 +307,13 @@ zip: $(dist)
 clean: $(call print-help,clean,Remove built files)
 clean:
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mhelp/* maple/mhelp/* maple/mtest/*
-	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml,$(wildcard doc/*))
+	-$(RM) $(filter-out doc/mds.texi doc/MapleHelp_en.xml doc/README-installer doc/fdl.texi,$(wildcard doc/*))
 	-$(RM) $(mla) $(hdb) 
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES) 
-	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla) $(MAPLE_INSTALL_DIR)/$(hdb)
+	-$(RM) -r $(MAPLE_LIB_DIR)/$(hdb)
+	-$(RM) -r $(MAPLE_LIB_DIR)/$(mla)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}

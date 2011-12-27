@@ -36,7 +36,7 @@
   "Regexp that matches an address tag.  The first group matches the address,
 the total match includes the delimiters.")
 
-(defconst mds--simple-name-re  "[a-zA-Z_][a-zA-Z0-9_]*"
+(defconst mds--simple-name-re  "[a-zA-Z_~][a-zA-Z0-9_]*"
   "Regular expression for a simple name.")
 
 (defconst mds--quoted-name-re  "`[^`\n\\\\]*\\(?:\\\\.[^`\n\\\\]*\\)*`"
@@ -102,6 +102,10 @@ The first group identifies SOMETHING.")
   "Regexp that matches the start of a line in a showstat buffer.
 The first group contains the indentation, including a statement number and flags.
 The second group is the actual line.")
+
+(defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
+  "Regexp that matches the statement number and marks, from the left margin,
+in a showstat buffer.")
 
 
 (defun mds-activate-addr-procname (&optional button)

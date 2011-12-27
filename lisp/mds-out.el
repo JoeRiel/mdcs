@@ -15,17 +15,21 @@
 (eval-when-compile
   (require 'mds-re)
   (require 'mds-client)
-  (defvar mds-truncate-lines))
+  (defvar mds-truncate-lines)
+  (defvar mds-ss-show-args-flag))
 
 ;;{{{ declarations
 
 ;; avoid compiler warnings
 
 (defvar mds-ss-state nil)
-(declare-function mds-goto-state "mds-ss")
+(defvar mds-track-input-flag t)
+
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-send "mds")
+(declare-function mds-goto-state "mds-ss")
+(declare-function mds-ss-eval-expr "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
 
@@ -40,7 +44,7 @@
   '((((min-colors 88) (class color) (background dark))  :foreground "lawn green")
     (((min-colors 88) (class color) (background light)) :foreground "dark green")
     (((class color)) :foreground "green"))
-  "Face for stack arguments."
+  "Face for arguments of calls on stack (displayed via mds-where)."
   :group 'mds-faces)
 
 (defface mds-debugger-cmd
@@ -128,11 +132,7 @@ The first group matches the statement, with some indentation.")
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-out-track-input t
-  "If non-nil, track (echo) the input line to the output after each command.")
-
 (make-variable-buffer-local 'mds-client)
-(make-variable-buffer-local 'mds-out-track-input)
 
 ;;}}}
 
@@ -213,6 +213,9 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;{{{ mds-out-display
 
+
+(defvar mds-delay-args nil)
+
 (defun mds-out-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
@@ -233,7 +236,7 @@ Optional TAG identifies the message type."
 	     ((eq tag 'cmd)
 	      ;; Command
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
-	      (if mds-out-track-input
+	      (if mds-track-input-flag
 		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
 	     
@@ -247,12 +250,23 @@ Optional TAG identifies the message type."
 	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
 	      (let* ((live-buf (mds-client-live-buf mds-client))
-		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf)))
-		(when trace-mode
-		  (if mds-out-track-input
-		      (insert (buffer-local-value 'mds-ss-statement live-buf)))
-		  (insert "\n")
-		  (mds-client-send mds-client (concat trace-mode "\n")))))
+		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf))
+		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
+		(if show-args
+		    (with-current-buffer live-buf
+		      (if trace-mode
+			  (progn
+			    (setq mds-ss-show-args-flag nil)
+			    (mds-ss-eval-expr "args"))
+			(if (eq show-args t)
+			    (setq mds-ss-show-args-flag 'now)
+			  (setq mds-ss-show-args-flag nil)
+			  (mds-ss-eval-expr "args"))))
+		  (when trace-mode
+		    (if mds-track-input-flag
+			(insert (buffer-local-value 'mds-ss-statement live-buf)))
+		    (insert "\n")
+		    (mds-client-send mds-client (concat trace-mode "\n"))))))
 
 	     ((eq tag 'output)
 	      (insert msg))

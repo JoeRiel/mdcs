@@ -10,7 +10,6 @@ Format := module()
 export ArgsToEqs
     ,  GoTry
     ,  PrettyPrint
-    ,  PrintProc
     ,  showstat
     ,  Try
     ;

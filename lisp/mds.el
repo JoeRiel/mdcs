@@ -48,6 +48,7 @@
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
+(require 'mds-patch)
 (require 'mds-re)
 (require 'mds-ss)
 (require 'mds-wm)
@@ -73,11 +74,23 @@ installed. Automatically assigned to nil if wmctrl is not available."
   :type 'function
   :group 'mds)
 
+(defcustom mds-show-args-flag t
+  "If non-nil, display args on entry to procedure."
+  :type 'boolean
+  :group 'mds)
+
+(defcustom mds-track-input-flag t
+  "If non-nil, track (echo) the input line to the output buffer
+after each command."
+  :type 'boolean
+  :group 'mds)
+  
+
 ;;}}}
 
 ;;{{{ Constants
 
-(defconst mds-version "0.1.1.15" "Version number of mds.")
+(defconst mds-version "1.5" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -89,16 +102,15 @@ installed. Automatically assigned to nil if wmctrl is not available."
   "Buffer used to record log entries. 
 Name given by `mds-log-buffer-name'.")
 
-(defvar mds-proc nil "Process for the server.")
+(defvar mds-proc nil "Process for the Maple debugger server.")
 
 (defvar mds-ss-trace nil
   "When non-nil, trace through the debugged code.")
 
 (defvar mds-log-messages nil
-  "When non-nil, write all messages to `mds-log-buffer'.")
+  "*When non-nil, write all messages to `mds-log-buffer'.")
 
 ;;}}}
-
 
 ;;{{{ Start and stop server
 
@@ -195,7 +207,6 @@ windows, and get the focus."
     ;; switch focus
     (if (functionp mds-get-focus-function)
       (funcall mds-get-focus-function))))
-
 
 ;;}}}
 ;;{{{ Filter
@@ -327,6 +338,9 @@ use them to route the message."
 	      (statement (match-string 4 msg)))
 	  (mds-ss-update live-buf addr procname state statement))))
 
+     ((string= tag "DBG_SAME_STATE")
+	(mds-goto-current-state))
+
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
      ;; Display in showstat buffer.
@@ -409,7 +423,35 @@ use them to route the message."
     (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
-    
+
+;;{{{ miscellaneous
+
+
+(defun mds-toggle-show-args ()
+  "Toggle the variable `mds-show-args-flag', which
+controls the automatic display of arguments when entering a procedure."
+  (interactive)
+  (message "display args: %s"
+	   (if (setq mds-show-args-flag (not mds-show-args-flag))
+	       "enabled"
+	     "disabled")))
+
+(defun mds-toggle-track-input ()
+  "Toggle the variable `mds-track-input-flag', which
+controls the automatic echoing of input lines."
+  (interactive)
+  (message "track input: %s"
+	   (if (setq mds-track-input-flag (not mds-track-input-flag))
+	       "enabled"
+	     "disabled")))
+
+(defun mds-version ()
+  "Display the version of mds."
+  (interactive)
+  (message "mds version: %s" mds-version))
+
+
+;;}}}    
 
 (provide 'mds)
 

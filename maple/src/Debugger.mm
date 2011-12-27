@@ -43,6 +43,7 @@ local _debugger
     , _showstop
     , _where
     , _print
+    , last_state
     , orig_print
     , orig_stopat
     , getname
@@ -207,7 +208,11 @@ $endif
         od;
 
         #}}}
-
+        #{{{ Hande statement
+        if sscanf(res, "%s") = ["statement"] then
+            return res;
+        end if;
+        #}}}
         #{{{ Handle solo enter (repeat previous command)
 
         # If the user just pressed ENTER, use the value of the variable
@@ -251,7 +256,7 @@ $endif
                     break
                 fi
             fi
-        od;
+        end do;
 
         #}}}
         #{{{ Record whether or not the command ended in a colon.
@@ -271,9 +276,9 @@ $endif
                     debugger_printf('DBG_WARN',"Warning, extra characters at end of parsed string\n");
                     debugger_printf('DBG_WARN',"Extra stuff: %q\n", res[i]);
                     break
-                fi
-            od
-        fi;
+                end if;
+            end do;
+        end if;
 
         #}}}
         #{{{ Strip trailing whitespace.
@@ -305,8 +310,8 @@ $endif
     description
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
-    local procName, statNumber, evalLevel, i, j, n, line, original, statLevel,
-        pName, lNum, cond, cmd, err;
+    local procName, statNumber, evalLevel, i, j, n, line, original, statLevel
+        , state, pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop, `debugger/no_output`;
 
         evalLevel := kernelopts('level') - 21;
@@ -334,7 +339,9 @@ $endif
         #{{{ process args
 
         for i from 1 to n do
-            if _passed[i] = lasterror then
+            # Use addressof to prevent an object from overriding
+            # equality.
+            if addressof(_passed[i]) = addressof(lasterror) then
                 debugger_printf(MPL_ERR, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..]))
             elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
@@ -390,7 +397,7 @@ $endif
         od;
 
         #}}}
-        #{{{ Print the debug status
+        #{{{ print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
@@ -398,10 +405,20 @@ $endif
                 debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
                 statNumber := -statNumber
             end if;
-            debugger_printf('DBG_STATE', "<%d>\n%A"
-                            , addressof(procName)
-                            , debugopts('procdump'=[procName, 0..statNumber])
-                           );
+
+            local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
+            # Set module_flag true if next statement appears to
+            # evaluate a module, which causes a debugger error if one
+            # attempt to step into it.  The test is simple and uses
+            # builtins to keep this fast.
+            module_flag := evalb(SearchText("module ()", dbg_state)<>0);
+            state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
+            if state = last_state then
+                WriteTagf('DBG_SAME_STATE');
+            else
+                last_state := state;
+                debugger_printf('DBG_STATE', "%s", state);
+            end if;
         end if;
 
         #}}}
@@ -442,10 +459,10 @@ $endif
             elif cmd = "next" then
                 debugopts('steplevel'=evalLevel);
                 return
-            elif cmd = "step" then
+            elif cmd = "step" and not module_flag then
                 debugopts('steplevel'=999999999);
                 return
-            elif cmd = "into" then
+            elif cmd = "into" or cmd = "step" and module_flag then
                 debugopts('steplevel'=evalLevel+6);
                 return
             elif cmd = "outfrom" then
@@ -663,7 +680,47 @@ $endif
 #}}}
 #{{{ ShowstatAddr
 
-    ShowstatAddr := proc( addr :: integer, {dead :: truefalse := false} )
+    ShowstatAddr := proc( addr :: integer
+                          , {dead :: truefalse := false}
+                          , $
+                        )
+$ifdef DONTUSE
+    local prc, pstr;
+
+        prc := pointto(addr);
+        pstr := convert(debugopts('procdump' = prc),string);
+
+        # Alas, this does not work.  Eval'ing (or op'ing)
+        # the procedure can cause the debugger to execute.
+
+        # Eval'ing (or op'ing) prc can cause the
+        # debugger to run ahead the first time this is done
+        # in a module local procedure.
+
+        # Create option string
+        opts := op(3, op(prc));
+        if opts = NULL then
+            opts := "";
+        else
+            opts := sprintf("option %q;\n", opts);
+        end if;
+
+        # Create description string
+        desc := op(5, op(prc));
+        if desc = NULL then
+            desc := "";
+        else
+            desc := sprintf("description %a;\n", desc);
+        end if;
+
+        # Split at first statement and insert opts and desc
+        pos := StringTools:-Search("\n   1", pstr);
+        pstr := cat(pstr[..pos]
+                    , opts
+                    , desc
+                    , pstr[pos+1..]
+                   );
+$endif
         WriteTagf(`if`(dead
                        , 'DBG_SHOW_INACTIVE'
                        , 'DBG_SHOW'
@@ -784,16 +841,6 @@ $endif
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(Format:-stopat);
-## $define NE testnoerror
-##
-## Try[NE]("1.0", FUNC("int:-ModuleApply"));
-## Try[NE]("2.0", proc() for local i to 5 do i^2 od; end proc, 'assign'="f");
-## Try    ("2.1", FUNC(f,1,i>3));
-## Try    ("2.2", f());
 
     stopat := proc(p :: {name,string,list}
                    , n :: posint
@@ -806,9 +853,20 @@ $endif
             return orig_stopat();
         end if;
         if p :: list then
-            return procname(op(p));
+            return procname(op(p), _options['debug_builtins']);
         end if;
         pnam := getname(p);
+        # debugbuiltins is a module local, which is a design flaw.
+        # Passing it as a keyword parameter is not possible
+        # because cond is optional yet is declared as 'uneval'.
+        if debugbuiltins and pnam :: 'builtin' then
+            unprotect(pnam);
+            proc(f)
+                f := subs(_f = eval(f), proc() _f(_passed) end proc);
+            end proc(pnam);
+            return procname(pnam, _passed[2..]);
+        end if;
+
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
         else                  debugopts('stopat'=[pnam, st, 'cond'])
