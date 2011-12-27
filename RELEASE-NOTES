@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.5
+** Handle leading tilde, used with coercion.
 * mdcs-1.4
 ** Added debug-builtin option to mdc.
 ** Added run-installer script to zip file
