@@ -12,26 +12,27 @@
 
 ;;;
 
-(eval-when-compile
-  (require 'mds-re)
-  (require 'mds-client)
-  (defvar mds-truncate-lines)
-  (defvar mds-ss-show-args-flag))
-
 ;;{{{ declarations
 
 ;; avoid compiler warnings
 
-(defvar mds-ss-state nil)
-(defvar mds-track-input-flag t)
+(eval-when-compile
+  (require 'mds-re)
+  (require 'mds-client)
+  (defvar mds-truncate-lines)
+  (defvar mds-ss-show-args-flag)
+  (defvar mds-ss-state nil)
+  (defvar mds-track-input-flag t))
 
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-send "mds")
 (declare-function mds-goto-state "mds-ss")
+(declare-function mds-ss-allow-input "mds-ss")
 (declare-function mds-ss-eval-expr "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
+
 
 ;;}}}
 ;;{{{ faces
@@ -257,6 +258,7 @@ Optional TAG identifies the message type."
 		      (if trace-mode
 			  (progn
 			    (setq mds-ss-show-args-flag nil)
+			    (mds-ss-allow-input live-buf t)
 			    (mds-ss-eval-expr "args"))
 			(if (eq show-args t)
 			    (setq mds-ss-show-args-flag 'now)
