@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.6
+** Fix bug when tracing
+** Improve installer for Windows: byte-compile files.
+** Provide run-installer.bat for Windows
 * mdcs-1.5
 ** Handle leading tilde, used with coercion.
 * mdcs-1.4

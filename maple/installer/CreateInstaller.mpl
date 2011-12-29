@@ -7,6 +7,7 @@ local cmd
     , file
     , Install
     , is_system
+    , lispDir
     , MakePath
     , pdir
     , platform
@@ -104,12 +105,19 @@ uses FT = FileTools, ST = StringTools;
 
         elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
 
+        # Emacs requires forward-quotes
+        if platform <> "unix" then
+            lispDir := ST:-RegSubs("\\"="/", LispDir);
+        else
+            lispDir := LispDir;
+        end if;
+
         cmd := sprintf("%s --batch --no-site-file --no-init-file "
                        "--eval \"(push \\\"%A\\\" load-path)\" "
                        "--funcall=batch-byte-compile "
                        "%{}s 2>&1"
                        , Emacs
-                       , LispDir
+                       , lispDir
                        , < elfiles >
                       );
         printf("%s\n", cmd);
@@ -176,7 +184,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "1.5";
+    version := "1.6";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
