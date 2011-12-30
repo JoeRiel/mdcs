@@ -3,7 +3,6 @@ InstallScript :=  proc()
 local cmd
     , config
     , elfiles
-    , Emacs
     , file
     , Install
     , is_system
@@ -16,7 +15,7 @@ local cmd
     , srcdir
     , tboxdir
     ;
-global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
+global Emacs, LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
 
 uses FT = FileTools, ST = StringTools;
 
@@ -107,7 +106,7 @@ uses FT = FileTools, ST = StringTools;
 
         # Emacs requires forward-quotes
         if platform <> "unix" then
-            lispDir := ST:-RegSubs("\\"="/", LispDir);
+            lispDir := ST:-SubstituteAll(LispDir, "\\", "/");
         else
             lispDir := LispDir;
         end if;
@@ -135,6 +134,7 @@ uses FT = FileTools, ST = StringTools;
                 "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and "
                 "select the directory where the lisp files were installed."
                );
+        error;
     end try;
 
     #}}}
