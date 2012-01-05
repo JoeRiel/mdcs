@@ -93,7 +93,6 @@
 ##  The corresponding procedure can also be used;
 ##  these options may provide additional functionality.
 ##  The details section describes these options.
-##- `debug_builtins` : allows debugging built-in procedures
 ##- `stopat` : set a watchpoint on a specified procedure
 ##- `stoperror` : set a watchpoint on a specified error
 ##- `stopwarning` : set a watchpoint on a specified warning
@@ -121,7 +120,7 @@
 ##  this assignment in a "Maple initialization file" makes it
 ##  available for all sessions.
 ##
-##
+##- `debug_builtins` : allows debugging built-in procedures
 ##- `emacs` : executable for starting Emacs
 ##- `host` : id of debugger server
 ##- `ignoretester` : used with the Maplesoft test environment
@@ -210,7 +209,7 @@
 ##  If true, stop at any error.
 ##  If a string, stop at that error message.
 ##  If a set of strings, stop at any of those error messages.
-##  The default value is false; this option is sticky.
+##  The default value is false.
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings ("regular expressions") that stop the debugger when a matching warning
@@ -247,7 +246,7 @@
 ##  If true, stop at any trapped error.
 ##  If a string, stop at a trapped error error with that message.
 ##  If a set of strings, stop at a trapped error with any of those error messages.
-##  The default value is false; this option is sticky.
+##  The default value is false.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -368,6 +367,7 @@ local Connect
     , CreateID
     , GetDefault
     , ModuleApply
+    , ModuleLoad
     , ModuleUnload
     , Read
     , Write
@@ -377,7 +377,7 @@ local Connect
     # will ever be thread-safe, so this is not serious.
 
     , cnt
-    , debugbuiltins
+    , debugbuiltins := false
     , Host
     , max_length
     , Port
@@ -403,7 +403,7 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { debug_builtins :: truefalse := false }
+                 { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: string := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
@@ -414,11 +414,11 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
-                 , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
+                 , { stoperror :: {truefalse,string,set} := false }
                  , { stopwarning :: {string,set(string),truefalse} := NULL }
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
-                 , { traperror :: {truefalse,string,set} := GetDefault(':-traperror',false) }
+                 , { traperror :: {truefalse,string,set} := false }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: {truefalse,string,set,identical(true)} := false }
                  , { unstopwhen :: { name, list, set } := NULL }
@@ -441,19 +441,22 @@ $endif
         #{{{ ignoretester
         if ignoretester then
             if assigned(TESTER_SOURCEDIR) then
-                return NULL
+                return NULL;
             end if;
         end if;
         #}}}
 
         debugbuiltins := debug_builtins;
+
         view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
 
         #{{{ max_length
+
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
+
         #}}}
         #{{{ usegrid
         if usegrid then
@@ -595,6 +598,13 @@ $endif
 
 #}}}
 
+#{{{ ModuleLoad
+
+    ModuleLoad := proc()
+        debugbuiltins := GetDefault(':-debug_builtins', false);
+    end proc;
+
+#}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
@@ -913,7 +923,7 @@ $endif
 #}}}
 #{{{ GetDefault
 
-    GetDefault := proc( opt :: name, default, $ )
+    GetDefault := proc( opt :: name, default := NULL, $ )
         if assigned(mdc_default[opt]) then
             return mdc_default[opt];
         else
