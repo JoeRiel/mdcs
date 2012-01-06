@@ -22,7 +22,9 @@
   (defvar mds-truncate-lines)
   (defvar mds-ss-show-args-flag)
   (defvar mds-ss-state nil)
-  (defvar mds-track-input-flag t))
+  (defvar mds-track-input-flag t)
+  (defvar mds-ss-trace)
+  (defvar mds-stop-trace-at-error-flag))
 
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
@@ -32,7 +34,6 @@
 (declare-function mds-ss-eval-expr "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
-
 
 ;;}}}
 ;;{{{ faces
@@ -300,7 +301,11 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'maple-err)
 	      ;; maple error
-	      (mds-insert-and-font-lock msg 'mds-maple-error))
+	      (mds-insert-and-font-lock msg 'mds-maple-error)
+	      (if (and mds-stop-trace-at-error-flag
+		       (buffer-local-value 'mds-ss-trace (mds-client-live-buf mds-client)))
+		  (with-current-buffer (mds-client-live-buf mds-client)
+		    (setq mds-ss-trace nil))))
 	     
 	     ((eq tag 'parse-err) 
 	      ;; maple debugger parse error

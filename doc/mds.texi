@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 1.6
+@set VERSION 1.7
 @set DATE June 2011
 
 @dircategory Emacs
@@ -320,6 +320,17 @@ A boolean variable that when non-nil causes the arguments
 to a procedure to be automatically displayed when first
 entering the procedure.  The default displays arguments.
 The command @code{mds-toggle-show-args} toggles this variable.
+
+@vindex mds-stop-trace-at-error-flag
+@findex mds-toggle-stop-trace-at-error
+@item @code{mds-stop-trace-at-error-flag}
+A boolean value that, when non-nil, causes tracing
+to stop when an error occurs.  This is useful
+in that it prevents the debugger from exiting when
+an error occurs while tracing.
+The default is to stop.
+The command @code{mds-toggle-stop-trace-at-error}
+toggles this variable.
 
 @vindex mds-track-input-flag
 @findex mds-toggle-track-input
