@@ -846,19 +846,19 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
-
     local pnam,st;
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
             return orig_stopat();
         end if;
         if p :: list then
-            return procname(op(p), _options['debug_builtins']);
+            return procname(op(p));
         end if;
         pnam := getname(p);
-        # debugbuiltins is a module local, which is a design flaw.
-        # Passing it as a keyword parameter is not possible
-        # because cond is optional yet is declared as 'uneval'.
+        # debugbuiltins is a module local, which is a design flaw, but
+        # avoiding it is tricky.  Passing it as a keyword parameter is
+        # not possible because cond is optional yet is declared as
+        # 'uneval'.
         if debugbuiltins and pnam :: 'builtin' then
             unprotect(pnam);
             proc(f)
