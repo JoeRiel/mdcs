@@ -1,5 +1,16 @@
 -*- org -*-
 
+* mdcs-1.7
+** Add customizable variable mds-stop-trace-at-error-flag, which is t by default.
+** Fix bug in stopat (remanent from a previous change was removed).
+** Change mdc options traperror and stoperror to not use mdc_default table.
+** Make mdc option debug_builtins sticky and use mdc_default table.
+* mdcs-1.6
+** Fix bug when tracing
+** Improve installer for Windows: byte-compile files.
+** Provide run-installer.bat for Windows
+* mdcs-1.5
+** Handle leading tilde, used with coercion.
 * mdcs-1.4
 ** Added debug-builtin option to mdc.
 ** Added run-installer script to zip file

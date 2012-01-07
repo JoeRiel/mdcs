@@ -36,7 +36,7 @@
   "Regexp that matches an address tag.  The first group matches the address,
 the total match includes the delimiters.")
 
-(defconst mds--simple-name-re  "[a-zA-Z_][a-zA-Z0-9_]*"
+(defconst mds--simple-name-re  "[a-zA-Z_~][a-zA-Z0-9_]*"
   "Regular expression for a simple name.")
 
 (defconst mds--quoted-name-re  "`[^`\n\\\\]*\\(?:\\\\.[^`\n\\\\]*\\)*`"

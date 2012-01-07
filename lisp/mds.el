@@ -84,13 +84,18 @@ installed. Automatically assigned to nil if wmctrl is not available."
 after each command."
   :type 'boolean
   :group 'mds)
+
+(defcustom mds-stop-trace-at-error-flag t
+  "If non-nil, stop tracing when an error occurs."
+  :type 'boolean
+  :group 'mds)
   
 
 ;;}}}
 
 ;;{{{ Constants
 
-(defconst mds-version "1.4" "Version number of mds.")
+(defconst mds-version "1.7" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -442,6 +447,15 @@ controls the automatic echoing of input lines."
   (interactive)
   (message "track input: %s"
 	   (if (setq mds-track-input-flag (not mds-track-input-flag))
+	       "enabled"
+	     "disabled")))
+
+
+(defun mds-toggle-stop-trace-at-error ()
+  "Toggle the variable `mds-stop-trace-at-error-flag'."
+  (interactive)
+  (message "stop tracing at error: %s"
+	   (if (setq mds-track-input-flag (not mds-stop-trace-at-error-flag))
 	       "enabled"
 	     "disabled")))
 

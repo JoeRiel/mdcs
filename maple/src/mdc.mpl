@@ -93,13 +93,12 @@
 ##  The corresponding procedure can also be used;
 ##  these options may provide additional functionality.
 ##  The details section describes these options.
-##- `debug_builtins` : allows debugging built-in procedures
 ##- `stopat` : set a watchpoint on a specified procedure
 ##- `stoperror` : set a watchpoint on a specified error
 ##- `stopwarning` : set a watchpoint on a specified warning
 ##- `stopwhen` : set a watchpoint on a specified variable
 ##- `stopwhenif` : set a conditional watchpoint on a specified variable
-##- `traperror` : stop at all trapped errors
+##- `traperror` : stop at a trapped error
 ##- `unstopat` : clear a procedure watchpoint
 ##- `unstoperror` : clear an error watchpoint
 ##- `unstopwhen` : clear a conditional watchpoint
@@ -121,7 +120,7 @@
 ##  this assignment in a "Maple initialization file" makes it
 ##  available for all sessions.
 ##
-##
+##- `debug_builtins` : allows debugging built-in procedures
 ##- `emacs` : executable for starting Emacs
 ##- `host` : id of debugger server
 ##- `ignoretester` : used with the Maplesoft test environment
@@ -210,7 +209,7 @@
 ##  If true, stop at any error.
 ##  If a string, stop at that error message.
 ##  If a set of strings, stop at any of those error messages.
-##  The default value is false; this option is sticky.
+##  The default value is false.
 ##
 ##opt(stopwarning, string\comma set of strings\comma or truefalse)
 ##  Assign strings ("regular expressions") that stop the debugger when a matching warning
@@ -242,9 +241,12 @@
 ##  This is equivalent to calling the "stopwhenif" command.
 ##  To clear, see the `unstopwhen` option, below.
 ##
-##opt(traperror,truefalse)
-##  If true, stop at trapped errors.
-##  The default value is false; this option is sticky.
+##opt(traperror,truefalse\comma string\comman or set of string)
+##  If false, ignore.
+##  If true, stop at any trapped error.
+##  If a string, stop at a trapped error error with that message.
+##  If a set of strings, stop at a trapped error with any of those error messages.
+##  The default value is false.
 ##
 ##opt(unstopat, name\comma string\comma list\comma or set of same)
 ##  Specifies procedures from which to remove instrumentation.
@@ -264,6 +266,14 @@
 ##  Clears one or more `stopwhen` or `stopwhenif` triggers.
 ##  This is equivalent to calling the "unstopwhen" command.
 ##  See the `stopwhen` and `stopwhenif` options, above.
+##
+##opt(unstoperror,truefalse\comma string\comma or set of strings)
+##  Clear stops set by the "traperror" option.
+##  If false, ignore.
+##  If true, clear all trapped errors.
+##  If a string, clear that error message.
+##  If a set of strings, clear those error messages.
+##  The default value is false.
 ##
 ##opt(usegrid,truefalse)
 ##  If true, append the "Grid" node-number to the label.
@@ -357,6 +367,7 @@ local Connect
     , CreateID
     , GetDefault
     , ModuleApply
+    , ModuleLoad
     , ModuleUnload
     , Read
     , Write
@@ -366,7 +377,7 @@ local Connect
     # will ever be thread-safe, so this is not serious.
 
     , cnt
-    , debugbuiltins
+    , debugbuiltins := false
     , Host
     , max_length
     , Port
@@ -392,7 +403,7 @@ $endif
 #{{{ mdc
 
     mdc := proc( (* no positional parameters *)
-                 { debug_builtins :: truefalse := false }
+                 { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: string := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
@@ -403,21 +414,22 @@ $endif
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
-                 , { stoperror :: {truefalse,string,set} := GetDefault(':-stoperror',false) }
+                 , { stoperror :: {truefalse,string,set} := false }
                  , { stopwarning :: {string,set(string),truefalse} := NULL }
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
-                 , { traperror :: truefalse := GetDefault(':-traperror',false) }
+                 , { traperror :: {truefalse,string,set} := false }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: {truefalse,string,set,identical(true)} := false }
                  , { unstopwhen :: { name, list, set } := NULL }
+                 , { untraperror :: {truefalse,string,set,identical(true)} := false }
                  , { usegrid :: truefalse := false }
                  , { view :: truefalse := GetDefault(':-view',false) }
                  , $
                )
 
     global `debugger/width`, WARNING;
-    local lbl;
+    local lbl,str;
 
         #{{{ exit
         if exit then
@@ -429,19 +441,22 @@ $endif
         #{{{ ignoretester
         if ignoretester then
             if assigned(TESTER_SOURCEDIR) then
-                return NULL
+                return NULL;
             end if;
         end if;
         #}}}
 
         debugbuiltins := debug_builtins;
+
         view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
 
         #{{{ max_length
+
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
+
         #}}}
         #{{{ usegrid
         if usegrid then
@@ -533,6 +548,17 @@ $endif
             map(:-unstoperror, unstoperror);
         end if;
         #}}}
+        #{{{ unstoperror
+        if untraperror = true then
+            :-unstoperror(':-traperror');
+        elif untraperror :: string then
+            :-unstoperror(':-traperror'[untraperror]);
+        elif untraperror :: set then
+            for str in untraperror do
+                :-unstoperror(':-traperror'[str]);
+            end do;
+        end if;
+        #}}}
         #{{{ stopwhen
         if stopwhen :: '{name,list}' then
             :-stopwhen(stopwhen);
@@ -555,8 +581,14 @@ $endif
         end if;
         #}}}
         #{{{ traperror
-        if traperror then
+        if traperror = true then
             :-stoperror(':-traperror');
+        elif traperror :: string then
+            :-stoperror(':-traperror'[traperror] );
+        elif traperror :: set then
+            for str in traperror do
+                :-stoperror(':-traperror'[str]);
+            end do;
         end if;
         #}}}
 
@@ -566,6 +598,13 @@ $endif
 
 #}}}
 
+#{{{ ModuleLoad
+
+    ModuleLoad := proc()
+        debugbuiltins := GetDefault(':-debug_builtins', false);
+    end proc;
+
+#}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
@@ -783,7 +822,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.4";
+    Version := "1.7";
 
 #}}}
 
@@ -884,7 +923,7 @@ $endif
 #}}}
 #{{{ GetDefault
 
-    GetDefault := proc( opt :: name, default, $ )
+    GetDefault := proc( opt :: name, default := NULL, $ )
         if assigned(mdc_default[opt]) then
             return mdc_default[opt];
         else

@@ -3,10 +3,10 @@ InstallScript :=  proc()
 local cmd
     , config
     , elfiles
-    , Emacs
     , file
     , Install
     , is_system
+    , lispDir
     , MakePath
     , pdir
     , platform
@@ -15,7 +15,7 @@ local cmd
     , srcdir
     , tboxdir
     ;
-global LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
+global Emacs, LispDir, InfoDir, DirFile, MapleLib, UpdateDir;
 
 uses FT = FileTools, ST = StringTools;
 
@@ -53,6 +53,7 @@ uses FT = FileTools, ST = StringTools;
     end proc;
     #}}}
     #{{{ Assign Defaults
+
     Emacs := "emacs";
     MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "emacs", "lib");
     LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "maple");
@@ -66,6 +67,7 @@ uses FT = FileTools, ST = StringTools;
                       );
         ssystem(cmd);
     end proc;
+
     #}}}
     #{{{ Read configuration file
     config := MakePath(tboxdir, "config.mpl");
@@ -86,28 +88,35 @@ uses FT = FileTools, ST = StringTools;
     end if;
     #}}}
     #{{{ Install lisp files
-    
+
     printf("\nInstalling lisp files...\n");
     srcdir := MakePath(tboxdir, "lisp");
     elfiles := FT:-ListDirectory(srcdir,'returnonly'="*.el");
     Install(srcdir, LispDir, elfiles);
-    
+
     #}}}
     #{{{ Byte-compile lisp files
 
     platform := kernelopts(':-platform');
-    
-    if platform = "unix" then
+
+    try
         printf("\nByte-compiling lisp files...\n");
-        
+
         elfiles := map[3](cat, LispDir, kernelopts('dirsep'), elfiles);
-        
+
+        # Emacs requires forward-quotes
+        if platform <> "unix" then
+            lispDir := ST:-SubstituteAll(LispDir, "\\", "/");
+        else
+            lispDir := LispDir;
+        end if;
+
         cmd := sprintf("%s --batch --no-site-file --no-init-file "
                        "--eval \"(push \\\"%A\\\" load-path)\" "
                        "--funcall=batch-byte-compile "
                        "%{}s 2>&1"
                        , Emacs
-                       , LispDir
+                       , lispDir
                        , < elfiles >
                       );
         printf("%s\n", cmd);
@@ -117,7 +126,7 @@ uses FT = FileTools, ST = StringTools;
                     , result[2]
                    );
         end if;
-    else
+    catch:
         WARNING("the lisp files were not automatically byte-compiled. "
                 "Byte-compiling is not a requirement, but will "
                 "allow the code to run faster.  You can manually byte-compile the "
@@ -125,7 +134,8 @@ uses FT = FileTools, ST = StringTools;
                 "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and "
                 "select the directory where the lisp files were installed."
                );
-    end if;
+        error;
+    end try;
 
     #}}}
     #{{{ Install info files
@@ -174,7 +184,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "1.4";
+    version := "1.7";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 

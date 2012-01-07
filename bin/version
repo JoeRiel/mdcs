@@ -104,6 +104,11 @@ file="run-installer"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/VERSION=/$sed_cmd" "$file"
 
+# Update run-installer.bat
+file="run-installer.bat"
+[ -z "$version" ] && echo -ne "$file:\t"
+sed $sed_opt "/VERSION=/$sed_cmd" "$file"
+
 
 #}}}
 
