@@ -494,7 +494,7 @@ Otherwise delete the dead showstat window."
   (mds-ss-eval-proc-statement "step" 'save))
 
 (defun mds-cycle-trace ()
-  "Cycle through the five tracing states: 'nil', 'cont', 'next', 'into', and 'step'.
+  "Cycle through the five tracing states: 'nil', 'cont', 'next', 'into', 'level', and 'step'.
 If nil is selected, tracing does not occur.  Otherwise, when the debugger returns
 control to the server, the selected debugging command is immediately executed.
 
@@ -507,7 +507,8 @@ output buffer are then active."
 	 ((null mds-ss-trace)           "cont")
 	 ((string= mds-ss-trace "cont") "next")
 	 ((string= mds-ss-trace "next") "into")
-	 ((string= mds-ss-trace "into") "step")
+	 ((string= mds-ss-trace "into") "level")
+	 ((string= mds-ss-trace "level") "step")
 	 ((string= mds-ss-trace "step") nil)))
   (message (concat "tracing " (or mds-ss-trace "disabled"))))
 
@@ -732,14 +733,6 @@ the number of activation levels to display."
 
 
 ;;}}}
-;;{{{ (*) View
-
-(defun mds-view ()
-  (interactive)
-  (ding)
-  (message "viewing currently not supported"))
-
-;;}}}
 
 ;;{{{ (*) Miscellaneous
 
@@ -835,7 +828,6 @@ the `mds-ss-buffer'."
 	   ("t" . mds-cycle-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
-	   ("v" . mds-view)
 	   ("w" . mds-stopwhen-local)
 	   ("W" . mds-stopwhen-global)
 	   ("x" . mds-showexception)

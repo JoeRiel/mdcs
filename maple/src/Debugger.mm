@@ -471,6 +471,9 @@ $endif
             elif cmd = "return" then
                 debugopts('steplevel'=evalLevel-statLevel*5);
                 return
+            elif cmd = "level" then
+                debugopts('steplevel' = Level);
+                return
             elif cmd = "quit" or cmd = "done" or cmd = "stop" then
                 # debugger_printf('DBG_STOP',"stopping\n");
                 # ssystem("sleep 1"); FIXME: may need to delay here.

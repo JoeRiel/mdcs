@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.8
+** Added 'level' to mdc and made it a tracing mode.
 * mdcs-1.7
 ** Add customizable variable mds-stop-trace-at-error-flag, which is t by default.
 ** Fix bug in stopat (remanent from a previous change was removed).

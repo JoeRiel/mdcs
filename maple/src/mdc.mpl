@@ -125,6 +125,7 @@
 ##- `host` : id of debugger server
 ##- `ignoretester` : used with the Maplesoft test environment
 ##- `launch_emacs` : enables auto-launch of Emacs
+##- `level` : sets level for tracing
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
@@ -173,6 +174,11 @@
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
 ##  The default value is false; this option is sticky.
+##
+##opt(level,posint)
+##  Sets the level used when tracing with the *level* mode.
+##  A higher values causes more procedures to be traced.
+##  The default is 75; this option is sticky.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
@@ -379,6 +385,7 @@ local Connect
     , cnt
     , debugbuiltins := false
     , Host
+    , Level
     , max_length
     , Port
     , sid := -1
@@ -410,6 +417,7 @@ $endif
                  , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                  , { label :: string := kernelopts('username') }
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
+                 , { level :: posint := GetDefault(':-level',75) }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
@@ -450,6 +458,8 @@ $endif
 
         view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
+
+        Level := level;
 
         #{{{ max_length
 
@@ -822,7 +832,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.7";
+    Version := "1.8";
 
 #}}}
 

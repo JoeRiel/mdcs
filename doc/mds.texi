@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 1.7
+@set VERSION 1.8
 @set DATE June 2011
 
 @dircategory Emacs
@@ -584,10 +584,10 @@ nesting level, in the body of a control structure (for example,
 @vindex mds-stop-trace-at-error-flag
 @item t (@code{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
-@strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
+@strong{cont}, @strong{next}, @strong{into}, @strong{level}, or @strong{step}, 
 determines where the debugger temporarily halts and what output 
 is displayed in the output buffer. The selected mode is equivalent 
-to continually executing the corresponding debugging command.  
+to continually executing the corresponding debugging command.
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
@@ -598,6 +598,10 @@ is selected.  If Maple has exited, reissuing the original Maple
 command causes the debugger to recommence, at which time the
 hyperlinks in the output buffer become operational and permit quickly
 moving to places of interest.
+
+The @strong{level} mode has no equivalent in the standard Maple debugger.
+It uses the setting established by the value of the @code{level} option
+passed to @code{mdc}; see the Maple help page for @code{mdc}.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
