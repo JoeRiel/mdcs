@@ -581,6 +581,7 @@ nesting level, in the body of a control structure (for example,
 
 @kindex t
 @findex mds-trace
+@vindex mds-stop-trace-at-error-flag
 @item t (@code{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
 @strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
@@ -590,11 +591,13 @@ to continually executing the corresponding debugging command.
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
-until the client exits.  At that point, the tracing mode should be
-manually disabled by selecting the @strong{disabled} mode.  Reissuing
-the original Maple command (in Maple) causes the debugger to
-recommence, at which time the hyperlinks in the output buffer become
-operational and permit quickly moving to places of interest.
+until the client exits or, if @code{mds-stop-trace-at-error-flag} is
+non-nil, an error is trapped.  At that point, the tracing mode may be
+manually disabled by pressing @kbd{t} until the @strong{disabled} mode
+is selected.  If Maple has exited, reissuing the original Maple
+command causes the debugger to recommence, at which time the
+hyperlinks in the output buffer become operational and permit quickly
+moving to places of interest.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
