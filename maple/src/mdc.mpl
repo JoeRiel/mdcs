@@ -177,8 +177,8 @@
 ##
 ##opt(level,posint)
 ##  Sets the level used when tracing with the *level* mode.
-##  A higher values causes more procedures to be traced.
-##  The default is 75; this option is sticky.
+##  Analogous to "printlevel", but the scale differs.
+##  The default value is 75; this option is sticky.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.

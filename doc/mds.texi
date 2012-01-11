@@ -646,13 +646,13 @@ procedure is not shown.  Each name is an active link.  Clicking on a link
 @kindex K
 @findex mds-where
 @item K (@code{mds-where})
-Where: display the stack. 
-The top-most level is shown first.
+Where: display the calling stack. 
+The latest entry is shown last.
 For each entry in the stack,
 the name of the calling procedure and the current statement within it are shown,
 followed on the next line by the list of arguments passed to corresponding procedure.
 An optional prefix argument can be passed; it specifies the number of levels to display.
-For example @kbd{C-u 2 K} displays the lowest two levels.
+For example @kbd{C-u 2 K} displays the topmost (most recent) two entries.
 
 The procedure names are active links.  Clicking on a link opens the
 procedure in the @strong{showstat dead} buffer, at the calling line.  
