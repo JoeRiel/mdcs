@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.9
+** Added 'skip_until' option to mdc.
 * mdcs-1.8
 ** Added 'level' to mdc and made it a tracing mode.
 * mdcs-1.7

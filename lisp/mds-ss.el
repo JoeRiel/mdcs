@@ -488,6 +488,11 @@ Otherwise delete the dead showstat window."
   (interactive)
   (mds-ss-eval-proc-statement "return" 'save))
 
+(defun mds-skip ()
+  "Resume skipping."
+  (interactive)
+  (mds-ss-eval-proc-statement "_skip"))
+
 (defun mds-step ()
   "Send the 'step' command to the debugger."
   (interactive)
@@ -825,6 +830,7 @@ the `mds-ss-buffer'."
 	   ("r" . mds-return)
 	   ("R" . mds-stoperror)
 	   ("s" . mds-step)
+	   ("S" . mds-skip)
 	   ("t" . mds-cycle-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
@@ -891,6 +897,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Next"		mds-next t]
        ["Into"		mds-into t]
        ["Outfrom"	mds-outfrom t]
+       ["Skip"          mds-skip t]
        ["Step"		mds-step t]
        ["Return"	mds-return t]
        ["Trace"         mds-cycle-trace t]
@@ -970,6 +977,7 @@ Execution
 \\[mds-into] (into) execute next statement at any level in current procedure
 \\[mds-outfrom] (outfrom) execute current statement sequence or until stop point
 \\[mds-step] (step) execute next statement at any level
+\\[mds-skip] resume skipping
 \\[mds-return] (return) continue executing until current procedure returns
 \\[mds-cycle-trace] cycle through trace modes
 \\[mds-quit] (quit) terminate debugging, return to mds buffer

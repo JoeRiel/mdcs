@@ -201,6 +201,18 @@
 ##  The second time the debugger enters the procedure, it should work properly.
 ##  The initial default is false; this option is sticky.
 ##
+##opt(skip_until,anything)
+##  Specifies a predicate that can be used to skip
+##  all code until a condition is met.  If `skip_until` is
+##  a procedure, it is used as the predicate.
+##  A list that contains the result of each executed statement
+##  is passed to the predicate, which must return true or false.
+##  When true is returned, debugging recommences.
+##
+##  If `skip_until` is not a procedure, the following predicate is used:
+##  ~proc(L) has(L,skip_until) end proc~.
+##  See the examples section.
+##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
@@ -331,6 +343,13 @@
 ##>(noexecute) int(1/x, x=a..1);
 ##- Clear the stop-on-warning.
 ##> mdc(stopwarning=false);
+##
+##- Use the `skip_until` option to stop the debugger during an
+##  integration of _x^2_ at the place where _x^3_ first appears.
+##
+##> mdc(stopat=int, skip_until=x^3);
+##> int(x^2, x);
+##
 ##XREFMAP
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
@@ -386,11 +405,13 @@ local Connect
     , debugbuiltins := false
     , Host
     , Level
+    , match_predicate := () -> true
     , max_length
     , Port
     , sid := -1
     , view_flag
     , show_options_flag
+    , skip := false
     , Warnings
     ;
 
@@ -426,6 +447,7 @@ $endif
                  , { stopwarning :: {string,set(string),truefalse} := NULL }
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
+                 , { skip_until := NULL }
                  , { traperror :: {truefalse,string,set} := false }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
                  , { unstoperror :: {truefalse,string,set,identical(true)} := false }
@@ -475,9 +497,11 @@ $endif
             lbl := label;
         end if;
         #}}}
+        #{{{ replace debugger
 
         Debugger:-Replace();
-
+        #}}}
+        #{{{ connect to server
         if sid = -1 then
             try
                 Connect(host, port, CreateID(lbl)
@@ -489,7 +513,7 @@ $endif
                 error;
             end try;
         end if;
-
+        #}}}
         #{{{ showoptions
         if showoptions :: truefalse then
             show_options_flag := showoptions;
@@ -600,6 +624,19 @@ $endif
                 :-stoperror(':-traperror'[str]);
             end do;
         end if;
+        #}}}
+
+        #{{{ skip_until
+
+        if skip_until <> NULL then
+            if skip_until :: procedure then
+                match_predicate := skip_until;
+            else
+                match_predicate := proc(L) has(L,skip_until) end proc;
+            end if;
+            skip := true;
+        end if;
+
         #}}}
 
         return NULL;
@@ -832,7 +869,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.8";
+    Version := "1.9";
 
 #}}}
 

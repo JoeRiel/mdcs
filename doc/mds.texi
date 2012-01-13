@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 1.8
+@set VERSION 1.9
 @set DATE June 2011
 
 @dircategory Emacs
@@ -578,6 +578,12 @@ Step: execute the next statement at any level.  Execution stops before
 the following statement, regardless of whether it is at the current
 nesting level, in the body of a control structure (for example,
 @code{if}), or in a called function.
+
+@kindex S
+@findex mds-skip
+@item S (@code{mds-skip})
+Skip forward until the predicate assigned by the @code{skip_until}
+option to @code{mdc} is true.
 
 @kindex t
 @findex mds-trace

@@ -161,6 +161,7 @@ $endif
     debugger_printf := proc( tag :: name )
     local argList, rts;
     description `Used by debugger to produce output.`;
+
         argList := [_rest];
 
         # suppress large rtables
@@ -317,7 +318,9 @@ $endif
         evalLevel := kernelopts('level') - 21;
 
         n := _npassed;
-        if n > 0 and type(_passed[n],list) and nops(_passed[n]) > 0
+        if n > 0
+        and type(_passed[n],list)
+        and nops(_passed[n]) > 0
         and _passed[n][1] = 'DEBUGINFO' then
             procName := _passed[n][2];
             statNumber := _passed[n][3];
@@ -338,71 +341,79 @@ $endif
         #}}}
         #{{{ process args
 
-        for i from 1 to n do
-            # Use addressof to prevent an object from overriding
-            # equality.
-            if addressof(_passed[i]) = addressof(lasterror) then
-                debugger_printf(MPL_ERR, "Error, %s\n"
-                                , StringTools:-FormatMessage(lastexception[2..]))
-            elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
-                if _passed[i][1] = 'DEBUGSTACK' then
-                    j := nops(_passed[i]) - 2;
-                    while j > 2 do
-                        if _passed[i][j+1] = `` then
-                            debugger_printf('DBG_STACK'
-                                            , "<%d>\n%a\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
-                                           );
-                        else
-                            debugger_printf('DBG_WHERE'
-                                            , "<%d>\n%a: %s\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
-                                            , _passed[i][j+1]
-                                           );
-                            if `debugger/no_output` <> true then
-                                debugger_printf('DBG_ARGS',"\t%a\n",_passed[i][j-1])
-                            fi
+        if skip then
+            skip := not match_predicate([_passed,`debugger/no_output`]);
+        else
+            for i from 1 to n do
+                # Use addressof to prevent an object from overriding
+                # equality.
+                if addressof(_passed[i]) = addressof(lasterror) then
+                    debugger_printf(MPL_ERR, "Error, %s\n"
+                                    , StringTools:-FormatMessage(lastexception[2..]))
+                elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
+                    if _passed[i][1] = 'DEBUGSTACK' then
+                        j := nops(_passed[i]) - 2;
+                        while j > 2 do
+                            if _passed[i][j+1] = `` then
+                                debugger_printf('DBG_STACK'
+                                                , "<%d>\n%a\n"
+                                                , addressof(_passed[i][j])
+                                                , _passed[i][j]
+                                               );
+                            else
+                                debugger_printf('DBG_WHERE'
+                                                , "<%d>\n%a: %s\n"
+                                                , addressof(_passed[i][j])
+                                                , _passed[i][j]
+                                                , _passed[i][j+1]
+                                               );
+                                if `debugger/no_output` <> true then
+                                    debugger_printf('DBG_ARGS',"\t%a\n",_passed[i][j-1])
+                                fi
+                            fi;
+                            j := j - 3
+                        od
+                    elif _passed[i][1] = 'DEBUGERROR' then
+                        debugger_printf('DBG_ERR', "Error, %Q\n",op(_passed[i][2..-1]))
+                    elif _passed[i][1] = 'DEBUGWATCH' then
+                        if assigned(`debugger/watch_condition`[_passed[i][2]])
+                        and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
+                        then
+                            return
                         fi;
-                        j := j - 3
-                    od
-                elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf('DBG_ERR', "Error, %Q\n",op(_passed[i][2..-1]))
-                elif _passed[i][1] = 'DEBUGWATCH' then
-                    if assigned(`debugger/watch_condition`[_passed[i][2]])
-                    and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
-                    then
-                        return
-                    fi;
-                    debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                        debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    elif `debugger/no_output` <> true then
+                        if i < n then
+                            # list/set that is part of a continued sequence
+                            debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
+                        else
+                            # list/set
+                            debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
+                        fi
+                    fi
                 elif `debugger/no_output` <> true then
                     if i < n then
-                        # list/set that is part of a continued sequence
-                        debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
+                        # expr that is part of a continued sequence
+                        debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
                     else
-                        # list/set
-                        debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
+                        # expr
+                        debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
                     fi
                 fi
-            elif `debugger/no_output` <> true then
-                if i < n then
-                    # expr that is part of a continued sequence
-                    debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
-                else
-                    # expr
-                    debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
-                fi
-            fi
-        od;
+            od;
+
+        end if;
 
         #}}}
+
         #{{{ print the debug status
 
         if procName <> 0 then
             if statNumber < 0 then
-                # handle negative statement number (indicates multiple targets)
-                debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
+                if not skip then
+                    # handle negative statement number (indicates multiple targets)
+                    debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
+                end if;
                 statNumber := -statNumber
             end if;
 
@@ -413,15 +424,27 @@ $endif
             # builtins to keep this fast.
             module_flag := evalb(SearchText("module ()", dbg_state)<>0);
             state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
-            if state = last_state then
-                WriteTagf('DBG_SAME_STATE');
-            else
-                last_state := state;
-                debugger_printf('DBG_STATE', "%s", state);
+            if not skip then
+                if state = last_state then
+                    WriteTagf('DBG_SAME_STATE');
+                else
+                    last_state := state;
+                    debugger_printf('DBG_STATE', "%s", state);
+                end if;
             end if;
         end if;
 
         #}}}
+
+        if skip then
+            if not module_flag then
+                debugopts('steplevel'=999999999);
+            else
+                debugopts('steplevel'=evalLevel+6);
+            end if;
+            return;
+        end if;
+
         #{{{ command loop
 
         do
@@ -601,6 +624,9 @@ $endif
                 return ['debugopts'('lastexception')]
             elif cmd = "setenv" then
                 return 'debugopts'('setenv'=[line[2],line[3]])
+            elif cmd = "_skip" then
+                skip := true;
+                return line;
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[searchtext("statement",original)+9..-1];
@@ -734,8 +760,6 @@ $endif
                  );
         NULL;
     end proc;
-
-
 
 #}}}
 #{{{ showstop
