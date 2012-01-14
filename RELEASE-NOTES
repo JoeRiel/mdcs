@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.9.1
+** Added SkipUntil export.  
+   Expression that terminated the skipping is now returned.
+   Skipping does not start automatically.
 * mdcs-1.9
 ** Added 'skip_until' option to mdc.
 * mdcs-1.8
