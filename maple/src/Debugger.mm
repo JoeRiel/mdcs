@@ -24,6 +24,8 @@ $define LOGFILE "readline.log"
 
 Debugger := module()
 
+#{{{ declarations
+
 export Printf
     ,  Replace
     ,  Restore
@@ -54,6 +56,8 @@ $endif
     , parse_debugger
     , ModuleLoad
     ;
+
+#}}}
 
 #{{{ ModuleLoad
 
@@ -343,7 +347,8 @@ $endif
 
         if skip then
             skip := not match_predicate([_passed,`debugger/no_output`]);
-        else
+        end if;
+        if not skip then
             for i from 1 to n do
                 # Use addressof to prevent an object from overriding
                 # equality.
@@ -436,15 +441,17 @@ $endif
 
         #}}}
 
+        #{{{ handle skip
+        # skip is true if 'skip_until' is in effect.
         if skip then
             if not module_flag then
                 debugopts('steplevel'=999999999);
             else
                 debugopts('steplevel'=evalLevel+6);
             end if;
-            return;
+            return NULL;
         end if;
-
+        #}}}
         #{{{ command loop
 
         do

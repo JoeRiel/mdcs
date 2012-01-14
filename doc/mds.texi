@@ -1067,39 +1067,21 @@ The debugger will halt in the procedure of interest.
 @section Locate source of unexpected result
 
 A computation gives the wrong result, but it is not apparent which
-procedure, or what line of code, is the culprit.  
+procedure, or what line of code, is the culprit. 
+There are a couple ways to handle this.
 
-@enumerate
+One possibility is to use the tracing feature, possibly with
+the @code{step} option.  A disadvantage with tracing is
+that it produces a lot of output and is slow.
 
-@item
-Instrument and execute the initial procedure.  
+Frequently a better way is to use @emph{skipping}.
+Call @code{mdc} with the @code{skip_until} option, or
+call @code{mdc:-SkipUntil} directly to assign a predicate
+that skips code until a condition is met.
+See the examples in the @code{mdc[SkipUntil]} help page, in Maple.
+With a predicate assigned, skip to the condition by typing
+@kbd{S} in the showstat buffer.
 
-@item
-In the debugger, use the @command{mds-trace} command to select
-@strong{step} as the tracing mode. Execute @command{step} to begin
-tracing.  Every procedure that is called will be traced and the results
-written to the output buffer.  Tracing halts when the debugger exits.
-
-@item
-Use the @command{mds-trace} command to disable tracing.  
-
-@item
-In Maple, reexecute the code to reestablish debugging.  
-
-@item
-In the debugger output buffer, use the search facility of Emacs to find
-the first appearance of the undesired expression.
-
-@item
-Right-click on the expression in the output buffer; the showstat-dead
-buffer will open and display the procedure and statement that produced
-the result.
-
-@end enumerate
-
-Because @strong{step} tracing mode generates a lot of output, you may
-find it more practical to instrument the suspected procedures and
-use @strong{into} tracing mode.
 
 @node Main Index, Key Index, Debugging Tips, Top
 @unnumbered Main Index

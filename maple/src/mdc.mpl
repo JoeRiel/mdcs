@@ -1,8 +1,8 @@
 # -*- mpldoc -*-
 
-#{{{ mpldoc
-
 ##INCLUDE ../include/mpldoc_macros.mpi
+
+#{{{ mpldoc
 
 ##DEFINE MOD mdc
 ##DEFINE CMD mdc
@@ -53,6 +53,7 @@
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
 ##- "\MOD[HelpMDS]"
+##- "\MOD[SkipUntil]"
 ##- "Grid"
 ##ENDMPLDOC
 
@@ -211,7 +212,10 @@
 ##
 ##  If `skip_until` is not a procedure, the following predicate is used:
 ##  ~proc(L) has(L,skip_until) end proc~.
-##  See the examples section.
+##  See "mdc[SkipUntil]" for a procedure that assigns the predicate.
+##
+##  To use the skip predicate, execute the `_skip` debugger command
+##  inside the debugger.  That command is bound to the `S` key.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -380,6 +384,7 @@ export Authenticate
     ,  Grid
     ,  InstallPatch
     ,  Sleep
+    ,  SkipUntil
     ,  mdc
     ,  Version
     ,  HelpMDS
@@ -411,7 +416,7 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
-    , skip := false
+    , skip
     , Warnings
     ;
 
@@ -625,19 +630,15 @@ $endif
             end do;
         end if;
         #}}}
-
         #{{{ skip_until
 
         if skip_until <> NULL then
-            if skip_until :: procedure then
-                match_predicate := skip_until;
-            else
-                match_predicate := proc(L) has(L,skip_until) end proc;
-            end if;
-            skip := true;
+            SkipUntil(skip_until);
+            skip := false;
         end if;
 
         #}}}
+
 
         return NULL;
 
@@ -910,7 +911,76 @@ $endif
     end proc;
 
 #}}}
+#{{{ SkipUntil
 
+##DEFINE CMD SkipUntil
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE assign the skip predicate
+##AUTHOR   Joe Riel
+##DATE     Jan 2012
+##CALLINGSEQUENCE
+##- \CMD('ex')
+##PARAMETERS
+##- 'ex' : ::anything::
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  assigns the predicate used when skipping.
+##  This is equivalent to using the `skip_until` option to `mdc`.
+##
+##- If 'ex' is a procedure, it is used as the predicate,
+##  otherwise, the predicate is the procedure
+##  ~proc(L) has(L,ex) end proc~.
+##
+##- When skipping, the result of each executed statement is
+##  passed to the predicate, in a list.  The predicate must return
+##  true or false.  When it returns true, skipping is terminated
+##  and debugging recommences.  The last expression is
+##  displayed in the debugger output.
+##
+##- The list passed to the predicate contains debugging information in
+##  addition to the result of the last output.
+##
+##- This procedure can be called from inside the debugger to
+##  assign a skip predicate during a debugging session.
+##
+##
+##OPTIONS
+##opt(usehastype,truefalse)
+##  When true, the predicate is ~proc(L) hastype(L,ex) end proc~.
+##  The default value is false.
+##
+##EXAMPLES(notest,noexecute)
+##- Assign the predicate to stop when _x^2_ is computed.
+##> mdc:-SkipUntil(x^2):
+##> mdc(stopat=int):
+##> int(x,x);
+##
+##- Use the `usehastype` option to stop skipping when a square appears.
+##> mdc:-SkipUntil(anything^2, usehastype):
+##> forget(int):
+##> int(x,x);
+##
+##SEEALSO
+##- "mdc"
+##- "mdc[mdc]"
+
+    SkipUntil := proc(ex, { usehastype :: truefalse := false } )
+        if usehastype then
+            if not ex :: type then
+                error "argument must be a type when using hastype, received '%1'", ex;
+            end if;
+            match_predicate := proc(L) hastype(L,ex) end proc;
+        elif ex :: procedure then
+            match_predicate := eval(ex);
+        else
+            match_predicate := proc(L) has(L,ex) end proc;
+        end if;
+        return NULL;
+    end proc;
+
+#}}}
 #{{{ Count
 
 ##DEFINE CMD Count
