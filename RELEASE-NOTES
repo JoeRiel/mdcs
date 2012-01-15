@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.9.2
+** Fixed bug; set local variable skip to false.
 * mdcs-1.9.1
 ** Added SkipUntil export.  
    Expression that terminated the skipping is now returned.
