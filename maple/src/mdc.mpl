@@ -634,8 +634,8 @@ $endif
 
         if skip_until <> NULL then
             SkipUntil(skip_until);
-            skip := false;
         end if;
+        skip := false;
 
         #}}}
 
