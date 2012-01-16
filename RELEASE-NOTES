@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.9.3
+** Modify skip to strip debuginfo.  Improve doc.
 * mdcs-1.9.2
 ** Fixed bug; set local variable skip to false.
 * mdcs-1.9.1
