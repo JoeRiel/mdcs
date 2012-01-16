@@ -206,13 +206,14 @@
 ##  Specifies a predicate that can be used to skip
 ##  all code until a condition is met.  If `skip_until` is
 ##  a procedure, it is used as the predicate.
-##  A list that contains the result of each executed statement
-##  is passed to the predicate, which must return true or false.
+##  The result of each executed statement is passed to the predicate,
+##  which must return true or false.
 ##  When true is returned, debugging recommences.
 ##
 ##  If `skip_until` is not a procedure, the following predicate is used:
-##  ~proc(L) has(L,skip_until) end proc~.
-##  See "mdc[SkipUntil]" for a procedure that assigns the predicate.
+##  ~proc() has([_passed],skip_until) end proc~.
+##  See "mdc[SkipUntil]" for a procedure that assigns the predicate
+##  and has additional options.
 ##
 ##  To use the skip predicate, execute the `_skip` debugger command
 ##  inside the debugger.  That command is bound to the `S` key.
@@ -919,9 +920,10 @@ $endif
 ##AUTHOR   Joe Riel
 ##DATE     Jan 2012
 ##CALLINGSEQUENCE
-##- \CMD('ex')
+##- \CMD('ex','opts')
 ##PARAMETERS
 ##- 'ex' : ::anything::
+##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
@@ -931,10 +933,10 @@ $endif
 ##
 ##- If 'ex' is a procedure, it is used as the predicate,
 ##  otherwise, the predicate is the procedure
-##  ~proc(L) has(L,ex) end proc~.
+##  ~proc() has([_passed],ex) end proc~.
 ##
 ##- When skipping, the result of each executed statement is
-##  passed to the predicate, in a list.  The predicate must return
+##  passed to the predicate.  The predicate must return
 ##  true or false.  When it returns true, skipping is terminated
 ##  and debugging recommences.  The last expression is
 ##  displayed in the debugger output.
@@ -948,7 +950,7 @@ $endif
 ##
 ##OPTIONS
 ##opt(usehastype,truefalse)
-##  When true, the predicate is ~proc(L) hastype(L,ex) end proc~.
+##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
 ##
 ##EXAMPLES(notest,noexecute)
@@ -962,6 +964,11 @@ $endif
 ##> forget(int):
 ##> int(x,x);
 ##
+##- Create a predicate that uses an exact match.
+##> mdc:-SkipUntil(proc() evalb(_passed=1/2*x^2) end proc):
+##> forget(int):
+##> int(x,x);
+##
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[mdc]"
@@ -971,11 +978,11 @@ $endif
             if not ex :: type then
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
-            match_predicate := proc(L) hastype(L,ex) end proc;
+            match_predicate := proc() hastype([_passed],ex) end proc;
         elif ex :: procedure then
             match_predicate := eval(ex);
         else
-            match_predicate := proc(L) has(L,ex) end proc;
+            match_predicate := proc() has([_passed],ex) end proc;
         end if;
         return NULL;
     end proc;

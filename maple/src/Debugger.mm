@@ -330,6 +330,10 @@ $endif
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
             n := n - 1;
+
+            if skip then
+                skip := not match_predicate(_passed[1..n]);
+            end if;
         else
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
@@ -345,9 +349,6 @@ $endif
         #}}}
         #{{{ process args
 
-        if skip then
-            skip := not match_predicate([_passed,`debugger/no_output`]);
-        end if;
         if not skip then
             for i from 1 to n do
                 # Use addressof to prevent an object from overriding
