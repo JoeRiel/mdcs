@@ -476,7 +476,7 @@ $endif
         #}}}
         #{{{ ignoretester
         if ignoretester then
-            if assigned(TESTER_SOURCEDIR) then
+            if assigned('TESTER_SOURCEDIR') then
                 return NULL;
             end if;
         end if;
@@ -941,14 +941,18 @@ $endif
 ##  and debugging recommences.  The last expression is
 ##  displayed in the debugger output.
 ##
-##- The list passed to the predicate contains debugging information in
-##  addition to the result of the last output.
+##- The arguments passed to the predicate consist of
+##  the result of each executed statement.
 ##
 ##- This procedure can be called from inside the debugger to
-##  assign a skip predicate during a debugging session.
+##  assign a predicate during a debugging session.
 ##
 ##
 ##OPTIONS
+##opt(exact, truefalse)
+##  When true, the predicate is ~proc() evalb(_passed = ex) end proc~.
+##  An exact match is efficient.
+##  The default is false.
 ##opt(usehastype,truefalse)
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
@@ -969,12 +973,25 @@ $endif
 ##> forget(int):
 ##> int(x,x);
 ##
+##- Create a predicate with "patmatch".
+##  Note that we first verify that ~_npassed=1~; without that
+##  a statement that returns NULL generates an error because
+##  the wrong number of arguments are passed to `patmatch`.
+##> mdc:-SkipUntil(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
+##> forget(int):
+##> int(x,x);
+##
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[mdc]"
 
-    SkipUntil := proc(ex, { usehastype :: truefalse := false } )
-        if usehastype then
+    SkipUntil := proc(ex
+                      , { usehastype :: truefalse := false }
+                      , { exact :: truefalse := false }
+                     )
+        if exact then
+            match_predicate := proc() evalb(_passed = ex) end proc;
+        elif usehastype then
             if not ex :: type then
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
@@ -1048,6 +1065,8 @@ $endif
 #{{{ GetDefault
 
     GetDefault := proc( opt :: name, default := NULL, $ )
+    global mdc_default;
+    description "Read the global table 'mdc_default' for default values.";
         if assigned(mdc_default[opt]) then
             return mdc_default[opt];
         else

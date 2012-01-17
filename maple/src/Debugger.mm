@@ -121,7 +121,7 @@ $endif
 #{{{ Print and _printf
 
     Printf := proc()
-        debugger_printf(MDC_PRINTF, _rest);
+        debugger_printf('MDC_PRINTF', _rest);
     end proc;
 
     # currently not used
@@ -147,12 +147,12 @@ $endif
 #{{{ ShowException
 
     ShowException := proc()
-    local exception;
-        exception := debugopts('lastexception');
-        if exception = '`(none)`' then
-            debugger_printf('DBG_EXCEPTION', "%a\n", exception);
+    local except;
+        except := debugopts('lastexception');
+        if except = '`(none)`' then
+            debugger_printf('DBG_EXCEPTION', "%a\n", except);
         else
-            debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(exception[2..]));
+            debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
 
@@ -354,7 +354,7 @@ $endif
                 # Use addressof to prevent an object from overriding
                 # equality.
                 if addressof(_passed[i]) = addressof(lasterror) then
-                    debugger_printf(MPL_ERR, "Error, %s\n"
+                    debugger_printf('MPL_ERR', "Error, %s\n"
                                     , StringTools:-FormatMessage(lastexception[2..]))
                 elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
                     if _passed[i][1] = 'DEBUGSTACK' then

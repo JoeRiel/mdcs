@@ -502,6 +502,7 @@ local indexed2slashed
         end proc;
         return NULL;
     end proc;
+
 #}}}
 
 end module:
