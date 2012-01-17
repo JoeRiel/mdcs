@@ -129,6 +129,7 @@
 ##- `level` : sets level for tracing
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
+##- 'quiet' : suppress greeting from server
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
 ##- `view` : enables echoing of commands
 ##ENDSUBSECTION
@@ -192,6 +193,10 @@
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
 ##  The default value is 10000; this option is sticky.
+##
+##opt(quiet,truefalse)
+##  When true do not print the greeting/farewell from the server.
+##  The default is false; this option is sticky.
 ##
 ##opt(showoptions,truefalse)
 ##  When true, the **options** and **description** statements
@@ -378,8 +383,7 @@ $define END_OF_MSG "---EOM---"
 unprotect('mdc'):
 module mdc()
 
-export Authenticate
-    ,  Count
+export Count
     ,  Debugger
     ,  Format
     ,  Grid
@@ -414,6 +418,7 @@ local Connect
     , match_predicate := () -> true
     , max_length
     , Port
+    , Quiet := false
     , sid := -1
     , view_flag
     , show_options_flag
@@ -447,6 +452,7 @@ $endif
                  , { level :: posint := GetDefault(':-level',75) }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                 , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                  , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := false }
@@ -470,7 +476,7 @@ $endif
         #{{{ exit
         if exit then
             Debugger:-Restore();
-            Disconnect();
+            Disconnect(_options['quiet']);
             return NULL;
         end if;
         #}}}
@@ -483,6 +489,7 @@ $endif
         #}}}
 
         debugbuiltins := debug_builtins;
+        Quiet := quiet;
 
         view_flag := view and not IsWorksheetInterface();
         max_length := maxlength;
@@ -511,8 +518,9 @@ $endif
         if sid = -1 then
             try
                 Connect(host, port, CreateID(lbl)
-                        , _options['launch_emacs']
                         , _options['emacs']
+                        , _options['launch_emacs']
+                        , _options['quiet']
                        );
             catch:
                 Debugger:-Restore();
@@ -677,9 +685,10 @@ $endif
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
-                    , { verbose :: truefalse := false }
-                    , { launch_emacs :: truefalse := false }
                     , { emacs :: string := "emacs" }
+                    , { launch_emacs :: truefalse := false }
+                    , { quiet :: truefalse := false }
+                    , { verbose :: truefalse := false }
                     , $
                    )
     local cmd,connected,line,sys;
@@ -727,7 +736,9 @@ $endif
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
-            printf("%s\n", line);
+            if not quiet then
+                printf("%s\n", line);
+            end if;
             if verbose then
                 printf("Connected to %s on port %d, with id %s\n"
                        , host, port, id );
@@ -744,9 +755,11 @@ $endif
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE terminate connection to Maple debugger server
 
-    Disconnect := proc()
+    Disconnect := proc( { quiet :: truefalse := false } )
         if sid <> -1 then
-            printf("goodbye\n");
+            if not quiet then
+                printf("goodbye\n");
+            end if;
             Sockets:-Close(sid);
             sid := -1;
         end if;
@@ -871,7 +884,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.9.3";
+    Version := "1.9.4";
 
 #}}}
 
@@ -968,14 +981,14 @@ $endif
 ##> forget(int):
 ##> int(x,x);
 ##
-##- Create a predicate that uses an exact match.
-##> mdc:-SkipUntil(proc() evalb(_passed=1/2*x^2) end proc):
+##- Use the `exact` option.
+##> mdc:-SkipUntil(1/2*x^2,'exact') end proc):
 ##> forget(int):
 ##> int(x,x);
 ##
-##- Create a predicate with "patmatch".
-##  Note that we first verify that ~_npassed=1~; without that
-##  a statement that returns NULL generates an error because
+##- Create a custom predicate with "patmatch".
+##  Note that we first verify that ~_npassed=1~; without that,
+##  a statement that returns `NULL` generates an error because
 ##  the wrong number of arguments are passed to `patmatch`.
 ##> mdc:-SkipUntil(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
 ##> forget(int):

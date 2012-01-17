@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.9.4
+** Add 'exact' option to SkipUntil; improved examples.
+** Add 'quiet' option to mdc
 * mdcs-1.9.3
 ** Modify skip to strip debuginfo.  Improve doc.
 * mdcs-1.9.2
