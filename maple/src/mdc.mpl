@@ -491,7 +491,7 @@ $endif
         debugbuiltins := debug_builtins;
         Quiet := quiet;
 
-        view_flag := view and not IsWorksheetInterface();
+        view_flag := view; # and not IsWorksheetInterface();
         max_length := maxlength;
 
         Level := level;
@@ -510,10 +510,25 @@ $endif
             lbl := label;
         end if;
         #}}}
+        #{{{ showoptions
+        if showoptions :: truefalse then
+            show_options_flag := showoptions;
+        end if;
+        #}}}
+        #{{{ skip_until
+
+        if skip_until <> NULL then
+            SkipUntil(skip_until);
+        end if;
+        skip := false;
+
+        #}}}
+
         #{{{ replace debugger
 
         Debugger:-Replace();
         #}}}
+
         #{{{ connect to server
         if sid = -1 then
             try
@@ -526,11 +541,6 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
-        end if;
-        #}}}
-        #{{{ showoptions
-        if showoptions :: truefalse then
-            show_options_flag := showoptions;
         end if;
         #}}}
         #{{{ stopat
@@ -638,14 +648,6 @@ $endif
                 :-stoperror(':-traperror'[str]);
             end do;
         end if;
-        #}}}
-        #{{{ skip_until
-
-        if skip_until <> NULL then
-            SkipUntil(skip_until);
-        end if;
-        skip := false;
-
         #}}}
 
 
