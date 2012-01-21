@@ -63,7 +63,7 @@ $endif
 
     ModuleLoad := proc()
     local ver;
-        # Newer version of Maple, 14+, allow a the keyword 'debugger'
+        # Newer version of Maple, 14+, allow the keyword 'debugger'
         # passed to 'parse', which does something, not sure what.
         replaced := false;
         ver := kernelopts('version');
