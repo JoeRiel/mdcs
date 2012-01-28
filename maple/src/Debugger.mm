@@ -45,6 +45,7 @@ local _debugger
     , _showstop
     , _where
     , _print
+    , last_evalLevel
     , last_state
     , orig_print
     , orig_stopat
@@ -56,6 +57,8 @@ $endif
     , parse_debugger
     , ModuleLoad
     ;
+
+    last_evalLevel := 0;
 
 #}}}
 
@@ -333,11 +336,14 @@ $endif
 
             if skip then
                 skip := not match_predicate(_passed[1..n]);
-                # Clever, but ungodly memory intensive!
-                # if skip then
-                #     local stk := debugopts('callstack');
-                #     skip := not match_predicate(stk);
-                # end if;
+                if skip then
+                    if evalLevel > last_evalLevel+5 then
+                        # Clever, but memory intensive!
+                        local stk := debugopts('callstack');
+                        skip := not match_predicate(stk);
+                    end if;
+                end if;
+                last_evalLevel := evalLevel;
             end if;
         else
             procName := 0;
