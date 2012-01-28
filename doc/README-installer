@@ -52,6 +52,8 @@ INSTALLATION
 7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
    the following statements
 
+;; THIS WON'T WORK FOR WINDOWS; remove backslashes from HOME
+
 ;; add ~/.emacs.d/maple to Emacs load-path
 (setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
 ;; mds package

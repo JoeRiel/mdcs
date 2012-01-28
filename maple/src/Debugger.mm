@@ -333,6 +333,11 @@ $endif
 
             if skip then
                 skip := not match_predicate(_passed[1..n]);
+                # Clever, but ungodly memory intensive!
+                # if skip then
+                #     local stk := debugopts('callstack');
+                #     skip := not match_predicate(stk);
+                # end if;
             end if;
         else
             procName := 0;
