@@ -336,14 +336,14 @@ $endif
 
             if skip then
                 skip := not match_predicate(_passed[1..n]);
-                if skip then
-                    if evalLevel > last_evalLevel+5 then
-                        # Clever, but memory intensive!
-                        local stk := debugopts('callstack');
-                        skip := not match_predicate(stk);
-                    end if;
-                end if;
-                last_evalLevel := evalLevel;
+                # if true then #skip_check_stack then
+                #     if skip and evalLevel > last_evalLevel+10 then
+                #         # Clever, but memory intensive!
+                #         local stk := debugopts('callstack');
+                #         skip := not match_predicate(stk);
+                #     end if;
+                #     last_evalLevel := evalLevel;
+                # end if;
             end if;
         else
             procName := 0;
