@@ -78,3 +78,6 @@
   1. Call mds-stopat in the dead-buf; a breakpoint is inserted.
   2. Call mds-unstopat at the breakpoint.  The error message
      "Error, no break point set at specified location" appears.
+
+* TODO SCR13: arguments do not display when reentering a procedure.
+  I thought that had been fixed, but it has not.  Run maple/sandbox/showargs.mpl.
