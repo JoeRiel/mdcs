@@ -188,23 +188,13 @@ $endif
 # Used for user-input to the debugger. This lets us easily change the input
 # facilities to take advantage of special features of the Iris in future.
 
-    debugger_readline := proc( )
-    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
-    description `Used by debugger to obtain input.`;
-    local len, res, startp, endp, i, endcolon;
-    global `debugger/default`;
-
-        #{{{ Get response (from server)
-
+    debugger_readline := proc()
+    description `Used by debugger to obtain user-input.`;
         do
             debugger_printf('DBG_PROMPT', ">");
             try
-                res := Read();
-$ifdef LOG_READLINE
-                fprintf(logpid, "[%s]\n", res);
-                fflush(logpid);
-$endif
-                break
+                return Read();
+                break;
             catch "process %1 disconnected unexpectedly":
                 error;
             catch:
@@ -213,98 +203,7 @@ $endif
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             end try;
-        od;
-
-        #}}}
-        #{{{ Hande statement
-        if sscanf(res, "%s") = ["statement"] then
-            return res;
-        end if;
-        #}}}
-        #{{{ Handle solo enter (repeat previous command)
-
-        # If the user just pressed ENTER, use the value of the variable
-        # `debugger/default`, which contains whatever debugger command the user
-        # issued last time. If there is no previous command, return a command to
-        # print a message pointing the user to the on-line help.
-        if `debugger/isspace`( res ) then
-            res := `if`(assigned(`debugger/default`)
-                        , `debugger/default`
-                        , "debugger_printf('DBG_HELP', \"See ?debugger for available commands\n\")"
-                       );
-        else
-            `debugger/default` := res;
-        fi;
-
-        #}}}
-        #{{{ Remove leading blanks, trailing comments, and colons.
-
-        startp := 1;
-        len := length(res);
-        endp := len;
-        endcolon := false;
-        for i from 1 to len do
-            if startp = i and res[i] = " " then
-                startp := i+1
-            elif res[i] = "#" then
-                endp := i-1;
-                break
-            elif res[i] = ";" then
-                endp := i-1;
-                break
-            elif res[i] = ":" then
-                if res[i+1] = ":" then
-                    # allow for `::` expressions in the debugger
-                    i := i + 1;
-                    next
-                fi;
-                if i = len or not member(res[i+1],{"=","-",":"}) then
-                    endp := i-1;
-                    endcolon := true;
-                    break
-                fi
-            fi
         end do;
-
-        #}}}
-        #{{{ Record whether or not the command ended in a colon.
-
-        if _npassed > 0 and type(_passed[1],name) then
-            assign(_passed[1],endcolon)
-        fi;
-
-        #}}}
-        #{{{ Check for characters after comment
-
-        # Complain if there were any non-blank, non-comment
-        #characters after the end of the typed command.
-        if i < len and res[i] <> "#" then
-            for i from i to len do
-                if res[i] <> " " then
-                    debugger_printf('DBG_WARN',"Warning, extra characters at end of parsed string\n");
-                    debugger_printf('DBG_WARN',"Extra stuff: %q\n", res[i]);
-                    break
-                end if;
-            end do;
-        end if;
-
-        #}}}
-        #{{{ Strip trailing whitespace.
-        while endp >= startp and res[endp] <= " " do endp := endp - 1 od;
-        res := res[startp..endp];
-        #}}}
-        #{{{ Extraneous stuff
-
-        # Means the user typed something which still ended up being nothing, such
-        # as a single semicolon, just a comment, etc.
-        if res = "" then
-            res := "`debugger/printf`(\"See ?debugger for available commands\n\")"
-        fi;
-
-        #}}}
-
-        return res;
-
     end proc:
 
 #}}}
@@ -320,7 +219,7 @@ $endif
         `Not intended to be called directly.`;
     local procName, statNumber, evalLevel, i, j, n, line, original, statLevel
         , state, pName, lNum, cond, cmd, err, module_flag;
-    global showstat, showstop, `debugger/no_output`;
+    global showstat, showstop;
 
         evalLevel := kernelopts('level') - 21;
 
@@ -382,9 +281,6 @@ $endif
                                                 , _passed[i][j]
                                                 , _passed[i][j+1]
                                                );
-                                if `debugger/no_output` <> true then
-                                    debugger_printf('DBG_ARGS',"\t%a\n",_passed[i][j-1])
-                                fi
                             fi;
                             j := j - 3
                         od
@@ -397,23 +293,19 @@ $endif
                             return
                         fi;
                         debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
-                    elif `debugger/no_output` <> true then
-                        if i < n then
-                            # list/set that is part of a continued sequence
-                            debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
-                        else
-                            # list/set
-                            debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
-                        fi
+                    elif i < n then
+                        # list/set that is part of a continued sequence
+                        debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
+                    else
+                        # list/set
+                        debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
                     fi
-                elif `debugger/no_output` <> true then
-                    if i < n then
+                elif i < n then
                         # expr that is part of a continued sequence
                         debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
-                    else
-                        # expr
-                        debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
-                    fi
+                else
+                    # expr
+                    debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
                 fi
             od;
 
@@ -465,7 +357,7 @@ $endif
         #{{{ command loop
 
         do
-            line := `debugger/readline`('`debugger/no_output`');
+            line := `debugger/readline`();
             # If there's an assignment, make sure it is delimited by spaces.
             i := searchtext(":=",line);
             if i > 1 and searchtext(" := ",line) <> i-1 then
@@ -669,6 +561,8 @@ $endif
                     # See *** comment in 'cmd = "statement"' case above.
                     if not line :: indexed and line :: procedure then
                         return eval(line);
+                    elif line = NULL then
+                        return "NULL";
                     else
                         return line;
                     fi;
