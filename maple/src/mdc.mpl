@@ -86,10 +86,10 @@
 ##  the *Options* section.
 ##
 ##SUBSECTION Skipping
-##- Skipping means executing code until a predicate returns true,
+##- *Skipping* means executing code until a predicate returns true,
 ##  then stopping the debugger at that point.
-##  It provide a convenient means to locate the source of
-##  a particular expression.
+##  It provide a convenient means to locate the source of an
+##  expression in a computation.
 ##
 ##- No debugger output is displayed from the point at which skipping
 ##  is started until the predicate is satisfied.
@@ -101,20 +101,18 @@
 ##
 ##- The `skip_check_stack` option passes the top stack entry to
 ##  predicate.  This can be useful because an expression may appear on
-##  the stack without being the output of a statement.  Note that
-##  using this option is very memory intensive.
+##  the stack without being the output of a statement.
+##  *This option is memory intensive*.
 ##
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Tracing
-##- Tracing means automatically executing the debugged while
-##  displaying the output and executed lines.  Tracing generally
-##  continues until the debugger exits, though it can be interrupted
-##  manually.
+##- *Tracing* means automatically executing the debugged code while
+##  displaying the output and executed lines in the debugger.
+##  Tracing generally continues until the debugger exits,
+##  though it can be interrupted manually.
 ##
 ##ENDSUBSECTION
-##
-##
 ##
 ##
 ##OPTIONS
