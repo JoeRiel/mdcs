@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.10
+** Improve documentation of skipping.
+** Rewrite debugger/readline to allow multi-statement inputs
 * mdcs-1.9.4
 ** Add 'exact' option to SkipUntil; improved examples.
 ** Add 'quiet' option to mdc
