@@ -232,6 +232,7 @@ local indexed2slashed
     prettyprint := proc(top :: truefalse := true)
     local eqs, ex, fld, i, ix, n, typ, opacity, rest;
     global _fake_name;
+
         if nargs > 2 then
             return seq(procname(false,ex), ex in [_rest]);
         end if;
@@ -306,7 +307,7 @@ local indexed2slashed
 
         elif rest :: procedure then
             if top then
-                if rest :: name then
+                if _rest :: name then
                     Format:-showstat(convert(rest,string));
                 else
                     # rest is an evaluated expression.  Assign to

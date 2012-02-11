@@ -189,14 +189,14 @@ $endif
 # facilities to take advantage of special features of the Iris in future.
 
     debugger_readline := proc()
-    local line,n;
+    local char,line,n;
     description `Used by debugger to obtain user-input.`;
         do
             debugger_printf('DBG_PROMPT', ">");
             try
                 line := Read();
                 n := length(line);
-                while line[n] = " " or line[n]="\n" do
+                while line[n] = "\n" do
                     n := n-1;
                 end do;
                 return line[..n];
@@ -513,7 +513,6 @@ $endif
             elif cmd = "unstopwhen" then
                 return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
-                "handling stoperror";
                 try
                     line := sscanf(original,"%s %1000c");
                     return 'stoperror'(seq(line[i],i=2..nops(line)))
