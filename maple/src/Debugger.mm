@@ -189,12 +189,17 @@ $endif
 # facilities to take advantage of special features of the Iris in future.
 
     debugger_readline := proc()
+    local line,n;
     description `Used by debugger to obtain user-input.`;
         do
             debugger_printf('DBG_PROMPT', ">");
             try
-                return Read();
-                break;
+                line := Read();
+                n := length(line);
+                while line[n] = " " or line[n]="\n" do
+                    n := n-1;
+                end do;
+                return line[..n];
             catch "process %1 disconnected unexpectedly":
                 error;
             catch:
@@ -508,6 +513,7 @@ $endif
             elif cmd = "unstopwhen" then
                 return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
             elif cmd = "stoperror" then
+                "handling stoperror";
                 try
                     line := sscanf(original,"%s %1000c");
                     return 'stoperror'(seq(line[i],i=2..nops(line)))
@@ -548,6 +554,8 @@ $endif
                     # for type procedure if it is a TABLEREF (i.e. type indexed).
                     if not line :: indexed and line :: procedure then
                         return eval(line);
+                    elif line = NULL then
+                        return 'NULL';
                     else
                         return line;
                     fi;
@@ -562,7 +570,7 @@ $endif
                     if not line :: indexed and line :: procedure then
                         return eval(line);
                     elif line = NULL then
-                        return "NULL";
+                        return 'NULL';
                     else
                         return line;
                     fi;
