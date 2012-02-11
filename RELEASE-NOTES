@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.10.1
+** debugger/readline: remove trailing newline, needed for some commands
+** debugger: handle NULL returned by a statement
 * mdcs-1.10
 ** Improve documentation of skipping.
 ** Rewrite debugger/readline to allow multi-statement inputs
