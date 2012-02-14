@@ -16,7 +16,7 @@
 ##  and, if properly installed, is available in Emacs.
 ##  Because installing the info page and updating the **dir**
 ##  node requires manual intervention on a Windows machine,
-##  this command is provided to easy access to the html
+##  this command provides easy access to the html
 ##  version of the help page.
 ##
 ##- The html file is located in the **doc** subdirectory
