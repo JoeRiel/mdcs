@@ -25,22 +25,24 @@ $define LOGFILE "readline.log"
 Debugger := module()
 
 #{{{ declarations
-
+    
 export Printf
     ,  Replace
     ,  Restore
+    ,  RestoreBuiltins
     ,  ShowError
     ,  ShowException
     ,  ShowstatAddr
     ,  stopat
     ,  unstopat
     ;
-
+    
 global DEBUGGER_PROCS;
-
+    
 local _debugger
     , debugger_printf
     , debugger_readline
+    , debugged_builtins
     , _showstat
     , _showstop
     , _where
@@ -57,13 +59,13 @@ $endif
     , parse_debugger
     , ModuleLoad
     ;
-
+    
     last_evalLevel := 0;
-
+    
 #}}}
 
 #{{{ ModuleLoad
-
+    
     ModuleLoad := proc()
     local ver;
         # Newer version of Maple, 14+, allow the keyword 'debugger'
@@ -78,13 +80,13 @@ $endif
         end if;
         NULL;
     end proc;
-
+    
 #}}}
 
 #{{{ Replace
-
+    
     Replace := proc()
-        if not replaced then
+        if replaced <> true then
             # Save these
             orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
@@ -107,35 +109,47 @@ $endif
         end if;
         return NULL;
     end proc;
-
+    
 #}}}
 #{{{ Restore
-
+    
     Restore := proc()
         # Dave H. suggests using 'forget'
-        if replaced then
+        if replaced = true then
             map( p -> kernelopts('unread' = p), ['DEBUGGER_PROCS', :-stopat] );
             replaced := false;
         end if;
         return NULL;
     end proc;
-
+    
 #}}}
-#{{{ Print and _printf
+#{{{ RestoreBuiltins
+    
+    RestoreBuiltins := proc()
+    local pnam;
+        for pnam in [indices(debugged_builtins,'nolist')] do
+            proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
+            debugged_builtins[pnam] := evaln(debugged_builtins[pnam]);
+        end do;
+        NULL;
+    end proc;
+#}}}
 
+#{{{ Print and _printf
+    
     Printf := proc()
         debugger_printf('MDC_PRINTF', _rest);
     end proc;
-
+    
     # currently not used
     _print := proc()
         orig_print(_passed);
         debugger_printf('DBG_WARN', "print output does not display in debugger\n");
     end proc;
-
+    
 #}}}
 #{{{ ShowError
-
+    
     ShowError := proc()
     local err;
         err := debugopts('lasterror');
@@ -145,10 +159,10 @@ $endif
             debugger_printf('DBG_ERROR', "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
-
+    
 #}}}
 #{{{ ShowException
-
+    
     ShowException := proc()
     local except;
         except := debugopts('lastexception');
@@ -158,44 +172,44 @@ $endif
             debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
-
+    
 #}}}
 
 # Debugger replacements
 
 #{{{ debugger_printf
-
+    
     debugger_printf := proc( tag :: name )
     local argList, rts;
     description `Used by debugger to produce output.`;
-
+        
         argList := [_rest];
-
+        
         # suppress large rtables
         rts := map(x->x=`debugger/describe_rtable`(x)
                    , indets(argList,'debugger_large_rtable')
                   );
         if rts <> {} then argList := subs(rts,argList) end if;
-
+        
         WriteTagf(tag, op(argList));
-
+        
         return NULL;
     end proc:
-
+    
 #}}}
 #{{{ debugger_readline
-
+    
 # Used for user-input to the debugger. This lets us easily change the input
 # facilities to take advantage of special features of the Iris in future.
-
+    
     debugger_readline := proc()
-    local char,line,n;
+    local line,n;
     description `Used by debugger to obtain user-input.`;
         do
             debugger_printf('DBG_PROMPT', ">");
             try
                 line := Read();
-                n := length(line);
+                n := -1;
                 while line[n] = "\n" do
                     n := n-1;
                 end do;
@@ -210,13 +224,13 @@ $endif
             end try;
         end do;
     end proc:
-
+    
 #}}}
 #{{{ debugger
-
+    
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
-
+    
     _debugger := proc( )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description
@@ -225,19 +239,19 @@ $endif
     local procName, statNumber, evalLevel, i, j, n, line, original, statLevel
         , state, pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop;
-
+        
         evalLevel := kernelopts('level') - 21;
-
+        
         n := _npassed;
         if n > 0
-        and type(_passed[n],list)
+        and _passed[n] :: list
         and nops(_passed[n]) > 0
         and _passed[n][1] = 'DEBUGINFO' then
             procName := _passed[n][2];
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
             n := n - 1;
-
+            
             if skip then
                 skip := not match_predicate(_passed[1..n]);
                 if SkipCheckStack then
@@ -251,7 +265,7 @@ $endif
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
-
+        
         #{{{ remove indices in procName
         # Added by Joe Riel.  Indices are used by some procedures,
         # for example, map[3], but need to be removed.  Multiple
@@ -261,7 +275,7 @@ $endif
         end do;
         #}}}
         #{{{ process args
-
+        
         if not skip then
             for i from 1 to n do
                 # Use addressof to prevent an object from overriding
@@ -269,7 +283,7 @@ $endif
                 if addressof(_passed[i]) = addressof(lasterror) then
                     debugger_printf('MPL_ERR', "Error, %s\n"
                                     , StringTools:-FormatMessage(lastexception[2..]))
-                elif type(_passed[i],list) and nops(_passed[i]) >= 1 then
+                elif _passed[i] :: list and nops(_passed[i]) >= 1 then
                     if _passed[i][1] = 'DEBUGSTACK' then
                         j := nops(_passed[i]) - 2;
                         while j > 2 do
@@ -306,20 +320,20 @@ $endif
                         debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
                     fi
                 elif i < n then
-                        # expr that is part of a continued sequence
-                        debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
+                    # expr that is part of a continued sequence
+                    debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
                 else
                     # expr
                     debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
                 fi
             od;
-
+            
         end if;
-
+        
         #}}}
-
+        
         #{{{ print the debug status
-
+        
         if procName <> 0 then
             if statNumber < 0 then
                 if not skip then
@@ -328,13 +342,17 @@ $endif
                 end if;
                 statNumber := -statNumber
             end if;
-
+            
             local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
             # Set module_flag true if next statement appears to
             # evaluate a module, which causes a debugger error if one
             # attempt to step into it.  The test is simple and uses
             # builtins to keep this fast.
-            module_flag := evalb(SearchText("module ()", dbg_state)<>0);
+            if SearchText("module ()", dbg_state) = 0 then
+                module_flag := false;
+            else
+                module_flag := true;
+            end if;
             state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
             if not skip then
                 if state = last_state then
@@ -345,9 +363,9 @@ $endif
                 end if;
             end if;
         end if;
-
+        
         #}}}
-
+        
         #{{{ handle skip
         # skip is true if 'skip_until' is in effect.
         if skip then
@@ -360,12 +378,12 @@ $endif
         end if;
         #}}}
         #{{{ command loop
-
+        
         do
             line := `debugger/readline`();
             # If there's an assignment, make sure it is delimited by spaces.
-            i := searchtext(":=",line);
-            if i > 1 and searchtext(" := ",line) <> i-1 then
+            i := SearchText(":=",line);
+            if i > 1 and SearchText(" := ",line) <> i-1 then
                 line := cat(line[1..i-1]," := ",line[i+2..-1])
             fi;
             original := line;
@@ -388,9 +406,9 @@ $endif
                 fi
             fi;
             err := NULL;
-
+            
             #{{{ parse cmd (else is arbitrary expression)
-
+            
             if cmd = "cont" then
                 return
             elif cmd = "next" then
@@ -424,7 +442,8 @@ $endif
             elif cmd = "showstack" then
                 n := debugopts('callstack');
                 n := [op(1,n),op(5..-1,n)];
-                n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
+                n := subsop(seq(3*i=``,i=1..(nops(n)+1)/3),n);
+                # n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
                 return n;
             elif cmd = "stopat" then
                 if nops(line) = 4 then
@@ -441,8 +460,8 @@ $endif
                     cond := NULL;
                     for i from 2 to nops(line) do
                         if i <= nops(line) then
-                            if type(line[i],name) then pName := line[i]
-                            elif type(line[i],{integer,list(integer)}) then
+                            if line[i] :: name then pName := line[i]
+                            elif line[i] ::  '{integer,list(integer)}' then
                                 lNum := line[i]
                             else cond := line[i]
                             fi
@@ -465,7 +484,7 @@ $endif
                 pName := procName;
                 lNum := NULL;
                 for i from 2 to nops(line) do
-                    if type(line[i],name) then pName := line[i]
+                    if line[i] :: name then pName := line[i]
                     else lNum := line[i]
                     fi
                 od;
@@ -490,7 +509,7 @@ $endif
                     pName := procName;
                     lNum := NULL;
                     for i from 2 to nops(line) do
-                        if type(line[i],name) then pName := line[i]
+                        if line[i] :: name then pName := line[i]
                         else lNum := line[i]
                         fi
                     od;
@@ -543,7 +562,7 @@ $endif
                 return line;
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
-                original := original[searchtext("statement",original)+9..-1];
+                original := original[SearchText("statement",original)+9..-1];
                 try
                     line := parse(original,'statement',parse_debugger);
                     # *** Avoid returning `line` unevaluated (due to LNED) by
@@ -577,28 +596,28 @@ $endif
                     err := lasterror;
                 end try;
             fi;
-
+            
             #}}}
             #{{{ handle error
-
+            
             if err = lasterror then
                 debugger_printf('DBG_PARSE_ERR', "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             fi;
-
+            
             #}}}
-
+            
         od;
-
+        
         #}}}
-
+        
     end proc:
-
+    
 #}}}
 
 #{{{ showstat
-
+    
     _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description `Displays a procedure with statement numbers and breakpoints.`;
@@ -613,9 +632,9 @@ $endif
             elif _npassed = 3 then
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
-
+            
             map[3](debugger_printf, 'DBG_SHOW_INACTIVE', "\n%s", [res]);
-
+            
             # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
                 debugger_printf('DBG_NULL', "\n" )
@@ -623,27 +642,27 @@ $endif
         fi;
         NULL
     end proc:
-
+    
 #}}}
 #{{{ ShowstatAddr
-
+    
     ShowstatAddr := proc( addr :: integer
                           , {dead :: truefalse := false}
                           , $
                         )
 $ifdef DONTUSE
     local prc, pstr;
-
+        
         prc := pointto(addr);
         pstr := convert(debugopts('procdump' = prc),string);
-
+        
         # Alas, this does not work.  Eval'ing (or op'ing)
         # the procedure can cause the debugger to execute.
-
+        
         # Eval'ing (or op'ing) prc can cause the
         # debugger to run ahead the first time this is done
         # in a module local procedure.
-
+        
         # Create option string
         opts := op(3, op(prc));
         if opts = NULL then
@@ -651,7 +670,7 @@ $ifdef DONTUSE
         else
             opts := sprintf("option %q;\n", opts);
         end if;
-
+        
         # Create description string
         desc := op(5, op(prc));
         if desc = NULL then
@@ -659,7 +678,7 @@ $ifdef DONTUSE
         else
             desc := sprintf("description %a;\n", desc);
         end if;
-
+        
         # Split at first statement and insert opts and desc
         pos := StringTools:-Search("\n   1", pstr);
         pstr := cat(pstr[..pos]
@@ -678,16 +697,16 @@ $endif
                  );
         NULL;
     end proc;
-
+    
 #}}}
 #{{{ showstop
-
+    
     _showstop := proc( $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description `Display a summary of all break points and watch points.`;
-    local i, ls, val;
+    local i, ls, val, width;
     global showstop;
-
+        
         ls := stopat();
         if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo breakpoints set.\n")
         else
@@ -699,12 +718,14 @@ $endif
         else
             debugger_printf('DBG_INFO', "\nWatched variables:\n");
             for i in ls do
-                if type(i,list) then
+                if i :: list then
                     debugger_printf('DBG_INFO', "   %a in procedure %a\n",i[2],i[1])
                 elif assigned(`debugger/watch_condition`[i]) then
                     val := sprintf('DBG_INFO', "%a",`debugger/watch_condition`[i]);
-                    if length(val) > interface('screenwidth') / 2 then
-                        val := cat(val[1..round(interface('screenwidth')/2)]," ...")
+                    width := streamcall('INTERFACE_GET(screenwidth)');
+                    width := `if`(width :: even, width/2, (width-1)/2);
+                    if length(val) > width then
+                        val := sprintf("%s ...", val[1..width])
                     fi;
                     debugger_printf('DBG_INFO', "   %a = %s\n",i,val)
                 else
@@ -734,10 +755,10 @@ $endif
         if procname <> 'showstop[nonl]' then debugger_printf('DBG_INFO', "\n") fi;
         NULL
     end proc:
-
+    
 #}}}
 #{{{ where
-
+    
     _where := proc( n::integer, $ )
     local stack, i;
     option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
@@ -757,11 +778,11 @@ $endif
         fi;
         NULL
     end proc:
-
+    
 #}}}
 
 #{{{ stopat
-
+    
 ##DEFINE CMD stopat
 ##PROCEDURE \MOD[\SUBMOD][\CMD]
 ##HALFLINE a fast method to instrument a procedure
@@ -786,7 +807,7 @@ $endif
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
-
+    
     stopat := proc(p :: {name,string,list}
                    , n :: posint
                    , cond :: uneval
@@ -802,31 +823,73 @@ $endif
         pnam := getname(p);
         # debugbuiltins is a module local, which is a design flaw, but
         # avoiding it is tricky.  Passing it as a keyword parameter is
-        # not possible because cond is optional yet is declared as
-        # 'uneval'.
+        # not possible because cond is optional yet declared as 'uneval'.
         if debugbuiltins and pnam :: 'builtin' then
+            # These are used in the debugger, or have special
+            # evaluation rules, so cannot be debugged.
+            # NOTE: Some could be debugged by toggling
+            # assignments when entering/exiting the debugger.
+            # But that is overkill for little use.
+            if member(pnam, '{ASSERT
+                              , DEBUG
+                              , SearchText
+                              , `if`
+                              , add
+                              , addressof
+                              , assigned
+                              , debugopts
+                              , eval
+                              , evalf
+                              , evalhf
+                              , evaln
+                              , has
+                              , indets
+                              , iolib
+                              , kernelopts
+                              , length
+                              , map
+                              , mul
+                              , nops
+                              , op
+                              , pointto
+                              , parse
+                              , seq
+                              , streamcall
+                              , subs
+                              , subsop
+                              , time
+                              , timelimit
+                              , traperror
+                              , trunc
+                              , type
+                              , userinfo
+                             }') then
+                error "cannot debug '%1'", pnam;
+            end if;
+            
+            debugged_builtins[pnam] := eval(pnam);
+            
             unprotect(pnam);
             proc(f)
                 f := subs(_f = eval(f), proc() _f(_passed) end proc);
             end proc(pnam);
             return procname(pnam, _passed[2..]);
         end if;
-
+        
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
         else                  debugopts('stopat'=[pnam, st, 'cond'])
         end if;
         return NULL;
     end proc:
-
+    
 #}}}
 #{{{ unstopat
-
+    
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
                      , $ )
-
     local pnam,st;
         if p :: list then
             return procname(op(p));
@@ -836,18 +899,22 @@ $endif
         if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
         else                  debugopts('stopat'=[pnam, -st, 'cond'])
         end if;
+        if assigned(debugged_builtins[pnam]) then
+            proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
+            debugged_builtins[pnam] := evaln(debugged_builtins[pnam]);
+        end if;
         return NULL;
     end proc:
-
+    
 #}}}
 
 #{{{ getname
-
+    
     getname := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
-
+            
             if p :: indexed then
                 # Convert indexed to slashed name;
                 # e.g. pkg[func] --> `pkg/func`
@@ -861,7 +928,7 @@ $endif
             else
                 pn := p;
             end if;
-
+            
             # Use eval in order to make sure everything is loaded from
             # the library. pnm is not returned (below) because
             # debugopts(stopat) needs a name if it is to return the
@@ -873,11 +940,11 @@ $endif
         finally
             kernelopts('opaquemodules'=opacity);
         end try;
-
+        
         return pn;
-
+        
     end proc;
-
+    
 #}}}
 
 $undef DBG_EVAL1

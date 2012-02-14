@@ -168,9 +168,12 @@
 ##
 ##SUBSECTION(collapsed) Option Details
 ##opt(debug_builtins,truefalse)
-##  If true then the `stopat` option can be used to debug built-in
-##  procedure.   The built-in procedure is replaced with a wrapper
+##  If true, the `stopat` option can be used to debug most built-in procedures.
+##  The built-in procedure is replaced with a wrapper
 ##  procedure that calls the original procedure.
+##  An error is raised if attempting to debug a builtin that is known
+##  to cause problems if it were allowed to be debugged; however,
+##  those builtins that are allowed to be debugged may cause problems.
 ##  The default value is false.
 ##
 ##opt(emacs,string)
@@ -396,6 +399,12 @@
 ##- Clear the stop-on-warning.
 ##> mdc(stopwarning=false);
 ##
+##- Debug a builtin procedure.  This can be useful for verifying
+##  the arguments passed to a builtin procedure.
+##
+##> mdc(stopat=convert, 'debug_builtins'):
+##> convert(<a,b,c>, list);
+##
 ##
 ##SUBSECTION Skipping
 ##- Use the `skip_until` option to stop the debugger during an
@@ -455,6 +464,9 @@ local Connect
     , Write
     , WriteTagf
 
+    , printf  # local versions so that globals can be 'debugged'
+    , sprintf
+
     # Module-local variables.  Seems unlikely that the debugger
     # will ever be thread-safe, so this is not serious.
 
@@ -486,6 +498,14 @@ $endif
 
     ModuleApply := mdc;
     Warnings := {};
+
+    printf := proc()
+        iolib(9,'default',args);  # fprintf('default',args)
+        iolib(23,'default');      # fflush('default')
+        NULL;
+    end proc;
+
+    sprintf := proc() iolib(10,args) end proc;
 
 #{{{ mdc
 
@@ -523,11 +543,14 @@ $endif
     local lbl,str;
 
         #{{{ exit
+
         if exit then
+            Debugger:-RestoreBuiltins();
             Debugger:-Restore();
             Disconnect(_options['quiet']);
             return NULL;
         end if;
+
         #}}}
         #{{{ ignoretester
         if ignoretester then
@@ -580,6 +603,7 @@ $endif
         #}}}
 
         #{{{ connect to server
+
         if sid = -1 then
             try
                 Connect(host, port, CreateID(lbl)
@@ -592,6 +616,7 @@ $endif
                 error;
             end try;
         end if;
+
         #}}}
         #{{{ stopat
         if stopat :: set then
@@ -718,13 +743,14 @@ $endif
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
+        Debugger:-RestoreBuiltins();
         if sid <> -1 then
             try
                 Sockets:-Close( sid );
             catch:
             end try;
         end if;
-        restoreProcs();
+        Debugger:-Restore();
     end proc;
 
 #}}}
