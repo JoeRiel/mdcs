@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.10.2
+** Improved handling of builtins; prevent some from being debugged, restore when finished.
+** Fixed bug with stopwarning=false
+** Improved examples and descriptions.
 * mdcs-1.10.1
 ** debugger/readline: remove trailing newline, needed for some commands
 ** debugger: handle NULL returned by a statement
