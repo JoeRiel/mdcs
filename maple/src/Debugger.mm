@@ -124,13 +124,15 @@ $endif
     
 #}}}
 #{{{ RestoreBuiltins
-    
+
     RestoreBuiltins := proc()
     local pnam;
-        for pnam in [indices(debugged_builtins,'nolist')] do
-            proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
-            debugged_builtins[pnam] := evaln(debugged_builtins[pnam]);
-        end do;
+        if debugged_builtins :: table then
+            for pnam in [indices(debugged_builtins,'nolist')] do
+                proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
+                debugged_builtins[pnam] := evaln(debugged_builtins[pnam]);
+            end do;
+        end if;
         NULL;
     end proc;
 #}}}
@@ -782,7 +784,7 @@ $endif
 #}}}
 
 #{{{ stopat
-    
+
 ##DEFINE CMD stopat
 ##PROCEDURE \MOD[\SUBMOD][\CMD]
 ##HALFLINE a fast method to instrument a procedure
@@ -807,7 +809,7 @@ $endif
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
-    
+
     stopat := proc(p :: {name,string,list}
                    , n :: posint
                    , cond :: uneval
@@ -853,6 +855,7 @@ $endif
                               , op
                               , pointto
                               , parse
+                              , print
                               , seq
                               , streamcall
                               , subs
@@ -866,23 +869,23 @@ $endif
                              }') then
                 error "cannot debug '%1'", pnam;
             end if;
-            
+
             debugged_builtins[pnam] := eval(pnam);
-            
+
             unprotect(pnam);
             proc(f)
                 f := subs(_f = eval(f), proc() _f(_passed) end proc);
             end proc(pnam);
             return procname(pnam, _passed[2..]);
         end if;
-        
+
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, st])
         else                  debugopts('stopat'=[pnam, st, 'cond'])
         end if;
         return NULL;
     end proc:
-    
+
 #}}}
 #{{{ unstopat
     
