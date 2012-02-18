@@ -791,16 +791,12 @@ $endif
                     emacs();
                 else
                     sys := kernelopts('platform');
-                    if sys = "windows" then
-                        cmd := sprintf("start /b %s --funcall mds", emacs);
-                    elif sys = "dos" then
-                        error "cannot launch emacs from dos";
-                    else
-                        cmd := sprintf("%s --funcall mds &", emacs);
-                    end if;
-                    if system(cmd) <> 0 then
-                        error "problem launching emacs"
-                    end if;
+                    cmd := sprintf("%s", emacs);
+                    try
+                        system['launch'](cmd);
+                    catch:
+                        error "problem launching emacs";
+                    end try;
                 end if;
                 to 5 do
                     try
