@@ -25,7 +25,7 @@ $define LOGFILE "readline.log"
 Debugger := module()
 
 #{{{ declarations
-    
+
 export Printf
     ,  Replace
     ,  Restore
@@ -36,9 +36,9 @@ export Printf
     ,  stopat
     ,  unstopat
     ;
-    
+
 global DEBUGGER_PROCS;
-    
+
 local _debugger
     , debugger_printf
     , debugger_readline
@@ -59,13 +59,13 @@ $endif
     , parse_debugger
     , ModuleLoad
     ;
-    
+
     last_evalLevel := 0;
-    
+
 #}}}
 
 #{{{ ModuleLoad
-    
+
     ModuleLoad := proc()
     local ver;
         # Newer version of Maple, 14+, allow the keyword 'debugger'
@@ -80,11 +80,11 @@ $endif
         end if;
         NULL;
     end proc;
-    
+
 #}}}
 
 #{{{ Replace
-    
+
     Replace := proc()
         if replaced <> true then
             # Save these
@@ -109,10 +109,10 @@ $endif
         end if;
         return NULL;
     end proc;
-    
+
 #}}}
 #{{{ Restore
-    
+
     Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced = true then
@@ -121,7 +121,7 @@ $endif
         end if;
         return NULL;
     end proc;
-    
+
 #}}}
 #{{{ RestoreBuiltins
 
@@ -138,20 +138,20 @@ $endif
 #}}}
 
 #{{{ Print and _printf
-    
+
     Printf := proc()
         debugger_printf('MDC_PRINTF', _rest);
     end proc;
-    
+
     # currently not used
     _print := proc()
         orig_print(_passed);
         debugger_printf('DBG_WARN', "print output does not display in debugger\n");
     end proc;
-    
+
 #}}}
 #{{{ ShowError
-    
+
     ShowError := proc()
     local err;
         err := debugopts('lasterror');
@@ -161,10 +161,10 @@ $endif
             debugger_printf('DBG_ERROR', "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
-    
+
 #}}}
 #{{{ ShowException
-    
+
     ShowException := proc()
     local except;
         except := debugopts('lastexception');
@@ -174,36 +174,36 @@ $endif
             debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
-    
+
 #}}}
 
 # Debugger replacements
 
 #{{{ debugger_printf
-    
+
     debugger_printf := proc( tag :: name )
     local argList, rts;
     description `Used by debugger to produce output.`;
-        
+
         argList := [_rest];
-        
+
         # suppress large rtables
         rts := map(x->x=`debugger/describe_rtable`(x)
                    , indets(argList,'debugger_large_rtable')
                   );
         if rts <> {} then argList := subs(rts,argList) end if;
-        
+
         WriteTagf(tag, op(argList));
-        
+
         return NULL;
     end proc:
-    
+
 #}}}
 #{{{ debugger_readline
-    
+
 # Used for user-input to the debugger. This lets us easily change the input
 # facilities to take advantage of special features of the Iris in future.
-    
+
     debugger_readline := proc()
     local line,n;
     description `Used by debugger to obtain user-input.`;
@@ -226,24 +226,24 @@ $endif
             end try;
         end do;
     end proc:
-    
+
 #}}}
 #{{{ debugger
-    
+
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
-    
+
     _debugger := proc( )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
-    local procName, statNumber, evalLevel, i, j, n, line, original, statLevel
+    local dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
         , state, pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop;
-        
+
         evalLevel := kernelopts('level') - 21;
-        
+
         n := _npassed;
         if n > 0
         and _passed[n] :: list
@@ -253,7 +253,7 @@ $endif
             statNumber := _passed[n][3];
             statLevel := _passed[n][4];
             n := n - 1;
-            
+
             if skip then
                 skip := not match_predicate(_passed[1..n]);
                 if SkipCheckStack then
@@ -267,7 +267,7 @@ $endif
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
-        
+
         #{{{ remove indices in procName
         # Added by Joe Riel.  Indices are used by some procedures,
         # for example, map[3], but need to be removed.  Multiple
@@ -277,7 +277,7 @@ $endif
         end do;
         #}}}
         #{{{ process args
-        
+
         if not skip then
             for i from 1 to n do
                 # Use addressof to prevent an object from overriding
@@ -329,13 +329,13 @@ $endif
                     debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
                 fi
             od;
-            
+
         end if;
-        
+
         #}}}
-        
+
         #{{{ print the debug status
-        
+
         if procName <> 0 then
             if statNumber < 0 then
                 if not skip then
@@ -344,8 +344,8 @@ $endif
                 end if;
                 statNumber := -statNumber
             end if;
-            
-            local dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
+
+            dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
             # Set module_flag true if next statement appears to
             # evaluate a module, which causes a debugger error if one
             # attempt to step into it.  The test is simple and uses
@@ -365,9 +365,9 @@ $endif
                 end if;
             end if;
         end if;
-        
+
         #}}}
-        
+
         #{{{ handle skip
         # skip is true if 'skip_until' is in effect.
         if skip then
@@ -380,7 +380,7 @@ $endif
         end if;
         #}}}
         #{{{ command loop
-        
+
         do
             line := `debugger/readline`();
             # If there's an assignment, make sure it is delimited by spaces.
@@ -408,9 +408,9 @@ $endif
                 fi
             fi;
             err := NULL;
-            
+
             #{{{ parse cmd (else is arbitrary expression)
-            
+
             if cmd = "cont" then
                 return
             elif cmd = "next" then
@@ -598,28 +598,28 @@ $endif
                     err := lasterror;
                 end try;
             fi;
-            
+
             #}}}
             #{{{ handle error
-            
+
             if err = lasterror then
                 debugger_printf('DBG_PARSE_ERR', "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             fi;
-            
+
             #}}}
-            
+
         od;
-        
+
         #}}}
-        
+
     end proc:
-    
+
 #}}}
 
 #{{{ showstat
-    
+
     _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description `Displays a procedure with statement numbers and breakpoints.`;
@@ -634,9 +634,9 @@ $endif
             elif _npassed = 3 then
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
-            
+
             map[3](debugger_printf, 'DBG_SHOW_INACTIVE', "\n%s", [res]);
-            
+
             # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
                 debugger_printf('DBG_NULL', "\n" )
@@ -644,27 +644,27 @@ $endif
         fi;
         NULL
     end proc:
-    
+
 #}}}
 #{{{ ShowstatAddr
-    
+
     ShowstatAddr := proc( addr :: integer
                           , {dead :: truefalse := false}
                           , $
                         )
 $ifdef DONTUSE
     local prc, pstr;
-        
+
         prc := pointto(addr);
         pstr := convert(debugopts('procdump' = prc),string);
-        
+
         # Alas, this does not work.  Eval'ing (or op'ing)
         # the procedure can cause the debugger to execute.
-        
+
         # Eval'ing (or op'ing) prc can cause the
         # debugger to run ahead the first time this is done
         # in a module local procedure.
-        
+
         # Create option string
         opts := op(3, op(prc));
         if opts = NULL then
@@ -672,7 +672,7 @@ $ifdef DONTUSE
         else
             opts := sprintf("option %q;\n", opts);
         end if;
-        
+
         # Create description string
         desc := op(5, op(prc));
         if desc = NULL then
@@ -680,7 +680,7 @@ $ifdef DONTUSE
         else
             desc := sprintf("description %a;\n", desc);
         end if;
-        
+
         # Split at first statement and insert opts and desc
         pos := StringTools:-Search("\n   1", pstr);
         pstr := cat(pstr[..pos]
@@ -699,16 +699,16 @@ $endif
                  );
         NULL;
     end proc;
-    
+
 #}}}
 #{{{ showstop
-    
+
     _showstop := proc( $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
     description `Display a summary of all break points and watch points.`;
     local i, ls, val, width;
     global showstop;
-        
+
         ls := stopat();
         if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo breakpoints set.\n")
         else
@@ -757,10 +757,10 @@ $endif
         if procname <> 'showstop[nonl]' then debugger_printf('DBG_INFO', "\n") fi;
         NULL
     end proc:
-    
+
 #}}}
 #{{{ where
-    
+
     _where := proc( n::integer, $ )
     local stack, i;
     option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
@@ -780,7 +780,7 @@ $endif
         fi;
         NULL
     end proc:
-    
+
 #}}}
 
 #{{{ stopat
@@ -888,7 +888,7 @@ $endif
 
 #}}}
 #{{{ unstopat
-    
+
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
@@ -908,16 +908,16 @@ $endif
         end if;
         return NULL;
     end proc:
-    
+
 #}}}
 
 #{{{ getname
-    
+
     getname := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
-            
+
             if p :: indexed then
                 # Convert indexed to slashed name;
                 # e.g. pkg[func] --> `pkg/func`
@@ -931,7 +931,7 @@ $endif
             else
                 pn := p;
             end if;
-            
+
             # Use eval in order to make sure everything is loaded from
             # the library. pnm is not returned (below) because
             # debugopts(stopat) needs a name if it is to return the
@@ -943,11 +943,11 @@ $endif
         finally
             kernelopts('opaquemodules'=opacity);
         end try;
-        
+
         return pn;
-        
+
     end proc;
-    
+
 #}}}
 
 $undef DBG_EVAL1
