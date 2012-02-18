@@ -174,9 +174,12 @@
 ##  An error is raised if attempting to debug builtins used by the debugger.
 ##  The default value is false.
 ##
-##opt(emacs,string)
-##  Executable used to launch emacs.
-##  Only used if `launch_emacs` is true.
+##opt(emacs,string or procedure)
+##  Executable used to launch Emacs.
+##  If a string, it is passed to "system".
+##  If a procedure, the procedure is called with no arguments;
+##  it should launch Emacs and start the Maple Debugger Server.
+##  This option is only used if `launch_emacs` is true.
 ##  The default value is ~"emacs"~; this option is sticky.
 ##
 ##opt(exit,truefalse)
@@ -516,7 +519,7 @@ $endif
 
     mdc := proc( (* no positional parameters *)
                  { debug_builtins :: truefalse := debugbuiltins }
-                 , { emacs :: string := GetDefault(':-emacs', "emacs") }
+                 , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
                  , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
@@ -770,7 +773,7 @@ $endif
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
-                    , { emacs :: string := "emacs" }
+                    , { emacs :: {string,procedure} := "emacs" }
                     , { launch_emacs :: truefalse := false }
                     , { quiet :: truefalse := false }
                     , { verbose :: truefalse := false }
@@ -784,16 +787,20 @@ $endif
             sid := Sockets:-Open(host, port);
         catch:
             if launch_emacs then
-                sys := kernelopts('platform');
-                if sys = "windows" then
-                    cmd := sprintf("start /b %s --funcall mds", emacs);
-                elif sys = "dos" then
-                    error "cannot launch emacs from dos";
+                if emacs :: procedure then
+                    emacs();
                 else
-                    cmd := sprintf("%s --funcall mds &", emacs);
-                end if;
-                if system(cmd) <> 0 then
-                    error "problem launching emacs"
+                    sys := kernelopts('platform');
+                    if sys = "windows" then
+                        cmd := sprintf("start /b %s --funcall mds", emacs);
+                    elif sys = "dos" then
+                        error "cannot launch emacs from dos";
+                    else
+                        cmd := sprintf("%s --funcall mds &", emacs);
+                    end if;
+                    if system(cmd) <> 0 then
+                        error "problem launching emacs"
+                    end if;
                 end if;
                 to 5 do
                     try
