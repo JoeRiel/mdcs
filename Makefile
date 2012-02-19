@@ -223,7 +223,7 @@ $(installer): doc hdb mla
 
 installer-zip: $(call print-help,installer-zip,Create Maple installer zip file)
 installer-zip: installer
-	zip mdcs-installer-$(VERSION).zip $(installer) README-installer run-installer run-installer.bat
+	zip mdcs-installer-$(subst .,-,$(VERSION)).zip $(installer) README-installer run-installer run-installer.bat
 
 # }}}
 
@@ -296,7 +296,7 @@ dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES RE
 
 zip: $(call print-help,zip,Create zipfile)
 zip: $(dist)
-	zip mdcs-$(subst .,-,$(VERSION)).zip $+
+	zip mdcs-$(VERSION).zip $+
 
 # }}}
 
