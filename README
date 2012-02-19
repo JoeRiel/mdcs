@@ -1,4 +1,4 @@
-VERSION 1.10.2
+VERSION 1.10.3
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
