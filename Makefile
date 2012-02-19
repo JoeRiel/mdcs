@@ -296,7 +296,7 @@ dist := $(LISP_FILES) $(mla) $(hdb) $(INFO_FILES) $(HTML_FILES) RELEASE-NOTES RE
 
 zip: $(call print-help,zip,Create zipfile)
 zip: $(dist)
-	zip mdcs-$(VERSION).zip $+
+	zip mdcs-$(subst .,-,$(VERSION)).zip $+
 
 # }}}
 
