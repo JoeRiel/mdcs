@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.10.3
+** Use system[launch] to start emacs; that should work with all OSes, but doesn't allow parameters,
+   so Emacs must start mds when launched.
+** All 'emacs' option to be assigned a procedure; if so assigned, use it to connect to Emacs.
 * mdcs-1.10.2
 ** Improved handling of builtins; prevent some from being debugged, restore when finished.
 ** Fixed bug with stopwarning=false

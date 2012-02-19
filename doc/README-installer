@@ -49,20 +49,28 @@ INSTALLATION
    the files, rename _config.mpl (located at $HOME/maple/toolbox/emacs)
    to config.mpl, and edit it appropriately for your system.
 
-7. Modify your .emacs file (normally located at $HOME/.emacs).  Add
-   the following statements
+7. Create/modify your .emacs file (normally located at $HOME/.emacs).  
+   To determine what Emacs uses for your home directory,
+   execute (getenv "HOME").  To do that, type M-x getenv
+   and then HOME.  M-x usually means hold down the Alt key
+   and press the x key.
+   Add the following statements to the .emacs file
 
-;; THIS WON'T WORK FOR WINDOWS; remove backslashes from HOME
-
-;; add ~/.emacs.d/maple to Emacs load-path
+;; add ~/.emacs.d/maple to Emacs load-path.
+;; This line won't work on Windows because the string returned
+;; by getenv includes back-slashes.
 (setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
+;; On a Windows system, do something like
+(setq load-path (cons "C:/Users/foo/AppData/Roaming/.emacs.d/maple/" load-path))
+
 ;; mds package
 (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
 ;; Assign the function keys f12 and Ctrl-f12.
 ;; Choose appropriate keys.
 (global-set-key [f12] 'mds-wm-cycle-clients) 
 (global-set-key [C-f12] 'mds-wm-cycle-groups)
-
+;; The following command starts the Maple debugger server.
+(mds) 
 ;; maplev package
 (autoload 'maplev-mode "maplev" "Maple editing mode" t)
 
