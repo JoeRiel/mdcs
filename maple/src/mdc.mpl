@@ -63,9 +63,9 @@
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('stops', 'opts')
+##- \CMD('stopats', 'opts')
 ##PARAMETERS
-##- 'stops' : (optional) ::seq(\\{string,name,list\\})::; procedures to instrument
+##- 'stopats' : (optional) ::seq(\\{string,name,list\\})::; procedures to instrument
 ##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
@@ -81,9 +81,10 @@
 ##  debugger may also be invoked by clicking the *debug icon* on the
 ##  toolbar during a running computation.
 ##
-##- The optional 'stops' parameter specifies the procedures to
+##- The optional 'stopats' parameter specifies the procedures to
 ##  instrument.  Using it is equivalent to calling `\CMD` with
-##  the `stopat` option; this provides a slightly shorter syntax.
+##  the `stopat` option; this provides a convenient shortcut.
+##  See the `stopat` option for the usage.
 ##
 ##- The target procedures can also be instrumented by passing the
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
@@ -528,7 +529,7 @@ $endif
 
 #{{{ mdc
 
-    mdc := proc( stops :: seq({string,name,list,set({string,name,list})})
+    mdc := proc( stopats :: seq({string,name,list,set({string,name,list})})
                  , { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
@@ -650,8 +651,8 @@ $endif
             Debugger:-stopat(stopat);
         end if;
 
-        if stops <> NULL then
-            for stp in [stops] do
+        if stopats <> NULL then
+            for stp in [stopats] do
                 Debugger:-stopat(stp);
             end do;
         end if;
