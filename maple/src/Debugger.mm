@@ -218,7 +218,9 @@ $endif
                 end do;
                 return line[..n];
             catch "process %1 disconnected unexpectedly":
-                error;
+                error sprintf("%s; use mdc(reconnect) to reconnect"
+                              , StringTools:-FormatMessage(lastexception[2..])
+                             );
             catch:
                 debugger_printf('DBG_ERR'
                                 , "Error, %s\n"

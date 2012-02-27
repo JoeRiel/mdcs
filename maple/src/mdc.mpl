@@ -63,8 +63,9 @@
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('opts')
+##- \CMD('stops', 'opts')
 ##PARAMETERS
+##- 'stops' : (optional) ::seq(\\{string,name,list\\})::; procedures to instrument
 ##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
@@ -79,6 +80,10 @@
 ##  code that calls the procedure. In the standard Maple GUI the
 ##  debugger may also be invoked by clicking the *debug icon* on the
 ##  toolbar during a running computation.
+##
+##- The optional 'stops' parameter specifies the procedures to
+##  instrument.  Using it is equivalent to calling `\CMD` with
+##  the `stopat` option; this provides a slightly shorter syntax.
 ##
 ##- The target procedures can also be instrumented by passing the
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
@@ -160,6 +165,7 @@
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
 ##- `quiet` : suppress greeting from server
+##- `reconnect` : reconnect to the debugger server
 ## -`skip_check_stack` : enables stack checking during skip
 ##- `skip_until` : assigns predicate used for skipping (cf. "SkipUntil")
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
@@ -231,8 +237,15 @@
 ##  The default value is 10000; this option is sticky.
 ##
 ##opt(quiet,truefalse)
-##  When true do not print the greeting/farewell from the server.
+##  When true, do not print the greeting/farewell from the server.
 ##  The default is false; this option is sticky.
+##
+##opt(reconnect,truefalse)
+##  When true, reconnect to the debugger server.
+##  This may be useful if the server had to be reset.
+##  After reconnecting, the debugging buffer may be blank
+##  until a statement is executed.
+##  The default is `false`.
 ##
 ##opt(showoptions,truefalse)
 ##  When true, the **options** and **description** statements
@@ -517,8 +530,8 @@ $endif
 
 #{{{ mdc
 
-    mdc := proc( (* no positional parameters *)
-                 { debug_builtins :: truefalse := debugbuiltins }
+    mdc := proc( stops :: seq({string,name,list,set({string,name,list})})
+                 , { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
@@ -529,6 +542,7 @@ $endif
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
+                 , { reconnect :: truefalse := false }
                  , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                  , { stopat :: {string,name,list,set({string,name,list})} := "" }
                  , { stoperror :: {truefalse,string,set} := false }
@@ -548,7 +562,7 @@ $endif
                )
 
     global `debugger/width`, WARNING;
-    local lbl,str;
+    local lbl,str,stp;
 
         #{{{ exit
 
@@ -584,19 +598,21 @@ $endif
         end if;
 
         #}}}
-        #{{{ usegrid
+        #{{{ usegrid (assign lbl)
+
         if usegrid then
             lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
         else
             lbl := label;
         end if;
+
         #}}}
         #{{{ showoptions
         if showoptions :: truefalse then
             show_options_flag := showoptions;
         end if;
         #}}}
-        #{{{ skip_until
+        #{{{ skip_until (clear skip)
 
         if skip_until <> NULL then
             SkipUntil(skip_until);
@@ -612,7 +628,7 @@ $endif
 
         #{{{ connect to server
 
-        if sid = -1 then
+        if sid = -1 or reconnect then
             try
                 Connect(host, port, CreateID(lbl)
                         , _options['emacs']
@@ -632,6 +648,13 @@ $endif
         elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
+
+        if stops <> NULL then
+            for stp in [stops] do
+                Debugger:-stopat(stp);
+            end do;
+        end if;
+
         #}}}
         #{{{ unstopat
         if unstopat :: set then
@@ -781,8 +804,12 @@ $endif
                    )
     local cmd,connected,line,sys;
         if sid <> -1 then
-            Sockets:-Close(sid);
+            try
+                Sockets:-Close(sid);
+            catch:
+            end try;
         end if;
+
         try
             sid := Sockets:-Open(host, port);
         catch:
@@ -817,7 +844,7 @@ $endif
         # handle login (hack for now)
         try
             line := Sockets:-Read(sid);
-        catch "invalid socket ID":
+        catch "invalid socket ID", "argument does not refer to an open socket connection":
             error "cannot connect to Debugger server.  Server may not be running."
         end try;
         # printf("%s\n", line);
