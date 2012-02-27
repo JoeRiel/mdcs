@@ -28,6 +28,7 @@ Debugger := module()
 
 export Printf
     ,  Replace
+    ,  Reset
     ,  Restore
     ,  RestoreBuiltins
     ,  ShowError
@@ -111,6 +112,13 @@ $endif
     end proc;
 
 #}}}
+#{{{ Reset
+
+    Reset := proc()
+        last_state := NULL;
+    end proc;
+
+#}}}
 #{{{ Restore
 
     Restore := proc()
@@ -186,13 +194,14 @@ $endif
     description `Used by debugger to produce output.`;
 
         argList := [_rest];
-
-        # suppress large rtables
-        rts := map(x->x=`debugger/describe_rtable`(x)
-                   , indets(argList,'debugger_large_rtable')
-                  );
-        if rts <> {} then argList := subs(rts,argList) end if;
-
+        try
+            # suppress large rtables
+            rts := map(x->x=`debugger/describe_rtable`(x)
+                       , indets(argList,'debugger_large_rtable')
+                      );
+            if rts <> {} then argList := subs(rts,argList) end if;
+        catch:
+        end try;
         WriteTagf(tag, op(argList));
 
         return NULL;
@@ -217,7 +226,9 @@ $endif
                 end do;
                 return line[..n];
             catch "process %1 disconnected unexpectedly":
-                error;
+                error sprintf("%s; use mdc(reconnect) to reconnect"
+                              , StringTools:-FormatMessage(lastexception[2..])
+                             );
             catch:
                 debugger_printf('DBG_ERR'
                                 , "Error, %s\n"
@@ -355,8 +366,8 @@ $endif
             else
                 module_flag := true;
             end if;
-            state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
             if not skip then
+                state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
                 if state = last_state then
                     WriteTagf('DBG_SAME_STATE');
                 else
@@ -371,10 +382,10 @@ $endif
         #{{{ handle skip
         # skip is true if 'skip_until' is in effect.
         if skip then
-            if not module_flag then
-                debugopts('steplevel'=999999999);
-            else
+            if module_flag then
                 debugopts('steplevel'=evalLevel+6);
+            else
+                debugopts('steplevel'=999999999);
             end if;
             return NULL;
         end if;
@@ -403,7 +414,7 @@ $endif
                     else
                         original := sprintf("assign('%a',%a)",line[1]
                                             , traperror(parse(line[2],parse_debugger)));
-                        cmd := ""
+                        cmd := "";
                     fi
                 fi
             fi;
