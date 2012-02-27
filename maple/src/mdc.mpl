@@ -243,8 +243,6 @@
 ##opt(reconnect,truefalse)
 ##  When true, reconnect to the debugger server.
 ##  This may be useful if the server had to be reset.
-##  After reconnecting, the debugging buffer may be blank
-##  until a statement is executed.
 ##  The default is `false`.
 ##
 ##opt(showoptions,truefalse)
@@ -624,6 +622,7 @@ $endif
         #{{{ replace debugger
 
         Debugger:-Replace();
+
         #}}}
 
         #{{{ connect to server
@@ -640,8 +639,6 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
-
-            Debugger:-Reset();
 
         end if;
 
@@ -809,6 +806,9 @@ $endif
                     , $
                    )
     local cmd,connected,line,sys;
+
+        Debugger:-Reset();
+
         if sid <> -1 then
             try
                 Sockets:-Close(sid);
