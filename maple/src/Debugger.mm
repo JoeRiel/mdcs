@@ -28,6 +28,7 @@ Debugger := module()
 
 export Printf
     ,  Replace
+    ,  Reset
     ,  Restore
     ,  RestoreBuiltins
     ,  ShowError
@@ -108,6 +109,13 @@ $ifdef LOG_READLINE
 $endif
         end if;
         return NULL;
+    end proc;
+
+#}}}
+#{{{ Reset
+
+    Reset := proc()
+        last_state := NULL;
     end proc;
 
 #}}}

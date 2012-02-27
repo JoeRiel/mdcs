@@ -629,6 +629,7 @@ $endif
         #{{{ connect to server
 
         if sid = -1 or reconnect then
+
             try
                 Connect(host, port, CreateID(lbl)
                         , _options['emacs']
@@ -639,6 +640,9 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
+
+            Debugger:-Reset();
+
         end if;
 
         #}}}
@@ -705,6 +709,7 @@ $endif
         end if;
         #}}}
         #{{{ unstoperror
+
         if unstoperror = true then
             debugopts('delerror' = 'all');
         elif unstoperror :: string then
@@ -712,6 +717,7 @@ $endif
         elif unstoperror :: set then
             map(:-unstoperror, unstoperror);
         end if;
+
         #}}}
         #{{{ unstoperror
         if untraperror = true then
@@ -847,7 +853,7 @@ $endif
         catch "invalid socket ID", "argument does not refer to an open socket connection":
             error "cannot connect to Debugger server.  Server may not be running."
         end try;
-        # printf("%s\n", line);
+
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
@@ -860,7 +866,8 @@ $endif
             end if;
             return NULL;
         end if;
-        # error "could not connect";
+
+
     end proc;
 
 #}}}
