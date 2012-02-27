@@ -115,6 +115,10 @@ Name given by `mds-log-buffer-name'.")
 (defvar mds-log-messages nil
   "*When non-nil, write all messages to `mds-log-buffer'.")
 
+(defvar mds-keep-dead-clients nil
+  "*When non-nil, keep dead clients.  Useful for inspecting the
+  output buffer of a traced procedure that crashes.")
+
 ;;}}}
 
 ;;{{{ Start and stop server
@@ -189,7 +193,8 @@ Do not touch `mds-log-buffer'."
       ;; Delete associated buffers.
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
-		       (if (mds-client-delete (assq proc mds-clients))
+		       (if (and (not mds-keep-dead-clients)
+				     (mds-client-delete (assq proc mds-clients)))
 			   "accepted " "")))
       (mds-wm-group-update mds-clients))
      ((string= msg "deleted\n"))
@@ -431,7 +436,6 @@ use them to route the message."
 
 ;;{{{ miscellaneous
 
-
 (defun mds-toggle-show-args ()
   "Toggle the variable `mds-show-args-flag', which
 controls the automatic display of arguments when entering a procedure."
@@ -464,20 +468,9 @@ controls the automatic echoing of input lines."
   (interactive)
   (message "mds version: %s" mds-version))
 
-
 ;;}}}    
 
 (provide 'mds)
-
-;;{{{ Manual Tests
-
-;;
-;; (load "mds-ss.el")
-;; (load "mds.el")
-;; (mds-start)
-;; (mds-stop)
-
-;;}}}
 
 ;;; mds.el ends here
 

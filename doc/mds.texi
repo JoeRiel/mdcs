@@ -313,6 +313,14 @@ transferred to Emacs.
 An integer that is the TCP port number used for communication.
 The default is 10000.
 
+@vindex mds-keep-dead-clients
+@item @code{mds-keep-dead-clients}
+A boolean variable that when non-nil prevents the buffers
+associated with a client from being removed when the client disconnects.
+Setting this to non-nil can be useful when tracing a command
+that causes the Maple kernel to disconnect.
+The default value is nil.
+
 @vindex mds-show-args-flag
 @findex mds-toggle-show-args
 @item @code{mds-show-args-flag}
