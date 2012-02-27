@@ -4,7 +4,7 @@
 
 SHELL := /bin/bash
 
-VERSION := 1.10.4
+VERSION := 1.10.5
 
 include help-system.mak
 

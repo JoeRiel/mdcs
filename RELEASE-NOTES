@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.10.5
+** Add 'reconnect' option to mdc
+** Added 'stops' positional parameter to mdc
 * mdcs-1.10.4
 ** debugger/printf: handle invalid indets call
 * mdcs-1.10.3
