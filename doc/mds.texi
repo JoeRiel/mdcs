@@ -179,9 +179,10 @@ These are printed in 1-D format so that they
 can be saved and reused as Maple input. 
 @item
 As lines of code are executed, they are echoed in the output
-window.  The result provides a visual trace of all the code
+window; @pxref{Output Buffer}.
+The result provides a visual trace of all the code
 that has been executed.  Clicking in the output window
-will open a third window that displays the procedure and
+opens a third window that displays the procedure and
 statement that generated the selected output.
 @item
 Expressions can be directly evaluated and displayed in a nice format.
@@ -191,15 +192,18 @@ with field name on the left and the entry on the right.
 The common debugging commands, 
 @strong{next}, @strong{into}, @strong{step}, etc.,
 are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
+@xref{Execution}.
 @item 
 Breakpoints can be set or cleared directly in the buffer.
 @item
 A trace mode permits rapidly tracing through instrumented procedures.
 That, coupled with the ability to jump from the output to
 the corresponding statement in the code, facilitates debugging.
+@xref{tracing}.
 @item
 Debugged procedures can be @emph{live-patched}, that is, modified in-place.  
 This permits testing changes without access to the full source code.
+@xref{Patching}.
 @end itemize
 
 @node Requirements, Installation, Summary, Introduction
@@ -319,6 +323,7 @@ A boolean variable that when non-nil prevents the buffers
 associated with a client from being removed when the client disconnects.
 Setting this to non-nil can be useful when tracing a command
 that causes the Maple kernel to disconnect.
+@xref{tracing}.
 The default value is nil.
 
 @vindex mds-show-args-flag
@@ -336,6 +341,7 @@ A boolean value that, when non-nil, causes tracing
 to stop when an error occurs.  This is useful
 in that it prevents the debugger from exiting when
 an error occurs while tracing.
+@xref{tracing}.
 The default is to stop.
 The command @code{mds-toggle-stop-trace-at-error}
 toggles this variable.
@@ -513,7 +519,8 @@ They are grouped according to function.
 
 MDS supports all the Maple debugger commands for executing the statements of
 a procedure.  These commands are bound to single keystrokes in the Showstat buffer.
-Output from these commands is written to the @emph{debugger output buffer}.
+Output from these commands is written to the @emph{debugger output buffer};
+@pxref{Output Buffer}.
 
 When any of these commands are executed, the cursor moves forward one character
 and, if the flavor of Emacs supports it, the cursor changes to a hollow box.
@@ -596,6 +603,7 @@ option to @code{mdc} is true.
 @kindex t
 @findex mds-trace
 @vindex mds-stop-trace-at-error-flag
+@anchor{tracing}
 @item t (@code{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
 @strong{cont}, @strong{next}, @strong{into}, @strong{level}, or @strong{step}, 
@@ -1079,7 +1087,8 @@ procedure, or what line of code, is the culprit.
 There are a couple ways to handle this.
 
 One possibility is to use the tracing feature, possibly with
-the @code{step} option.  A disadvantage with tracing is
+the @code{step} option; @pxref{tracing}.
+A disadvantage with tracing is
 that it produces a lot of output and is slow.
 
 Frequently a better way is to use @emph{skipping}.
