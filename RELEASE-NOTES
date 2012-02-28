@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.10.6
+** Add 'mds-keep-dead-clients' variable
+** Added cross references in mds.texi
 * mdcs-1.10.5
 ** Add 'reconnect' option to mdc
 ** Added 'stops' positional parameter to mdc
