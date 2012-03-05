@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-1.10.7
+** Improved and fixed Maple help pages (examples were broken)
+** Added TraceLevel export
 * mdcs-1.10.6
 ** Add 'mds-keep-dead-clients' variable
 ** Added cross references in mds.texi
