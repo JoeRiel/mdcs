@@ -152,21 +152,22 @@ byte-compile: $(ELC_FILES)
 
 # {{{ hdb
 
-.PHONY: hdb
+.PHONY: hdb remove-preview
+
+remove-preview :
+	$(RM) maple/src/_preview_.mm
 
 hdb := mdc.hdb
 hdb: $(call print-help,hdb,Create Maple help database)
-hdb: install-mla mdc.hdb
-
-mdc-new.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
-	@echo "Creating Maple help database"
-	@$(RM) maple/src/_preview_.mm
-	@mpldoc -c nightly $+
-	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
+hdb: remove-preview install-mla mdc.hdb
 
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
-	@$(RM) maple/src/_preview_.mm
+	@mpldoc -c nightly $+
+	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
+
+mdc-old.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
+	@echo "Creating Maple help database"
 	@$(RM) maple/doti/*
 	@err=$$(mpldoc --config etc/mpldoc/doti.xml $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p' ; ) ; \
 		if [ ! -z "$$err" ]; then \
@@ -182,7 +183,7 @@ mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 .PHONY: mla 
 mla := mdc.mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
-mla: $(mla)
+mla: remove-preview $(mla)
 
 txtbold   := $(shell tput bold)
 txtred    := $(shell tput setaf 1)
