@@ -1178,7 +1178,7 @@ $endif
 ##  while it is occurring.
 ##
 ##> restart;
-##> mdc:-SkipUntil(() -> evalb(kernelots('level') > 1000)):
+##> mdc:-SkipUntil(() -> evalb(kernelopts('level') > 1000)):
 ##> f := proc(x) 1 + procname(x+1) end proc:
 ##> mdc(f):
 ##> f();
