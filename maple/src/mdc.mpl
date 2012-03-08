@@ -271,13 +271,15 @@
 ##
 ##opt(skip_until,anything)
 ##  Specifies a predicate that can be used to skip
-##  all code until a condition is met.  If `skip_until` is
-##  a procedure, it is used as the predicate.
+##  all code until a condition is met.
+##  If `skip_until` is a procedure (but not a name),
+##  it is used as the predicate.
 ##  The result of each executed statement is passed to the predicate,
 ##  which must return true or false.
 ##  When true is returned, debugging recommences.
 ##
-##  If `skip_until` is not a procedure, the following predicate is used:
+##  If `skip_until` is not a procedure, or is the name of a procedure,
+##  the following predicate is used:
 ##  ~proc() has([_passed],skip_until) end proc~.
 ##  See "mdc[SkipUntil]" for a procedure that assigns the predicate
 ##  and has additional options.
@@ -1104,7 +1106,8 @@ $endif
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
 ##
-##- If 'ex' is a procedure, it is used as the predicate,
+##- If 'ex' is a procedure (but not a name),
+##  it is used as the predicate,
 ##  otherwise, the predicate is the procedure
 ##  ~proc() has([_passed],ex) end proc~.
 ##
@@ -1199,7 +1202,7 @@ $endif
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
             match_predicate := proc() hastype([_passed],ex) end proc;
-        elif ex :: procedure then
+        elif ex :: 'And(procedure,Not(name))' then
             match_predicate := eval(ex);
         else
             match_predicate := proc() has([_passed],ex) end proc;
