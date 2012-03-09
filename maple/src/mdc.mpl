@@ -1097,14 +1097,19 @@ $endif
 ##CALLINGSEQUENCE
 ##- \CMD('ex','opts')
 ##PARAMETERS
-##- 'ex' : ::anything::
+##- 'ex' : (optional) ::anything::
 ##param_opts(\CMD)
 ##RETURNS
-##- `NULL`
+##- `procedure`
 ##DESCRIPTION
 ##- The `\CMD` command
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
+##
+##- The current or newly assigned predicate is returned.
+##
+##- If called with no arguments,
+##  the current predicate is returned.
 ##
 ##- If 'ex' is a procedure (but not a name),
 ##  it is used as the predicate,
@@ -1191,11 +1196,12 @@ $endif
 ##- "mdc"
 ##- "mdc[mdc]"
 
-    SkipUntil := proc(ex
+    SkipUntil := proc(ex := NULL
                       , { usehastype :: truefalse := false }
                       , { exact :: truefalse := false }
                      )
-        if exact then
+        if ex = NULL then
+        elif exact then
             match_predicate := proc() evalb(_passed = ex) end proc;
         elif usehastype then
             if not ex :: type then
@@ -1207,7 +1213,7 @@ $endif
         else
             match_predicate := proc() has([_passed],ex) end proc;
         end if;
-        return NULL;
+        return eval(match_predicate);
     end proc;
 
 #}}}
