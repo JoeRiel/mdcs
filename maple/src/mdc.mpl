@@ -287,6 +287,15 @@
 ##  To use the skip predicate, execute the `_skip` debugger command
 ##  inside the debugger, where it is bound to the `S` key.
 ##
+##opt(skip_until[exact],anything)
+##  Similar to `skip_until`, but passes the `exact` option to "SkipUntil".
+##
+##opt(skip_until[loc],anything)
+##  Similar to `skip_until`, but passes the `matchlocals` option to "SkipUntil".
+##
+##opt(skip_until[type],anything)
+##  Similar to `skip_until`, but passes the `usehastype` option to "SkipUntil".
+##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
 ##  Strings are parsed with ~kernelopts(opaquemodules=false)~,
@@ -580,6 +589,9 @@ $endif
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
                  , { skip_until := NULL }
+                 , { `skip_until[exact]` := NULL }
+                 , { `skip_until[loc]` := NULL }
+                 , { `skip_until[type]` := NULL }
                  , { skip_check_stack :: truefalse := SkipCheckStack }
                  , { traperror :: {truefalse,string,set} := false }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
@@ -646,7 +658,14 @@ $endif
 
         if skip_until <> NULL then
             SkipUntil(skip_until);
+        elif `skip_until[loc]` <> NULL then
+            SkipUntil(`skip_until[loc]`, 'matchlocals');
+        elif `skip_until[type]` <> NULL then
+            SkipUntil(`skip_until[type]`, 'usehastype');
+        elif `skip_until[exact]` <> NULL then
+            SkipUntil(`skip_until[exact]`, 'exact');
         end if;
+
         skip := false;
 
         #}}}
@@ -804,12 +823,18 @@ $endif
     ModuleLoad := proc()
         debugbuiltins := GetDefault(':-debug_builtins', false);
         SkipCheckStack := GetDefault(':-skip_check_stack', false);
+        TypeTools:-AddType('synonym'
+                           , proc(x,nm)
+                                 x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
+                             end proc
+                          );
     end proc;
 
 #}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
+        TypeTools:-RemoveType('synonym');
         Debugger:-RestoreBuiltins();
         if sid <> -1 then
             try
@@ -1130,9 +1155,15 @@ $endif
 ##
 ##
 ##OPTIONS
-##opt(exact, truefalse)
+##- These options are mutually exclusive;
+##opt(exact,truefalse)
 ##  When true, the predicate is ~proc() evalb(_passed = ex) end proc~.
 ##  An exact match is efficient.
+##  The default is false.
+##opt(matchlocals,truefalse)
+##  When true, any locals in the expression being tested are replaced
+##  with globals before testing.  This option can be used by itself,
+##  in which case the test using `has` is performed, or with `exact` option.
 ##  The default is false.
 ##opt(usehastype,truefalse)
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
@@ -1192,6 +1223,21 @@ $endif
 ##> f();
 ##ENDSUBSECTION
 ##
+##SUBSECTION Match an expression with a local variable
+##- Assign a procedure that computes an expression, _exp(x)_,
+##  with a local variable, _x_, that we want to locate using skipping.
+##>> f := proc()
+##>> local x,y;
+##>>     y := exp(x);
+##>>     y^2;
+##>>  end proc:
+##
+##- Use the `matchlocals` option.
+##> mdc:-SkipUntil(exp(x), 'matchlocals'):
+##> mdc(f):
+##> f();
+##ENDSUBSECTION
+##
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[mdc]"
@@ -1199,15 +1245,27 @@ $endif
     SkipUntil := proc(ex := NULL
                       , { usehastype :: truefalse := false }
                       , { exact :: truefalse := false }
+                      , { matchlocals :: truefalse := false }
                      )
         if ex = NULL then
         elif exact then
-            match_predicate := proc() evalb(_passed = ex) end proc;
+            if matchlocals then
+                match_predicate := proc()
+                    _npassed > 0 and subs([seq(n=convert(n,`global`), n=indets([_passed],`local`))],[_passed]) = ex;
+                end proc;
+            else
+                match_predicate := proc() evalb(_passed = ex) end proc;
+            end if;
         elif usehastype then
             if not ex :: type then
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
             match_predicate := proc() hastype([_passed],ex) end proc;
+        elif matchlocals then
+            match_predicate := proc()
+                local n;
+                _npassed > 0 and has(subs([seq(n=convert(n,`global`), n=indets([_passed],`local`))],[_passed]),ex);
+            end proc;
         elif ex :: 'And(procedure,Not(name))' then
             match_predicate := eval(ex);
         else
