@@ -287,14 +287,26 @@
 ##  To use the skip predicate, execute the `_skip` debugger command
 ##  inside the debugger, where it is bound to the `S` key.
 ##
+##opt(skip_until[alloc],posint)
+##  Similar to `skip_until`, but uses the `bytesalloc` option to "SkipUntil".
+##  Skipping stops when _kernelopts(bytesalloc)_ exceeds the value.
+##
 ##opt(skip_until[exact],anything)
 ##  Similar to `skip_until`, but passes the `exact` option to "SkipUntil".
+##  Skipping stops when a computed result exactly matches the value.
+##
+##opt(skip_until[level],posint)
+##  Similar to `skip_until`, but uses the `stacklevel` option to "SkipUntil".
+##  Skipping stops when _kernelopts(level)_ exceeds the value.
 ##
 ##opt(skip_until[loc],anything)
 ##  Similar to `skip_until`, but passes the `matchlocals` option to "SkipUntil".
+##  Skipping stops when the value appears in a computed result that
+##  has all local variables replaced with the global equivalent.
 ##
 ##opt(skip_until[type],anything)
 ##  Similar to `skip_until`, but passes the `usehastype` option to "SkipUntil".
+##  Skipping stops when the given type appears in a computed result.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -589,7 +601,9 @@ $endif
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
                  , { skip_until := NULL }
+                 , { `skip_until[alloc]` :: posint := NULL }
                  , { `skip_until[exact]` := NULL }
+                 , { `skip_until[level]` :: posint := NULL }
                  , { `skip_until[loc]` := NULL }
                  , { `skip_until[type]` := NULL }
                  , { skip_check_stack :: truefalse := SkipCheckStack }
@@ -658,6 +672,10 @@ $endif
 
         if skip_until <> NULL then
             SkipUntil(skip_until);
+        elif `skip_until[alloc]` <> NULL then
+            SkipUntil('bytesalloc' = `skip_until[alloc]`);
+        elif `skip_until[level]` <> NULL then
+            SkipUntil('stacklevel' = `skip_until[level]`);
         elif `skip_until[loc]` <> NULL then
             SkipUntil(`skip_until[loc]`, 'matchlocals');
         elif `skip_until[type]` <> NULL then
@@ -1155,7 +1173,9 @@ $endif
 ##
 ##
 ##OPTIONS
-##- These options are mutually exclusive;
+##- Some of the options are mutually exclusive.
+##opt(bytesalloc,posint)
+##  When passed, skip until _bytesalloc < kernelopts(:-bytesalloc)_.
 ##opt(exact,truefalse)
 ##  When true, the predicate is ~proc() evalb(_passed = ex) end proc~.
 ##  An exact match is efficient.
@@ -1165,6 +1185,8 @@ $endif
 ##  with globals before testing.  This option can be used by itself,
 ##  in which case the test using `has` is performed, or with `exact` option.
 ##  The default is false.
+##opt(stacklevel,posint)
+##  When passed, skip until _stacklevel < kernelopts(:-level)_.
 ##opt(usehastype,truefalse)
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
@@ -1205,7 +1227,7 @@ $endif
 ##  the statements that initiated the excessive usage.
 ##
 ##> restart;
-##> mdc:-SkipUntil(() -> evalb(kernelopts('bytesalloc') > 1e8)):
+##> mdc:-SkipUntil('bytesall' = 1e8):
 ##> mdc(sum):
 ##> sum(binomial(n+2*i, n), i=1..e-1);
 ##
@@ -1217,7 +1239,7 @@ $endif
 ##  while it is occurring.
 ##
 ##> restart;
-##> mdc:-SkipUntil(() -> evalb(kernelopts('level') > 1000)):
+##> mdc:-SkipUntil('stacklevel' = 1000):
 ##> f := proc(x) 1 + procname(x+1) end proc:
 ##> mdc(f):
 ##> f();
@@ -1243,11 +1265,17 @@ $endif
 ##- "mdc[mdc]"
 
     SkipUntil := proc(ex := NULL
+                      , { bytesalloc :: posint := NULL }
+                      , { stacklevel :: posint := NULL }
                       , { usehastype :: truefalse := false }
                       , { exact :: truefalse := false }
                       , { matchlocals :: truefalse := false }
                      )
-        if ex = NULL then
+        if bytesalloc <> NULL then
+            match_predicate := proc() evalb(bytesalloc < kernelopts(':-bytesalloc')) end proc;
+        elif stacklevel <> NULL then
+            match_predicate := proc() evalb(stacklevel < kernelopts(':-level')) end proc;
+        elif ex = NULL then
         elif exact then
             if matchlocals then
                 match_predicate := proc()
