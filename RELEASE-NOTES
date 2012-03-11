@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.11.1
+** Added indices to skip_until option to handle special cases
 * mdcs-1.10.7
 ** Improved and fixed Maple help pages (examples were broken)
 ** Added TraceLevel export
