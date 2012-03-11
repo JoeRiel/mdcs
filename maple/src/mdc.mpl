@@ -1251,7 +1251,7 @@ $endif
         elif exact then
             if matchlocals then
                 match_predicate := proc()
-                    _npassed > 0 and subs([seq(n=convert(n,`global`), n=indets([_passed],`local`))],[_passed]) = ex;
+                    _npassed > 0 and ex = subs([seq(n=convert(n,`global`), n=indets([_passed],`local`))],[_passed]);
                 end proc;
             else
                 match_predicate := proc() evalb(_passed = ex) end proc;
