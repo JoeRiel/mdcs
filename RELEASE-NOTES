@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-1.11.2
+** Added 'level' and 'alloc' indices to skip_until
+** Fixed help page to display with tty Maple
+** Added message when grouping clients
 * mdcs-1.11.1
 ** Added indices to skip_until option to handle special cases
 * mdcs-1.10.7
