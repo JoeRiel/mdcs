@@ -128,7 +128,7 @@
 ##
 ##OPTIONS
 ##
-##SUBSECTION(collapsed) Instrumentation Options
+##SUBSECTION Instrumentation Options
 ##-(lead="indent")
 ##  These options are used to instrument procedures for debugging.
 ##  Most correspond to a standard Maple procedure of the same name.
@@ -146,7 +146,7 @@
 ##- `unstopwhen` : clear a conditional watchpoint
 ##ENDSUBSECTION
 ##
-##SUBSECTION(collapsed) Configuration Options
+##SUBSECTION Configuration Options
 ##-(lead="indent")
 ##  These options configure the debugger.
 ##  They are *sticky*, meaning they remain
@@ -178,7 +178,7 @@
 ##- `view` : enables echoing of commands
 ##ENDSUBSECTION
 ##
-##SUBSECTION(collapsed) Option Details
+##SUBSECTION Option Details
 ##opt(debug_builtins,truefalse)
 ##  If true, the `stopat` option can be used to debug most built-in procedures.
 ##  The built-in procedure is replaced with a wrapper
@@ -480,7 +480,7 @@
 ##> mdc('skip_check_stack'):
 ##> f(y);
 ##
-##- See "mdc[SkipUntil]" for more examples of using the skip feature.
+##- See "mdc[SkipUntil]" for more examples using the skip feature.
 ##
 ##ENDSUBSECTION
 ##

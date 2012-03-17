@@ -226,7 +226,8 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 	  (if (listp g)
 	      (mds-wm-display-group g)
 	    (mds-wm-display-client g))
-	  (setq mds-wm-grouped-clients G)))))
+	  (setq mds-wm-grouped-clients G)))
+    (message "no debugger groups")))
 
 
 (defvar mds-wm-group nil)
