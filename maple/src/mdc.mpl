@@ -1274,7 +1274,10 @@ $endif
         if bytesalloc <> NULL then
             match_predicate := proc() evalb(bytesalloc < kernelopts(':-bytesalloc')) end proc;
         elif stacklevel <> NULL then
-            match_predicate := proc() evalb(stacklevel < kernelopts(':-level')) end proc;
+
+            match_predicate := subs('_S' = stacklevel+48
+                                    , proc() evalb(_S < kernelopts(':-level')) end proc
+                                   );
         elif ex = NULL then
         elif exact then
             if matchlocals then

@@ -253,6 +253,9 @@ $endif
         , state, pName, lNum, cond, cmd, err, module_flag;
     global showstat, showstop;
 
+        # Note: 21 appears to be the amount that kernelopts('level')
+        # increases when entering a procedure.
+
         evalLevel := kernelopts('level') - 21;
 
         n := _npassed;
@@ -260,9 +263,9 @@ $endif
         and _passed[n] :: list
         and nops(_passed[n]) > 0
         and _passed[n][1] = 'DEBUGINFO' then
-            procName := _passed[n][2];
-            statNumber := _passed[n][3];
-            statLevel := _passed[n][4];
+            procName := _passed[n][2];   # name of procedure
+            statNumber := _passed[n][3]; # state number in procedure
+            statLevel := _passed[n][4];  # state level (a posint, starting at 1, incremented with each "indentation" level)
             n := n - 1;
 
             if skip then
@@ -275,6 +278,7 @@ $endif
                 end if;
             end if;
         else
+            # Joe asks: Is this branch ever executed?
             procName := 0;
             statLevel := trunc(evalLevel / 5); # Approximately #
         fi;
