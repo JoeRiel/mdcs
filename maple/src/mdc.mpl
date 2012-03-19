@@ -1271,14 +1271,17 @@ $endif
                       , { exact :: truefalse := false }
                       , { matchlocals :: truefalse := false }
                      )
+
         if bytesalloc <> NULL then
             match_predicate := proc() evalb(bytesalloc < kernelopts(':-bytesalloc')) end proc;
+
         elif stacklevel <> NULL then
 
-            match_predicate := subs('_S' = stacklevel+48
+            match_predicate := subs('_S' = stacklevel+48  # 48 = 20+4+4+20
                                     , proc() evalb(_S < kernelopts(':-level')) end proc
                                    );
         elif ex = NULL then
+
         elif exact then
             if matchlocals then
                 match_predicate := proc()
@@ -1287,22 +1290,28 @@ $endif
             else
                 match_predicate := proc() evalb(_passed = ex) end proc;
             end if;
+
         elif usehastype then
             if not ex :: type then
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
             match_predicate := proc() hastype([_passed],ex) end proc;
+
         elif matchlocals then
             match_predicate := proc()
                 local n;
                 _npassed > 0 and has(subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]),ex);
             end proc;
+
         elif ex :: 'And(procedure,Not(name))' then
             match_predicate := eval(ex);
+
         else
             match_predicate := proc() has([_passed],ex) end proc;
         end if;
+
         return eval(match_predicate);
+
     end proc;
 
 #}}}
