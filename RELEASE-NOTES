@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-1.11.3
+** Added offset to stacklevel option in SkipUntil.
 * mdcs-1.11.2
 ** Added 'level' and 'alloc' indices to skip_until
 ** Fixed help page to display with tty Maple
