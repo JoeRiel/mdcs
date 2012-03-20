@@ -1277,8 +1277,8 @@ $endif
 
         elif stacklevel <> NULL then
 
-            match_predicate := subs('_S' = stacklevel+48  # 48 = 20+4+4+20
-                                    , proc() evalb(_S < kernelopts(':-level')) end proc
+            match_predicate := subs('_S' = stacklevel+52  # 48 = 20+4+4+20, but 52 is better
+                                    , proc() evalb(_S <= kernelopts(':-level')) end proc
                                    );
         elif ex = NULL then
 
