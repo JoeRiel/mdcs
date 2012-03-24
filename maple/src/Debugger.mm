@@ -269,7 +269,7 @@ $endif
             n := n - 1;
 
             if skip then
-                skip := not match_predicate(_passed[1..n]);
+                skip := not match_predicate[procName,statNumber](_passed[1..n]);
                 if SkipCheckStack then
                     if skip and evalLevel > last_evalLevel+5 then
                         skip := not match_predicate(op([7,..], debugopts('callstack')));
