@@ -543,6 +543,25 @@ The following table describes each of the execution commands.
 @item c (@code{mds-cont})
 Continue: run until the next breakpoint or watchpoint, or until the program terminates.
 
+@kindex g
+@findex mds-goto-procname
+@item c (@code{mds-goto-procname})
+Goto a procedure.  The name of the procedure is the name at point.
+If called with an argument, @{C-u g}, the procedure name is
+queried in the minibuffer, the default is the name at point.
+This feature is built on the skipping mechanism,
+it does not use breakpoints.
+
+@kindex h
+@findex mds-here
+@item h (@code{mds-here})
+Execute code until the statement at what the command was executed
+is reached.  This is similar to setting a breakpoint at the
+statement, then continuing, however, it uses the skipping mechanism
+rather than breakpoints.  If executed at the current statement,
+Maple execution will continue until the next time that statement
+is reached.
+
 @kindex i
 @findex mds-into
 @item i (@code{mds-into})
