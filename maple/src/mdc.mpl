@@ -510,6 +510,8 @@ $define END_OF_MSG "---EOM---"
 unprotect('mdc'):
 module mdc()
 
+option package;
+
 export Count
     ,  Debugger
     ,  EnterProc
@@ -522,6 +524,7 @@ export Count
     ,  mdc
     ,  Version
     ,  HelpMDS
+    ,  _pexports
     ;
 
 #{{{ local declarations
@@ -559,6 +562,23 @@ local Connect
     , SkipCheckStack
     , Warnings
     ;
+
+    _pexports := proc()
+    local sys, excludes;
+        sys := kernelopts('platform');
+        excludes := [NULL
+                     , ':-Debugger'
+                     , ':-EnterProc'
+                     , ':-Format'
+                     , ':-InstallPatch'
+                     , ':-_pexports'
+                     , `if`(sys = "windows" or sys = "dos"
+                            , NULL
+                            , ':-HelpMDS'
+                           )
+                    ];
+        remove(member, [exports(':-mdc')], excludes);
+    end proc;
 
 #}}}
 
@@ -967,6 +987,36 @@ $endif
 #}}}
 #{{{ EnterProc
 
+##DEFINE CMD EnterProc
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE enter a specified procedure
+##AUTHOR   Joe Riel
+##DATE     Mar 2012
+##CALLINGSEQUENCE
+##- \CMD('p')
+##PARAMETERS
+##- 'p' : (optional) ::string::; procedure to enter
+##RETURNS
+##- ::string::
+##DESCRIPTION
+##- The `\CMD` command
+##  causes the debugger to skip until a specified procedure is
+##  entered.
+##
+##- The optional 'p' argument is the name of the procedure.
+##  During debugging, itt is matched against the end of the name of the
+##  current procedure.  If a match occurs, and the procedure is at
+##  statement one, then skipping is halted and debugging resumes.
+##
+##- If called with no arguments, the string corresponding to
+##  the target procedure is returned.  If the target has been
+##  reached, the name is cleared and NULL is returned.
+##
+##- This procedure is not intended to be called directly by the user.
+##SEEALSO
+##- "mdc"
+##- "mdc[mdc]"
+
     EnterProc := proc( p :: string := NULL )
         if p = NULL then
             enter_procname;
@@ -1185,6 +1235,12 @@ $endif
 ##- This procedure can be called from inside the debugger to
 ##  assign a predicate during a debugging session.
 ##
+##NOTES
+##- If the skip predicate is not satisfied, Maple will continue
+##  executing the code until the debugger exits.  The internal flag
+##  used to enable skipping will remain active, so skipping will
+##  resume when the debugger is reentered.  To avoid this, clear the
+##  skipping flag by calling ~mdc()~ from Maple.
 ##
 ##OPTIONS
 ##- Some of the options are mutually exclusive.
