@@ -48,6 +48,10 @@ local _debugger
     , _showstop
     , _where
     , _print
+    , here := false
+    , here_here := false
+    , here_proc
+    , here_state
     , last_evalLevel
     , last_state
     , orig_print
@@ -269,24 +273,40 @@ $endif
 
             n := n - 1;
 
-            if enter_procname <> NULL then
-                if statNumber = 1
-                and SearchText(enter_procname
-                               , sprintf("%a",procName)
-                               , -length(enter_procname)..-1
-                              ) <> 0 then
-                    skip := false;
-                    enter_procname := NULL;
-                end if;
-            elif skip then
-                skip := not match_predicate[procName,statNumber](_passed[1..n]);
-                if SkipCheckStack then
-                    if skip and evalLevel > last_evalLevel+5 then
-                        skip := not match_predicate(op([7,..], debugopts('callstack')));
+            if skip then
+
+                if here then
+                    if here_proc = procName
+                    and here_state = statNumber then
+                        if here_here then
+                            here_here := false;
+                        else
+                            skip := false;
+                            here := false;
+                        end if;
+                    #else
+                    #    lprint(here_proc <> procName, here_state <> statNumber);
                     end if;
-                    last_evalLevel := evalLevel;
+                elif enter_procname <> NULL then
+                    if statNumber = 1
+                    and SearchText(enter_procname
+                                   , sprintf("%a",procName)
+                                   , -length(enter_procname)..-1
+                                  ) <> 0 then
+                        skip := false;
+                        enter_procname := NULL;
+                    end if;
+                else
+                    skip := not match_predicate[procName,statNumber](_passed[1..n]);
+                    if SkipCheckStack then
+                        if skip and evalLevel > last_evalLevel+5 then
+                            skip := not match_predicate(op([7,..], debugopts('callstack')));
+                        end if;
+                        last_evalLevel := evalLevel;
+                    end if;
                 end if;
-            end if;
+
+                    end if;
         else
             # Joe asks: Is this branch ever executed?
             procName := 0;
@@ -587,6 +607,13 @@ $endif
             elif cmd = "_skip" then
                 skip := true;
                 return line;
+            elif cmd = "_here" then
+                here := true;
+                here_proc := procName;
+                here_state := line[2];
+                here_here := evalb(here_state = statNumber);
+                skip := true;
+                return here_state;
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[SearchText("statement",original)+9..-1];
