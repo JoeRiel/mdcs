@@ -913,7 +913,8 @@ to work, `face-remapping-alist' must be buffer-local."
 
       ("Execution"
        ["Continue"	mds-cont t]
-       ["Goto"          mds-goto-procname t]
+       ["Goto"		mds-goto-procname t]
+       ["Here"		mds-here t]
        ["Into"		mds-into t]
        ["Next"		mds-next t]
        ["Outfrom"	mds-outfrom t]
