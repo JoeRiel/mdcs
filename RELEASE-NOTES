@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs.1.12.1
+** Added mds-goto-procname and mds-here
+** Made mdc a package
 * mdcs-1.11.3
 ** Added offset to stacklevel option in SkipUntil.
 * mdcs-1.11.2
