@@ -48,8 +48,7 @@ local _debugger
     , _showstop
     , _where
     , _print
-    , here := false
-    , here_here := false
+    , here_cnt := 0
     , here_proc
     , here_state
     , last_evalLevel
@@ -275,17 +274,15 @@ $endif
 
             if skip then
 
-                if here then
+                if here_cnt > 0 then
                     if here_proc = procName
                     and here_state = statNumber then
-                        if here_here then
-                            here_here := false;
+                        if here_cnt > 1 then
+                            here_cnt := here_cnt-1;
                         else
                             skip := false;
-                            here := false;
+                            here_cnt := 0;
                         end if;
-                    #else
-                    #    lprint(here_proc <> procName, here_state <> statNumber);
                     end if;
                 elif enter_procname <> NULL then
                     if statNumber = 1
@@ -608,12 +605,15 @@ $endif
                 skip := true;
                 return line;
             elif cmd = "_here" then
-                here := true;
-                here_proc := pointto(line[2]);
-                here_state := line[3];
-                here_here := evalb(here_state = statNumber);
+                line := sscanf(original, "%s %d %d %d");
+                here_cnt := line[2];
+                here_proc := pointto(line[3]);
+                here_state := line[4];
+                if here_state = statNumber then
+                    here_cnt := here_cnt+1;
+                end if;
                 skip := true;
-                return here_state;
+                return here_cnt; # why bother
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[SearchText("statement",original)+9..-1];

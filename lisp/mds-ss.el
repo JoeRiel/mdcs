@@ -482,14 +482,14 @@ procedure name at point."
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (mds-ss-eval-expr (format "mdc:-EnterProc(\"%s\")" proc))))
 
-(defun mds-here ()
-  "Skip until the statement at point is reached.
-If executed at current statement, skip until it is reached again."
-  (interactive)
-  (mds-ss-eval-proc-statement (format "_here %s %s"
+(defun mds-here (cnt)
+  "Skip until the statement at point is reached CNT times."
+  (interactive "p")
+  (mds-ss-eval-proc-statement (format "_here %d %s %s"
+				      cnt
 				      (mds-ss-get-addr)
 				      (mds-ss-get-state))))
-  
+
 (defun mds-into ()
   "Send the 'into' command to the debugger."
   (interactive)
@@ -823,7 +823,6 @@ the `mds-ss-buffer'."
   "Display the info page for MDS."
   (interactive)
   (info "mds"))
-
 
 ;;}}}
 

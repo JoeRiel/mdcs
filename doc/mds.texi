@@ -558,17 +558,16 @@ it does not use breakpoints.
 Execute code until the statement at which the command was executed
 is reached.  This is similar to setting a breakpoint at the
 statement, then continuing, however, it uses the skipping mechanism
-rather than breakpoints.  If executed at the current statement,
-Maple execution continues until the next time that statement
-is reached.
+rather than breakpoints.  If passed an optional numeric prefix, e.g.,
+@kbd{C-u 5 h}, then skipping continues until the statement has been
+reached that many times.
 
 If executed at a location without a statement number,
 say, at an @code{else}, the preceding statement number is used
-as the target.  The chosen statement number is echoed in the
-output buffer.  
+as the target.
 
 Can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
-execution skips to that statement in the corresponding procedure.
+execution skips to the statement in the corresponding procedure.
 
 @kindex i
 @findex mds-into
