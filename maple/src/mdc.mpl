@@ -512,6 +512,7 @@ module mdc()
 
 export Count
     ,  Debugger
+    ,  EnterProc
     ,  Format
     ,  Grid
     ,  InstallPatch
@@ -544,6 +545,7 @@ local Connect
 
     , cnt
     , debugbuiltins := false
+    , enter_procname := NULL
     , Host
     , Level := LEVEL_DEFAULT
     , match_predicate := () -> true
@@ -961,6 +963,18 @@ $endif
             sid := -1;
         end if;
     end proc;
+
+#}}}
+#{{{ EnterProc
+
+    EnterProc := proc( p :: string := NULL )
+        if p = NULL then
+            enter_procname;
+        else
+            skip := true;
+            enter_procname := p;
+        end if;
+    end proc:
 
 #}}}
 

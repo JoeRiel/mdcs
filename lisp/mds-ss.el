@@ -18,6 +18,7 @@
   (require 'mds-client)
   (require 'mds-out)
   (require 'mds-re)
+  (require 'mds-thing)
   (require 'mds-wm))
 
 ;;{{{ declarations
@@ -460,6 +461,15 @@ Otherwise raise error indicating Maple is not available."
   (interactive)
   (mds-ss-eval-proc-statement "cont" 'save))
 
+(defun mds-goto-procname ()
+  "Goto (stopat) a procedure.
+The user is prompted for the procedure name; the default is the
+procedure name at point."
+  (interactive)
+  (let ((proc (thing-at-point 'procname)))
+    (setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc))
+    (mds-ss-eval-expr (format "mdc:-EnterProc(\"%s\")" proc))))
+
 (defun mds-into ()
   "Send the 'into' command to the debugger."
   (interactive)
@@ -815,6 +825,7 @@ the `mds-ss-buffer'."
 	   ("e" . mds-eval-and-display-expr)
 	   ("E" . mds-eval-and-display-expr-global)
 	   ("f" . self-insert-command)
+	   ("g" . mds-goto-procname)
 	   ("h" . mds-help-debugger)
 	   ("H" . mds-info)
 	   ("i" . mds-into)
@@ -1050,4 +1061,3 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 (provide 'mds-ss)
 
 ;; mds-ss.el ends here
-

@@ -266,9 +266,19 @@ $endif
             procName := _passed[n][2];   # name of procedure
             statNumber := _passed[n][3]; # state number in procedure
             statLevel := _passed[n][4];  # state level (a posint, starting at 1, incremented with each "indentation" level)
+
             n := n - 1;
 
-            if skip then
+            if enter_procname <> NULL then
+                if statNumber = 1
+                and SearchText(enter_procname
+                               , sprintf("%a",procName)
+                               , -length(enter_procname)..-1
+                              ) <> 0 then
+                    skip := false;
+                    enter_procname := NULL;
+                end if;
+            elif skip then
                 skip := not match_predicate[procName,statNumber](_passed[1..n]);
                 if SkipCheckStack then
                     if skip and evalLevel > last_evalLevel+5 then

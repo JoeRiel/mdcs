@@ -51,6 +51,7 @@
 (require 'mds-patch)
 (require 'mds-re)
 (require 'mds-ss)
+(require 'mds-thing)
 (require 'mds-wm)
 
 ;;}}}
