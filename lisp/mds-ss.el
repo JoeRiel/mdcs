@@ -450,6 +450,17 @@ Otherwise raise error indicating Maple is not available."
 
 ;;}}}
 
+;;{{{ functions
+
+(defun mds-ss-get-addr ()
+  "Return the (hidden) address of the current procedure."
+  (save-excursion
+    (goto-char (point-min))
+    (if (looking-at mds--addr-procname-re)
+	(match-string 2))))
+
+;;}}}
+
 ;;{{{ commands
 
 ;; Define the interactive commands bound to keys
@@ -475,7 +486,9 @@ procedure name at point."
   "Skip until the statement at point is reached.
 If executed at current statement, skip until it is reached again."
   (interactive)
-  (mds-ss-eval-proc-statement (format "_here %s" (mds-ss-get-state))))
+  (mds-ss-eval-proc-statement (format "_here %s %s"
+				      (mds-ss-get-addr)
+				      (mds-ss-get-state))))
   
 (defun mds-into ()
   "Send the 'into' command to the debugger."

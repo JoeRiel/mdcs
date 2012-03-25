@@ -609,8 +609,8 @@ $endif
                 return line;
             elif cmd = "_here" then
                 here := true;
-                here_proc := procName;
-                here_state := line[2];
+                here_proc := pointto(line[2]);
+                here_state := line[3];
                 here_here := evalb(here_state = statNumber);
                 skip := true;
                 return here_state;
