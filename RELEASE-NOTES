@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs.1.12.2
+** Modify mds-here to work from dead showstat buffer
+** Add handling of numeric prefix to mds-here, to allow skipping several times.
+** Add mds-here (h) to showstat menu
 * mdcs.1.12.1
 ** Added mds-goto-procname and mds-here
 ** Made mdc a package
