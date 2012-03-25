@@ -565,7 +565,10 @@ is reached.
 If executed at a location without a statement number,
 say, at an @code{else}, the preceding statement number is used
 as the target.  The chosen statement number is echoed in the
-output buffer.
+output buffer.  
+
+Can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
+execution skips to that statement in the corresponding procedure.
 
 @kindex i
 @findex mds-into
