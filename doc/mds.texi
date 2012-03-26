@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 1.10.4
+@set VERSION 1.12.2
 @set DATE June 2011
 
 @dircategory Emacs
@@ -179,9 +179,10 @@ These are printed in 1-D format so that they
 can be saved and reused as Maple input. 
 @item
 As lines of code are executed, they are echoed in the output
-window.  The result provides a visual trace of all the code
+window; @pxref{Output Buffer}.
+The result provides a visual trace of all the code
 that has been executed.  Clicking in the output window
-will open a third window that displays the procedure and
+opens a third window that displays the procedure and
 statement that generated the selected output.
 @item
 Expressions can be directly evaluated and displayed in a nice format.
@@ -191,15 +192,18 @@ with field name on the left and the entry on the right.
 The common debugging commands, 
 @strong{next}, @strong{into}, @strong{step}, etc.,
 are bound to keystrokes (@kbd{n}, @kbd{i}, @kbd{s}, etc.).
+@xref{Execution}.
 @item 
 Breakpoints can be set or cleared directly in the buffer.
 @item
 A trace mode permits rapidly tracing through instrumented procedures.
 That, coupled with the ability to jump from the output to
 the corresponding statement in the code, facilitates debugging.
+@xref{tracing}.
 @item
 Debugged procedures can be @emph{live-patched}, that is, modified in-place.  
 This permits testing changes without access to the full source code.
+@xref{Patching}.
 @end itemize
 
 @node Requirements, Installation, Summary, Introduction
@@ -313,6 +317,15 @@ transferred to Emacs.
 An integer that is the TCP port number used for communication.
 The default is 10000.
 
+@vindex mds-keep-dead-clients
+@item @code{mds-keep-dead-clients}
+A boolean variable that when non-nil prevents the buffers
+associated with a client from being removed when the client disconnects.
+Setting this to non-nil can be useful when tracing a command
+that causes the Maple kernel to disconnect.
+@xref{tracing}.
+The default value is nil.
+
 @vindex mds-show-args-flag
 @findex mds-toggle-show-args
 @item @code{mds-show-args-flag}
@@ -328,6 +341,7 @@ A boolean value that, when non-nil, causes tracing
 to stop when an error occurs.  This is useful
 in that it prevents the debugger from exiting when
 an error occurs while tracing.
+@xref{tracing}.
 The default is to stop.
 The command @code{mds-toggle-stop-trace-at-error}
 toggles this variable.
@@ -505,7 +519,8 @@ They are grouped according to function.
 
 MDS supports all the Maple debugger commands for executing the statements of
 a procedure.  These commands are bound to single keystrokes in the Showstat buffer.
-Output from these commands is written to the @emph{debugger output buffer}.
+Output from these commands is written to the @emph{debugger output buffer};
+@pxref{Output Buffer}.
 
 When any of these commands are executed, the cursor moves forward one character
 and, if the flavor of Emacs supports it, the cursor changes to a hollow box.
@@ -527,6 +542,32 @@ The following table describes each of the execution commands.
 @findex mds-cont
 @item c (@code{mds-cont})
 Continue: run until the next breakpoint or watchpoint, or until the program terminates.
+
+@kindex g
+@findex mds-goto-procname
+@item g (@code{mds-goto-procname})
+Goto a procedure.  The name of the procedure is the name at point.
+If called with an argument, @kbd{C-u g}, the procedure name is
+queried in the minibuffer, the default is the name at point.
+This feature is built on the skipping mechanism,
+it does not use breakpoints.
+
+@kindex h
+@findex mds-here
+@item h (@code{mds-here})
+Execute code until the statement at which the command was executed
+is reached.  This is similar to setting a breakpoint at the
+statement, then continuing, however, it uses the skipping mechanism
+rather than breakpoints.  If passed an optional numeric prefix, e.g.,
+@kbd{C-u 5 h}, then skipping continues until the statement has been
+reached that many times.
+
+If executed at a location without a statement number,
+say, at an @code{else}, the preceding statement number is used
+as the target.
+
+Can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
+execution skips to the statement in the corresponding procedure.
 
 @kindex i
 @findex mds-into
@@ -588,6 +629,7 @@ option to @code{mdc} is true.
 @kindex t
 @findex mds-trace
 @vindex mds-stop-trace-at-error-flag
+@anchor{tracing}
 @item t (@code{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
 @strong{cont}, @strong{next}, @strong{into}, @strong{level}, or @strong{step}, 
@@ -957,11 +999,6 @@ The MDS showstat-mode has several ways for obtaining help.
 
 @table @asis
 
-@kindex h
-@findex mds-help-debugger
-@item h (@code{mds-help-debugger})
-Display the Maple help page for the Maple debugger.
-
 @kindex C-h m
 @item C-h m
 Display the help for this mode.
@@ -1071,7 +1108,8 @@ procedure, or what line of code, is the culprit.
 There are a couple ways to handle this.
 
 One possibility is to use the tracing feature, possibly with
-the @code{step} option.  A disadvantage with tracing is
+the @code{step} option; @pxref{tracing}.
+A disadvantage with tracing is
 that it produces a lot of output and is slow.
 
 Frequently a better way is to use @emph{skipping}.

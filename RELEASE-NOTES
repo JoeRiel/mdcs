@@ -1,5 +1,29 @@
 -*- org -*-
 
+* mdcs.1.12.2
+** Modify mds-here to work from dead showstat buffer
+** Add handling of numeric prefix to mds-here, to allow skipping several times.
+** Add mds-here (h) to showstat menu
+* mdcs.1.12.1
+** Added mds-goto-procname and mds-here
+** Made mdc a package
+* mdcs-1.11.3
+** Added offset to stacklevel option in SkipUntil.
+* mdcs-1.11.2
+** Added 'level' and 'alloc' indices to skip_until
+** Fixed help page to display with tty Maple
+** Added message when grouping clients
+* mdcs-1.11.1
+** Added indices to skip_until option to handle special cases
+* mdcs-1.10.7
+** Improved and fixed Maple help pages (examples were broken)
+** Added TraceLevel export
+* mdcs-1.10.6
+** Add 'mds-keep-dead-clients' variable
+** Added cross references in mds.texi
+* mdcs-1.10.5
+** Add 'reconnect' option to mdc
+** Added 'stops' positional parameter to mdc
 * mdcs-1.10.4
 ** debugger/printf: handle invalid indets call
 * mdcs-1.10.3

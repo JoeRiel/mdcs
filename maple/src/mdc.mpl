@@ -47,13 +47,18 @@
 ##  is a bit more complicated, the html version can be
 ##  opened with the command "HelpMDS".
 ##
+##SUBSECTION Exports
+##- "mdc[Grid]" : submodule for debugging "Grid" processes.
+##- "mdc[Count]" : implements a counter
+##- "mdc[mdc]" : main export
+##- "mdc[HelpMDS]" : display help page for debugger server
+##- "mdc[SkipUntil]" : set skip options
+##- "mdc[Sleep]" : utility routine for sleeping
+##- "mdc[TraceLevel]" : set/query the *level* tracing mode
+##ENDSUBSECTION
+##
 ##SEEALSO
 ##- "debugger"
-##- "\MOD[\MOD]"
-##- "\MOD[Grid]"
-##- "\MOD[Count]"
-##- "\MOD[HelpMDS]"
-##- "\MOD[SkipUntil]"
 ##- "Grid"
 ##ENDMPLDOC
 
@@ -63,9 +68,9 @@
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('stops', 'opts')
+##- \CMD('stopats', 'opts')
 ##PARAMETERS
-##- 'stops' : (optional) ::seq(\\{string,name,list\\})::; procedures to instrument
+##- 'stopats' : (optional) ::seq({string,name,list})::; procedures to instrument
 ##param_opts(\CMD)
 ##RETURNS
 ##- `NULL`
@@ -81,9 +86,10 @@
 ##  debugger may also be invoked by clicking the *debug icon* on the
 ##  toolbar during a running computation.
 ##
-##- The optional 'stops' parameter specifies the procedures to
+##- The optional 'stopats' parameter specifies the procedures to
 ##  instrument.  Using it is equivalent to calling `\CMD` with
-##  the `stopat` option; this provides a slightly shorter syntax.
+##  the `stopat` option; this provides a convenient shortcut.
+##  See the `stopat` option for the usage.
 ##
 ##- The target procedures can also be instrumented by passing the
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
@@ -96,8 +102,8 @@
 ##  It provide a convenient means to locate the source of an
 ##  expression in a computation.
 ##
-##- No debugger output is displayed from the point at which skipping
-##  is started until the predicate is satisfied.
+##- When skipping, no debugger output is displayed
+##  until the predicate is satisfied.
 ##
 ##- The predicate, a Maple procedure that is passed the computed
 ##  output of each executed Maple statement in the running code, is
@@ -122,7 +128,7 @@
 ##
 ##OPTIONS
 ##
-##SUBSECTION(collapsed) Instrumentation Options
+##SUBSECTION Instrumentation Options
 ##-(lead="indent")
 ##  These options are used to instrument procedures for debugging.
 ##  Most correspond to a standard Maple procedure of the same name.
@@ -140,7 +146,7 @@
 ##- `unstopwhen` : clear a conditional watchpoint
 ##ENDSUBSECTION
 ##
-##SUBSECTION(collapsed) Configuration Options
+##SUBSECTION Configuration Options
 ##-(lead="indent")
 ##  These options configure the debugger.
 ##  They are *sticky*, meaning they remain
@@ -166,13 +172,13 @@
 ##- `port` : TCP port number
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
-## -`skip_check_stack` : enables stack checking during skip
+##- `skip_check_stack` : enables stack checking during skip
 ##- `skip_until` : assigns predicate used for skipping (cf. "SkipUntil")
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
 ##- `view` : enables echoing of commands
 ##ENDSUBSECTION
 ##
-##SUBSECTION(collapsed) Option Details
+##SUBSECTION Option Details
 ##opt(debug_builtins,truefalse)
 ##  If true, the `stopat` option can be used to debug most built-in procedures.
 ##  The built-in procedure is replaced with a wrapper
@@ -265,19 +271,42 @@
 ##
 ##opt(skip_until,anything)
 ##  Specifies a predicate that can be used to skip
-##  all code until a condition is met.  If `skip_until` is
-##  a procedure, it is used as the predicate.
+##  all code until a condition is met.
+##  If `skip_until` is a procedure (but not a name),
+##  it is used as the predicate.
 ##  The result of each executed statement is passed to the predicate,
 ##  which must return true or false.
 ##  When true is returned, debugging recommences.
 ##
-##  If `skip_until` is not a procedure, the following predicate is used:
+##  If `skip_until` is not a procedure, or is the name of a procedure,
+##  the following predicate is used:
 ##  ~proc() has([_passed],skip_until) end proc~.
 ##  See "mdc[SkipUntil]" for a procedure that assigns the predicate
 ##  and has additional options.
 ##
 ##  To use the skip predicate, execute the `_skip` debugger command
 ##  inside the debugger, where it is bound to the `S` key.
+##
+##opt(skip_until[alloc],posint)
+##  Similar to `skip_until`, but uses the `bytesalloc` option to "SkipUntil".
+##  Skipping stops when _kernelopts(bytesalloc)_ exceeds the value.
+##
+##opt(skip_until[exact],anything)
+##  Similar to `skip_until`, but passes the `exact` option to "SkipUntil".
+##  Skipping stops when a computed result exactly matches the value.
+##
+##opt(skip_until[level],posint)
+##  Similar to `skip_until`, but uses the `stacklevel` option to "SkipUntil".
+##  Skipping stops when _kernelopts(level)_ exceeds the value.
+##
+##opt(skip_until[loc],anything)
+##  Similar to `skip_until`, but passes the `matchlocals` option to "SkipUntil".
+##  Skipping stops when the value appears in a computed result that
+##  has all local variables replaced with the global equivalent.
+##
+##opt(skip_until[type],anything)
+##  Similar to `skip_until`, but passes the `usehastype` option to "SkipUntil".
+##  Skipping stops when the given type appears in a computed result.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
 ##  Specifies the procedures to instrument.
@@ -325,7 +354,7 @@
 ##  This is equivalent to calling the "stopwhenif" command.
 ##  To clear, see the `unstopwhen` option, below.
 ##
-##opt(traperror,truefalse\comma string\comman or set of string)
+##opt(traperror,truefalse\comma string\comma or set of string)
 ##  If false, ignore.
 ##  If true, stop at any trapped error.
 ##  If a string, stop at a trapped error error with that message.
@@ -376,11 +405,11 @@
 ##- Launch the Maple debugger client, instrumenting "int".
 ##  Assume the Maple Debugger Server is running on a different
 ##  machine, named `gauss`.
-##> mdc(stopat=int, host="gauss"):
+##> mdc(int, host="gauss"):
 ##SET(lead=indent)
 ##- ~Welcome joe~
 ##UNSET
-##- Now launch the debugger.
+##- Now, call _int_, which invokes the debugger.
 ##> int(x^2,x);
 ##
 ##- When finished debugging, shutdown the client, restoring the debugger procedures.
@@ -395,13 +424,13 @@
 ##>> end proc:
 ##- Set a conditional breakpoint so that debugging begins
 ##  when `fib` is called with argument `n` equal to 10.
-##> mdc(stopat=[fib,1,'n=10']):
+##> mdc([fib,1,'n=10']):
 ##>(noexecute) fib(20);
 ##- Clear the conditional breakpoint.
 ##> mdc(unstopat=[fib,1]):
 ##- Use "mdc[Count]" in a conditional breakpoint to begin debugging on the eighth call to fib.
 ##  Forward quotes are used to prevent premature evaluation.
-##> mdc(stopat=[fib,1,'mdc:-Count()=8']):
+##> mdc([fib,1,'mdc:-Count()=8']):
 ##>(noexecute) fib(10);
 ##
 ##- Stop on any warning.
@@ -413,7 +442,7 @@
 ##- Debug a builtin procedure.  This is occasionally be useful for verifying
 ##  the arguments passed to a builtin procedure.
 ##
-##> mdc(stopat=convert, 'debug_builtins'):
+##> mdc(convert, 'debug_builtins'):
 ##> convert(<a,b,c>, list);
 ##
 ##- Using the 'unstopat' option reverts the builtin to its original assignment.
@@ -430,8 +459,28 @@
 ##  integration of _x^2_ at the place where _x^3_ first appears
 ##  as the output of a statement.
 ##
-##> mdc(stopat=int, skip_until=x^3);
+##> mdc(int, skip_until=x^3);
 ##> int(x^2, x);
+##
+##- The `skip_check_stack` option, which is used with `skip_until`,
+##  causes expressions on the stack to be passed to the predicate.
+##  This can locate expressions that are not otherwise
+##  part of a computed result.  Consider the following example.
+##
+##> f := x -> g(2*x)*x:
+##> g := x -> x^2:
+##
+##- Use `skip_until` to search for the _2*y_ expression.
+##
+##> mdc(f, 'skip_until' = 2*y):
+##> f(y);
+##
+##- Normal skipping does not locate _2*y_.
+##  Using `skip_check_stack` does.
+##> mdc('skip_check_stack'):
+##> f(y);
+##
+##- See "mdc[SkipUntil]" for more examples using the skip feature.
 ##
 ##ENDSUBSECTION
 ##
@@ -445,10 +494,13 @@
 ##- "debugger"
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
+##- "\MOD[SkipUntil]"
+##- "\MOD[TraceLevel]"
 ##ENDMPLDOC
 
 #}}}
 
+$define LEVEL_DEFAULT 75
 $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 $define END_OF_MSG "---EOM---"
@@ -458,16 +510,21 @@ $define END_OF_MSG "---EOM---"
 unprotect('mdc'):
 module mdc()
 
+option package;
+
 export Count
     ,  Debugger
+    ,  EnterProc
     ,  Format
     ,  Grid
     ,  InstallPatch
     ,  Sleep
     ,  SkipUntil
+    ,  TraceLevel
     ,  mdc
     ,  Version
     ,  HelpMDS
+    ,  _pexports
     ;
 
 #{{{ local declarations
@@ -491,8 +548,9 @@ local Connect
 
     , cnt
     , debugbuiltins := false
+    , enter_procname := NULL
     , Host
-    , Level
+    , Level := LEVEL_DEFAULT
     , match_predicate := () -> true
     , max_length
     , Port
@@ -504,6 +562,23 @@ local Connect
     , SkipCheckStack
     , Warnings
     ;
+
+    _pexports := proc()
+    local sys, excludes;
+        sys := kernelopts('platform');
+        excludes := [NULL
+                     , ':-Debugger'
+                     , ':-EnterProc'
+                     , ':-Format'
+                     , ':-InstallPatch'
+                     , ':-_pexports'
+                     , `if`(sys = "windows" or sys = "dos"
+                            , NULL
+                            , ':-HelpMDS'
+                           )
+                    ];
+        remove(member, [exports(':-mdc')], excludes);
+    end proc;
 
 #}}}
 
@@ -528,7 +603,7 @@ $endif
 
 #{{{ mdc
 
-    mdc := proc( stops :: seq({string,name,list,set({string,name,list})})
+    mdc := proc( stopats :: seq({string,name,list,set({string,name,list})})
                  , { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
@@ -536,7 +611,7 @@ $endif
                  , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                  , { label :: string := kernelopts('username') }
                  , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
-                 , { level :: posint := GetDefault(':-level',75) }
+                 , { level :: posint := GetDefault(':-level',LEVEL_DEFAULT) }
                  , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                  , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                  , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
@@ -548,6 +623,11 @@ $endif
                  , { stopwhen :: { name, list, set } := NULL }
                  , { stopwhenif :: { list, set(list) } := NULL }
                  , { skip_until := NULL }
+                 , { `skip_until[alloc]` :: posint := NULL }
+                 , { `skip_until[exact]` := NULL }
+                 , { `skip_until[level]` :: posint := NULL }
+                 , { `skip_until[loc]` := NULL }
+                 , { `skip_until[type]` := NULL }
                  , { skip_check_stack :: truefalse := SkipCheckStack }
                  , { traperror :: {truefalse,string,set} := false }
                  , { unstopat :: {string,name,list,set(string,name,list)} := "" }
@@ -614,7 +694,18 @@ $endif
 
         if skip_until <> NULL then
             SkipUntil(skip_until);
+        elif `skip_until[alloc]` <> NULL then
+            SkipUntil('bytesalloc' = `skip_until[alloc]`);
+        elif `skip_until[level]` <> NULL then
+            SkipUntil('stacklevel' = `skip_until[level]`);
+        elif `skip_until[loc]` <> NULL then
+            SkipUntil(`skip_until[loc]`, 'matchlocals');
+        elif `skip_until[type]` <> NULL then
+            SkipUntil(`skip_until[type]`, 'usehastype');
+        elif `skip_until[exact]` <> NULL then
+            SkipUntil(`skip_until[exact]`, 'exact');
         end if;
+
         skip := false;
 
         #}}}
@@ -650,8 +741,8 @@ $endif
             Debugger:-stopat(stopat);
         end if;
 
-        if stops <> NULL then
-            for stp in [stops] do
+        if stopats <> NULL then
+            for stp in [stopats] do
                 Debugger:-stopat(stp);
             end do;
         end if;
@@ -772,12 +863,18 @@ $endif
     ModuleLoad := proc()
         debugbuiltins := GetDefault(':-debug_builtins', false);
         SkipCheckStack := GetDefault(':-skip_check_stack', false);
+        TypeTools:-AddType('synonym'
+                           , proc(x,nm)
+                                 x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
+                             end proc
+                          );
     end proc;
 
 #}}}
 #{{{ ModuleUnload
 
     ModuleUnload := proc()
+        TypeTools:-RemoveType('synonym');
         Debugger:-RestoreBuiltins();
         if sid <> -1 then
             try
@@ -886,6 +983,48 @@ $endif
             sid := -1;
         end if;
     end proc;
+
+#}}}
+#{{{ EnterProc
+
+##DEFINE CMD EnterProc
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE enter a specified procedure
+##AUTHOR   Joe Riel
+##DATE     Mar 2012
+##CALLINGSEQUENCE
+##- \CMD('p')
+##PARAMETERS
+##- 'p' : (optional) ::string::; procedure to enter
+##RETURNS
+##- ::string::
+##DESCRIPTION
+##- The `\CMD` command
+##  causes the debugger to skip until a specified procedure is
+##  entered.
+##
+##- The optional 'p' argument is the name of the procedure.
+##  During debugging, itt is matched against the end of the name of the
+##  current procedure.  If a match occurs, and the procedure is at
+##  statement one, then skipping is halted and debugging resumes.
+##
+##- If called with no arguments, the string corresponding to
+##  the target procedure is returned.  If the target has been
+##  reached, the name is cleared and NULL is returned.
+##
+##- This procedure is not intended to be called directly by the user.
+##SEEALSO
+##- "mdc"
+##- "mdc[mdc]"
+
+    EnterProc := proc( p :: string := NULL )
+        if p = NULL then
+            enter_procname;
+        else
+            skip := true;
+            enter_procname := p;
+        end if;
+    end proc:
 
 #}}}
 
@@ -1006,7 +1145,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.10.4";
+    Version := "1.12.2";
 
 #}}}
 
@@ -1023,10 +1162,18 @@ $endif
 ##- 't' : ::nonnegint::; number of seconds to sleep
 ##DESCRIPTION
 ##- The `\CMD` command pauses the execution of the Maple engine
-##  a specified length of time.  While paused it does not use CPU
+##  a specified length of time.  While paused, it does not use CPU
 ##  resources.
 ##
 ##- The 't' parameter is the duration to pause, in seconds.
+##
+##- This routine is used internally when connecting to the Debugger
+##  server.  It is provided here with the hope that it might
+##  be useful elsewhere.
+##
+##EXAMPLES(noexecute)
+##> mdc:-Sleep(1);
+##
 ##SEEALSO
 ##- "Threads[Sleep]"
 
@@ -1057,16 +1204,22 @@ $endif
 ##CALLINGSEQUENCE
 ##- \CMD('ex','opts')
 ##PARAMETERS
-##- 'ex' : ::anything::
+##- 'ex' : (optional) ::anything::
 ##param_opts(\CMD)
 ##RETURNS
-##- `NULL`
+##- `procedure`
 ##DESCRIPTION
 ##- The `\CMD` command
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
 ##
-##- If 'ex' is a procedure, it is used as the predicate,
+##- The current or newly assigned predicate is returned.
+##
+##- If called with no arguments,
+##  the current predicate is returned.
+##
+##- If 'ex' is a procedure (but not a name),
+##  it is used as the predicate,
 ##  otherwise, the predicate is the procedure
 ##  ~proc() has([_passed],ex) end proc~.
 ##
@@ -1082,17 +1235,35 @@ $endif
 ##- This procedure can be called from inside the debugger to
 ##  assign a predicate during a debugging session.
 ##
+##NOTES
+##- If the skip predicate is not satisfied, Maple will continue
+##  executing the code until the debugger exits.  The internal flag
+##  used to enable skipping will remain active, so skipping will
+##  resume when the debugger is reentered.  To avoid this, clear the
+##  skipping flag by calling ~mdc()~ from Maple.
 ##
 ##OPTIONS
-##opt(exact, truefalse)
+##- Some of the options are mutually exclusive.
+##opt(bytesalloc,posint)
+##  When passed, skip until _bytesalloc < kernelopts(:-bytesalloc)_.
+##opt(exact,truefalse)
 ##  When true, the predicate is ~proc() evalb(_passed = ex) end proc~.
 ##  An exact match is efficient.
 ##  The default is false.
+##opt(matchlocals,truefalse)
+##  When true, any locals in the expression being tested are replaced
+##  with globals before testing.  This option can be used by itself,
+##  in which case the test using `has` is performed, or with `exact` option.
+##  The default is false.
+##opt(stacklevel,posint)
+##  When passed, skip until _stacklevel < kernelopts(:-level)_.
 ##opt(usehastype,truefalse)
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
 ##
 ##EXAMPLES(notest,noexecute)
+##SUBSECTION Locate the source of an expression
+##
 ##- Assign the predicate to stop when _x^2_ is computed.
 ##> mdc:-SkipUntil(x^2):
 ##> mdc(stopat=int):
@@ -1116,27 +1287,101 @@ $endif
 ##> forget(int):
 ##> int(x,x);
 ##
+##ENDSUBSECTION
+##SUBSECTION Locate the source of intensive memory usage
+##
+##- Set a threshold on the memory allocated.
+##  This is useful for quickly locating bottlenecks in a program.
+##  When, after the debugger returns from skipping,
+##  the stack (displayed with the 'K' key) contains
+##  the statements that initiated the excessive usage.
+##
+##> restart;
+##> mdc:-SkipUntil('bytesall' = 1e8):
+##> mdc(sum):
+##> sum(binomial(n+2*i, n), i=1..e-1);
+##
+##ENDSUBSECTION
+##SUBSECTION Locate a stack overflow
+##
+##- Set a threshold on the size of the stack.
+##  This is useful for catching a *stack overflow*
+##  while it is occurring.
+##
+##> restart;
+##> mdc:-SkipUntil('stacklevel' = 1000):
+##> f := proc(x) 1 + procname(x+1) end proc:
+##> mdc(f):
+##> f();
+##ENDSUBSECTION
+##
+##SUBSECTION Match an expression with a local variable
+##- Assign a procedure that computes an expression, _exp(x)_,
+##  with a local variable, _x_, that we want to locate using skipping.
+##>> f := proc()
+##>> local x,y;
+##>>     y := exp(x);
+##>>     y^2;
+##>>  end proc:
+##
+##- Use the `matchlocals` option.
+##> mdc:-SkipUntil(exp(x), 'matchlocals'):
+##> mdc(f):
+##> f();
+##ENDSUBSECTION
+##
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[mdc]"
 
-    SkipUntil := proc(ex
+    SkipUntil := proc(ex := NULL
+                      , { bytesalloc :: posint := NULL }
+                      , { stacklevel :: posint := NULL }
                       , { usehastype :: truefalse := false }
                       , { exact :: truefalse := false }
+                      , { matchlocals :: truefalse := false }
                      )
-        if exact then
-            match_predicate := proc() evalb(_passed = ex) end proc;
+
+        if bytesalloc <> NULL then
+            match_predicate := proc() evalb(bytesalloc < kernelopts(':-bytesalloc')) end proc;
+
+        elif stacklevel <> NULL then
+
+            match_predicate := subs('_S' = stacklevel+52  # 48 = 20+4+4+20, but 52 is better
+                                    , proc() evalb(_S <= kernelopts(':-level')) end proc
+                                   );
+        elif ex = NULL then
+
+        elif exact then
+            if matchlocals then
+                match_predicate := proc()
+                    _npassed > 0 and [ex] = subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]);
+                end proc;
+            else
+                match_predicate := proc() evalb(_passed = ex) end proc;
+            end if;
+
         elif usehastype then
             if not ex :: type then
                 error "argument must be a type when using hastype, received '%1'", ex;
             end if;
             match_predicate := proc() hastype([_passed],ex) end proc;
-        elif ex :: procedure then
+
+        elif matchlocals then
+            match_predicate := proc()
+                local n;
+                _npassed > 0 and has(subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]),ex);
+            end proc;
+
+        elif ex :: 'And(procedure,Not(name))' then
             match_predicate := eval(ex);
+
         else
             match_predicate := proc() has([_passed],ex) end proc;
         end if;
-        return NULL;
+
+        return eval(match_predicate);
+
     end proc;
 
 #}}}
@@ -1208,6 +1453,46 @@ $endif
             return default;
         end if;
     end proc;
+#}}}
+#{{{ TraceLevel
+
+##DEFINE CMD TraceLevel
+##PROCEDURE(help) \MOD[\CMD]
+##HALFLINE set and query the tracing level
+##AUTHOR   Joe Riel
+##DATE     Mar 2012
+##CALLINGSEQUENCE
+##- \CMD('lev')
+##PARAMETERS
+##- 'lev' : (optional) ::posint::
+##RETURNS
+##- ::posint::; previous level
+##DESCRIPTION
+##- The `\CMD` command sets and queries the tracing level,
+##  which is used by the level tracing mode.
+##  See the `level` option in "\MOD[mdc]".
+##
+##- The optional 'lev' parameter assigns the level.
+##  If not provided the value is not changed.
+##
+##- The previous level value is returned.
+##EXAMPLES
+##> mdc:-TraceLevel();
+##> mdc:-TraceLevel(100);
+##> mdc:-TraceLevel();
+##SEEALSO
+##- "mdc"
+##- "mdc[mdc]"
+
+    TraceLevel := proc( lev :: posint := NULL )
+    local prev;
+        prev := Level;
+        if lev <> NULL then
+            Level := lev;
+        end if;
+        prev;
+    end proc;
+
 #}}}
 
 end module:

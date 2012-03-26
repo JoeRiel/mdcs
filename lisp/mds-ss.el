@@ -18,6 +18,7 @@
   (require 'mds-client)
   (require 'mds-out)
   (require 'mds-re)
+  (require 'mds-thing)
   (require 'mds-wm))
 
 ;;{{{ declarations
@@ -449,6 +450,17 @@ Otherwise raise error indicating Maple is not available."
 
 ;;}}}
 
+;;{{{ functions
+
+(defun mds-ss-get-addr ()
+  "Return the (hidden) address of the current procedure."
+  (save-excursion
+    (goto-char (point-min))
+    (if (looking-at mds--addr-procname-re)
+	(match-string 2))))
+
+;;}}}
+
 ;;{{{ commands
 
 ;; Define the interactive commands bound to keys
@@ -459,6 +471,24 @@ Otherwise raise error indicating Maple is not available."
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
   (mds-ss-eval-proc-statement "cont" 'save))
+
+(defun mds-goto-procname (query)
+  "Goto (stopat) a procedure.
+The user is prompted for the procedure name; the default is the
+procedure name at point."
+  (interactive "P")
+  (let ((proc (thing-at-point 'procname)))
+    (if query 
+	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
+    (mds-ss-eval-expr (format "mdc:-EnterProc(\"%s\")" proc))))
+
+(defun mds-here (cnt)
+  "Skip until the statement at point is reached CNT times."
+  (interactive "p")
+  (mds-ss-eval-proc-statement (format "_here %d %s %s"
+				      cnt
+				      (mds-ss-get-addr)
+				      (mds-ss-get-state))))
 
 (defun mds-into ()
   "Send the 'into' command to the debugger."
@@ -794,7 +824,6 @@ the `mds-ss-buffer'."
   (interactive)
   (info "mds"))
 
-
 ;;}}}
 
 ;;}}}
@@ -815,7 +844,8 @@ the `mds-ss-buffer'."
 	   ("e" . mds-eval-and-display-expr)
 	   ("E" . mds-eval-and-display-expr-global)
 	   ("f" . self-insert-command)
-	   ("h" . mds-help-debugger)
+	   ("g" . mds-goto-procname)
+	   ("h" . mds-here)
 	   ("H" . mds-info)
 	   ("i" . mds-into)
 	   ("I" . mds-stopwhenif)
@@ -895,8 +925,10 @@ to work, `face-remapping-alist' must be buffer-local."
 
       ("Execution"
        ["Continue"	mds-cont t]
-       ["Next"		mds-next t]
+       ["Goto"		mds-goto-procname t]
+       ["Here"		mds-here t]
        ["Into"		mds-into t]
+       ["Next"		mds-next t]
        ["Outfrom"	mds-outfrom t]
        ["Skip"          mds-skip t]
        ["Step"		mds-step t]
@@ -1050,4 +1082,3 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 (provide 'mds-ss)
 
 ;; mds-ss.el ends here
-
