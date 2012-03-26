@@ -395,28 +395,33 @@ POINT is moved to the indentation of the current line."
 
 ;;{{{ select maple expressions
 
-(defun mds-ident-around-point-interactive (prompt &optional default complete)
+(defun mds-expr-at-point-interactive (prompt &optional default complete)
   "Request Maple identifier in minibuffer, using PROMPT.
 Default is identifier around point. If it is empty use DEFAULT.
 Minibuffer completion is used if COMPLETE is non-nil."
   ;; Suppress error message
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
-	;; this is really simple.  Need to improve...
-        (ident (if (looking-at " *\\(?:if\\|return\\)? +")
-		   (save-excursion
-		     (goto-char (match-end 0))
-		     (maplev--ident-around-point default))
-		 (maplev--ident-around-point default)))
-        (maplev-completion-release maplev-release)
+	;; this is crude, but reasonable
+	(expr (cond
+	       ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
+		(format "evalb(%s)" (match-string 1)))
+	       ((looking-at " *return \\(.*\\);?$")
+		(match-string 1))
+	       ((looking-at (concat mds--name-re " := \\(.*[^;\n]\\);?$"))
+		(match-string 1))
+	       ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
+		(match-string 1))
+	       (t (maplev--ident-around-point default))))
+	(maplev-completion-release maplev-release)
         choice)
-    (setq prompt (concat prompt (unless (string-equal ident "")
-                                  (concat " (default " ident ")"))
+    (setq prompt (concat prompt (unless (string-equal expr "")
+                                  (concat " [" expr "]"))
                          ": ")
           choice (if complete
                      (completing-read prompt 'maplev--completion
-                                      nil nil nil maplev-history-list ident)
-                   (read-string prompt nil maplev-history-list ident)))
+                                      nil nil nil maplev-history-list expr)
+                   (read-string prompt nil maplev-history-list expr)))
     ;; Are there situations where we want to suppress the error message??
     (if (string-equal choice "")
         (error "Empty choice"))
@@ -475,9 +480,13 @@ Otherwise raise error indicating Maple is not available."
 (defun mds-goto-procname (query)
   "Goto (stopat) a procedure.
 The user is prompted for the procedure name; the default is the
-procedure name at point."
+procedure name at or near point."
   (interactive "P")
-  (let ((proc (thing-at-point 'procname)))
+  (let ((proc (if (looking-at (concat "return \\|" mds--name-re " := \\|\\(?:el\\)?if "))
+		  (save-excursion
+		    (goto-char (match-end 0))
+		    (thing-at-point 'procname))
+		(thing-at-point 'procname))))
     (if query 
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (mds-ss-eval-expr (format "mdc:-EnterProc(\"%s\")" proc))))
@@ -670,7 +679,7 @@ If the state does not have a breakpoint, print a message."
   "Pretty-print EXPR.  This calls the Maple procedure 
 mdc:-Format:-PrettyPrint to convert EXPR into a more useful display.
 With optional prefix, clear debugger output before displaying."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mds-out-clear))
   (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
@@ -678,7 +687,7 @@ With optional prefix, clear debugger output before displaying."
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
 If called interactively, EXPR is queried."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "eval: " "")))
   (if current-prefix-arg (mds-out-clear))
   (mds-ss-eval-expr expr))
@@ -688,7 +697,7 @@ If called interactively, EXPR is queried."
   "Evaluate a Maple expression, EXPR, in a global context.  
 If called interactively, EXPR is queried.
 The result is returned in the message area."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "global eval: " "")))
   (if current-prefix-arg (mds-out-clear))
   (mds-eval-and-display-expr (concat "statement " expr)))
