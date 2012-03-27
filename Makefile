@@ -16,7 +16,7 @@ OS := $(shell uname -o)
 $(info $(OS))
 
 build: $(call print-help,build,Byte-compile$(comma) doc$(comma) and mla)
-build: byte-compile compile doc mla
+build: byte-compile doc mla
 
 # {{{ Executables
 
