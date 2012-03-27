@@ -634,19 +634,19 @@ $endif
                 go_back_proc := procName;
                 go_back_state := statNumber;
                 skip := true;
-                return original;
+                return 'NULL';
             elif cmd = "_enter" then
                 line := sscanf(original, "%s %s");
                 enter_procname := line[2];
                 go_back_proc := procName;
                 go_back_state := statNumber;
                 skip := true;
-                return original;
+                return 'NULL';
             elif cmd = "_goback_save" then
                 line := sscanf(original, "%s %d");
                 go_back_proc := procName;
                 go_back_state := line[2];
-                return sprintf("_goback_save %a %d", procName, go_back_state);
+                return 'NULL'
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[SearchText("statement",original)+9..-1];
