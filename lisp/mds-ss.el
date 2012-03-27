@@ -481,8 +481,7 @@ If QUERY is non-nil, prompt for the procedure name; the default is the
 procedure name at or near point.  If QUERY is nil, use the procedure name
 at or near point, without prompting."
   (interactive "P")
-  ;; FIXME: this won't match (a,b,c) := SomeProc(...);
-  (let ((proc (if (looking-at (concat "return \\|.* := \\|\\(?:el\\)?if "))
+  (let ((proc (if (looking-at (concat "return \\|.* := "))
 		  (save-excursion
 		    (goto-char (match-end 0))
 		    (thing-at-point 'procname))
