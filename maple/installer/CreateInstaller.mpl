@@ -211,6 +211,7 @@ global InstallScript;
                                           , "mds-patch.el"
                                           , "mds-re.el"
                                           , "mds-ss.el"
+                                          , "mds-thing.el"
                                           , "mds-wm.el"
                                           , "mds.el"
                                          ])

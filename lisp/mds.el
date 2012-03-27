@@ -90,7 +90,6 @@ after each command."
   "If non-nil, stop tracing when an error occurs."
   :type 'boolean
   :group 'mds)
-  
 
 ;;}}}
 

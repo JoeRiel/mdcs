@@ -9,10 +9,10 @@
 (declare-function mds-client-set-status "mds")
 
 
-(defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"
+(defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"
   "Regular expression to match identifier expected from client.
-The first group matches the user name, the second the OS, the third
-is the process id of the Maple job.")
+The first group matches the label, the second the major version of Maple,
+the third the OS, the fourth the process id of the Maple job.")
 
 (defvar mds-logins nil)
 
@@ -47,8 +47,8 @@ is the process id of the Maple job.")
 (defun mds-login-greet (proc msg)
   (process-send-string proc (format "Welcome %s" msg)))
 
-
 (defun mds-login (proc msg)
+  "Handle login message MSG from process PROC."
   (let ((status (mds-login-get-status proc)))
     (cond
 
@@ -60,17 +60,18 @@ is the process id of the Maple job.")
      ((eq status 'get-userid)
       ;; For now, finish login process
       (if (not (string-match mds-login-id-re msg))
-	  ;; id is incorrect
+	  ;; id has incorrect format
 	  (mds-login-query-userid proc)
-	;; (mds-login-set-userid proc msg)
-	(let ((id (match-string 1 msg))
-	      (os (match-string 2 msg))
-	      (maple (match-string 3 msg))
+	;; id has correct format
+	(let ((label (match-string 1 msg)) ; label
+	      (ver (match-string 2 msg))   ; maple version (16)
+	      (os (match-string 3 msg))    ; unix/window/etc
+	      (pid (match-string 4 msg))   ; maple pid
 	      (client (assq proc mds-clients)))
 	  (when client
-	    (mds-client-set-id client (list id os maple))
+	    (mds-client-set-id client (list label ver os pid))
 	    (mds-client-set-status client 'start-debugging)
-	    (mds-login-greet proc id)))
+	    (mds-login-greet proc label)))
 	(mds-login-delete proc))))))
 
 

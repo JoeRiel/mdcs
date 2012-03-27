@@ -315,6 +315,7 @@ cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
 	-$(RM) -r $(MAPLE_LIB_DIR)/$(hdb)
 	-$(RM) -r $(MAPLE_LIB_DIR)/$(mla)
+	-$(RM) $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
 	-$(RM) $(INFO_DIR)/$(INFO_FILES)
 
 # }}}

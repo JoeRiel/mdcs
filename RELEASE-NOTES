@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs.1.12.3
+** Add mds-thing.el to manifest
+** Add goback functionality
+** Modify here (enter_proc) so that matching is done anywhere, not anchored at end
 * mdcs.1.12.2
 ** Modify mds-here to work from dead showstat buffer
 ** Add handling of numeric prefix to mds-here, to allow skipping several times.

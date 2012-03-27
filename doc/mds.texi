@@ -518,7 +518,8 @@ They are grouped according to function.
 @cindex execution
 
 MDS supports all the Maple debugger commands for executing the statements of
-a procedure.  These commands are bound to single keystrokes in the Showstat buffer.
+a procedure and includes some commands that are not part of the standard 
+debugger.  These commands are bound to single keystrokes in the Showstat buffer.
 Output from these commands is written to the @emph{debugger output buffer};
 @pxref{Output Buffer}.
 
@@ -545,15 +546,22 @@ Continue: run until the next breakpoint or watchpoint, or until the program term
 
 @kindex g
 @findex mds-goto-procname
+@anchor{mds-goto-procname}
 @item g (@code{mds-goto-procname})
 Goto a procedure.  The name of the procedure is the name at point.
 If called with an argument, @kbd{C-u g}, the procedure name is
 queried in the minibuffer, the default is the name at point.
 This feature is built on the skipping mechanism,
-it does not use breakpoints.
+it does not use breakpoints.  This is not robust because it relies
+on string-matching to determine whether the chose procedure has
+been entered.
+
+This command saves a @strong{goback} point at the statement where
+it was called; @pxref{mds-goback-save}.
 
 @kindex h
 @findex mds-here
+@anchor{mds-here}
 @item h (@code{mds-here})
 Execute code until the statement at which the command was executed
 is reached.  This is similar to setting a breakpoint at the
@@ -568,6 +576,9 @@ as the target.
 
 Can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
 execution skips to the statement in the corresponding procedure.
+
+This command saves a @strong{goback} point at the statement where
+it was called; @pxref{mds-goback-save}.
 
 @kindex i
 @findex mds-into
@@ -760,6 +771,19 @@ Stopat-cond:  Set a conditional breakpoint at the start of the statement at the 
 The condition is entered in the mini-buffer.  It must be a Maple boolean expression.
 A question mark appears to the right of the statement number.
 The debugger is halted each time it reaches the statement and the condition evaluates to true.
+
+@kindex G
+@findex mds-goback-save
+@anchor{mds-goback-save}
+@item G (@code{mds-goback-save})
+Save the statement at point as a @strong{goback} point.  This permits
+returning to that point, after leaving the debugger, by executing
+@code{mdc(goback)} in the Maple client and then executing the command
+that started the debugging session.  
+
+The goback point will be overwritten if @code{mds-goto-procname},
+@pxref{mds-goto-procname}, or @code{mds-here}, @pxref{mds-here}, are
+called because they also save the goback point, to permit recovery.
 
 @kindex p
 @findex mds-showstop
