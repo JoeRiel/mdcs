@@ -25,10 +25,10 @@
 
 ;; avoid compiler warnings
 
-(declare-function mds-client-out-buf "mds")
-(declare-function mds-client-live-buf "mds")
-(declare-function mds-client-dead-buf "mds")
-(declare-function mds-client-send "mds")
+(declare-function mds-client-out-buf "mds-client")
+(declare-function mds-client-live-buf "mds-client")
+(declare-function mds-client-dead-buf "mds-client")
+(declare-function mds-client-send "mds-client")
 
 (eval-when-compile
   (defvar mds-show-args-flag))
@@ -160,7 +160,7 @@ to be used with commands that cause Maple to execute procedural code."
 ;;{{{ (*) mds-ss-create-buffer
 
 (defun mds-ss-create-buffer (client &optional alive)
-  "Create and return a `mds-ss-buffer' buffer for CLIENT.
+  "Create and return an `mds-ss-buffer' buffer for CLIENT.
 If ALIVE is non-nil, create a live buffer."
   (let ((buf (generate-new-buffer (if alive
 				      "*mds-ss-live*"
@@ -395,28 +395,31 @@ POINT is moved to the indentation of the current line."
 
 ;;{{{ select maple expressions
 
-(defun mds-ident-around-point-interactive (prompt &optional default complete)
+(defun mds-expr-at-point-interactive (prompt &optional default complete)
   "Request Maple identifier in minibuffer, using PROMPT.
 Default is identifier around point. If it is empty use DEFAULT.
 Minibuffer completion is used if COMPLETE is non-nil."
   ;; Suppress error message
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
-	;; this is really simple.  Need to improve...
-        (ident (if (looking-at " *\\(?:if\\|return\\)? +")
-		   (save-excursion
-		     (goto-char (match-end 0))
-		     (maplev--ident-around-point default))
-		 (maplev--ident-around-point default)))
-        (maplev-completion-release maplev-release)
+	;; this is crude, but reasonable
+	(expr (cond
+	       ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
+		(format "evalb(%s)" (match-string 1)))
+	       ((looking-at " *return \\(.*\\);?$")
+		(match-string 1))
+	       ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
+		(match-string 1))
+	       (t (maplev--ident-around-point default))))
+	(maplev-completion-release maplev-release)
         choice)
-    (setq prompt (concat prompt (unless (string-equal ident "")
-                                  (concat " (default " ident ")"))
+    (setq prompt (concat prompt (unless (string-equal expr "")
+                                  (concat " [" expr "]"))
                          ": ")
           choice (if complete
                      (completing-read prompt 'maplev--completion
-                                      nil nil nil maplev-history-list ident)
-                   (read-string prompt nil maplev-history-list ident)))
+                                      nil nil nil maplev-history-list expr)
+                   (read-string prompt nil maplev-history-list expr)))
     ;; Are there situations where we want to suppress the error message??
     (if (string-equal choice "")
         (error "Empty choice"))
@@ -474,13 +477,24 @@ Otherwise raise error indicating Maple is not available."
 
 (defun mds-goto-procname (query)
   "Goto (stopat) a procedure.
-The user is prompted for the procedure name; the default is the
-procedure name at point."
+If QUERY is non-nil, prompt for the procedure name; the default is the
+procedure name at or near point.  If QUERY is nil, use the procedure name
+at or near point, without prompting."
   (interactive "P")
-  (let ((proc (thing-at-point 'procname)))
-    (if query 
+  ;; FIXME: this won't match (a,b,c) := SomeProc(...);
+  (let ((proc (if (looking-at (concat "return \\|.* := \\|\\(?:el\\)?if "))
+		  (save-excursion
+		    (goto-char (match-end 0))
+		    (thing-at-point 'procname))
+		(thing-at-point 'procname))))
+    (if (or query
+	    (and
+	     (let ((release (mds-client-get-maple-release mds-client)))
+	       (or (member proc (cdr (assoc release maplev--reserved-words-alist)))
+		   (member proc (cdr (assoc release maplev--builtin-functions-alist)))))
+	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
-    (mds-ss-eval-expr (format "mdc:-EnterProc(\"%s\")" proc))))
+    (mds-ss-eval-proc-statement (format "_enter %s" proc))))
 
 (defun mds-here (cnt)
   "Skip until the statement at point is reached CNT times."
@@ -489,6 +503,7 @@ procedure name at point."
 				      cnt
 				      (mds-ss-get-addr)
 				      (mds-ss-get-state))))
+
 
 (defun mds-into ()
   "Send the 'into' command to the debugger."
@@ -670,15 +685,25 @@ If the state does not have a breakpoint, print a message."
   "Pretty-print EXPR.  This calls the Maple procedure 
 mdc:-Format:-PrettyPrint to convert EXPR into a more useful display.
 With optional prefix, clear debugger output before displaying."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "prettyprint: " "")))
   (if current-prefix-arg (mds-out-clear))
+  (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
+
+(defun mds-eval-and-prettyprint-prev (expr)
+  "Pretty-print EXPR on previous line."
+  (interactive (list (save-excursion
+		       (let ((col (current-column)))
+			 (forward-line -1)
+			 (forward-char col))
+		       (mds-expr-at-point-interactive
+			"prettyprint: " ""))))
   (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
 
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
 If called interactively, EXPR is queried."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "eval: " "")))
   (if current-prefix-arg (mds-out-clear))
   (mds-ss-eval-expr expr))
@@ -688,7 +713,7 @@ If called interactively, EXPR is queried."
   "Evaluate a Maple expression, EXPR, in a global context.  
 If called interactively, EXPR is queried.
 The result is returned in the message area."
-  (interactive (list (mds-ident-around-point-interactive
+  (interactive (list (mds-expr-at-point-interactive
 		      "global eval: " "")))
   (if current-prefix-arg (mds-out-clear))
   (mds-eval-and-display-expr (concat "statement " expr)))
@@ -819,6 +844,11 @@ the `mds-ss-buffer'."
   (interactive)
   (maplev-help-show-topic "debugger"))
 
+(defun mds-goback-save ()
+  "Save current statement as goto point."
+  (interactive)
+  (mds-ss-eval-proc-statement (format "_goback_save %s" (mds-ss-get-state))))
+
 (defun mds-info ()
   "Display the info page for MDS."
   (interactive)
@@ -845,6 +875,7 @@ the `mds-ss-buffer'."
 	   ("E" . mds-eval-and-display-expr-global)
 	   ("f" . self-insert-command)
 	   ("g" . mds-goto-procname)
+	   ("G" . mds-goback-save)
 	   ("h" . mds-here)
 	   ("H" . mds-info)
 	   ("i" . mds-into)
@@ -870,6 +901,7 @@ the `mds-ss-buffer'."
 	   ("x" . mds-showexception)
 	   ("X" . mds-showerror)
 	   ("." . mds-eval-and-prettyprint)
+	   ("," . mds-eval-and-prettyprint-prev)
 	   )))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
@@ -926,6 +958,7 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Execution"
        ["Continue"	mds-cont t]
        ["Goto"		mds-goto-procname t]
+       ["Goto [query]" mds-goto-procname t :keys "C-u g"]
        ["Here"		mds-here t]
        ["Into"		mds-into t]
        ["Next"		mds-next t]
@@ -952,6 +985,8 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Clear watchpoint on error"  mds-stoperror-clear :keys "C-u R"]
        "----"
        ["Show all stop points"       mds-showstop t]
+       "---"
+       ["Save goto point"            mds-goback-save t]
        )
 
       ("Evaluation"

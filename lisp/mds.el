@@ -90,13 +90,12 @@ after each command."
   "If non-nil, stop tracing when an error occurs."
   :type 'boolean
   :group 'mds)
-  
 
 ;;}}}
 
 ;;{{{ Constants
 
-(defconst mds-version "1.12.2" "Version number of mds.")
+(defconst mds-version "1.12.3" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 

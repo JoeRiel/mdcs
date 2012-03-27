@@ -199,6 +199,11 @@
 ##  and restore the original debugger procedures.
 ##  The default value is false.
 ##
+##opt(goback,truefalse)
+##  Activates a previously saved *goback* state.
+##  When debugging begins, Maple skips to the
+##  saved state.
+##
 ##opt(host,string)
 ##  The name of the host machine that is running the Maple Debugger Server.
 ##  The default value is _"localhost"_; this option is sticky.
@@ -514,7 +519,6 @@ option package;
 
 export Count
     ,  Debugger
-    ,  EnterProc
     ,  Format
     ,  Grid
     ,  InstallPatch
@@ -548,7 +552,6 @@ local Connect
 
     , cnt
     , debugbuiltins := false
-    , enter_procname := NULL
     , Host
     , Level := LEVEL_DEFAULT
     , match_predicate := () -> true
@@ -558,7 +561,6 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
-    , skip
     , SkipCheckStack
     , Warnings
     ;
@@ -568,7 +570,6 @@ local Connect
         sys := kernelopts('platform');
         excludes := [NULL
                      , ':-Debugger'
-                     , ':-EnterProc'
                      , ':-Format'
                      , ':-InstallPatch'
                      , ':-_pexports'
@@ -607,6 +608,7 @@ $endif
                  , { debug_builtins :: truefalse := debugbuiltins }
                  , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                  , { exit :: truefalse := false }
+                 , { goback :: truefalse := false }
                  , { host :: string := GetDefault(':-host',"localhost") }
                  , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                  , { label :: string := kernelopts('username') }
@@ -706,7 +708,7 @@ $endif
             SkipUntil(`skip_until[exact]`, 'exact');
         end if;
 
-        skip := false;
+        Debugger:-Skip('clear');
 
         #}}}
 
@@ -734,6 +736,11 @@ $endif
         end if;
 
         #}}}
+
+        if goback then
+            Debugger:-GoBack();
+        end if;
+
         #{{{ stopat
         if stopat :: set then
             map(Debugger:-stopat, stopat);
@@ -985,48 +992,6 @@ $endif
     end proc;
 
 #}}}
-#{{{ EnterProc
-
-##DEFINE CMD EnterProc
-##PROCEDURE(help) \MOD[\CMD]
-##HALFLINE enter a specified procedure
-##AUTHOR   Joe Riel
-##DATE     Mar 2012
-##CALLINGSEQUENCE
-##- \CMD('p')
-##PARAMETERS
-##- 'p' : (optional) ::string::; procedure to enter
-##RETURNS
-##- ::string::
-##DESCRIPTION
-##- The `\CMD` command
-##  causes the debugger to skip until a specified procedure is
-##  entered.
-##
-##- The optional 'p' argument is the name of the procedure.
-##  During debugging, itt is matched against the end of the name of the
-##  current procedure.  If a match occurs, and the procedure is at
-##  statement one, then skipping is halted and debugging resumes.
-##
-##- If called with no arguments, the string corresponding to
-##  the target procedure is returned.  If the target has been
-##  reached, the name is cleared and NULL is returned.
-##
-##- This procedure is not intended to be called directly by the user.
-##SEEALSO
-##- "mdc"
-##- "mdc[mdc]"
-
-    EnterProc := proc( p :: string := NULL )
-        if p = NULL then
-            enter_procname;
-        else
-            skip := true;
-            enter_procname := p;
-        end if;
-    end proc:
-
-#}}}
 
 #{{{ Read
 
@@ -1107,9 +1072,10 @@ $endif
 ##  returns a string that can be used by the server
 ##  to identify this client.
 ##
-##- Currently the format is ~:label:platform:pid:~,
-##  where label is the argument, and `platform` and `pid`
-##  are the corresponding outputs of "kernelopts".
+##- Currently the format is ~:label:release:platform:pid:~, where
+##  'label' is the argument, `release` is the major Maple release (a
+##  posint), and `platform` and `pid` are the corresponding outputs of
+##  "kernelopts".
 ##
 ##NOTES
 ##- The format will probably be expanded once this is in place.
@@ -1121,10 +1087,10 @@ $endif
 ##      label=proc(s1,s2) evalb( s1 = sprintf("%s%d:",s2,kernelopts('pid')) )
 ##   end proc):
 ## macro(LA='verify,label', NLA='verify,Not(label)', TE=testerror);
-## Try[LA]("1.1", FUNC("label"), ":label:unix:");
-## Try[LA]("1.2", FUNC("abc12"), ":abc12:unix:");
-## Try[LA]("1.3", FUNC("abc-1_2_"), ":abc-1_2_:unix:");
-## Try[NLA]("2.1", FUNC("abc-1_2_"), ":abc-1_2_:unix:0");
+## Try[LA]("1.1", FUNC("label"), ":label:16:unix:");
+## Try[LA]("1.2", FUNC("abc12"), ":abc12:16:unix:");
+## Try[LA]("1.3", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:");
+## Try[NLA]("2.1", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:0");
 ## Try[TE]("10.0", FUNC(""), "label cannot be empty");
 ## msg := "invalid characters in label":
 ## Try[TE]("10.1", FUNC("+"), msg);
@@ -1133,19 +1099,26 @@ $endif
 
 
     CreateID := proc(label :: string,$)
+    local ver;
         if length(label) = 0 then
             error "label cannot be empty";
         elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
             error "invalid characters in label '%1'", label;
         end if;
-        return sprintf(":%s:%s:%d:", label, kernelopts('platform,pid') );
+        ver := kernelopts('version');
+        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
+        return sprintf(":%s:%s:%s:%d:"
+                       , label
+                       , ver
+                       , kernelopts('platform,pid')
+                      );
     end proc;
 
 #}}}
 
 #{{{ Version
 
-    Version := "1.12.2";
+    Version := "1.12.3";
 
 #}}}
 
@@ -1355,6 +1328,7 @@ $endif
         elif exact then
             if matchlocals then
                 match_predicate := proc()
+                local n;
                     _npassed > 0 and [ex] = subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]);
                 end proc;
             else

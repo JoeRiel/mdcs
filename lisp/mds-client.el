@@ -79,8 +79,8 @@ live-buf dead-buf out-buf), where status is initialized to 'new'."
 
 (defun mds-client-set-id (client id)
   "Set the identifier of CLIENT to ID.
-Currently ID consists of a three element list of strings,
-\(USER-ID OS MAPLE-PID)."
+Currently ID consists of a four element list of strings,
+\(LABEL VERSION OS MAPLE-PID)."
   (setcar (nthcdr 3 client) id))
 
 
@@ -126,6 +126,12 @@ kill the buffers, and decrement `mds-clients-number'."
   ;; by the Debugger code.
   (ding)
   (message "Interrupting is currently not implemented.  Use quit to close the debugger connection, then manually interrupt Maple."))
+
+
+(defun mds-client-get-maple-release (client)
+  "Return the major release of the Maple kernel used by CLIENT.
+The value is an integer."
+  (string-to-number (nth 1 (mds-client-id client))))
 
 
 (provide 'mds-client)

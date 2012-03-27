@@ -26,7 +26,8 @@ Debugger := module()
 
 #{{{ declarations
 
-export Printf
+export GoBack
+    ,  Printf
     ,  Replace
     ,  Reset
     ,  Restore
@@ -34,6 +35,7 @@ export Printf
     ,  ShowError
     ,  ShowException
     ,  ShowstatAddr
+    ,  Skip
     ,  stopat
     ,  unstopat
     ;
@@ -44,10 +46,14 @@ local _debugger
     , debugger_printf
     , debugger_readline
     , debugged_builtins
+    , enter_procname := NULL
     , _showstat
     , _showstop
     , _where
     , _print
+    , go_back := false
+    , go_back_proc
+    , go_back_state := 0
     , here_cnt := 0
     , here_proc
     , here_state
@@ -61,6 +67,7 @@ $ifdef LOG_READLINE
     , logpid
 $endif
     , parse_debugger
+    , skip
     , ModuleLoad
     ;
 
@@ -268,13 +275,21 @@ $endif
         and _passed[n][1] = 'DEBUGINFO' then
             procName := _passed[n][2];   # name of procedure
             statNumber := _passed[n][3]; # state number in procedure
-            statLevel := _passed[n][4];  # state level (a posint, starting at 1, incremented with each "indentation" level)
-
+            statLevel := _passed[n][4];  # state level (a posint, starting at 1,
+                                         # incremented with each "indentation" level)
             n := n - 1;
+
+            #{{{ handle go_back/here/enter_procname/match_predicate
 
             if skip then
 
-                if here_cnt > 0 then
+                if go_back then
+                    if procName = go_back_proc
+                    and statNumber = go_back_state then
+                        go_back := false;
+                        skip := false;
+                    end if;
+                elif here_cnt > 0 then
                     if here_proc = procName
                     and here_state = statNumber then
                         if here_cnt > 1 then
@@ -288,7 +303,7 @@ $endif
                     if statNumber = 1
                     and SearchText(enter_procname
                                    , sprintf("%a",procName)
-                                   , -length(enter_procname)..-1
+                                   #, -length(enter_procname)..-1
                                   ) <> 0 then
                         skip := false;
                         enter_procname := NULL;
@@ -303,7 +318,9 @@ $endif
                     end if;
                 end if;
 
-                    end if;
+            end if;
+
+            #}}}
         else
             # Joe asks: Is this branch ever executed?
             procName := 0;
@@ -602,6 +619,8 @@ $endif
             elif cmd = "setenv" then
                 return 'debugopts'('setenv'=[line[2],line[3]])
             elif cmd = "_skip" then
+                go_back_proc := procName;
+                go_back_state := statNumber;
                 skip := true;
                 return line;
             elif cmd = "_here" then
@@ -612,8 +631,22 @@ $endif
                 if here_state = statNumber then
                     here_cnt := here_cnt+1;
                 end if;
+                go_back_proc := procName;
+                go_back_state := statNumber;
                 skip := true;
-                return here_cnt; # why bother
+                return original;
+            elif cmd = "_enter" then
+                line := sscanf(original, "%s %s");
+                enter_procname := line[2];
+                go_back_proc := procName;
+                go_back_state := statNumber;
+                skip := true;
+                return original;
+            elif cmd = "_goback_save" then
+                line := sscanf(original, "%s %d");
+                go_back_proc := procName;
+                go_back_state := line[2];
+                return sprintf("_goback_save %a %d", procName, go_back_state);
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[SearchText("statement",original)+9..-1];
@@ -998,6 +1031,32 @@ $endif
 
         return pn;
 
+    end proc;
+
+#}}}
+
+#{{{ GoBack
+
+    GoBack := proc({ clear :: truefalse := false }, $ )
+        if clear then
+            go_back := false;
+            go_back_state := 0;
+            skip := false;
+            return NULL;
+        else
+            if go_back_state = 0 then
+                error "no previous state saved";
+            end if;
+            go_back := true;
+            skip := true;
+            return [go_back_proc, go_back_state];
+        end if;
+    end proc;
+#}}}
+#{{{ Skip
+
+    Skip := proc( { clear :: truefalse := false }, $ )
+        skip := not clear;
     end proc;
 
 #}}}
