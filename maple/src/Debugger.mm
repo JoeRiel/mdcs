@@ -643,9 +643,10 @@ $endif
                 skip := true;
                 return 'NULL';
             elif cmd = "_goback_save" then
-                line := sscanf(original, "%s %d");
-                go_back_proc := procName;
+                line := sscanf(original, "%s %d %d");
                 go_back_state := line[2];
+                # go_back_proc := procName;
+                go_back_proc := pointto(line[3]);
                 return 'NULL'
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.

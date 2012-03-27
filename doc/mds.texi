@@ -779,9 +779,11 @@ The debugger is halted each time it reaches the statement and the condition eval
 Save the statement at point as a @strong{goback} point.  This permits
 returning to that point, after leaving the debugger, by executing
 @code{mdc(goback)} in the Maple client and then executing the command
-that started the debugging session.  
+that started the debugging session.  If executed in the dead showstat
+buffer, @pxref{Dead Showstat Buffer}, the goback point is set in
+the corresponding procedure.
 
-The goback point will be overwritten if @code{mds-goto-procname},
+The goback point is overwritten when @code{mds-goto-procname},
 @pxref{mds-goto-procname}, or @code{mds-here}, @pxref{mds-here}, are
 called because they also save the goback point, to permit recovery.
 

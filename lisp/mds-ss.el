@@ -489,6 +489,7 @@ at or near point, without prompting."
 		(thing-at-point 'procname))))
     (if (or query
 	    (and
+	     ;; check for reserved words, builtins, etc
 	     (let ((release (mds-client-get-maple-release mds-client)))
 	       (or (member proc (cdr (assoc release maplev--reserved-words-alist)))
 		   (member proc (cdr (assoc release maplev--builtin-functions-alist)))))
@@ -847,7 +848,9 @@ the `mds-ss-buffer'."
 (defun mds-goback-save ()
   "Save current statement as goto point."
   (interactive)
-  (mds-ss-eval-proc-statement (format "_goback_save %s" (mds-ss-get-state))))
+  (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+				      (mds-ss-get-state)
+				      (mds-ss-get-addr))))
 
 (defun mds-info ()
   "Display the info page for MDS."
