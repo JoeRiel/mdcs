@@ -548,13 +548,13 @@ Continue: run until the next breakpoint or watchpoint, or until the program term
 @findex mds-goto-procname
 @anchor{mds-goto-procname}
 @item g (@code{mds-goto-procname})
-Goto a procedure.  The name of the procedure is the name at point.
-If called with an argument, @kbd{C-u g}, the procedure name is
-queried in the minibuffer, the default is the name at point.
-This feature is built on the skipping mechanism,
-it does not use breakpoints.  This is not robust because it relies
-on string-matching to determine whether the chose procedure has
-been entered.
+Goto a procedure, that is, skip until the selected procedure is entered.
+The name of the procedure is surmised from the code at point.  If called
+with an argument, @kbd{C-u g}, the procedure name is queried in the
+minibuffer, the default is taken from the code at point.  This feature
+is built on the skipping mechanism; it does not use breakpoints.  It
+relies on string-matching to determine whether the selected procedure has
+been entered, so can sometimes give surprising results.
 
 This command saves a @strong{goback} point at the statement where
 it was called; @pxref{mds-goback-save}.
@@ -574,7 +574,7 @@ If executed at a location without a statement number,
 say, at an @code{else}, the preceding statement number is used
 as the target.
 
-Can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
+It can be called from the dead showstat buffer (@pxref{Dead Showstat Buffer});
 execution skips to the statement in the corresponding procedure.
 
 This command saves a @strong{goback} point at the statement where

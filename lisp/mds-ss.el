@@ -957,16 +957,18 @@ to work, `face-remapping-alist' must be buffer-local."
 
       ("Execution"
        ["Continue"	mds-cont t]
-       ["Goto"		mds-goto-procname t]
-       ["Goto [query]" mds-goto-procname t :keys "C-u g"]
-       ["Here"		mds-here t]
        ["Into"		mds-into t]
        ["Next"		mds-next t]
        ["Outfrom"	mds-outfrom t]
        ["Skip"          mds-skip t]
        ["Step"		mds-step t]
        ["Return"	mds-return t]
-       ["Trace"         mds-cycle-trace t]
+       "----"
+       ["Goto"		mds-goto-procname t]
+       ["Goto [query]"  mds-goto-procname :keys "C-u g"]
+       ["Here"		mds-here t]
+       "----"
+       ["Trace [cycle]" mds-cycle-trace t]
        "----"
        ["Quit"		mds-quit t]
        )
@@ -986,7 +988,7 @@ to work, `face-remapping-alist' must be buffer-local."
        "----"
        ["Show all stop points"       mds-showstop t]
        "---"
-       ["Save goto point"            mds-goback-save t]
+       ["Save goback point"          mds-goback-save t]
        )
 
       ("Evaluation"
