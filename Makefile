@@ -128,7 +128,9 @@ p: doc/$(PKG).pdf
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
 	  --eval "(push (expand-file-name \"./lisp\") load-path)" \
-	  --eval "(push \"$(LISP_BASE)\" load-path)"
+	  --eval "(push \"$(LISP_DIR)\" load-path)"
+
+$(info $(ELFLAGS))
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
