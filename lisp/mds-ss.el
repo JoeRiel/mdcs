@@ -491,7 +491,9 @@ at or near point, without prompting."
 	     ;; check for reserved words, builtins, etc
 	     (let ((release (mds-client-get-maple-release mds-client)))
 	       (or (member proc (cdr (assoc release maplev--reserved-words-alist)))
-		   (member proc (cdr (assoc release maplev--builtin-functions-alist)))))
+		   (member proc (cdr (assoc release maplev--builtin-functions-alist)))
+		   (member proc maplev--special-words)
+		   (member proc maplev--initial-variables)))
 	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (mds-ss-eval-proc-statement (format "_enter %s" proc))))
