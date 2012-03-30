@@ -1239,7 +1239,7 @@ $endif
 ##
 ##- Assign the predicate to stop when _x^2_ is computed.
 ##> mdc:-SkipUntil(x^2):
-##> mdc(stopat=int):
+##> mdc(int):
 ##> int(x,x);
 ##
 ##- Use the `usehastype` option to stop skipping when a square appears.
@@ -1248,7 +1248,7 @@ $endif
 ##> int(x,x);
 ##
 ##- Use the `exact` option.
-##> mdc:-SkipUntil(1/2*x^2,'exact') end proc):
+##> mdc:-SkipUntil(1/2*x^2,'exact');
 ##> forget(int):
 ##> int(x,x);
 ##
@@ -1284,8 +1284,12 @@ $endif
 ##> restart;
 ##> mdc:-SkipUntil('stacklevel' = 1000):
 ##> f := proc(x) kernelopts('level'); 1 + procname(x+1) end proc:
+##- This call generates a stack overflow.
 ##> f(1);
+##OUTPUT(show) Error, (in f) too many levels of recursion
 ##> mdc(f):
+##- Call `f` again.  When the debugger starts, type **S** to begin
+##  skipping.
 ##> f(1);
 ##ENDSUBSECTION
 ##
@@ -1296,7 +1300,7 @@ $endif
 ##>> local x,y;
 ##>>     y := exp(x);
 ##>>     y^2;
-##>>  end proc:
+##>> end proc:
 ##
 ##- Use the `matchlocals` option.
 ##> mdc:-SkipUntil(exp(x), 'matchlocals'):
@@ -1317,12 +1321,35 @@ $endif
                      )
 
         if bytesalloc <> NULL then
-            match_predicate := proc() evalb(bytesalloc < kernelopts(':-bytesalloc')) end proc;
+            match_predicate := proc()
+            local alloc;
+                alloc := kernelopts(':-bytesalloc');
+                if bytesalloc < alloc then
+                    sprintf("allocated bytes [%d] exceeded %d"
+                            , alloc
+                            , bytesalloc
+                           );
+                else
+                    false;
+                end if;
+            end proc;
+
 
         elif stacklevel <> NULL then
 
-            match_predicate := subs('_S' = stacklevel+52  # 48 = 20+4+4+20, but 52 is better
-                                    , proc() evalb(_S <= kernelopts(':-level')) end proc
+            match_predicate := subs('_S' = stacklevel+51  # 48 = 20+4+4+20, but 51 is better
+                                    , proc()
+                                      local lev;
+                                          lev := kernelopts(':-level');
+                                          if _S < lev then
+                                              sprintf("stack level [%d] exceeded %d"
+                                                      , lev - 51
+                                                      , stacklevel
+                                                     );
+                                          else
+                                              false;
+                                          end if;
+                                      end proc
                                    );
         elif ex = NULL then
 

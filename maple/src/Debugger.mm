@@ -260,7 +260,7 @@ $endif
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
     local dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
-        , state, pName, lNum, cond, cmd, err, module_flag;
+        , state, pName, lNum, cond, cmd, err, module_flag, pred;
     global showstat, showstop;
 
         # Note: 21 appears to be the amount that kernelopts('level')
@@ -309,7 +309,15 @@ $endif
                         enter_procname := NULL;
                     end if;
                 else
-                    skip := not match_predicate[procName,statNumber](_passed[1..n]);
+                    pred := match_predicate[procName,statNumber](_passed[1..n]);
+                    if pred <> false then
+                        skip := false;
+                        if pred = true then
+                            debugger_printf('DBG_WARN', "skip predicate satisfied\n");
+                        else
+                            debugger_printf('DBG_WARN', "skip predicate satisfied: %Q\n", pred);
+                        end if;
+                    end if;
                     if SkipCheckStack then
                         if skip and evalLevel > last_evalLevel+5 then
                             skip := not match_predicate(op([7,..], debugopts('callstack')));
@@ -328,12 +336,14 @@ $endif
         fi;
 
         #{{{ remove indices in procName
+
         # Added by Joe Riel.  Indices are used by some procedures,
         # for example, map[3], but need to be removed.  Multiple
         # indices are possible.
         while procName :: 'And(indexed,Not(procedure))' do
             procName := op(0,procName);
         end do;
+
         #}}}
         #{{{ process args
 
@@ -680,6 +690,15 @@ $endif
                     else
                         return line;
                     fi;
+                # catch "invalid expression":
+                #     try
+                #         # this will generate a warning if saving
+                #         # locals.  But warning does not go to debugger
+                #         # output,  it shows up in tty stream.
+                #         parse(original,'statement',parse_debugger);
+                #     catch:
+                #         err := lasterror;
+                #     end try
                 catch:
                     err := lasterror;
                 end try;
