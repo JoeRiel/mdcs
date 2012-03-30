@@ -1283,9 +1283,10 @@ $endif
 ##
 ##> restart;
 ##> mdc:-SkipUntil('stacklevel' = 1000):
-##> f := proc(x) 1 + procname(x+1) end proc:
+##> f := proc(x) kernelopts('level'); 1 + procname(x+1) end proc:
+##> f(1);
 ##> mdc(f):
-##> f();
+##> f(1);
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Match an expression with a local variable
