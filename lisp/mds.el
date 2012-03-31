@@ -369,6 +369,9 @@ use them to route the message."
 
      ((string= tag "DBG_ARGS")
       (mds-out-display out-buf msg 'args))
+
+     ((string= tag "MONITOR")
+      (mds-out-display out-buf msg 'monitor))
      
      ((string= tag "DBG_STACK")
       (mds-out-display out-buf msg 'stack))
