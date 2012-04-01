@@ -1215,10 +1215,11 @@ $endif
 ##  ~proc() has([_passed],ex) end proc~.
 ##
 ##- When skipping, the result of each executed statement is
-##  passed to the predicate.  The predicate must return
-##  true or false.  When it returns true, skipping is terminated
-##  and debugging recommences.  The last expression is
-##  displayed in the debugger output.
+##  passed to the predicate.  If the predicate returns false,
+##  skipping continues.  If it returns true, skipping stops
+##  and a generic message is displaye in the debugger output window.
+##  If it returns any other value, skipping stops and that
+##  value is incorporated into the printed message.
 ##
 ##- The arguments passed to the predicate consist of
 ##  the result of each executed statement.
@@ -1288,7 +1289,7 @@ $endif
 ##  the statements that initiated the excessive usage.
 ##
 ##> restart;
-##> mdc:-SkipUntil('bytesall' = 1e8):
+##> mdc:-SkipUntil('bytesalloc' = 10^8):
 ##> mdc(sum):
 ##> sum(binomial(n+2*i, n), i=1..e-1);
 ##
@@ -1326,6 +1327,36 @@ $endif
 ##> f();
 ##ENDSUBSECTION
 ##
+##SUBSECTION Printing a value on exit
+##- Returning a non-boolean expression halts the skipping
+##  and displays the expression.  This can be used to provide
+##  a useful message.  The following examaple illustrates the
+##  use, if not the usefulness.
+##
+##>> timeskip := proc()
+##>> local t;
+##>>    t := time();
+##>>    if t < 3 then
+##>>        false;
+##>>    else
+##>>        t;
+##>>    end if;
+##>> end proc:
+##- Assign a procedure that loops endlessly.
+##>> f := proc()
+##>> local cnt;
+##>>     cnt := 0;
+##>>     do
+##>>         cnt := cnt+1;
+##>>     end do;
+##>> end proc:
+##- Instrument `f`.  Use the `skip_until` option to assign
+##  the skip predicate (it call `SkipUntil`).  Note the
+##  use of "eval" around the skip predicate (`timeskip`).
+##> mdc(f, skip_until = eval(timeskip)):
+##> f();
+##
+##ENDSUBSECTION
 ##SEEALSO
 ##- "mdc[package]"
 ##- "mdc"
