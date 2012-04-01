@@ -1261,6 +1261,8 @@ $endif
 ##- Assign the predicate to stop when _x^2_ is computed.
 ##> mdc:-SkipUntil(x^2):
 ##> mdc(int):
+##- Call `int`, which launches the debugger.
+##  To start the skipping, type **S** in the debugger.
 ##> int(x,x);
 ##
 ##- Use the `usehastype` option to stop skipping when a square appears.
@@ -1291,10 +1293,35 @@ $endif
 ##  the statements that initiated the excessive usage.
 ##
 ##> restart;
-##> mdc:-SkipUntil('bytesalloc' = 10^8):
-##> mdc(sum):
-##> sum(binomial(n+2*i, n), i=1..e-1);
+##- Assign a procedure that inefficiently increase the sign of
+##  a Vector a term at a time by constructing an entirely new Vector.
+##>> inefficent := proc(n)
+##>> local i,x,V;
+##>>    V := Vector();
+##>>    for i to n do
+##>>        V := Vector([seq(x,x=V),i]);
+##>>    end do;
+##>>    V;
+##>> end proc:
+##- The ~skip_until[alloc]~ option to "mdc"
+##  is equivalent to calling `SkipUntil` with
+##  option `bytesalloc`.
+##> mdc(inefficent, skip_until[alloc]=10^8):
+##> inefficent(1000);
 ##
+##- The proper way to increase the size of a Vector is
+##  to use Maple's dynamic resizing ability.  Here
+##  is the equivalent procedure
+##>> efficent := proc(n)
+##>> local i,V;
+##>>    V := Vector();
+##>>    for i to n do
+##>>        V(i) := i;
+##>>    end do;
+##>>    V;
+##>> end proc:
+##- The memory usage is minimal
+##> CodeTools:-Usage(efficient(1000));
 ##ENDSUBSECTION
 ##SUBSECTION Locate a stack overflow
 ##
@@ -1341,7 +1368,7 @@ $endif
 ##>>    if t < 3 then
 ##>>        false;
 ##>>    else
-##>>        t;
+##>>        sprintf("computation time was %a seconds", t);
 ##>>    end if;
 ##>> end proc:
 ##- Assign a procedure that loops endlessly.
@@ -1353,8 +1380,11 @@ $endif
 ##>>     end do;
 ##>> end proc:
 ##- Instrument `f`.  Use the `skip_until` option to assign
-##  the skip predicate (it call `SkipUntil`).  Note the
-##  use of "eval" around the skip predicate (`timeskip`).
+##  the skip predicate (it calls `SkipUntil`).  Note the
+##  use of "eval" around the skip predicate (`timeskip`);
+##  without that `timeskip` would be a name and the generated
+##  predicate would become true only if that name appeared
+##  as an output of a statement---that will not happen.
 ##> mdc(f, skip_until = eval(timeskip)):
 ##> f();
 ##
