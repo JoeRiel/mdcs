@@ -104,7 +104,7 @@
 ##
 ##
 ##SUBSECTION Skipping
-##- *Skipping* means executing code until a predicate returns true,
+##- *Skipping* is the automatic execution of code until a predicate returns true,
 ##  then entering the debugger at that point.
 ##  It provide a convenient means to locate the source of an
 ##  expression in a computation.
@@ -121,17 +121,20 @@
 ##  predicate.  This can be useful because an expression may appear on
 ##  the stack without being the output of a statement.
 ##  *This option is memory intensive*.
-##
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Tracing
-##- *Tracing* means automatically executing the debugged code while
-##  displaying the output and executed lines in the debugger.
+##- *Tracing* is the automatic execution and display of the debugged
+##  code.  The debugger server has commands for enabling tracing.
 ##  Tracing generally continues until the debugger exits,
 ##  though it can be interrupted manually.
-##
 ##ENDSUBSECTION
 ##
+##SUBSECTION Monitoring
+##- *Monitoring* is the contiuous display of selected Maple
+##  expressions as the debugger steps through code.
+##  See "mdc[Monitor]" for a procedure to setup monitoring.
+##ENDSUBSECTION
 ##
 ##OPTIONS
 ##
@@ -506,6 +509,7 @@
 ##- "debugger"
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
+##- "\MOD[Monitor]"
 ##- "\MOD[SkipUntil]"
 ##- "\MOD[TraceLevel]"
 ##ENDMPLDOC
@@ -1132,7 +1136,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.12.3";
+    Version := "1.13.1";
 
 #}}}
 

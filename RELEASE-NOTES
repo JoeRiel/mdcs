@@ -1,5 +1,11 @@
 -*- org -*-
 
+* mdcs.1.13.1
+** Add basic monitoring functionality.
+** Change local name of mdc main command from mdc:-mdc to mdc:-ModuleApply.
+   Modify mpldoc titles to correspond.
+** Improve goback functionality to be settable from dead-showstat buffer
+** Fix/improve SkipUntil example
 * mdcs.1.12.3
 ** Add mds-thing.el to manifest
 ** Add goback functionality
