@@ -6,12 +6,13 @@
 
 ##DEFINE MOD mdc
 ##DEFINE CMD mdc
-##MODULE(help) \MOD
-##HALFLINE Overview of the Maple Debugger Client Module
+##PACKAGE(help) \PKG[package]
+##TITLE \PKG
+##HALFLINE Overview of the Maple Debugger Client package
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##DESCRIPTION
-##- The `\MOD` module implements a *Maple Debugger Client*,
+##- The `\MOD` package implements a *Maple Debugger Client*,
 ##  which is half of a *Maple Debugger Client/Server* pair.
 ##  This client/server architecture provides several
 ##  significant benefits:
@@ -31,7 +32,7 @@
 ##
 ##- The `\MOD` module is an appliable module
 ##  that launches the Maple Debugger Client.
-##  See "\MOD[\MOD]" for details.
+##  See "\CMD" for details.
 ##
 ##- The submodule "\MOD[Grid]" provides several exports
 ##  for using "Grid" with the `\MOD`.
@@ -51,20 +52,23 @@
 ##- "mdc[Grid]" : submodule for debugging "Grid" processes.
 ##- "mdc[Count]" : implements a counter
 ##- "mdc[mdc]" : main export
-##- "mdc[HelpMDS]" : display help page for debugger server
+##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
+##- "mdc[Monitor]" : set/query monitor expressions
 ##- "mdc[SkipUntil]" : set skip options
 ##- "mdc[Sleep]" : utility routine for sleeping
 ##- "mdc[TraceLevel]" : set/query the *level* tracing mode
 ##ENDSUBSECTION
 ##
 ##SEEALSO
+##- "mdc"
 ##- "debugger"
 ##- "Grid"
 ##ENDMPLDOC
 
 
-##PROCEDURE(help) \MOD[mdc]
+##PROCEDURE(help) \CMD[ModuleApply]
 ##HALFLINE Maple Debugger Client
+##ALIAS mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -75,7 +79,9 @@
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command launches the "Maple Debugger Client".
+##- The `\CMD` command is an appliable module that
+##  launches the "Maple Debugger Client".
+##  For package details, see "\MOD[package]".
 ##  If the client successfully connects to a *Maple Debugger Server*,
 ##  it replaces the standard Maple "debugger" with
 ##  procedures that transfer debugging control to the server.
@@ -95,6 +101,7 @@
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
 ##  `\CMD`.  These, as well as configuration options, are described in
 ##  the *Options* section.
+##
 ##
 ##SUBSECTION Skipping
 ##- *Skipping* means executing code until a predicate returns true,
@@ -495,7 +502,7 @@
 ##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
-##- "\MOD"
+##- "\MOD[package]"
 ##- "debugger"
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
@@ -517,19 +524,21 @@ module mdc()
 
 option package;
 
+#{{{ exports
 export Count
     ,  Debugger
     ,  Format
     ,  Grid
     ,  InstallPatch
+    ,  Monitor
     ,  Sleep
     ,  SkipUntil
     ,  TraceLevel
-    ,  mdc
     ,  Version
     ,  HelpMDS
     ,  _pexports
     ;
+#}}}
 
 #{{{ local declarations
 
@@ -564,6 +573,9 @@ local Connect
     , SkipCheckStack
     , Warnings
     ;
+#}}}
+
+#{{{ _pexports
 
     _pexports := proc()
     local sys, excludes;
@@ -582,17 +594,7 @@ local Connect
     end proc;
 
 #}}}
-
-$ifdef BUILD_MLA
-$include <src/Debugger.mm>
-$include <src/Format.mm>
-$include <src/Grid.mm>
-$include <src/HelpMDS.mm>
-$include <src/InstallPatch.mm>
-$endif
-
-    ModuleApply := mdc;
-    Warnings := {};
+#{{{ Replace builtins: printf, sprintf
 
     printf := proc()
         iolib(9,'default',args);  # fprintf('default',args)
@@ -602,44 +604,56 @@ $endif
 
     sprintf := proc() iolib(10,args) end proc;
 
-#{{{ mdc
+#}}}
 
-    mdc := proc( stopats :: seq({string,name,list,set({string,name,list})})
-                 , { debug_builtins :: truefalse := debugbuiltins }
-                 , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
-                 , { exit :: truefalse := false }
-                 , { goback :: truefalse := false }
-                 , { host :: string := GetDefault(':-host',"localhost") }
-                 , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
-                 , { label :: string := kernelopts('username') }
-                 , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
-                 , { level :: posint := GetDefault(':-level',LEVEL_DEFAULT) }
-                 , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
-                 , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
-                 , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
-                 , { reconnect :: truefalse := false }
-                 , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
-                 , { stopat :: {string,name,list,set({string,name,list})} := "" }
-                 , { stoperror :: {truefalse,string,set} := false }
-                 , { stopwarning :: {string,set(string),truefalse} := NULL }
-                 , { stopwhen :: { name, list, set } := NULL }
-                 , { stopwhenif :: { list, set(list) } := NULL }
-                 , { skip_until := NULL }
-                 , { `skip_until[alloc]` :: posint := NULL }
-                 , { `skip_until[exact]` := NULL }
-                 , { `skip_until[level]` :: posint := NULL }
-                 , { `skip_until[loc]` := NULL }
-                 , { `skip_until[type]` := NULL }
-                 , { skip_check_stack :: truefalse := SkipCheckStack }
-                 , { traperror :: {truefalse,string,set} := false }
-                 , { unstopat :: {string,name,list,set(string,name,list)} := "" }
-                 , { unstoperror :: {truefalse,string,set,identical(true)} := false }
-                 , { unstopwhen :: { name, list, set } := NULL }
-                 , { untraperror :: {truefalse,string,set,identical(true)} := false }
-                 , { usegrid :: truefalse := false }
-                 , { view :: truefalse := GetDefault(':-view',false) }
-                 , $
-               )
+    Warnings := {}; # initialize
+
+$ifdef BUILD_MLA
+$include <src/Debugger.mm>
+$include <src/Format.mm>
+$include <src/Grid.mm>
+$include <src/HelpMDS.mm>
+$include <src/InstallPatch.mm>
+$endif
+
+#{{{ main
+
+    ModuleApply := proc( stopats :: seq({string,name,list,set({string,name,list})})
+                         , { debug_builtins :: truefalse := debugbuiltins }
+                         , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
+                         , { exit :: truefalse := false }
+                         , { goback :: truefalse := false }
+                         , { host :: string := GetDefault(':-host',"localhost") }
+                         , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
+                         , { label :: string := kernelopts('username') }
+                         , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
+                         , { level :: posint := GetDefault(':-level',LEVEL_DEFAULT) }
+                         , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
+                         , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                         , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
+                         , { reconnect :: truefalse := false }
+                         , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
+                         , { stopat :: {string,name,list,set({string,name,list})} := "" }
+                         , { stoperror :: {truefalse,string,set} := false }
+                         , { stopwarning :: {string,set(string),truefalse} := NULL }
+                         , { stopwhen :: { name, list, set } := NULL }
+                         , { stopwhenif :: { list, set(list) } := NULL }
+                         , { skip_until := NULL }
+                         , { `skip_until[alloc]` :: posint := NULL }
+                         , { `skip_until[exact]` := NULL }
+                         , { `skip_until[level]` :: posint := NULL }
+                         , { `skip_until[loc]` := NULL }
+                         , { `skip_until[type]` := NULL }
+                         , { skip_check_stack :: truefalse := SkipCheckStack }
+                         , { traperror :: {truefalse,string,set} := false }
+                         , { unstopat :: {string,name,list,set(string,name,list)} := "" }
+                         , { unstoperror :: {truefalse,string,set,identical(true)} := false }
+                         , { unstopwhen :: { name, list, set } := NULL }
+                         , { untraperror :: {truefalse,string,set,identical(true)} := false }
+                         , { usegrid :: truefalse := false }
+                         , { view :: truefalse := GetDefault(':-view',false) }
+                         , $
+                       )
 
     global `debugger/width`, WARNING;
     local lbl,str,stp;
@@ -1286,7 +1300,7 @@ $endif
 ##> f := proc(x) kernelopts('level'); 1 + procname(x+1) end proc:
 ##- This call generates a stack overflow.
 ##> f(1);
-##OUTPUT(show) Error, (in f) too many levels of recursion
+##<(show) Error, (in f) too many levels of recursion
 ##> mdc(f):
 ##- Call `f` again.  When the debugger starts, type **S** to begin
 ##  skipping.
@@ -1294,8 +1308,8 @@ $endif
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Match an expression with a local variable
-##- Assign a procedure that computes an expression, _exp(x)_,
-##  with a local variable, _x_, that we want to locate using skipping.
+##- Assign a procedure that computes an expression, ~exp(x)~,
+##  with a local variable, ~x~, that we want to locate using skipping.
 ##>> f := proc()
 ##>> local x,y;
 ##>>     y := exp(x);
@@ -1309,8 +1323,8 @@ $endif
 ##ENDSUBSECTION
 ##
 ##SEEALSO
+##- "mdc[package]"
 ##- "mdc"
-##- "mdc[mdc]"
 
     SkipUntil := proc(ex := NULL
                       , { bytesalloc :: posint := NULL }
@@ -1428,7 +1442,7 @@ $endif
 ##>(noexecute) mdc(stopat=[f, 1, 'mdc:-Count()=23']);
 ##>(noexecute) f(0);
 ##SEEALSO
-##- "mdc[mdc]"
+##- "mdc"
 ##- "stopat"
 
     Count := proc( { reset :: truefalse := false } )
@@ -1455,6 +1469,11 @@ $endif
             return default;
         end if;
     end proc;
+#}}}
+#{{{ Monitor
+
+    Monitor := Debugger:-Monitor;
+
 #}}}
 #{{{ TraceLevel
 
@@ -1484,7 +1503,7 @@ $endif
 ##> mdc:-TraceLevel();
 ##SEEALSO
 ##- "mdc"
-##- "mdc[mdc]"
+##- "mdc[package]"
 
     TraceLevel := proc( lev :: posint := NULL )
     local prev;

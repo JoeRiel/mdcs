@@ -792,17 +792,20 @@ See `mds-monitor-define'."
   (mds-ss-eval-proc-statement "_monitor toggle"))
 
 (defun mds-monitor-define (all)
-  "Define a monitor expression for the current procedure.
+  "Define a monitor expression for the current procedure or, if ALL is non-nil, all procedures.
 The user is queried for the expression in the minibuffer.  The
 expression must be valid Maple. An empty string, or whitespace,
 removes the monitor expression for the current procedure.
 
-The monitored expression applies to the current procedure in the
-showstat buffer; it will only be displayed when that procedure is
-active.  Expressions can be defined for multiple procedures.  See
-`mds-monitor-toggle'."
+If ALL is non-nil, the monitored expression is used with all
+procedures, otherwise it is used with just the current procedure
+in the showstat buffer; it will only be displayed when that
+procedure is active.  Expressions can be defined for multiple
+procedures.  Only one expression is used with all procedure. 
+See `mds-monitor-toggle'."
   (interactive "P")
-  (let ((expr (read-string "monitor expr: "))
+  (let ((expr (read-string (format "%smonitor expr: "
+				   (if all "[all] " ""))))
 	(addr (if all "0" (mds-ss-get-addr))))
     (mds-ss-eval-proc-statement (format "_monitor define %s %s" addr expr))))
 

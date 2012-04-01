@@ -78,7 +78,7 @@ Texts.  A copy of the license is included in the section entitled
 
 Introduction
 
-* Summary::                     What MDS does
+* Summary::                     Summary of what MDS does
 * Requirements::                What is needed to run MDS
 * Installation::                How to install MDS
 * Configuration::               How to configure MDS
@@ -91,8 +91,8 @@ Configuration
 
 Showstat Buffer
 
-* Live Showstat Buffer::        The current procedure
-* Dead Showstat Buffer::        Viewing other procedures
+* Live Showstat Buffer::        
+* Dead Showstat Buffer::        
 * Showstat Mode::               
 
 Showstat Mode
@@ -103,6 +103,7 @@ Showstat Mode
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
+* Monitoring::                  
 * Patching::                    Live patching Maple procedures
 * Help::                        Getting help
 
@@ -509,6 +510,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints
 * Evaluation::                  Evaluating expressions
 * Miscellaneous::               Miscellaneous commands
+* Monitoring::                  
 * Patching::                    Live patching Maple procedures
 * Help::                        Getting help
 @end menu
@@ -924,7 +926,7 @@ c = NULL
 
 @end table
 
-@node  Miscellaneous, Patching, Evaluation, Showstat Mode
+@node  Miscellaneous, Monitoring, Evaluation, Showstat Mode
 @subsection Miscellaneous
 @cindex miscellaneous
 
@@ -947,7 +949,35 @@ With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
 @end table
 
-@node Patching, Help, Miscellaneous, Showstat Mode
+@node Monitoring, Patching, Miscellaneous, Showstat Mode
+@subsection Monitoring
+@cindex monitoring
+
+Arbitrary Maple expressions can be monitored.  The expressions
+are evaluated at each step and the results displayed in
+the @emph{debugger output buffer}.  A global monitor expression
+can be assigned for all procedures; each procedure can also
+have its own monitor expression.  Both types of expressions
+are displayed.  The expressions are evaluated in the context
+of the procedure.
+
+@table @asis
+@kindex m
+@findex mds-monitor-toggle
+@item m (@code{mds-monitor-toggle})
+Toggle the monitoring operation.
+
+@kindex M
+@findex mds-monitor-define
+@item M (@code{mds-monitor-define})
+Define a monitor expression for the current procedure.
+With prefix argument (@kbd{C-u M}) the monitor expression
+applies to all procedure.  Both types of monitor expressions
+can coexist.  The expression is queried in the minibuffer.
+
+@end table
+
+@node Patching, Help, Monitoring, Showstat Mode
 @subsection Patching
 @cindex patching
 

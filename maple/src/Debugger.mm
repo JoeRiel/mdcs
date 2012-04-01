@@ -23,6 +23,7 @@ Debugger := module()
 #{{{ declarations
 
 export GoBack
+    ,  Monitor
     ,  Printf
     ,  Replace
     ,  Reset
@@ -1128,6 +1129,78 @@ $endif
     Skip := proc( { clear :: truefalse := false }, $ )
         skip := not clear;
     end proc;
+
+#}}}
+
+#{{{ Monitor
+
+##DEFINE CMD Monitor
+##PROCEDURE(help) \PKG[\CMD]
+##HALFLINE set and query a monitor expression
+##AUTHOR   Joe Riel
+##DATE     Mar 2012
+##CALLINGSEQUENCE
+##- \CMD('prc', 'str' )
+##PARAMETERS
+##- 'prc'  : ::name:: or ::string::; identifies a procedure
+##- 'str' : (optional) ::string::; monitor expression
+##RETURNS
+##- ::string:: or `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  sets and queries a monitor expression
+##  for a procedure.
+##  The monitor expression previously assigned for the procedure
+##  is returned.
+##
+##- The 'prc' argument identifies the procedure.
+##  It may be either the name of the procedure, or
+##  a string that evalutes to the procedure.
+##  Strings are useful for specifying local procedures.
+##
+##- If 'prc' is the string ~"all"~, the monitor expression
+##  is active for all procedures.
+##
+##- The optional 'str' argument is a string corresponding
+##  to a Maple expression that is evaluated and displayed
+##  when 'prc' is active during debugging.  If 'str'
+##  is the empty string then the monitoring exprpoenesion is removed.
+##
+##EXAMPLES
+##> with(mdc):
+##> Monitor( int = "[args]" );
+
+$define IDENTIFIER {name,string}
+
+    Monitor := proc( prc :: IDENTIFIER, str :: string := NULL )
+    local addr, expr, prev;
+
+        if prc = "all" then
+            addr := 0;
+        else
+            addr := addressof(getname(prc));
+        end if;
+
+        if assigned(monitor_expr[addr]) then
+            prev := assigned(monitor_expr[addr])
+        else
+            prev := NULL;
+        end if;
+
+        if str <> NULL then
+            expr := StringTools:-Trim(str);
+            if expr = "" then
+                monitor_expr[addr] := evaln(monitor_expr[addr]);
+            else
+                monitor_expr[addr] := expr;
+            end if;
+        end if;
+
+        return prev;
+
+    end proc;
+
+
 
 #}}}
 
