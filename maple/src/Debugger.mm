@@ -16,10 +16,6 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
-$define DBG_EVAL1 DBG_EVAL
-$define DBG_EVAL2 DBG_EVAL
-$define DBG_EVAL3 DBG_EVAL
-$define DBG_EVAL4 DBG_EVAL
 $define LOGFILE "readline.log"
 
 Debugger := module()
@@ -27,6 +23,7 @@ Debugger := module()
 #{{{ declarations
 
 export GoBack
+    ,  Monitor
     ,  Printf
     ,  Replace
     ,  Reset
@@ -59,6 +56,10 @@ local _debugger
     , here_state
     , last_evalLevel
     , last_state
+    , monitoring := false
+    , monitor_addr := 0
+    , monitor_expr
+    , monitor_result := false
     , orig_print
     , orig_stopat
     , getname
@@ -259,8 +260,8 @@ $endif
     description
         `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
         `Not intended to be called directly.`;
-    local dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
-        , state, pName, lNum, cond, cmd, err, module_flag, pred;
+    local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
+        , state, pName, lNum, cond, cmd, err, module_flag, pred, tag;
     global showstat, showstop;
 
         # Note: 21 appears to be the amount that kernelopts('level')
@@ -276,7 +277,7 @@ $endif
             procName := _passed[n][2];   # name of procedure
             statNumber := _passed[n][3]; # state number in procedure
             statLevel := _passed[n][4];  # state level (a posint, starting at 1,
-                                         # incremented with each "indentation" level)
+            # incremented with each "indentation" level)
             n := n - 1;
 
             #{{{ handle go_back/here/enter_procname/match_predicate
@@ -345,9 +346,14 @@ $endif
         end do;
 
         #}}}
-        #{{{ process args
+        #{{{ send result to emacs
 
         if not skip then
+            if monitor_result then
+                tag := 'MONITOR'
+            else
+                tag := 'DBG_EVAL'
+            end if;
             for i from 1 to n do
                 # Use addressof to prevent an object from overriding
                 # equality.
@@ -385,19 +391,19 @@ $endif
                         debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                     elif i < n then
                         # list/set that is part of a continued sequence
-                        debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
+                        debugger_printf(tag, "%a,\n",_passed[i])
                     else
                         # list/set
-                        debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
+                        debugger_printf(tag, "%a\n",_passed[i])
                     fi
                 elif i < n then
                     # expr that is part of a continued sequence
-                    debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
+                    debugger_printf(tag, "%a,\n",_passed[i])
                 else
                     # expr
-                    debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
+                    debugger_printf(tag, "%a\n",_passed[i])
                 fi
-            od;
+            end do;
 
         end if;
 
@@ -417,7 +423,7 @@ $endif
             dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
             # Set module_flag true if next statement appears to
             # evaluate a module, which causes a debugger error if one
-            # attempt to step into it.  The test is simple and uses
+            # attempts to step into it.  The test is simple and uses
             # builtins to keep this fast.
             if SearchText("module ()", dbg_state) = 0 then
                 module_flag := false;
@@ -437,7 +443,7 @@ $endif
 
         #}}}
 
-        #{{{ handle skip
+        #{{{ handle skip/monitor
         # skip is true if 'skip_until' is in effect.
         if skip then
             if module_flag then
@@ -446,6 +452,29 @@ $endif
                 debugopts('steplevel'=999999999);
             end if;
             return NULL;
+        elif monitoring then
+            if monitor_result = true then
+                monitor_result := false;
+            else
+                addr := addressof(procName);
+                if assigned(monitor_expr[0])
+                or assigned(monitor_expr[addr]) then
+                    monitor_result := true;
+                    # parse the statement in the debugger context
+                    # and send to Maple
+                    line := NULL;
+                    if assigned(monitor_expr[0]) then
+                        line := (line,parse(monitor_expr[0], parse_debugger));
+                    end if;
+                    if assigned(monitor_expr[addr]) then
+                        line := (line, parse(monitor_expr[addr], parse_debugger));
+                    end if;
+                    if line = NULL then
+                        line := 'NULL';
+                    end if;
+                    return line;
+                end if;
+            end if;
         end if;
         #}}}
         #{{{ command loop
@@ -658,6 +687,28 @@ $endif
                 # go_back_proc := procName;
                 go_back_proc := pointto(line[3]);
                 return 'NULL'
+            elif cmd = "_monitor" then
+                line := sscanf(original, "%s %s %d %1000c");
+                cmd := line[2];
+                if cmd = "toggle" then
+                    monitoring := not monitoring;
+                    return `if`(monitoring
+                                , "monitoring enabled"
+                                , "monitoring disabled"
+                               );
+                elif cmd = "define" then
+                    addr := line[3];
+                    if numelems(line) = 3 then
+                        monitor_expr[addr] := evaln(monitor_expr[addr]);
+                        return 'NULL'
+                    else
+                        monitor_expr[addr] := line[4];
+                        line[4];
+                    end if;
+                else
+                    return 'NULL';
+                end if;
+
             elif cmd = "statement" then
                 # Must be an expression to evaluate globally.
                 original := original[SearchText("statement",original)+9..-1];
@@ -690,15 +741,15 @@ $endif
                     else
                         return line;
                     fi;
-                # catch "invalid expression":
-                #     try
-                #         # this will generate a warning if saving
-                #         # locals.  But warning does not go to debugger
-                #         # output,  it shows up in tty stream.
-                #         parse(original,'statement',parse_debugger);
-                #     catch:
-                #         err := lasterror;
-                #     end try
+                    # catch "invalid expression":
+                    #     try
+                    #         # this will generate a warning if saving
+                    #         # locals.  But warning does not go to debugger
+                    #         # output,  it shows up in tty stream.
+                    #         parse(original,'statement',parse_debugger);
+                    #     catch:
+                    #         err := lasterror;
+                    #     end try
                 catch:
                     err := lasterror;
                 end try;
@@ -1081,9 +1132,76 @@ $endif
 
 #}}}
 
-$undef DBG_EVAL1
-$undef DBG_EVAL2
-$undef DBG_EVAL3
-$undef DBG_EVAL4
+#{{{ Monitor
+
+##DEFINE CMD Monitor
+##PROCEDURE(help) \PKG[\CMD]
+##HALFLINE set and query a monitor expression
+##AUTHOR   Joe Riel
+##DATE     Mar 2012
+##CALLINGSEQUENCE
+##- \CMD('prc', 'str' )
+##PARAMETERS
+##- 'prc'  : ::name:: or ::string::; identifies a procedure
+##- 'str' : (optional) ::string::; monitor expression
+##RETURNS
+##- ::string:: or `NULL`
+##DESCRIPTION
+##- The `\CMD` command
+##  sets and queries a monitor expression
+##  for a procedure.
+##  The monitor expression previously assigned for the procedure
+##  is returned.
+##
+##- The 'prc' argument identifies the procedure.
+##  It may be either the name of the procedure, or
+##  a string that evalutes to the procedure.
+##  Strings are useful for specifying local procedures.
+##
+##- If 'prc' is the string ~"all"~, the monitor expression
+##  is active for all procedures.
+##
+##- The optional 'str' argument is a string corresponding
+##  to a Maple expression that is evaluated and displayed
+##  when 'prc' is active during debugging.  If 'str'
+##  is the empty string then the monitoring exprpoenesion is removed.
+##
+##EXAMPLES
+##> with(mdc):
+##> Monitor( int = "[args]" );
+
+$define IDENTIFIER {name,string}
+
+    Monitor := proc( prc :: IDENTIFIER, str :: string := NULL )
+    local addr, expr, prev;
+
+        if prc = "all" then
+            addr := 0;
+        else
+            addr := addressof(getname(prc));
+        end if;
+
+        if assigned(monitor_expr[addr]) then
+            prev := assigned(monitor_expr[addr])
+        else
+            prev := NULL;
+        end if;
+
+        if str <> NULL then
+            expr := StringTools:-Trim(str);
+            if expr = "" then
+                monitor_expr[addr] := evaln(monitor_expr[addr]);
+            else
+                monitor_expr[addr] := expr;
+            end if;
+        end if;
+
+        return prev;
+
+    end proc;
+
+
+
+#}}}
 
 end module;

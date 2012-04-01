@@ -33,7 +33,6 @@
 (eval-when-compile
   (defvar mds-show-args-flag))
 
-
 ;;}}}
 
 ;;{{{ customization
@@ -783,6 +782,34 @@ the number of activation levels to display."
     (mds-ss-eval-debug-code cmd)))
 
 ;;}}}
+;;{{{ (*) Monitoring
+
+(defun mds-monitor-toggle ()
+  "Toggle the monitoring feature, which 
+provides a continuous display of specified Maple expressions.
+See `mds-monitor-define'."
+  (interactive)
+  (mds-ss-eval-proc-statement "_monitor toggle"))
+
+(defun mds-monitor-define (all)
+  "Define a monitor expression for the current procedure or, if ALL is non-nil, all procedures.
+The user is queried for the expression in the minibuffer.  The
+expression must be valid Maple. An empty string, or whitespace,
+removes the monitor expression for the current procedure.
+
+If ALL is non-nil, the monitored expression is used with all
+procedures, otherwise it is used with just the current procedure
+in the showstat buffer; it will only be displayed when that
+procedure is active.  Expressions can be defined for multiple
+procedures.  Only one expression is used with all procedure. 
+See `mds-monitor-toggle'."
+  (interactive "P")
+  (let ((expr (read-string (format "%smonitor expr: "
+				   (if all "[all] " ""))))
+	(addr (if all "0" (mds-ss-get-addr))))
+    (mds-ss-eval-proc-statement (format "_monitor define %s %s" addr expr))))
+
+;;}}}
 ;;{{{ (*) Short cuts
 
 (defun mds-send-last-command ()
@@ -888,6 +915,8 @@ the `mds-ss-buffer'."
 	   ("K" . mds-where)
 	   ("l" . mds-goto-current-state)
 	   ("L" . mds-ss-refresh)
+	   ("m" . mds-monitor-toggle)
+	   ("M" . mds-monitor-define)
 	   ("n" . mds-next)
 	   ("o" . mds-outfrom)
 	   ("p" . mds-showstop)
@@ -998,7 +1027,7 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Evaluation"
        ["Evaluate expression"			mds-eval-and-display-expr t]
        ["Evaluate expression in global context" mds-eval-and-display-expr-global t]
-       ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t] 
+       ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t]
        )
 
       ("Information"
@@ -1008,7 +1037,10 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Show error"			mds-showerror t]
        ["Show error raw"		(mds-showerror t) t]
        ["Show exception"		mds-showexception t]
-       ["Show exception raw"		(mds-showexception t) t] 
+       ["Show exception raw"		(mds-showexception t) t]
+       "---"
+       ["Toggle monitoring"		mds-monitor-toggle t]
+       ["Define monitor expression" 	mds-monitor-define t]
        )
 
       ("Miscellaneous"

@@ -93,6 +93,13 @@
   "Face for Maple errors."
   :group 'mds-faces)
 
+(defface mds-monitor
+  '((((class color) (background dark))  :foreground "spring green")
+    (((class color) (background light)) :foreground "ForestGreen")
+    (((class color) :foreground "red")))
+  "Face for monitored expressions."
+  :group 'mds-faces)
+
 (defface mds-prompt
   '((((min-colors 88) (class color) (background dark))  :foreground "gray40")
     (((min-colors 88) (class color) (background light)) :foreground "gray60")
@@ -273,6 +280,9 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'output)
 	      (insert msg))
+
+	     ((eq tag 'monitor)
+	      (mds-insert-and-font-lock msg 'mds-monitor))
 
 	     ((eq tag 'addr-procname)
 	      (insert msg "\n")
