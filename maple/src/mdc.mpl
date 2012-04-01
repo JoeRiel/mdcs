@@ -304,7 +304,8 @@
 ##
 ##opt(skip_until[alloc],posint)
 ##  Similar to `skip_until`, but uses the `bytesalloc` option to "SkipUntil".
-##  Skipping stops when _kernelopts(bytesalloc)_ exceeds the value.
+##  Skipping stops when _kernelopts(bytesalloc)_ increases by
+##  the specified value.
 ##
 ##opt(skip_until[exact],anything)
 ##  Similar to `skip_until`, but passes the `exact` option to "SkipUntil".
@@ -1237,7 +1238,8 @@ $endif
 ##OPTIONS
 ##- Some of the options are mutually exclusive.
 ##opt(bytesalloc,posint)
-##  When passed, skip until _bytesalloc < kernelopts(:-bytesalloc)_.
+##  When passed, skip until ~kernelopts(':-bytesalloc')~ exceeds
+##  the current setting by 'bytesalloc'.
 ##opt(exact,truefalse)
 ##  When true, the predicate is ~proc() evalb(_passed = ex) end proc~.
 ##  An exact match is efficient.
@@ -1368,15 +1370,19 @@ $endif
                       , { exact :: truefalse := false }
                       , { matchlocals :: truefalse := false }
                      )
+    local alloc_orig, alloc_max;
 
         if bytesalloc <> NULL then
+
+            alloc_orig := kernelopts(':-bytesalloc');
+            alloc_max := alloc_orig + bytesalloc;
+
             match_predicate := proc()
             local alloc;
                 alloc := kernelopts(':-bytesalloc');
-                if bytesalloc < alloc then
-                    sprintf("allocated bytes [%d] exceeded %d"
-                            , alloc
-                            , bytesalloc
+                if alloc_max < alloc then
+                    sprintf("allocated bytes increased by %a"
+                            , alloc - alloc_orig
                            );
                 else
                     false;
