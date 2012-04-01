@@ -250,6 +250,7 @@ $endif
     end proc:
 
 #}}}
+
 #{{{ debugger
 
 # The debugger proper. This gets invoked after a call to the function debug()
@@ -289,6 +290,7 @@ $endif
                     and statNumber = go_back_state then
                         go_back := false;
                         skip := false;
+                        debugger_printf('CLEAR_ECHO');
                     end if;
                 elif here_cnt > 0 then
                     if here_proc = procName
@@ -297,6 +299,7 @@ $endif
                             here_cnt := here_cnt-1;
                         else
                             skip := false;
+                            debugger_printf('CLEAR_ECHO');
                             here_cnt := 0;
                         end if;
                     end if;
@@ -308,6 +311,7 @@ $endif
                                   ) <> 0 then
                         skip := false;
                         enter_procname := NULL;
+                        debugger_printf('CLEAR_ECHO');
                     end if;
                 else
                     pred := match_predicate[procName,statNumber](_passed[1..n]);

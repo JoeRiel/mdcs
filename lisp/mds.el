@@ -409,6 +409,9 @@ use them to route the message."
      ((string= tag "DBG_STOP")
       (mds-out-display out-buf msg 'stop))
 
+     ((string= tag "CLEAR_ECHO")
+      (message ""))
+
      ((string= tag "DBG_NULL"))
 
      ;; otherwise print to debugger output buffer

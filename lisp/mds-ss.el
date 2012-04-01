@@ -495,11 +495,13 @@ at or near point, without prompting."
 		   (member proc maplev--initial-variables)))
 	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
+    (message "Stop in procedure %s..." proc)
     (mds-ss-eval-proc-statement (format "_enter %s" proc))))
 
 (defun mds-here (cnt)
   "Skip until the statement at point is reached CNT times."
   (interactive "p")
+  (message "Skipping to point...")
   (mds-ss-eval-proc-statement (format "_here %d %s %s"
 				      cnt
 				      (mds-ss-get-addr)
@@ -537,6 +539,7 @@ Otherwise delete the dead showstat window."
 (defun mds-skip ()
   "Resume skipping."
   (interactive)
+  (message "Skipping...")
   (mds-ss-eval-proc-statement "_skip"))
 
 (defun mds-step ()
@@ -876,6 +879,7 @@ the `mds-ss-buffer'."
 (defun mds-goback-save ()
   "Save current statement as goto point."
   (interactive)
+  (message "set goback point")
   (mds-ss-eval-proc-statement (format "_goback_save %s %s"
 				      (mds-ss-get-state)
 				      (mds-ss-get-addr))))
