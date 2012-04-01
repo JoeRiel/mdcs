@@ -1168,11 +1168,42 @@ $endif
 ##
 ##EXAMPLES
 ##> with(mdc):
-##> Monitor( int = "[args]" );
+##- Assign procedures `f` and `g`.
+##>> f := proc(x)
+##>> local i,y;
+##>>     y := x;
+##>>     for i to 10 do
+##>>         y := g(x);
+##>>         y := y+1;
+##>>     end do;
+##>>     y;
+##>> end proc:
+##>> g := proc(w)
+##>> local x,z;
+##>>     x := w+1;
+##>>     z := x^2;
+##>>     z;
+##>> end proc:
+##- Assign monitor expressions for all procedures, and specialized
+##  ones for `f` and `g`.  Note the use of single-quotes to prevent
+##  evaluation of the left side of the equation.  That works for local
+##  variables, but not for arguments; those need double quotes (see
+##  the `x`).  Watch what happens as you step through the procedures.
+##> Monitor( "all", "[kernelopts(level,bytesalloc), 'x'=x, """"x^2""""=x^2]" );
+##> Monitor( f, "['i'=i, 'y'=y]" );
+##> Monitor( g, "'z'=z");
+##- Instrument `f`, then begin debugging.
+##  Be sure to turn-on monitoring in the debugger (type **m**).
+##> mdc(f,quiet);
+##>(noexecute) f(1);
+##
+##SEEALSO
+##- "mdc"
+##- "mdc[package]"
 
 $define IDENTIFIER {name,string}
 
-    Monitor := proc( prc :: IDENTIFIER, str :: string := NULL )
+    Monitor := proc( prc :: IDENTIFIER, str :: string := NULL, $ )
     local addr, expr, prev;
 
         if prc = "all" then
@@ -1200,7 +1231,7 @@ $define IDENTIFIER {name,string}
 
     end proc;
 
-
+$undef IDENTIFIER
 
 #}}}
 
