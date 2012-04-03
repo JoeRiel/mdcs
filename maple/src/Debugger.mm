@@ -188,9 +188,9 @@ $endif
     local except;
         except := debugopts('lastexception');
         if except = '`(none)`' then
-            debugger_printf('DBG_EXCEPTION', "%a\n", except);
+            debugger_printf('SHOW_EXCEPTION', "%a\n", except);
         else
-            debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf('SHOW_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
 
@@ -373,7 +373,7 @@ $endif
         ls := stoperror();
         if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo errors being watched.\n")
         else
-            debugger_printf('DBG_WATCHED_ERRS', "\nWatched errors:\n");
+            debugger_printf('WATCHED_ERRS', "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
                     debugger_printf('DBG_INFO', "   All errors\n")
@@ -396,6 +396,17 @@ $endif
 #}}}
 #{{{ where
 
+##DEFINE PROC _where
+##PROCEDURE \PROC
+##HALFLINE display stack
+##AUTHOR   Joe Riel
+##DATE     Apr 2012
+##CALLINGSEQUENCE
+##- \PROC('n')
+##PARAMETERS
+##- 'n' : (optional) ::integer::; number of activation levels to display
+##
+
     _where := proc( n::integer, $ )
     local stack, i;
     option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
@@ -405,6 +416,9 @@ $endif
         else
             stack := debugopts('callstack')
         fi;
+
+        # FIXME DBG_STACK[1-3] is currently not handled
+
         for i from nops(stack)-2 to 8 by -3 do
             debugger_printf('DBG_STACK1', "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
         od;

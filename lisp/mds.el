@@ -394,16 +394,16 @@ use them to route the message."
      ((string= tag "DBG_ERROR")
       (mds-out-display out-buf msg 'maple-err))
 
-     ((string= tag "DBG_EXCEPTION")
+     ((string= tag "SHOW_EXCEPTION")
       (mds-out-display out-buf msg 'maple-err))
 
      ((string= tag "DBG_INFO")
       (mds-out-display out-buf msg 'debug-info))
 
-     ((string= tag "DBG_WATCHED_CONDS")
+     ((string= tag "WATCHED_CONDS")
       (mds-out-display out-buf msg 'watch-conds))
 
-     ((string= tag "DBG_WATCHED_ERRS")
+     ((string= tag "WATCHED_ERRS")
       (mds-out-display out-buf msg 'watch-errs))
 
      ((string= tag "DBG_STOP")

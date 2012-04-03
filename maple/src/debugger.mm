@@ -11,15 +11,23 @@
 ##- blah blah
 ##
 ##SUBSECTION Tags
+##- CLEAR_ECHO : clear message at bottom of screen
 ##- DBG_ERR
+##- DBG_EVAL
+##- DBG_INFO :
 ##- DBG_PARSE_ERR
 ##- DBG_SAME_STATE
-##- DBG_STACK
+##- DBG_STACK :
 ##- DBG_STATE
 ##- DBG_STOP
-##- DBG_WARN
-##- DBG_WATCHED_CONDS
+##- DBG_WARN :
 ##- DBG_WHERE
+##- MONITOR : message is result of a monitored expression
+##- MDC_PRINTF
+##- MPL_ERR :
+##- SHOW_EXCEPTION : called from "ShowException"
+##- WATCHED_CONDS:
+##- WATCHED_ERRS : called from "_showstop"
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
@@ -160,7 +168,7 @@ global showstat, showstop;
                     then
                         return
                     fi;
-                    debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf('WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif i < n then
                     # list/set that is part of a continued sequence
                     debugger_printf(tag, "%a,\n",_passed[i])
