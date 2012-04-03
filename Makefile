@@ -165,7 +165,7 @@ hdb: remove-preview install-mla mdc.hdb
 
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
-	@mpldoc -c nightly $+
+	@mpldoc --config nightly $+
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 mdc-old.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
