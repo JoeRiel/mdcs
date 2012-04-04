@@ -923,6 +923,11 @@ b = 12,
 c = NULL
 @end example
 
+@kindex ,
+@findex mds-eval-and-prettyprint-prev
+@item . (@code{mds-eval-and-prettyprint-prev})
+Works like @code{mds-eval-and-prettyprint} but uses expression at previous line
+(skipping useless lines).
 
 @end table
 

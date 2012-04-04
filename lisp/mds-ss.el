@@ -1060,7 +1060,8 @@ to work, `face-remapping-alist' must be buffer-local."
       ("Evaluation"
        ["Evaluate expression"			mds-eval-and-display-expr t]
        ["Evaluate expression in global context" mds-eval-and-display-expr-global t]
-       ["Evaluate and prettyprint expression"	mds-eval-and-prettyprint t]
+       ["Prettyprint prettyprint expression"	mds-eval-and-prettyprint t]
+       ["Prettyprint expression from previous line"	mds-eval-and-prettyprint-prev t]
        )
 
       ("Information"
