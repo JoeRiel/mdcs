@@ -477,18 +477,40 @@ Otherwise raise error indicating Maple is not available."
   (interactive)
   (mds-ss-eval-proc-statement "cont" 'save))
 
-(defun mds-goto-procname (query)
-  "Goto (stopat) a procedure.
-If QUERY is non-nil, prompt for the procedure name; the default is the
-procedure name at or near point.  If QUERY is nil, use the procedure name
-at or near point, without prompting."
+(defun mds-goto-procname (flag)
+  "Goto (stopat) a procedure without setting breakpoints or stopping along the way.
+If FLAG is non-nil, prompt for the procedure name.  If Transient
+Mark mode is enabled and the mark is active, the default is the
+marked region, otherwise the default is the name at or near
+point.  If FLAG is nil, use the default without prompting.
+
+The command sent to Maple (_enter name) uses skipping.  While
+Maple executes the debugged code, the debugger searches for a
+match of the current procname with the chosen name.  This can
+fail if the name of the target procedure has been reassigned.
+Consider, for example, the Maple code
+
+   bar := proc(x) x^2 end proc:
+   foo := bar:
+   main := proc() foo(3); end proc:
+
+If, inside main, you call `mds-goto-procname` with foo as the target,
+it will fail since the actual name of foo is bar.
+
+The Maple debugger sets a goback point at the current state so
+that debugging can be resumed if no match occurs and the debugger
+exits."
+
   (interactive "P")
-  (let ((proc (if (looking-at (concat "return \\|.* := "))
-		  (save-excursion
-		    (goto-char (match-end 0))
-		    (thing-at-point 'procname))
-		(thing-at-point 'procname))))
-    (if (or query
+  (let ((proc (cond
+	       ((use-region-p)
+		(buffer-substring-no-properties (mark) (point)))
+	       ((looking-at (concat "return \\|.* := "))
+		(save-excursion
+		  (goto-char (match-end 0))
+		  (thing-at-point 'procname)))
+	       (t (thing-at-point 'procname)))))
+    (if (or flag
 	    (and
 	     ;; check for reserved words, builtins, etc
 	     (let ((release (mds-client-get-maple-release mds-client)))
