@@ -710,24 +710,28 @@ If the state does not have a breakpoint, print a message."
 ;;}}}
 ;;{{{ (*) Evaluation
 
-(defun mds-eval-and-prettyprint (expr)
-  "Pretty-print EXPR.  This calls the Maple procedure 
-mdc:-Format:-PrettyPrint to convert EXPR into a more useful display.
-With optional prefix, clear debugger output before displaying."
-  (interactive (list (mds-expr-at-point-interactive
-		      "prettyprint: " "")))
-  (if current-prefix-arg (mds-out-clear))
-  (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
+(defun mds-eval-and-prettyprint ()
+  "Query an expression in the minibuffer and pretty-print it in the output buffer.
+The default is taken from expression at point.  The Maple
+procedure mdc:-Format:-PrettyPrint is used to break the expression into
+multiple lines."
+  (interactive)
+  (let ((expr (mds-expr-at-point-interactive
+	       "prettyprint: " "")))
+    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr))))
 
-(defun mds-eval-and-prettyprint-prev (expr)
-  "Pretty-print EXPR on previous line."
-  (interactive (list (save-excursion
-		       (let ((col (current-column)))
-			 (forward-line -1)
-			 (forward-char col))
-		       (mds-expr-at-point-interactive
-			"prettyprint: " ""))))
-  (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)))
+(defun mds-eval-and-prettyprint-prev ()
+  "Move backward to previous statement and call `mds-eval-and-prettyprint'."
+  (interactive)
+  (save-excursion
+    (let ((col (current-column)))
+      (forward-line -1)
+      (forward-char col)
+      (when (looking-at "end ")
+	(forward-line -1)
+	(forward-char col))
+      (mds-eval-and-prettyprint))))
+
 
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
