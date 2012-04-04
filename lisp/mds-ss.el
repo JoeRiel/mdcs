@@ -409,7 +409,10 @@ Minibuffer completion is used if COMPLETE is non-nil."
 		(match-string 1))
 	       ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
 		(match-string 1))
-	       (t (maplev--ident-around-point default))))
+	       (t (if (looking-at "\\s-+")
+		      ;; move forward through empty space
+		      (goto-char (match-end 0)))
+		  (maplev--ident-around-point default))))
 	(maplev-completion-release maplev-release)
         choice)
     (setq prompt (concat prompt (unless (string-equal expr "")
