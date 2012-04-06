@@ -1159,16 +1159,17 @@ $endif
 ##
 ##- The 'prc' argument identifies the procedure.
 ##  It may be either the name of the procedure, or
-##  a string that evalutes to the procedure.
+##  a string that evaluates to the procedure.
 ##  Strings are useful for specifying local procedures.
 ##
 ##- If 'prc' is the string ~"all"~, the monitor expression
 ##  is active for all procedures.
 ##
-##- The optional 'str' argument is a string corresponding
-##  to a Maple expression that is evaluated and displayed
-##  when 'prc' is active during debugging.  If 'str'
-##  is the empty string then the monitoring exprpoenesion is removed.
+##- The optional 'str' argument is a string
+##  corresponding to a Maple expression
+##  that is parsed and displayed when 'prc' is active during debugging.
+##  If 'str' is the empty string,
+##  the monitoring expression is removed.
 ##
 ##EXAMPLES
 ##> with(mdc):
@@ -1188,17 +1189,27 @@ $endif
 ##>>     z := x^2;
 ##>>     z;
 ##>> end proc:
-##- Assign monitor expressions for all procedures, and specialized
-##  ones for `f` and `g`.  Note the use of single-quotes to prevent
-##  evaluation of the left side of the equation.  That works for local
-##  variables, but not for arguments; those need double quotes (see
-##  the `x`).  Watch what happens as you step through the procedures.
-##> Monitor( "all", "[kernelopts(level,bytesalloc), 'x'=x, """"x^2""""=x^2]" );
+##- Assign monitor expressions for the `f` and `g` procedures.
 ##> Monitor( f, "['i'=i, 'y'=y]" );
 ##> Monitor( g, "'z'=z");
 ##- Instrument `f`, then begin debugging.
 ##  Be sure to turn-on monitoring in the debugger (type **m**).
 ##> mdc(f,quiet);
+##>(noexecute) f(1);
+##- Assign a global monitor that displays the value of `x`.  It is
+##  used for all procedures; its output appears before any local
+##  monitor output.
+##> Monitor("all", "[\"x\"=x, 'x'=x]");
+##
+##-(nolead) Note (above) that two nearly-identical equations are used,
+##  the sole difference is that double-quotes are used around the `x`
+##  in one, and single-quotes are used in the other.  Launch the
+##  debugger and observe the difference in output when in the `f` and
+##  `g` procedures.  In `f`, the single-quoted `x` appears as a
+##  numeric value, while in `g` it appears as `x`.  The reason for
+##  that is that `x` is a parameter of `f`.  As such, it will always
+##  be fully evaluated in a monitored expression, whether or
+##  not it has single-quotes.
 ##>(noexecute) f(1);
 ##
 ##SEEALSO

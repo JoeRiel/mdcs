@@ -131,7 +131,7 @@
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Monitoring
-##- *Monitoring* is the contiuous display of selected Maple
+##- *Monitoring* is the continuous display of selected Maple
 ##  expressions as the debugger steps through code.
 ##  See "mdc[Monitor]" for a procedure to setup monitoring.
 ##ENDSUBSECTION
@@ -1218,7 +1218,7 @@ $endif
 ##- When skipping, the result of each executed statement is
 ##  passed to the predicate.  If the predicate returns false,
 ##  skipping continues.  If it returns true, skipping stops
-##  and a generic message is displaye in the debugger output window.
+##  and a generic message is displayed in the debugger output window.
 ##  If it returns any other value, skipping stops and that
 ##  value is incorporated into the printed message.
 ##
@@ -1359,7 +1359,7 @@ $endif
 ##SUBSECTION Printing a value on exit
 ##- Returning a non-boolean expression halts the skipping
 ##  and displays the expression.  This can be used to provide
-##  a useful message.  The following examaple illustrates the
+##  a useful message.  The following example illustrates the
 ##  use, if not the usefulness.
 ##
 ##>> timeskip := proc()
