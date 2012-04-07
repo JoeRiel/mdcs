@@ -88,7 +88,7 @@ local addr, expr, prev;
     end if;
 
     if assigned(monitor_expr[addr]) then
-        prev := assigned(monitor_expr[addr])
+        prev := monitor_expr[addr];
     else
         prev := NULL;
     end if;
