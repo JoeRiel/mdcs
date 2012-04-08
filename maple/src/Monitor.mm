@@ -1,3 +1,4 @@
+##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE CMD Monitor
 ##PROCEDURE(help) \PKG[\CMD]
 ##HALFLINE set and query a monitor expression
@@ -19,7 +20,7 @@
 ##
 ##- The 'prc' argument identifies the procedure.
 ##  It may be either the name of the procedure, or
-##  a string that evaluates to the procedure.
+##  a string that evaluates to the procedure name.
 ##  Strings are useful for specifying local procedures.
 ##
 ##- If 'prc' is the string ~"all"~, the monitor expression
@@ -33,8 +34,8 @@
 ##
 ##EXAMPLES
 ##> with(mdc):
-##- Assign procedures `f` and `g`.
-##>> f := proc(x)
+##- Assign procedures `f` and `g` used in the following examples.
+##> f := proc(x)
 ##>> local i,y;
 ##>>     y := x;
 ##>>     for i to 10 do
@@ -43,22 +44,30 @@
 ##>>     end do;
 ##>>     y;
 ##>> end proc:
-##>> g := proc(w)
+##> g := proc(w)
 ##>> local x,z;
 ##>>     x := w+1;
 ##>>     z := x^2;
 ##>>     z;
 ##>> end proc:
+##SUBSECTION Local Monitors
 ##- Assign monitor expressions for the `f` and `g` procedures.
+##  A list is used for multiple expressions to keep them on one line
+##  in the output.
 ##> Monitor( f, "['i'=i, 'y'=y]" );
 ##> Monitor( g, "'z'=z");
 ##- Instrument `f`, then begin debugging.
 ##  Be sure to turn-on monitoring in the debugger (type **m**).
-##> mdc(f,quiet);
+##  The `quiet` option to `mdc` suppresses the greeting.
+##>(noexecute) mdc(f,quiet);
 ##>(noexecute) f(1);
-##- Assign a global monitor that displays the value of `x`.  It is
-##  used for all procedures; its output appears before any local
-##  monitor output.
+##ENDSUBSECTION
+##SUBSECTION Global Monitor
+##- Use ~"all"~ as the value of 'prc' to assign a global monitor that
+##  displays the value of `x`.  When monitoring is enabled, the global
+##  monitor is active in both 'f' and 'g' (or any other procedures you
+##  may enter); its output appears before any local monitor output.
+##
 ##> Monitor("all", "[\"x\"=x, 'x'=x]");
 ##
 ##-(nolead) Note (above) that two nearly-identical equations are used,
@@ -70,7 +79,44 @@
 ##  that is that `x` is a parameter of `f`.  As such, it will always
 ##  be fully evaluated in a monitored expression, whether or
 ##  not it has single-quotes.
+##
+##>(noexecute) mdc(f,quiet);
 ##>(noexecute) f(1);
+##
+##ENDSUBSECTION
+##SUBSECTION Conditional Monitors
+##- Assign a monitor expression that is displayed
+##  only when a condition is met.  This can be
+##  achieved by using the Maple "`if`" function.
+##  Note that `\CMD` returns the previously assigned string.
+##
+##> Monitor( f, "`if(3 < i, 'i'=i, NULL)" );
+##>(noexecute) mdc(f,quiet);
+##>(noexecute) f(1);
+##ENDSUBSECTION
+##
+##SUBSECTION Advanced Monitors
+##- A monitor can call procedures, which could be used, say, to write
+##  an expression to a file for later analysis.
+##
+##  For example, in addition to displaying the values of `i` and `x`,
+##  the following monitor also writes them to the file
+##  **/tmp/ix.mpl**.  Note that "fprintf" returns the number
+##  of characters written, which is displayed as the third element
+##  in the list.
+##
+##> logfile := "/tmp/i-x.dat":
+##> log_ix := curry(fprintf, logfile, "%q\n");
+##> Monitor( f, "[i,x,log_ix(i,x)]");
+##>(noexecute) mdc(f,quiet);
+##>(noexecute) f(1)
+##- Close the file to ensure it has been written and is accessible.
+##>(noexecute) fclose(logfile):
+##
+##- Be judicious in the use of such monitors.  Do not call a procedure
+##  that is being debugged.
+##
+##ENDSUBSECTION
 ##
 ##SEEALSO
 ##- "mdc"
