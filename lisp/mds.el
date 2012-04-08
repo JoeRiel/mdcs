@@ -443,8 +443,9 @@ use them to route the message."
 ;;{{{ miscellaneous
 
 (defun mds-toggle-show-args ()
-  "Toggle the variable `mds-show-args-flag', which
-controls the automatic display of arguments when entering a procedure."
+  "Toggle the variable `mds-show-args-flag'.
+When true, the arguments of a procedure are automatically printed
+when entering a procedure."
   (interactive)
   (message "display args: %s"
 	   (if (setq mds-show-args-flag (not mds-show-args-flag))
@@ -452,8 +453,9 @@ controls the automatic display of arguments when entering a procedure."
 	     "disabled")))
 
 (defun mds-toggle-track-input ()
-  "Toggle the variable `mds-track-input-flag', which
-controls the automatic echoing of input lines."
+  "Toggle the variable `mds-track-input-flag'.
+When true, executed input statements from the showstat buffer
+are printed to the output buffer."
   (interactive)
   (message "track input: %s"
 	   (if (setq mds-track-input-flag (not mds-track-input-flag))
@@ -462,7 +464,8 @@ controls the automatic echoing of input lines."
 
 
 (defun mds-toggle-stop-trace-at-error ()
-  "Toggle the variable `mds-stop-trace-at-error-flag'."
+  "Toggle the variable `mds-stop-trace-at-error-flag'.
+When true, tracing stops if an error is raised."
   (interactive)
   (message "stop tracing at error: %s"
 	   (if (setq mds-track-input-flag (not mds-stop-trace-at-error-flag))
