@@ -807,7 +807,7 @@ otherwise run through StringTools:-FormatMessage."
   "Send the 'where' command to the debugger.
 The optional DEPTH parameter is a positive integer that specifies
 the number of activation levels to display."
-  (interactive "p")
+  (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d" depth)
 	       "where")))
