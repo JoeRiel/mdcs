@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs.1.13.2
+** Fix bug with mds-where (stack wouldn't display)
+** Improved help page for Monitor
 * mdcs.1.13.1
 ** Add basic monitoring functionality.
 ** Change local name of mdc main command from mdc:-mdc to mdc:-ModuleApply.
