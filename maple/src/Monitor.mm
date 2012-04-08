@@ -13,15 +13,20 @@
 ##- ::string:: or `NULL`
 ##DESCRIPTION
 ##- The `\CMD` command
-##  sets and queries a monitor expression
-##  for a procedure.
-##  The monitor expression previously assigned for the procedure
-##  is returned.
+##  sets and queries a *monitor expression* for a procedure.
+##  When monitoring is enabled, and the selected procedure is current,
+##  the expression is evaluated after each statement
+##  and the result is displayed in the debugger output buffer.
+##
+##- The monitor expression previously set for the procedure is
+##  returned.  If none has been assigned, `NULL` is returned.
 ##
 ##- The 'prc' argument identifies the procedure.
 ##  It may be either the name of the procedure, or
 ##  a string that evaluates to the procedure name.
-##  Strings are useful for specifying local procedures.
+##  The evaluation of a string is done with
+##  _kernelopts(opaquemodules=false)_,
+##  so strings can be used to specify procedures local to modules.
 ##
 ##- If 'prc' is the string ~"all"~, the monitor expression
 ##  is active for all procedures.
@@ -50,6 +55,13 @@
 ##>>     z := x^2;
 ##>>     z;
 ##>> end proc:
+##
+##- **Note:** In the following subsections, a few examples use
+##  double-quotes inside a Maple string.  They are entered by
+##  *escaping* them with a preceding backslash ~("...\\"...")~.
+##  The Maple 16 help browser renders these properly,
+##  however, if the help page is opened in a worksheet to execute the examples,
+##  the conversion may omit the backslash.
 ##SUBSECTION Local Monitors
 ##- Assign monitor expressions for the `f` and `g` procedures.
 ##  A list is used for multiple expressions to keep them on one line
@@ -65,14 +77,16 @@
 ##SUBSECTION Global Monitor
 ##- Use ~"all"~ as the value of 'prc' to assign a global monitor that
 ##  displays the value of `x`.  When monitoring is enabled, the global
-##  monitor is active in both 'f' and 'g' (or any other procedures you
-##  may enter); its output appears before any local monitor output.
+##  monitor is active in both 'f' and 'g' (or any other procedure
+##  entered).
+##  Global monitor expressions are evaluated and displayed before
+##  local monitor expressions.
 ##
 ##> Monitor("all", "[\"x\"=x, 'x'=x]");
 ##
 ##-(nolead) Note (above) that two nearly-identical equations are used,
-##  the sole difference is that double-quotes are used around the `x`
-##  in one, and single-quotes are used in the other.  Launch the
+##  the sole difference being that double-quotes are used around the `x`
+##  in one, while single-quotes are used in the other.  Launch the
 ##  debugger and observe the difference in output when in the `f` and
 ##  `g` procedures.  In `f`, the single-quoted `x` appears as a
 ##  numeric value, while in `g` it appears as `x`.  The reason for
@@ -90,20 +104,16 @@
 ##  achieved by using the Maple "`if`" function.
 ##  Note that `\CMD` returns the previously assigned string.
 ##
-##> Monitor( f, "`if(3 < i, 'i'=i, NULL)" );
+##> Monitor( f, "`if`(3 < i, 'i'=i, NULL)" );
 ##>(noexecute) mdc(f,quiet);
 ##>(noexecute) f(1);
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Advanced Monitors
-##- A monitor can call procedures, which could be used, say, to write
-##  an expression to a file for later analysis.
-##
+##- A monitor expression can call procedures.
 ##  For example, in addition to displaying the values of `i` and `x`,
-##  the following monitor also writes them to the file
-##  **/tmp/ix.mpl**.  Note that "fprintf" returns the number
-##  of characters written, which is displayed as the third element
-##  in the list.
+##  the following monitor expression calls "fprintf" to
+##  write the values to a file.
 ##
 ##> logfile := "/tmp/i-x.dat":
 ##> log_ix := curry(fprintf, logfile, "%q\n");
@@ -121,6 +131,7 @@
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[package]"
+##- "kernelopts"
 
 $define IDENTIFIER {name,string}
 
