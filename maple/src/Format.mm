@@ -322,6 +322,14 @@ local indexed2slashed
                 # this can be improved.
                 return `proc() ... end proc`;
             end if;
+        elif rest :: string then
+            if StringTools:-Has(rest, "\n") then
+                Debugger:-Printf("(*String with newlines [%d]: *)\n", length(rest));
+                return op(StringTools:-Split(rest, "\n"));
+            else
+                return rest;
+            end if;
+
         elif rest = NULL then
             return "NULL";
         elif rest :: 'name = anything' then
