@@ -727,7 +727,7 @@ multiple lines."
     (let ((col (current-column)))
       (forward-line -1)
       (forward-char col)
-      (when (looking-at "end ")
+      (while (looking-at " *end ")
 	(forward-line -1)
 	(forward-char col))
       (mds-eval-and-prettyprint))))
