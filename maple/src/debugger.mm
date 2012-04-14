@@ -11,22 +11,22 @@
 ##- blah blah
 ##
 ##SUBSECTION Tags
-##- CLEAR_ECHO : clear message at bottom of screen
-##- DBG_ERR
-##- DBG_EVAL
-##- DBG_INFO :
-##- DBG_PARSE_ERR
-##- DBG_SAME_STATE
-##- DBG_STACK :
-##- DBG_STATE
-##- DBG_STOP
-##- DBG_WARN :
-##- DBG_WHERE
+##- CLEAR_ECHO : clear message in echo area
+##- DBG_ERR : A debugger error occurred
+##- DBG_EVAL : computed result (user or procedure)
+##- DBG_INFO : output from "showstop"
+##- DBG_PARSE_ERR : debugger could not interpret input
+##- DBG_SAME_STATE : state has not changed
+##- DBG_STACK : short stack output (can be merged with DBG_WHERE)
+##- DBG_STATE : debugger statement
+##- DBG_STOP : never sent
+##- DBG_WARN : used to indicate improper action (but also when skip is satisfied)
+##- DBG_WHERE : long stack output
 ##- MONITOR : message is result of a monitored expression
-##- MDC_PRINTF
-##- MPL_ERR :
+##- MDC_PRINTF : pretty-printed output
+##- MPL_ERR : a Maple error occurred
 ##- SHOW_EXCEPTION : called from "ShowException"
-##- WATCHED_CONDS:
+##- WATCHED_CONDS: reports watches
 ##- WATCHED_ERRS : called from "_showstop"
 
 # The debugger proper. This gets invoked after a call to the function debug()
