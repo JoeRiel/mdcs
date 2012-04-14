@@ -401,18 +401,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
   ;; Suppress error message
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
-	;; this is crude, but reasonable
-	(expr (cond
-	       ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
-		(format "evalb(%s)" (match-string 1)))
-	       ((looking-at " *return \\(.*\\);?$")
-		(match-string 1))
-	       ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
-		(match-string 1))
-	       (t (if (looking-at "\\s-+")
-		      ;; move forward through empty space
-		      (goto-char (match-end 0)))
-		  (maplev--ident-around-point default))))
+	(expr (mds-expr-at-point default))
 	(maplev-completion-release maplev-release)
         choice)
     (setq prompt (concat prompt (unless (string-equal expr "")
@@ -426,6 +415,21 @@ Minibuffer completion is used if COMPLETE is non-nil."
     (if (string-equal choice "")
         (error "Empty choice"))
     choice))
+
+(defun mds-expr-at-point (&optional default)
+  "Return the expression at point. 
+This is specialized to work with a few routines; needs to be generalized."
+  (cond
+   ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
+    (format "evalb(%s)" (match-string-no-properties 1)))
+   ((looking-at " *return \\(.*\\);?$")
+    (match-string-no-properties 1))
+   ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
+    (match-string-no-properties 1))
+   (t (if (looking-at "\\s-+")
+	  ;; move forward through empty space
+	  (goto-char (match-end 0)))
+      (maplev--ident-around-point default))))
 
 ;;}}}
 
@@ -730,7 +734,8 @@ multiple lines."
       (while (looking-at " *end ")
 	(forward-line -1)
 	(forward-char col))
-      (mds-eval-and-prettyprint))))
+      (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)"
+				(mds-expr-at-point))))))
 
 
 (defun mds-eval-and-display-expr (expr &optional suffix)

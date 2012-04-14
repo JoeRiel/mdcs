@@ -1137,7 +1137,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.13.2";
+    Version := "1.13.3";
 
 #}}}
 
@@ -1480,9 +1480,9 @@ $endif
 ##AUTHOR   Joe Riel
 ##DATE     Sep 2011
 ##CALLINGSEQUENCE
-##- \CMD('indices','opts')
+##- \CMD('indx1','indx2',...,'opts')
 ##PARAMETERS
-##- 'indices' : (optional) arguments used to identify counter
+##- 'indxk' : (optional) arguments used to identify counter
 ##param_opts(\CMD)
 ##DESCRIPTION
 ##- The `\CMD` command increments a counter and returns the result.
@@ -1490,37 +1490,82 @@ $endif
 ##  `stopat` option to "mdc[mdc]" to stop the debugger inside a
 ##  procedure after a specified number of calls.
 ##
+##- The optional parameters 'indx1',...,'indx2' are used
+##  as a single index to a table that stores the count value.
+##  It is allowable to use no indices, which is the usual case
+##  if you need only one counter.
+##
 ##- The counter incremented is local to the "mdc" module.  Different
 ##  counters can be specified by passing arbitrary arguments
-##  ('indices') to \CMD.  These arguments are used to index a table
-##  that stores the counters.
+##  ('indices') to \CMD.
 ##
 ##OPTIONS
 ##opt(reset,truefalse)
 ##  If true, clear all the counters.
 ##  The default value is false, which does not clear counters.
 ##
+##opt(value,truefalse)
+##  If true, return the current value of the counter
+##  associated with 'indices'.
+##
+##opt(indices,truefalse)
+##  If true, return the assigned indices
+##  as a sequence of lists.
+##
 ##EXAMPLES
+##> with(mdc):
 ##- Exercise a couple of counters.
-##> mdc:-Count(), mdc:-Count();
-##> mdc:-Count(12), mdc:-Count(), mdc:-Count(12);
+##> Count(), Count(),Count(12), Count(), Count(12);
+##- Get the sequence of indx's
+##> indxs := [Count('indices')];
+##- Get the associated values.
+##> [seq(Count(op(k),'value'), k=indxs)];
 ##- Reset all counters.
-##> mdc:-Count(reset):
+##> Count('reset');
+##> Count('value');
 ##- Assign a procedure that calls itself endlessly.
 ##> f := proc(x) procname(x+1) end proc:
 ##- Configure debugging to begin at statement 1 of the 23rd call to f.
 ##  Forward-quotes are used to prevent premature evaluation of the condition.
-##>(noexecute) mdc(stopat=[f, 1, 'mdc:-Count()=23']);
+##>(noexecute) mdc(stopat=[f, 1, 'Count()=23']);
+##- Call `f`, which launches the debugger if `f` when the counter
+##  reaches 23.  When inside the debugger, type `q` to quit.
 ##>(noexecute) f(0);
+##- Verify that the counter reached 23.
+##>(noexecute) Count('value');
+##<(show) 23
+##> Count(reset)
 ##SEEALSO
 ##- "mdc"
 ##- "stopat"
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdc:-Count):
+## macro(AS='verify,as_set');
+##
+## Try("1.0", [FUNC(),FUNC(),FUNC(1)], [1,2,1]):
+## Try("1.1", [FUNC('value'),FUNC(1,'value'),FUNC(0,'value')],[2,1,0]):
+## Try[AS]("1.2", [FUNC('indices')], [[],[1]]);
+## Try("1.3", FUNC('reset'));
 
-    Count := proc( { reset :: truefalse := false } )
+    Count := proc( { reset :: truefalse := false }
+                   , { value :: truefalse := false }
+                   , { indices :: truefalse := false }
+                 )
         if reset then
             cnt := table();
             return NULL;
+        elif value then
+            if assigned(cnt[_rest]) then
+                return cnt[_rest];
+            else
+                return 0;
+            end if;
+        elif indices then
+            return :-indices(cnt);
         end if;
+
         if assigned(cnt[_passed]) then
             cnt[_passed] := cnt[_passed] + 1;
         else

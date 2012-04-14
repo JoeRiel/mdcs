@@ -184,7 +184,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "1.13.2";
+    version := "1.13.3";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
@@ -217,6 +217,7 @@ global InstallScript;
                                          ])
 
                           , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
+                          , "../maplev/lisp/button-lock.el" = "lisp/button-lock.el"
 
                           , "doc/README-installer" = "README-installer"
                           , "doc/mds" = "info/mds"

@@ -105,7 +105,11 @@ window."
 The split direction and initial size of the showstat window are
 determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
 the client."
-  (select-frame mds-frame)
+  (if (not (eq (selected-frame) mds-frame))
+      ;; first set focus to selected frame;
+      ;; without that, xfce doesn't switch frames
+      (select-frame-set-input-focus (selected-frame)))
+  (select-frame-set-input-focus mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
   (set-window-buffer
    (split-window nil

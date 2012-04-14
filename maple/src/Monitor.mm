@@ -75,34 +75,26 @@
 ##>(noexecute) f(1);
 ##ENDSUBSECTION
 ##SUBSECTION Global Monitor
-##- Use ~"all"~ as the value of 'prc' to assign a global monitor that
-##  displays the value of `x`.  When monitoring is enabled, the global
-##  monitor is active in both 'f' and 'g' (or any other procedure
-##  entered).
-##  Global monitor expressions are evaluated and displayed before
-##  local monitor expressions.
+##- Using ~"all"~ as the value of 'prc' assigns a global monitor
+##  expression used by all procedures.  Here we use it to display the
+##  value of `x`.  Global monitor expressions are evaluated and
+##  displayed before local monitor expressions.
 ##
-##> Monitor("all", "[\"x\"=x, 'x'=x]");
+##> Monitor("all", "'x'=x");
 ##
-##-(nolead) Note (above) that two nearly-identical equations are used,
-##  the sole difference being that double-quotes are used around the `x`
-##  in one, while single-quotes are used in the other.  Launch the
-##  debugger and observe the difference in output when in the `f` and
-##  `g` procedures.  In `f`, the single-quoted `x` appears as a
-##  numeric value, while in `g` it appears as `x`.  The reason for
-##  that is that `x` is a parameter of `f`.  As such, it will always
-##  be fully evaluated in a monitored expression, whether or
-##  not it has single-quotes.
+##-(nolead) The forward quotes around the `x` are intended to protect
+##  it from being evaluated.  It works as intended in `g`, but
+##  is evaluated in `f`, where `x` is a parameter.  This is
+##  a \"feature\" of the debugger kernel.
 ##
 ##>(noexecute) mdc(f,quiet);
 ##>(noexecute) f(1);
 ##
 ##ENDSUBSECTION
 ##SUBSECTION Conditional Monitors
-##- Assign a monitor expression that is displayed
-##  only when a condition is met.  This can be
-##  achieved by using the Maple "`if`" function.
-##  Note that `\CMD` returns the previously assigned string.
+##- The "`if`" function may be used to create a monitor expression
+##  that is displayed only when a condition is met.  Note that `\CMD`
+##  returns the previously assigned string.
 ##
 ##> Monitor( f, "`if`(3 < i, 'i'=i, NULL)" );
 ##>(noexecute) mdc(f,quiet);
@@ -111,17 +103,14 @@
 ##
 ##SUBSECTION Advanced Monitors
 ##- A monitor expression can call procedures.
-##  For example, in addition to displaying the values of `i` and `x`,
-##  the following monitor expression calls "fprintf" to
-##  write the values to a file.
+##  For example, here it is used with "mdc[Count]" to
+##  store each call to the procedure in a table.
 ##
-##> logfile := "/tmp/i-x.dat":
-##> log_ix := curry(fprintf, logfile, "%q\n");
-##> Monitor( f, "[i,x,log_ix(i,x)]");
+##> mon := proc() global S; S[Count()] := [args]; end proc:
+##> Monitor( f, "mon(i,x,y)"):
 ##>(noexecute) mdc(f,quiet);
 ##>(noexecute) f(1)
-##- Close the file to ensure it has been written and is accessible.
-##>(noexecute) fclose(logfile):
+##>(noexecute) seq(S[i], i=1..Count('value'));
 ##
 ##- Be judicious in the use of such monitors.  Do not call a procedure
 ##  that is being debugged.
