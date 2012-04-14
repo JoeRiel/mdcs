@@ -109,7 +109,7 @@
 ##> mon := proc() global S; S[Count()] := [args]; end proc:
 ##> Monitor( f, "mon(i,x,y)"):
 ##>(noexecute) mdc(f,quiet);
-##>(noexecute) f(1)
+##>(noexecute) f(1);
 ##>(noexecute) seq(S[i], i=1..Count('value'));
 ##
 ##- Be judicious in the use of such monitors.  Do not call a procedure

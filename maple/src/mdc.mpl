@@ -1323,8 +1323,9 @@ $endif
 ##- The memory usage is minimal
 ##> CodeTools:-Usage(efficient(1000));
 ##ENDSUBSECTION
+##EXAMPLES(execute)
 ##SUBSECTION Locate a stack overflow
-##
+##SET(noexecute)
 ##- Set a threshold on the size of the stack.
 ##  This is useful for catching a *stack overflow*
 ##  while it is occurring.
@@ -1334,7 +1335,10 @@ $endif
 ##> f := proc(x) kernelopts('level'); 1 + procname(x+1) end proc:
 ##- This call generates a stack overflow.
 ##> f(1);
-##<(show) Error, (in f) too many levels of recursion
+##SET(nolead,noshow,execute)
+##- ``
+##> printf("%s\n", "Error (in f) too many levels of recursion"):
+##UNSET
 ##> mdc(f):
 ##- Call `f` again.  When the debugger starts, type **S** to begin
 ##  skipping.
@@ -1534,7 +1538,7 @@ $endif
 ##- Verify that the counter reached 23.
 ##>(noexecute) Count('value');
 ##<(show) 23
-##> Count(reset)
+##> Count(reset);
 ##SEEALSO
 ##- "mdc"
 ##- "stopat"

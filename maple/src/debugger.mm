@@ -28,6 +28,7 @@
 ##- SHOW_EXCEPTION : called from "ShowException"
 ##- WATCHED_CONDS: reports watches
 ##- WATCHED_ERRS : called from "_showstop"
+##ENDSUBSECTION
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
