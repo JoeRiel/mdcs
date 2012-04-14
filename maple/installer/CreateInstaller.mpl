@@ -217,6 +217,7 @@ global InstallScript;
                                          ])
 
                           , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
+                          , "../maplev/lisp/button-lock.el" = "lisp/button-lock.el"
 
                           , "doc/README-installer" = "README-installer"
                           , "doc/mds" = "info/mds"
