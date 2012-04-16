@@ -23,38 +23,44 @@
 ##
 ##- The 'prc' argument identifies the procedure.
 ##  It may be either the name of the procedure, or
-##  a string that evaluates to the procedure name.
-##  The evaluation of a string is done with
+##  a string that parses to the procedure name.
+##  The parsing of a string is done with
 ##  _kernelopts(opaquemodules=false)_,
-##  so strings can be used to specify procedures local to modules.
+##  so a string can be used to specify a procedure local to a module.
 ##
 ##- If 'prc' is the string ~"all"~, the monitor expression
 ##  is active for all procedures.
 ##
 ##- The optional 'str' argument is a string
 ##  corresponding to a Maple expression
-##  that is parsed and displayed when 'prc' is active during debugging.
+##  that is parsed and displayed during debugging,
+##  when 'prc' is active and monitoring is enabled.
 ##  If 'str' is the empty string,
 ##  the monitoring expression is removed.
 ##
 ##EXAMPLES
 ##> with(mdc):
 ##- Assign procedures `f` and `g` used in the following examples.
-##> f := proc(x)
-##>> local i,y;
-##>>     y := x;
-##>>     for i to 10 do
-##>>         y := g(x);
-##>>         y := y+1;
-##>>     end do;
-##>>     y;
-##>> end proc:
-##> g := proc(w)
-##>> local x,z;
-##>>     x := w+1;
-##>>     z := x^2;
-##>>     z;
-##>> end proc:
+##>  M := module()
+##>> export f;
+##>> local g;
+##>>     f := proc(x)
+##>>     local i,y;
+##>>         y := x;
+##>>         for i to 10 do
+##>>             y := g(x);
+##>>             y := y+1;
+##>>         end do;
+##>>         y;
+##>>     end proc:
+##>> # Assign the local g
+##>>     g := proc(w)
+##>>     local x,z;
+##>>         x := w+1;
+##>>         z := x^2;
+##>>         z;
+##>>     end proc:
+##>> end module:
 ##
 ##- **Note:** In the following subsections, a few examples use
 ##  double-quotes inside a Maple string.  They are entered by
@@ -63,16 +69,17 @@
 ##  however, if the help page is opened in a worksheet to execute the examples,
 ##  the conversion may omit the backslash.
 ##SUBSECTION Local Monitors
-##- Assign monitor expressions for the `f` and `g` procedures.
-##  A list is used for multiple expressions to keep them on one line
-##  in the output.
-##> Monitor( f, "['i'=i, 'y'=y]" );
-##> Monitor( g, "'z'=z");
-##- Instrument `f`, then begin debugging.
+##- Assign monitor expressions for the `f` and `g` procedures.  A list
+##  is used for multiple expressions to keep them on one line in the
+##  output. Note the use of double-quotes around ~M:-g~ to access the
+##  local procedure.
+##> Monitor( M:-f, "['i'=i, 'y'=y]" );
+##> Monitor( "M:-g", "'z'=z");
+##- Instrument ~M:-f~, then begin debugging.
 ##  Be sure to turn-on monitoring in the debugger (type **m**).
 ##  The `quiet` option to `mdc` suppresses the greeting.
-##>(noexecute) mdc(f,quiet);
-##>(noexecute) f(1);
+##>(noexecute) mdc(M:-f,quiet);
+##>(noexecute) M:-f(1);
 ##ENDSUBSECTION
 ##SUBSECTION Global Monitor
 ##- Using ~"all"~ as the value of 'prc' assigns a global monitor
@@ -87,8 +94,8 @@
 ##  is evaluated in `f`, where `x` is a parameter.  This is
 ##  a \"feature\" of the debugger kernel.
 ##
-##>(noexecute) mdc(f,quiet);
-##>(noexecute) f(1);
+##>(noexecute) mdc(M:-f,quiet);
+##>(noexecute) M:-f(1);
 ##
 ##ENDSUBSECTION
 ##SUBSECTION Conditional Monitors
@@ -96,9 +103,9 @@
 ##  that is displayed only when a condition is met.  Note that `\CMD`
 ##  returns the previously assigned string.
 ##
-##> Monitor( f, "`if`(3 < i, 'i'=i, NULL)" );
-##>(noexecute) mdc(f,quiet);
-##>(noexecute) f(1);
+##> Monitor( M:-f, "`if`(3 < i, 'i'=i, NULL)" );
+##>(noexecute) mdc(M:-f,quiet);
+##>(noexecute) M:-f(1);
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Advanced Monitors
@@ -107,9 +114,9 @@
 ##  store each call to the procedure in a table.
 ##
 ##> mon := proc() global S; S[Count()] := [args]; end proc:
-##> Monitor( f, "mon(i,x,y)"):
-##>(noexecute) mdc(f,quiet);
-##>(noexecute) f(1);
+##> Monitor( M:-f, "mon(i,x,y)"):
+##>(noexecute) mdc(M:-f,quiet);
+##>(noexecute) M:-f(1);
 ##>(noexecute) seq(S[i], i=1..Count('value'));
 ##
 ##- Be judicious in the use of such monitors.  Do not call a procedure
