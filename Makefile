@@ -76,6 +76,18 @@ endif
 
 # }}}
 
+# {{{ Auxiliary functions (warn, shellerr)
+
+txtbold   := $(shell tput bold)
+# 0=black 1=red 2=green 3=yellow 4=blue 5=magenta 6=cyan 7=white
+txthilite := $(shell tput setaf 3)
+txtnormal := $(shell tput sgr0)
+warn = "$(txthilite)$1$(txtnormal)"
+shellerr = echo $(call warn,$$($1 2>&1 >/dev/null))
+showerr = echo $(call warn,$$($1))
+
+# }}}
+
 # {{{ doc
 
 .PHONY: doc info html h i p
@@ -130,8 +142,6 @@ ELFLAGS	= --no-site-file \
 	  --eval "(push (expand-file-name \"./lisp\") load-path)" \
 	  --eval "(push \"$(LISP_DIR)\" load-path)"
 
-$(info $(ELFLAGS))
-
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
 ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-cp mds-client mds-thing mds
@@ -165,7 +175,7 @@ hdb: remove-preview install-mla mdc.hdb
 
 mdc.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 	@echo "Creating Maple help database"
-	@mpldoc --config nightly $+
+	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 mdc-old.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
@@ -186,11 +196,6 @@ mdc-old.hdb : maple/src/mdc.mpl maple/src/*.mm maple/include/*.mpi
 mla := mdc.mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: remove-preview $(mla)
-
-txtbold   := $(shell tput bold)
-txtred    := $(shell tput setaf 1)
-txtnormal := $(shell tput sgr0)
-warn = "$(txtred)$(textbold)$1$(txtnormal)"
 
 %.mla: maple/src/%.mpl maple/src/*.mm
 	@$(RM) $@
