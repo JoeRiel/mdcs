@@ -422,6 +422,8 @@ This is specialized to work with a few routines; needs to be generalized."
   (cond
    ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
     (format "evalb(%s)" (match-string-no-properties 1)))
+   ((looking-at " *for \\([^ ]+\\)")
+    (match-string-no-properties 1))
    ((looking-at " *return \\(.*\\);?$")
     (match-string-no-properties 1))
    ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
@@ -467,6 +469,12 @@ Otherwise raise error indicating Maple is not available."
     (goto-char (point-min))
     (if (looking-at mds--addr-procname-re)
 	(match-string 2))))
+
+(defun mds-ss-beginning-of-statement ()
+  "Move to beginning of statement on current line."
+  (beginning-of-line)
+  (re-search-forward mds-ss-statement-re (line-end-position))
+  (goto-char (match-beginning 2)))
 
 ;;}}}
 
@@ -730,10 +738,10 @@ multiple lines."
   (save-excursion
     (let ((col (current-column)))
       (forward-line -1)
-      (forward-char col)
-      (while (looking-at " *end ")
+      (mds-ss-beginning-of-statement)
+      (while (looking-at "end ")
 	(forward-line -1)
-	(forward-char col))
+	(mds-ss-beginning-of-statement))
       (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)"
 				(mds-expr-at-point))))))
 
@@ -856,7 +864,6 @@ See `mds-monitor-toggle'."
       (mds-ss-eval-proc-statement mds-ss-last-debug-cmd)
     (ding)
     (message "no previous command")))
-
 
 ;;}}}
 

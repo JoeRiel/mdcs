@@ -101,7 +101,7 @@ The first group identifies SOMETHING.")
 (defconst mds-ss-statement-re "^\\( +\\(?:[0-9]+[!*]? +\\)?\\)\\(.*\\)"
   "Regexp that matches the start of a line in a showstat buffer.
 The first group contains the indentation, including a statement number and flags.
-The second group is the actual line.")
+The second group is the Maple statement.")
 
 (defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
   "Regexp that matches the statement number and marks, from the left margin,

@@ -621,7 +621,7 @@ $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
 $endif
 
-#{{{ main
+#{{{ ModuleApply
 
     ModuleApply := proc( stopats :: seq({string,name,list,set({string,name,list})})
                          , { debug_builtins :: truefalse := debugbuiltins }
