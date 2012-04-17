@@ -324,8 +324,9 @@ local indexed2slashed
             end if;
         elif rest :: string then
             if StringTools:-Has(rest, "\n") then
-                Debugger:-Printf("(*String with newlines [%d]: *)\n", length(rest));
-                return op(StringTools:-Split(rest, "\n"));
+                Debugger:-Printf("(*String with newlines [chars: %d]: *)\n", length(rest));
+                Debugger:-Printf("%s\n", rest);
+                return NULL;
             else
                 return rest;
             end if;
