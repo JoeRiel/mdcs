@@ -9,7 +9,11 @@ help:
 need-help := $(filter help,$(MAKECMDGOALS))
 
 define print-help
-$(if $(need-help),$(warning $1 -- $2))
+$(if $(need-help),$(info $1	$2))
+endef
+
+define print-separator
+$(if $(need-help),$(info ----------------------------------------------------------------))
 endef
 
 define last-element
