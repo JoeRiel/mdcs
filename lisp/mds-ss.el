@@ -130,11 +130,12 @@ Echo the command to the output buffer unless HIDE is non-nil."
     (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd))
   (mds-ss-send-client (concat cmd "\n")))
 
-(defun mds-ss-eval-expr (expr)
-  "Send EXPR, with appended newline, to the Maple process and to the output buffer.
-This function is intended to be used for evaluating Maple expressions."
+(defun mds-ss-eval-expr (expr &optional display)
+  "Send EXPR, with appended newline, to the Maple process DISPLAY to the output buffer.
+If DISPLAY is nil, send EXPR to the output buffer.  This function
+is intended to be used for evaluating Maple expressions."
   (mds-ss-check-allow-input)
-  (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input)
+  (mds-out-append-input (mds-client-out-buf mds-client) (or display expr) 'mds-user-input)
   (mds-ss-send-client (concat expr "\n")))
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
@@ -730,7 +731,7 @@ multiple lines."
   (interactive)
   (let ((expr (mds-expr-at-point-interactive
 	       "prettyprint: " "")))
-    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr))))
+    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
 
 (defun mds-eval-and-prettyprint-prev ()
   "Move backward to previous statement and call `mds-eval-and-prettyprint'."
@@ -742,8 +743,9 @@ multiple lines."
       (while (looking-at "end ")
 	(forward-line -1)
 	(mds-ss-beginning-of-statement))
-      (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)"
-				(mds-expr-at-point))))))
+      (let ((expr (mds-expr-at-point)))
+      (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
+				
 
 
 (defun mds-eval-and-display-expr (expr &optional suffix)
