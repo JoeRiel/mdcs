@@ -313,6 +313,12 @@ is available, then it is set to @code{mds-windows-get-focus-wmctrl}.
 The nil value means that focus will not automatically be
 transferred to Emacs.
 
+Note that transfer of focus may only occur when the debugger is
+@emph{first} entered.  Upon exiting and reentering the debugger, this
+function is not called, though it should be.  That is due to a
+limitation of the Maple debugger kernel; it does not provide an
+indication that debugging has either begun or ended.
+
 @vindex mds-port
 @item @code{mds-port}
 An integer that is the TCP port number used for communication.
