@@ -1,5 +1,11 @@
 -*- org -*-
 
+* mdcs.1.13.4
+** Hide the mdc:-Format:-PrettyPrint function call
+** Linebreak when prettyprintings strings with newlines, and strip quotes
+** Another fix to Monitor help page
+* mdcs.1.13.3
+** forgot to update these notes
 * mdcs.1.13.2
 ** Fix bug with mds-where (stack wouldn't display)
 ** Improved help page for Monitor
