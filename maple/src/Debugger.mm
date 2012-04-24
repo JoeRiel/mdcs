@@ -463,7 +463,7 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
-    local pnam,st;
+    local pnam,statenum;
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
             return orig_stopat();
@@ -528,9 +528,9 @@ $endif
             return procname(pnam, _passed[2..]);
         end if;
 
-        st := `if`(_npassed=1,1,n);
-        if _npassed <= 2 then debugopts('stopat'=[pnam, st])
-        else                  debugopts('stopat'=[pnam, st, 'cond'])
+        statenum := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, statenum])
+        else                  debugopts('stopat'=[pnam, statenum, 'cond'])
         end if;
         return NULL;
     end proc:
