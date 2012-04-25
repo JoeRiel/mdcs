@@ -91,11 +91,14 @@ global showstat, showstop;
                     debugger_printf('CLEAR_ECHO');
                 end if;
             elif skip_before <> NULL then
-                dbg_state := debugopts('procdump'=[procName, 0..abs(statNumber)]);
-                if SearchText(skip_before, dbg_state) <> 0 then
-                    skip := false;
-                    debugger_printf('CLEAR_ECHO');
+                if skip_before_halt then
+                    dbg_state := debugopts('procdump'=[procName, 0..abs(statNumber)]);
+                    if SearchText(skip_before, dbg_state) <> 0 then
+                        skip := false;
+                        debugger_printf('CLEAR_ECHO');
+                    end if;
                 end if;
+                skip_before_halt := not skip_before_halt;
             else
                 pred := match_predicate[procName,statNumber](_passed[1..n]);
                 if pred <> false then

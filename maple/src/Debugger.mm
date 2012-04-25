@@ -66,6 +66,7 @@ local _debugger
     , getname
     , replaced
     , skip_before := NULL
+    , skip_before_halt := true
 $ifdef LOG_READLINE
     , logpid
 $endif
@@ -632,6 +633,7 @@ $endif
     local prev;
         prev := skip_before;
         skip_before := target;
+        skip_before_halt := true;
         prev;
     end proc;
 
