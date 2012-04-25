@@ -54,7 +54,7 @@
 ##- "mdc[mdc]" : main export
 ##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
 ##- "mdc[Monitor]" : set/query monitor expressions
-##- "mdc[SkipUntil]" : set skip options
+##- "mdc[Skip]" : set skip options
 ##- "mdc[Sleep]" : utility routine for sleeping
 ##- "mdc[TraceLevel]" : set/query the *level* tracing mode
 ##ENDSUBSECTION
@@ -115,7 +115,7 @@
 ##- The predicate, a Maple procedure that is passed the computed
 ##  output of each executed Maple statement in the running code, is
 ##  defined by using the `skip_until` option, or the more powerful
-##  "mdc:-SkipUntil" command.
+##  "mdc:-Skip" command.
 ##
 ##- The `skip_check_stack` option passes the top stack entry to the
 ##  predicate.  This can be useful because an expression may appear on
@@ -184,7 +184,7 @@
 ##- `reconnect` : reconnect to the debugger server
 ##- `skip_before` : assigns string used for skipping
 ##- `skip_check_stack` : enables stack checking during skip
-##- `skip_until` : assigns predicate used for skipping (cf. "SkipUntil")
+##- `skip_until` : assigns predicate used for skipping (cf. "Skip")
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
 ##- `view` : enables echoing of commands
 ##ENDSUBSECTION
@@ -277,8 +277,9 @@
 ##  The default is false; this option is sticky.
 ##
 ##opt(skip_before,string)
-##  The string is matched against the string corresponding to the
-##  next statement; if it matches, skipping is halted.
+##  The string is matched against the next statement;
+##  if it mathes, skipping is halted.
+##  This is equivalent to calling "Skip" with option `before`.
 ##
 ##opt(skip_check_stack,truefalse)
 ##  If true, when *skipping*, pass the arguments of the top procedure
@@ -301,32 +302,32 @@
 ##  If `skip_until` is not a procedure, or is the name of a procedure,
 ##  the following predicate is used:
 ##  ~proc() has([_passed],skip_until) end proc~.
-##  See "mdc[SkipUntil]" for a procedure that assigns the predicate
+##  See "mdc[Skip]" for a procedure that assigns the predicate
 ##  and has additional options.
 ##
 ##  To use the skip predicate, execute the `_skip` debugger command
 ##  inside the debugger, where it is bound to the `S` key.
 ##
 ##opt(skip_until[alloc],posint)
-##  Similar to `skip_until`, but uses the `bytesalloc` option to "SkipUntil".
+##  Similar to `skip_until`, but uses the `bytesalloc` option to "Skip".
 ##  Skipping stops when _kernelopts(bytesalloc)_ increases by
 ##  the specified value.
 ##
 ##opt(skip_until[exact],anything)
-##  Similar to `skip_until`, but passes the `exact` option to "SkipUntil".
+##  Similar to `skip_until`, but passes the `exact` option to "Skip".
 ##  Skipping stops when a computed result exactly matches the value.
 ##
 ##opt(skip_until[level],posint)
-##  Similar to `skip_until`, but uses the `stacklevel` option to "SkipUntil".
+##  Similar to `skip_until`, but uses the `stacklevel` option to "Skip".
 ##  Skipping stops when _kernelopts(level)_ exceeds the value.
 ##
 ##opt(skip_until[loc],anything)
-##  Similar to `skip_until`, but passes the `matchlocals` option to "SkipUntil".
+##  Similar to `skip_until`, but passes the `matchlocals` option to "Skip".
 ##  Skipping stops when the value appears in a computed result that
 ##  has all local variables replaced with the global equivalent.
 ##
 ##opt(skip_until[type],anything)
-##  Similar to `skip_until`, but passes the `usehastype` option to "SkipUntil".
+##  Similar to `skip_until`, but passes the `usehastype` option to "Skip".
 ##  Skipping stops when the given type appears in a computed result.
 ##
 ##opt(stopat, name\comma string\comma list\comma or set of same)
@@ -501,7 +502,7 @@
 ##> mdc('skip_check_stack'):
 ##> f(y);
 ##
-##- See "mdc[SkipUntil]" for more examples using the skip feature.
+##- See "mdc[Skip]" for more examples using the skip feature.
 ##
 ##ENDSUBSECTION
 ##
@@ -516,7 +517,7 @@
 ##- "\MOD[Grid]"
 ##- "\MOD[Count]"
 ##- "\MOD[Monitor]"
-##- "\MOD[SkipUntil]"
+##- "\MOD[Skip]"
 ##- "\MOD[TraceLevel]"
 ##ENDMPLDOC
 
@@ -542,7 +543,7 @@ export Count
     ,  InstallPatch
     ,  Monitor
     ,  Sleep
-    ,  SkipUntil
+    ,  Skip
     ,  TraceLevel
     ,  Version
     ,  HelpMDS
@@ -586,7 +587,7 @@ local Connect
 #}}}
 
 #{{{ _pexports
-
+    
     _pexports := proc()
     local sys, excludes;
         sys := kernelopts('platform');
@@ -602,18 +603,18 @@ local Connect
                     ];
         remove(member, [exports(':-mdc')], excludes);
     end proc;
-
+    
 #}}}
 #{{{ Replace builtins: printf, sprintf
-
+    
     printf := proc()
         iolib(9,'default',args);  # fprintf('default',args)
         iolib(23,'default');      # fflush('default')
         NULL;
     end proc;
-
+    
     sprintf := proc() iolib(10,args) end proc;
-
+    
 #}}}
 
     Warnings := {}; # initialize
@@ -670,14 +671,14 @@ $endif
     local lbl,str,stp;
 
         #{{{ exit
-
+        
         if exit then
             Debugger:-RestoreBuiltins();
             Debugger:-Restore();
             Disconnect(_options['quiet']);
             return NULL;
         end if;
-
+        
         #}}}
         #{{{ ignoretester
         if ignoretester then
@@ -697,20 +698,20 @@ $endif
         Level := level;
 
         #{{{ max_length
-
+        
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
-
+        
         #}}}
         #{{{ usegrid (assign lbl)
-
+        
         if usegrid then
             lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
         else
             lbl := label;
         end if;
-
+        
         #}}}
         #{{{ showoptions
         if showoptions :: truefalse then
@@ -718,41 +719,41 @@ $endif
         end if;
         #}}}
         #{{{ skip_until (clear skip)
-
+        
         if skip_until <> NULL then
-            SkipUntil(skip_until);
+            Skip(skip_until);
         elif `skip_until[alloc]` <> NULL then
-            SkipUntil('bytesalloc' = `skip_until[alloc]`);
+            Skip('bytesalloc' = `skip_until[alloc]`);
         elif `skip_until[level]` <> NULL then
-            SkipUntil('stacklevel' = `skip_until[level]`);
+            Skip('stacklevel' = `skip_until[level]`);
         elif `skip_until[loc]` <> NULL then
-            SkipUntil(`skip_until[loc]`, 'matchlocals');
+            Skip(`skip_until[loc]`, 'matchlocals');
         elif `skip_until[type]` <> NULL then
-            SkipUntil(`skip_until[type]`, 'usehastype');
+            Skip(`skip_until[type]`, 'usehastype');
         elif `skip_until[exact]` <> NULL then
-            SkipUntil(`skip_until[exact]`, 'exact');
+            Skip(`skip_until[exact]`, 'exact');
         end if;
-
+        
         Debugger:-Skip('clear');
-
+        
         #}}}
         #{{{ skip_before
 
         if skip_before <> NULL then
-            Debugger:-SkipBefore(skip_before);
+            Skip(skip_before, 'before');
         end if;
 
         #}}}
         #{{{ replace debugger
-
+        
         Debugger:-Replace();
-
+        
         #}}}
 
         #{{{ connect to server
-
+        
         if sid = -1 or reconnect then
-
+            
             try
                 Connect(host, port, CreateID(lbl)
                         , _options['emacs']
@@ -763,9 +764,9 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
-
+            
         end if;
-
+        
         #}}}
 
         if goback then
@@ -778,13 +779,13 @@ $endif
         elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
-
+        
         if stopats <> NULL then
             for stp in [stopats] do
                 Debugger:-stopat(stp);
             end do;
         end if;
-
+        
         #}}}
         #{{{ unstopat
         if unstopat :: set then
@@ -803,7 +804,7 @@ $endif
         end if;
         #}}}
         #{{{ stopwarning
-
+        
         if stopwarning <> NULL then
             unprotect('WARNING');
             if stopwarning = false then
@@ -835,7 +836,7 @@ $endif
         end if;
         #}}}
         #{{{ unstoperror
-
+        
         if unstoperror = true then
             debugopts('delerror' = 'all');
         elif unstoperror :: string then
@@ -843,7 +844,7 @@ $endif
         elif unstoperror :: set then
             map(:-unstoperror, unstoperror);
         end if;
-
+        
         #}}}
         #{{{ unstoperror
         if untraperror = true then
@@ -897,7 +898,7 @@ $endif
 #}}}
 
 #{{{ ModuleLoad
-
+    
     ModuleLoad := proc()
         debugbuiltins := GetDefault(':-debug_builtins', false);
         SkipCheckStack := GetDefault(':-skip_check_stack', false);
@@ -907,10 +908,10 @@ $endif
                              end proc
                           );
     end proc;
-
+    
 #}}}
 #{{{ ModuleUnload
-
+    
     ModuleUnload := proc()
         TypeTools:-RemoveType('synonym');
         Debugger:-RestoreBuiltins();
@@ -922,15 +923,15 @@ $endif
         end if;
         Debugger:-Restore();
     end proc;
-
+    
 #}}}
 
 #{{{ Connect
-
+    
 ##DEFINE PROC Connect
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE initiate a connection to a Maple debugger server
-
+    
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
@@ -941,16 +942,16 @@ $endif
                     , $
                    )
     local cmd,connected,line,sys;
-
+        
         Debugger:-Reset();
-
+        
         if sid <> -1 then
             try
                 Sockets:-Close(sid);
             catch:
             end try;
         end if;
-
+        
         try
             sid := Sockets:-Open(host, port);
         catch:
@@ -988,7 +989,7 @@ $endif
         catch "invalid socket ID", "argument does not refer to an open socket connection":
             error "cannot connect to Debugger server.  Server may not be running."
         end try;
-
+        
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
@@ -1001,17 +1002,17 @@ $endif
             end if;
             return NULL;
         end if;
-
-
+        
+        
     end proc;
-
+    
 #}}}
 #{{{ Disconnect
-
+    
 ##DEFINE PROC Disconnect
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE terminate connection to Maple debugger server
-
+    
     Disconnect := proc( { quiet :: truefalse := false } )
         if sid <> -1 then
             if not quiet then
@@ -1021,11 +1022,11 @@ $endif
             sid := -1;
         end if;
     end proc;
-
+    
 #}}}
 
 #{{{ Read
-
+    
     Read := proc()
     local res;
         res := Sockets:-Read(sid);
@@ -1034,19 +1035,19 @@ $endif
         end if;
         return res;
     end proc;
-
+    
 #}}}
 #{{{ Write
-
+    
     Write := proc(msg :: string)
         if sid <> -1 then
             Sockets:-Write(sid, msg);
         end if;
     end proc;
-
+    
 #}}}
 #{{{ WriteTagf
-
+    
 ##DEFINE PROC WriteTagf
 ##PROCEDURE \MOD[\PROC]
 ##AUTHOR   Joe Riel
@@ -1058,7 +1059,7 @@ $endif
 ##- 'rest' : (optional) arguments to "sprintf"
 ##RETURNS
 ##- `NULL`
-
+    
     WriteTagf := proc(tag)
     uses Write = Sockets:-Write;
     local msg,len;
@@ -1085,10 +1086,10 @@ $endif
         end if;
         return NULL;
     end proc;
-
+    
 #}}}
 #{{{ CreateID
-
+    
 ##DEFINE PROC CreateID
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE create a formatted ID that identifies the client
@@ -1127,8 +1128,8 @@ $endif
 ## Try[TE]("10.1", FUNC("+"), msg);
 ## Try[TE]("10.2", FUNC(" "), msg);
 ## Try[TE]("10.3", FUNC("\n"), msg);
-
-
+    
+    
     CreateID := proc(label :: string,$)
     local ver;
         if length(label) = 0 then
@@ -1144,17 +1145,17 @@ $endif
                        , kernelopts('platform,pid')
                       );
     end proc;
-
+    
 #}}}
 
 #{{{ Version
-
+    
     Version := "1.13.5";
-
+    
 #}}}
 
 #{{{ Sleep
-
+    
 ##DEFINE CMD Sleep
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE pause execution of the engine
@@ -1180,7 +1181,7 @@ $endif
 ##
 ##SEEALSO
 ##- "Threads[Sleep]"
-
+    
     Sleep := proc( t :: nonnegint )
     local cmd,sys;
         try
@@ -1196,11 +1197,11 @@ $endif
         end try;
         return NULL;
     end proc;
-
+    
 #}}}
-#{{{ SkipUntil
+#{{{ Skip
 
-##DEFINE CMD SkipUntil
+##DEFINE CMD Skip
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE assign the skip predicate
 ##AUTHOR   Joe Riel
@@ -1249,6 +1250,14 @@ $endif
 ##
 ##OPTIONS
 ##- Some of the options are mutually exclusive.
+##
+##opt(before,truefalse)
+##  Match 'ex', which must be a string, against the Maple code
+##  corresponding to the next statement to execute; if it matches,
+##  stop skipping.  This option works differently than the others in
+##  that it does not generate a predicate.  It returns the previous
+##  target of `before`.
+##
 ##opt(bytesalloc,posint)
 ##  When passed, skip until ~kernelopts(':-bytesalloc')~ exceeds
 ##  the current setting by 'bytesalloc'.
@@ -1271,19 +1280,19 @@ $endif
 ##SUBSECTION Locate the source of an expression
 ##
 ##- Assign the predicate to stop when _x^2_ is computed.
-##> mdc:-SkipUntil(x^2):
+##> mdc:-Skip(x^2):
 ##> mdc(int):
 ##- Call `int`, which launches the debugger.
 ##  To start the skipping, type **S** in the debugger.
 ##> int(x,x);
 ##
 ##- Use the `usehastype` option to stop skipping when a square appears.
-##> mdc:-SkipUntil(anything^2, usehastype):
+##> mdc:-Skip(anything^2, usehastype):
 ##> forget(int):
 ##> int(x,x);
 ##
 ##- Use the `exact` option.
-##> mdc:-SkipUntil(1/2*x^2,'exact');
+##> mdc:-Skip(1/2*x^2,'exact');
 ##> forget(int):
 ##> int(x,x);
 ##
@@ -1291,10 +1300,18 @@ $endif
 ##  Note that we first verify that ~_npassed=1~; without that,
 ##  a statement that returns `NULL` generates an error because
 ##  the wrong number of arguments are passed to `patmatch`.
-##> mdc:-SkipUntil(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
+##> mdc:-Skip(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
 ##> forget(int):
 ##> int(x,x);
 ##
+##ENDSUBSECTION
+##SUBSECTION Stop before executing a particular statement
+##- Use the `before` option to stop skipping before the
+##  `INTERFACE_PLOT3D` streamcall is made.
+##
+##> mdc:-Skip("INTERFACE_PLOT3D",'before');
+##> mdc(plot3d):
+##> plot3d(sin(x)*sin(y),x=0..Pi,y=0..Pi);
 ##ENDSUBSECTION
 ##SUBSECTION Locate the source of intensive memory usage
 ##
@@ -1316,7 +1333,7 @@ $endif
 ##>>    V;
 ##>> end proc:
 ##- The ~skip_until[alloc]~ option to "mdc"
-##  is equivalent to calling `SkipUntil` with
+##  is equivalent to calling `Skip` with
 ##  option `bytesalloc`.
 ##> mdc(inefficent, skip_until[alloc]=10^8):
 ##> inefficent(1000);
@@ -1343,7 +1360,7 @@ $endif
 ##  while it is occurring.
 ##
 ##> restart;
-##> mdc:-SkipUntil('stacklevel' = 1000):
+##> mdc:-Skip('stacklevel' = 1000):
 ##> f := proc(x) kernelopts('level'); 1 + procname(x+1) end proc:
 ##- This call generates a stack overflow.
 ##> f(1);
@@ -1367,7 +1384,7 @@ $endif
 ##>> end proc:
 ##
 ##- Use the `matchlocals` option.
-##> mdc:-SkipUntil(exp(x), 'matchlocals'):
+##> mdc:-Skip(exp(x), 'matchlocals'):
 ##> mdc(f):
 ##> f();
 ##ENDSUBSECTION
@@ -1396,7 +1413,7 @@ $endif
 ##>>     end do;
 ##>> end proc:
 ##- Instrument `f`.  Use the `skip_until` option to assign
-##  the skip predicate (it calls `SkipUntil`).  Note the
+##  the skip predicate (it calls `Skip`).  Note the
 ##  use of "eval" around the skip predicate (`timeskip`);
 ##  without that `timeskip` would be a name and the generated
 ##  predicate would become true only if that name appeared
@@ -1409,16 +1426,24 @@ $endif
 ##- "mdc[package]"
 ##- "mdc"
 
-    SkipUntil := proc(ex := NULL
-                      , { bytesalloc :: posint := NULL }
-                      , { stacklevel :: posint := NULL }
-                      , { usehastype :: truefalse := false }
-                      , { exact :: truefalse := false }
-                      , { matchlocals :: truefalse := false }
-                     )
+    Skip := proc(ex := NULL
+                 , { before :: truefalse := false }
+                 , { bytesalloc :: posint := NULL }
+                 , { stacklevel :: posint := NULL }
+                 , { usehastype :: truefalse := false }
+                 , { exact :: truefalse := false }
+                 , { matchlocals :: truefalse := false }
+                )
     local alloc_orig, alloc_max;
 
-        if bytesalloc <> NULL then
+        if before then
+            if not ex :: string then
+                error ( "target must be a string when using 'before' option, "
+                        "received %1", ex );
+            end if;
+            return Debugger:-SkipBefore(ex);
+
+        elif bytesalloc <> NULL then
 
             alloc_orig := kernelopts(':-bytesalloc');
             alloc_max := alloc_orig + bytesalloc;
@@ -1472,7 +1497,7 @@ $endif
 
         elif matchlocals then
             match_predicate := proc()
-                local n;
+            local n;
                 _npassed > 0 and has(subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]),ex);
             end proc;
 
@@ -1489,7 +1514,7 @@ $endif
 
 #}}}
 #{{{ Count
-
+    
 ##DEFINE CMD Count
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE increment a counter
@@ -1564,7 +1589,7 @@ $endif
 ## Try("1.1", [FUNC('value'),FUNC(1,'value'),FUNC(0,'value')],[2,1,0]):
 ## Try[AS]("1.2", [FUNC('indices')], [[],[1]]);
 ## Try("1.3", FUNC('reset'));
-
+    
     Count := proc( { reset :: truefalse := false }
                    , { value :: truefalse := false }
                    , { indices :: truefalse := false }
@@ -1581,17 +1606,17 @@ $endif
         elif indices then
             return :-indices(cnt);
         end if;
-
+        
         if assigned(cnt[_passed]) then
             cnt[_passed] := cnt[_passed] + 1;
         else
             cnt[_passed] := 1;
         end if;
     end proc:
-
+    
 #}}}
 #{{{ GetDefault
-
+    
     GetDefault := proc( opt :: name, default := NULL, $ )
     global mdc_default;
     description "Read the global table 'mdc_default' for default values.";
@@ -1603,12 +1628,12 @@ $endif
     end proc;
 #}}}
 #{{{ Monitor
-
+    
     Monitor := Debugger:-Monitor;
-
+    
 #}}}
 #{{{ TraceLevel
-
+    
 ##DEFINE CMD TraceLevel
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE set and query the tracing level
@@ -1636,7 +1661,7 @@ $endif
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[package]"
-
+    
     TraceLevel := proc( lev :: posint := NULL )
     local prev;
         prev := Level;
@@ -1645,7 +1670,7 @@ $endif
         end if;
         prev;
     end proc;
-
+    
 #}}}
 
 end module:
