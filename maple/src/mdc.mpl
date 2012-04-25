@@ -1149,7 +1149,7 @@ $endif
 
 #{{{ Version
 
-    Version := "1.13.4";
+    Version := "1.13.5";
 
 #}}}
 
