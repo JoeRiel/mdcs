@@ -278,7 +278,7 @@
 ##
 ##opt(skip_before,string)
 ##  The string is matched against the next statement;
-##  if it mathes, skipping is halted.
+##  if it matches, skipping is halted.
 ##  This is equivalent to calling "Skip" with option `before`.
 ##
 ##opt(skip_check_stack,truefalse)
@@ -587,7 +587,7 @@ local Connect
 #}}}
 
 #{{{ _pexports
-    
+
     _pexports := proc()
     local sys, excludes;
         sys := kernelopts('platform');
@@ -603,18 +603,18 @@ local Connect
                     ];
         remove(member, [exports(':-mdc')], excludes);
     end proc;
-    
+
 #}}}
 #{{{ Replace builtins: printf, sprintf
-    
+
     printf := proc()
         iolib(9,'default',args);  # fprintf('default',args)
         iolib(23,'default');      # fflush('default')
         NULL;
     end proc;
-    
+
     sprintf := proc() iolib(10,args) end proc;
-    
+
 #}}}
 
     Warnings := {}; # initialize
@@ -671,14 +671,14 @@ $endif
     local lbl,str,stp;
 
         #{{{ exit
-        
+
         if exit then
             Debugger:-RestoreBuiltins();
             Debugger:-Restore();
             Disconnect(_options['quiet']);
             return NULL;
         end if;
-        
+
         #}}}
         #{{{ ignoretester
         if ignoretester then
@@ -698,20 +698,20 @@ $endif
         Level := level;
 
         #{{{ max_length
-        
+
         if max_length > 0 then
             `debugger/width` := max_length;
         end if;
-        
+
         #}}}
         #{{{ usegrid (assign lbl)
-        
+
         if usegrid then
             lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
         else
             lbl := label;
         end if;
-        
+
         #}}}
         #{{{ showoptions
         if showoptions :: truefalse then
@@ -719,7 +719,7 @@ $endif
         end if;
         #}}}
         #{{{ skip_until (clear skip)
-        
+
         if skip_until <> NULL then
             Skip(skip_until);
         elif `skip_until[alloc]` <> NULL then
@@ -733,9 +733,9 @@ $endif
         elif `skip_until[exact]` <> NULL then
             Skip(`skip_until[exact]`, 'exact');
         end if;
-        
+
         Debugger:-Skip('clear');
-        
+
         #}}}
         #{{{ skip_before
 
@@ -745,15 +745,15 @@ $endif
 
         #}}}
         #{{{ replace debugger
-        
+
         Debugger:-Replace();
-        
+
         #}}}
 
         #{{{ connect to server
-        
+
         if sid = -1 or reconnect then
-            
+
             try
                 Connect(host, port, CreateID(lbl)
                         , _options['emacs']
@@ -764,9 +764,9 @@ $endif
                 Debugger:-Restore();
                 error;
             end try;
-            
+
         end if;
-        
+
         #}}}
 
         if goback then
@@ -779,13 +779,13 @@ $endif
         elif stopat <> "" then
             Debugger:-stopat(stopat);
         end if;
-        
+
         if stopats <> NULL then
             for stp in [stopats] do
                 Debugger:-stopat(stp);
             end do;
         end if;
-        
+
         #}}}
         #{{{ unstopat
         if unstopat :: set then
@@ -804,7 +804,7 @@ $endif
         end if;
         #}}}
         #{{{ stopwarning
-        
+
         if stopwarning <> NULL then
             unprotect('WARNING');
             if stopwarning = false then
@@ -836,7 +836,7 @@ $endif
         end if;
         #}}}
         #{{{ unstoperror
-        
+
         if unstoperror = true then
             debugopts('delerror' = 'all');
         elif unstoperror :: string then
@@ -844,7 +844,7 @@ $endif
         elif unstoperror :: set then
             map(:-unstoperror, unstoperror);
         end if;
-        
+
         #}}}
         #{{{ unstoperror
         if untraperror = true then
@@ -898,7 +898,7 @@ $endif
 #}}}
 
 #{{{ ModuleLoad
-    
+
     ModuleLoad := proc()
         debugbuiltins := GetDefault(':-debug_builtins', false);
         SkipCheckStack := GetDefault(':-skip_check_stack', false);
@@ -908,10 +908,10 @@ $endif
                              end proc
                           );
     end proc;
-    
+
 #}}}
 #{{{ ModuleUnload
-    
+
     ModuleUnload := proc()
         TypeTools:-RemoveType('synonym');
         Debugger:-RestoreBuiltins();
@@ -923,15 +923,15 @@ $endif
         end if;
         Debugger:-Restore();
     end proc;
-    
+
 #}}}
 
 #{{{ Connect
-    
+
 ##DEFINE PROC Connect
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE initiate a connection to a Maple debugger server
-    
+
     Connect := proc(host :: string
                     , port :: posint
                     , id :: string
@@ -942,16 +942,16 @@ $endif
                     , $
                    )
     local cmd,connected,line,sys;
-        
+
         Debugger:-Reset();
-        
+
         if sid <> -1 then
             try
                 Sockets:-Close(sid);
             catch:
             end try;
         end if;
-        
+
         try
             sid := Sockets:-Open(host, port);
         catch:
@@ -989,7 +989,7 @@ $endif
         catch "invalid socket ID", "argument does not refer to an open socket connection":
             error "cannot connect to Debugger server.  Server may not be running."
         end try;
-        
+
         if line = "userid: " then
             Sockets:-Write(sid, id);
             line := Sockets:-Read(sid);
@@ -1002,17 +1002,17 @@ $endif
             end if;
             return NULL;
         end if;
-        
-        
+
+
     end proc;
-    
+
 #}}}
 #{{{ Disconnect
-    
+
 ##DEFINE PROC Disconnect
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE terminate connection to Maple debugger server
-    
+
     Disconnect := proc( { quiet :: truefalse := false } )
         if sid <> -1 then
             if not quiet then
@@ -1022,11 +1022,11 @@ $endif
             sid := -1;
         end if;
     end proc;
-    
+
 #}}}
 
 #{{{ Read
-    
+
     Read := proc()
     local res;
         res := Sockets:-Read(sid);
@@ -1035,19 +1035,19 @@ $endif
         end if;
         return res;
     end proc;
-    
+
 #}}}
 #{{{ Write
-    
+
     Write := proc(msg :: string)
         if sid <> -1 then
             Sockets:-Write(sid, msg);
         end if;
     end proc;
-    
+
 #}}}
 #{{{ WriteTagf
-    
+
 ##DEFINE PROC WriteTagf
 ##PROCEDURE \MOD[\PROC]
 ##AUTHOR   Joe Riel
@@ -1059,7 +1059,7 @@ $endif
 ##- 'rest' : (optional) arguments to "sprintf"
 ##RETURNS
 ##- `NULL`
-    
+
     WriteTagf := proc(tag)
     uses Write = Sockets:-Write;
     local msg,len;
@@ -1086,10 +1086,10 @@ $endif
         end if;
         return NULL;
     end proc;
-    
+
 #}}}
 #{{{ CreateID
-    
+
 ##DEFINE PROC CreateID
 ##PROCEDURE \MOD[\PROC]
 ##HALFLINE create a formatted ID that identifies the client
@@ -1128,8 +1128,8 @@ $endif
 ## Try[TE]("10.1", FUNC("+"), msg);
 ## Try[TE]("10.2", FUNC(" "), msg);
 ## Try[TE]("10.3", FUNC("\n"), msg);
-    
-    
+
+
     CreateID := proc(label :: string,$)
     local ver;
         if length(label) = 0 then
@@ -1145,17 +1145,17 @@ $endif
                        , kernelopts('platform,pid')
                       );
     end proc;
-    
+
 #}}}
 
 #{{{ Version
-    
+
     Version := "1.13.5";
-    
+
 #}}}
 
 #{{{ Sleep
-    
+
 ##DEFINE CMD Sleep
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE pause execution of the engine
@@ -1181,7 +1181,7 @@ $endif
 ##
 ##SEEALSO
 ##- "Threads[Sleep]"
-    
+
     Sleep := proc( t :: nonnegint )
     local cmd,sys;
         try
@@ -1197,7 +1197,7 @@ $endif
         end try;
         return NULL;
     end proc;
-    
+
 #}}}
 #{{{ Skip
 
@@ -1514,7 +1514,7 @@ $endif
 
 #}}}
 #{{{ Count
-    
+
 ##DEFINE CMD Count
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE increment a counter
@@ -1589,7 +1589,7 @@ $endif
 ## Try("1.1", [FUNC('value'),FUNC(1,'value'),FUNC(0,'value')],[2,1,0]):
 ## Try[AS]("1.2", [FUNC('indices')], [[],[1]]);
 ## Try("1.3", FUNC('reset'));
-    
+
     Count := proc( { reset :: truefalse := false }
                    , { value :: truefalse := false }
                    , { indices :: truefalse := false }
@@ -1606,17 +1606,17 @@ $endif
         elif indices then
             return :-indices(cnt);
         end if;
-        
+
         if assigned(cnt[_passed]) then
             cnt[_passed] := cnt[_passed] + 1;
         else
             cnt[_passed] := 1;
         end if;
     end proc:
-    
+
 #}}}
 #{{{ GetDefault
-    
+
     GetDefault := proc( opt :: name, default := NULL, $ )
     global mdc_default;
     description "Read the global table 'mdc_default' for default values.";
@@ -1628,12 +1628,12 @@ $endif
     end proc;
 #}}}
 #{{{ Monitor
-    
+
     Monitor := Debugger:-Monitor;
-    
+
 #}}}
 #{{{ TraceLevel
-    
+
 ##DEFINE CMD TraceLevel
 ##PROCEDURE(help) \MOD[\CMD]
 ##HALFLINE set and query the tracing level
@@ -1661,7 +1661,7 @@ $endif
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[package]"
-    
+
     TraceLevel := proc( lev :: posint := NULL )
     local prev;
         prev := Level;
@@ -1670,7 +1670,7 @@ $endif
         end if;
         prev;
     end proc;
-    
+
 #}}}
 
 end module:
