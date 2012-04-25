@@ -182,6 +182,7 @@
 ##- `port` : TCP port number
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
+##- `skip_before` : assigns string used for skipping
 ##- `skip_check_stack` : enables stack checking during skip
 ##- `skip_until` : assigns predicate used for skipping (cf. "SkipUntil")
 ##- `showoptions` : displays `options` and `description` statements in procedure listings
@@ -274,6 +275,10 @@
 ##  the end when first debugging a procedure.*
 ##  The second time the debugger enters the procedure, it should work properly.
 ##  The default is false; this option is sticky.
+##
+##opt(skip_before,string)
+##  The string is matched against the string corresponding to the
+##  next statement; if it matches, skipping is halted.
 ##
 ##opt(skip_check_stack,truefalse)
 ##  If true, when *skipping*, pass the arguments of the top procedure
@@ -643,6 +648,7 @@ $endif
                          , { stopwarning :: {string,set(string),truefalse} := NULL }
                          , { stopwhen :: { name, list, set } := NULL }
                          , { stopwhenif :: { list, set(list) } := NULL }
+                         , { skip_before :: string := NULL }
                          , { skip_until := NULL }
                          , { `skip_until[alloc]` :: posint := NULL }
                          , { `skip_until[exact]` := NULL }
@@ -730,7 +736,13 @@ $endif
         Debugger:-Skip('clear');
 
         #}}}
+        #{{{ skip_before
 
+        if skip_before <> NULL then
+            Debugger:-SkipBefore(skip_before);
+        end if;
+
+        #}}}
         #{{{ replace debugger
 
         Debugger:-Replace();

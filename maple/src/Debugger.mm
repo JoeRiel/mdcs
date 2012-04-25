@@ -29,6 +29,7 @@ export GoBack
     ,  Reset
     ,  Restore
     ,  RestoreBuiltins
+    ,  SkipBefore
     ,  ShowError
     ,  ShowException
     ,  ShowstatAddr
@@ -64,6 +65,7 @@ local _debugger
     , orig_stopat
     , getname
     , replaced
+    , skip_before := NULL
 $ifdef LOG_READLINE
     , logpid
 $endif
@@ -621,6 +623,16 @@ $endif
 
     Skip := proc( { clear :: truefalse := false }, $ )
         skip := not clear;
+    end proc;
+#}}}
+
+#{{{ SkipBefore
+
+    SkipBefore := proc( target :: string )
+    local prev;
+        prev := skip_before;
+        skip_before := target;
+        prev;
     end proc;
 
 #}}}
