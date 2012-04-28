@@ -120,6 +120,7 @@ the client."
 				  (window-height)))))
 		 mds-wm-side-by-side)
    (mds-client-out-buf client))
+  (switch-to-buffer (mds-client-live-buf client))
   client)
 
 
