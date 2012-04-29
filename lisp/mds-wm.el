@@ -111,18 +111,18 @@ the client."
       (select-frame-set-input-focus (selected-frame)))
   (select-frame-set-input-focus mds-frame)
   (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
-  (set-window-buffer
-   (split-window nil
-		 (and mds-wm-ss-fractional-size
-		      (round (* mds-wm-ss-fractional-size
-				(if mds-wm-side-by-side
-				    (window-width)
-				  (window-height)))))
-		 mds-wm-side-by-side)
-   (mds-client-out-buf client))
-  (switch-to-buffer (mds-client-live-buf client))
+  (if mouse-autoselect-window
+      ;; without this, out-buf is selected
+      (sleep-for 0.1))
+  (set-window-buffer (split-window nil 
+				   (and mds-wm-ss-fractional-size
+					(round (* mds-wm-ss-fractional-size
+						  (if mds-wm-side-by-side
+						      (window-width)
+						    (window-height)))))
+				   mds-wm-side-by-side)
+		     (mds-client-out-buf client))
   client)
-
 
 (defun mds-wm-display-dead (client)
   "Display the dead showstat buffer of CLIENT in a window."
