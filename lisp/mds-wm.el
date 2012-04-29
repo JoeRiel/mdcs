@@ -102,7 +102,7 @@ window."
 
 (defun mds-wm-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
-The split direction and initial size of the showstat window are
+nThe split direction and initial size of the showstat window are
 determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
 the client."
   (if (not (eq (selected-frame) mds-frame))
@@ -110,19 +110,21 @@ the client."
       ;; without that, xfce doesn't switch frames
       (select-frame-set-input-focus (selected-frame)))
   (select-frame-set-input-focus mds-frame)
-  (delete-other-windows (select-window (display-buffer (mds-client-live-buf client))))
   (if mouse-autoselect-window
-      ;; without this, out-buf is selected
+      ;; without this, there are weird probles with windo splits or selecting live-buf
       (sleep-for 0.1))
-  (set-window-buffer (split-window nil 
-				   (and mds-wm-ss-fractional-size
-					(round (* mds-wm-ss-fractional-size
-						  (if mds-wm-side-by-side
-						      (window-width)
-						    (window-height)))))
-				   mds-wm-side-by-side)
-		     (mds-client-out-buf client))
-  client)
+  (let ((buf1 (mds-client-live-buf client))
+	(buf2 (mds-client-out-buf client)))
+    (delete-other-windows (select-window (display-buffer buf1)))
+    (set-window-buffer (split-window nil 
+				     (and mds-wm-ss-fractional-size
+					  (round (* mds-wm-ss-fractional-size
+						    (if mds-wm-side-by-side
+							(window-width)
+						      (window-height)))))
+				     mds-wm-side-by-side)
+		       buf2)
+    client))
 
 (defun mds-wm-display-dead (client)
   "Display the dead showstat buffer of CLIENT in a window."
