@@ -51,6 +51,7 @@
 ##SUBSECTION Exports
 ##- "mdc[Grid]" : submodule for debugging "Grid" processes.
 ##- "mdc[Count]" : implements a counter
+##- "mdc[DataFile"] : return path to file in data directory of installed toolbox
 ##- "mdc[mdc]" : main export
 ##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
 ##- "mdc[Monitor]" : set/query monitor expressions
@@ -537,10 +538,12 @@ option package;
 
 #{{{ exports
 export Count
+    ,  DataFile
     ,  Debugger
     ,  Format
     ,  Grid
     ,  InstallPatch
+    ,  LineInfo
     ,  Monitor
     ,  Sleep
     ,  Skip
@@ -620,11 +623,13 @@ local Connect
     Warnings := {}; # initialize
 
 $ifdef BUILD_MLA
+$include <src/DataFile.mm>
 $include <src/Debugger.mm>
 $include <src/Format.mm>
 $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
+$include <src/LineInfo.mm>
 $endif
 
 #{{{ ModuleApply

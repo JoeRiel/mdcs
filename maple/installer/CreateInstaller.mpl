@@ -216,6 +216,11 @@ global InstallScript;
                                           , "mds.el"
                                          ])
 
+                          (* data files *)
+                          , "data/Sample.mpl" = "data/Sample.mpl"
+
+                          (* emacs stuff *)
+
                           , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
                           , "../maplev/lisp/button-lock.el" = "lisp/button-lock.el"
 

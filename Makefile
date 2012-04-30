@@ -100,7 +100,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-client mds-thing mds
+ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-client mds-thing mds-li mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)
@@ -275,7 +275,13 @@ install-all: $(install-all)
 install: $(call print-help,install	,Install everything)
 install: $(install-all)
 
-install: $(addprefix install-,dev hdb html info lisp maple)
+install: $(addprefix install-,dev data hdb html info lisp maple)
+
+install-data: $(call print-help,install-data,Install data)
+install-data: data/*.mpl
+	@echo "Installing data files into $(MAPLE_DATA_DIR)"
+	@$(MKDIR) $(MAPLE_DATA_DIR)
+	@$(CP) --target-directory=$(MAPLE_DATA_DIR) $+
 
 install-dev: $(call print-help,install-dev,Install everything but hdb)
 install-dev: install-elc install-info install-maple

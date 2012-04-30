@@ -22,6 +22,7 @@
 ##- DBG_STOP : never sent
 ##- DBG_WARN : used to indicate improper action (but also when skip is satisfied)
 ##- DBG_WHERE : long stack output
+##- LINE_INFO : sending line info (filename, lineno, beg, end)
 ##- MONITOR : message is result of a monitored expression
 ##- MDC_PRINTF : pretty-printed output
 ##- MPL_ERR : a Maple error occurred
@@ -338,6 +339,8 @@ global showstat, showstop;
             # n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
             return n;
         elif cmd = "stopat" then
+            #{{{ stopat
+
             if nops(line) = 4 then
                 try
                     parse(line[4],parse_debugger);
@@ -372,7 +375,10 @@ global showstat, showstop;
                 fi;
                 if err <> lasterror then return []; (* stopat() *) fi
             fi
+
+            #}}}
         elif cmd = "unstopat" then
+            #{{{ unstopat
             pName := procName;
             lNum := NULL;
             for i from 2 to nops(line) do
@@ -386,7 +392,10 @@ global showstat, showstop;
                 err := lasterror;
             end try;
             if err <> lasterror then return err fi
+            #}}}
         elif cmd = "showstat" or cmd = "list" then
+            #{{{ showstat
+
             if procName = 0 then
                 debugger_printf('DBG_WARN',"Error, not currently in a procedure\n");
             elif nops(line) = 1 and cmd = "list" then
@@ -411,6 +420,8 @@ global showstat, showstop;
                     err := lasterror;
                 end try;
             fi
+
+            #}}}
         elif cmd = "showstop" then
             try
                 showstop['nonl']();
@@ -424,19 +435,23 @@ global showstat, showstop;
         elif cmd = "unstopwhen" then
             return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
         elif cmd = "stoperror" then
+            #{{{ stoperror
             try
                 line := sscanf(original,"%s %1000c");
                 return 'stoperror'(seq(line[i],i=2..nops(line)))
             catch:
                 err := lasterror;
             end try;
+            #}}}
         elif cmd = "unstoperror" then
+            #{{{ unstoperror
             try
                 line := sscanf(original,"%s %1000c");
                 return 'unstoperror'(seq(line[i],i=2..nops(line)));
             catch:
                 err := lasterror;
             end try;
+            #}}}
         elif cmd = "help" or cmd = "?" then
             try
                 help('debugger');
@@ -450,11 +465,14 @@ global showstat, showstop;
         elif cmd = "setenv" then
             return 'debugopts'('setenv'=[line[2],line[3]])
         elif cmd = "_skip" then
+            #{{{ _skip
             go_back_proc := procName;
             go_back_state := statNumber;
             skip := true;
             return line;
+            #}}}
         elif cmd = "_here" then
+            #{{{ _here
             line := sscanf(original, "%s %d %d %d");
             here_cnt := line[2];
             here_proc := pointto(line[3]);
@@ -466,20 +484,26 @@ global showstat, showstop;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
+            #}}}
         elif cmd = "_enter" then
+            #{{{ _enter
             line := sscanf(original, "%s %s");
             enter_procname := line[2];
             go_back_proc := procName;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
+            #}}}
         elif cmd = "_goback_save" then
+            #{{{ _goback_save
             line := sscanf(original, "%s %d %d");
             go_back_state := line[2];
             # go_back_proc := procName;
             go_back_proc := pointto(line[3]);
             return 'NULL'
+            #}}}
         elif cmd = "_monitor" then
+            #{{{ _monitor
             line := sscanf(original, "%s %s %d %1000c");
             cmd := line[2];
             if cmd = "toggle" then
@@ -500,8 +524,15 @@ global showstat, showstop;
             else
                 return 'NULL';
             end if;
-
+            #}}}
+        elif cmd = "_lineinfo" then
+            line := sscanf(original, "%s %d %d");
+            addr := line[2];
+            state := line[3];
+            debugger_printf('LINE_INFO', "%Q\n", LineInfo:-Get(addr,state));
+            return 'NULL';
         elif cmd = "statement" then
+            #{{{ statement
             # Must be an expression to evaluate globally.
             original := original[SearchText("statement",original)+9..-1];
             try
@@ -521,7 +552,9 @@ global showstat, showstop;
             catch:
                 err := lasterror;
             end try
+            #}}}
         else
+            #{{{ expression
             try
                 # Must be an expression to evaluate.
                 line := parse(original,parse_debugger);
@@ -545,6 +578,7 @@ global showstat, showstop;
             catch:
                 err := lasterror;
             end try;
+            #}}}
         fi;
 
         #}}}

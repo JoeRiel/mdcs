@@ -45,6 +45,7 @@
 (require 'mds-client)
 ;;(require 'mds-cp)
 ;;(require 'mds-edit)
+(require 'mds-li)
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
@@ -334,7 +335,9 @@ use them to route the message."
       (mds-out-display out-buf 
 			  (buffer-local-value 'mds-ss-state live-buf)
 			  'prompt)
-      (mds-client-set-allow-input client t))
+      (mds-client-set-allow-input client t)
+      (if mds-display-source-flag
+	  (mds-li-display-source)))
      
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  
@@ -390,6 +393,9 @@ use them to route the message."
 
      ((string= tag "MDC_PRINTF")
       (mds-out-display out-buf msg 'printf))
+
+     ((string= tag "LINE_INFO")
+      (mds-li-handle msg))
 
      ((string= tag "DBG_ERROR")
       (mds-out-display out-buf msg 'maple-err))
