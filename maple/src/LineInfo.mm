@@ -1,6 +1,7 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD LineInfo
 ##DEFINE THISMOD \PKG[\SUBMOD]
+##DEFINE THISPROC \PKG[\SUBMOD][\PROC]
 ##MODULE \THISMOD
 ##HALFLINE methods for lineinfo
 ##AUTHOR   Joe Riel
@@ -84,7 +85,7 @@
 LineInfo := module()
 
 export Get
-    ,  StoreAll
+    ,  Store
     ;
 
 local ModuleLoad
@@ -95,7 +96,7 @@ local ModuleLoad
 
     ModuleLoad := proc()
         # Initialize the info table
-        Info := table('sparse');
+        Info := table();
     end proc;
 
     #}}}
@@ -124,7 +125,7 @@ local ModuleLoad
         info := Info[addr];
 
         if info = 0 then
-            StoreAll(addr);
+            Store(addr);
             return thisproc(_passed);
         elif info = NULL then
             return NULL;
@@ -138,20 +139,66 @@ local ModuleLoad
 
     end proc;
     #}}}
-    #{{{ StoreAll
+    #{{{ Store
 
-    StoreAll := proc( addr )
+##DEFINE PROC Store
+##PROCEDURE \THISPROC
+##HALFLINE store the lineinfo data of a procedure
+##AUTHOR   Joe Riel
+##DATE     Apr 2012
+##CALLINGSEQUENCE
+##- \PROC('addr')
+##PARAMETERS
+##- 'addr' : ::integer::; Maple address of procedure
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- Store the *lineinfo* data of a procedure into the module local
+##  table `Info`.  If the procedure has no lineinfo data, nothing
+##  is done.
+##
+##- The 'addr' parameter is the address of the procedure.  It is used
+##  as the index into 'Info'.  If an entry already exists in the
+##  table, nothing is done.
+##
+##- The data is stored in the table as a packed record consisting of
+##  two fields, `filenames` and `positions`.
+##
+##-- The `filenames` entry is a list of strings corresponding to the
+##  absolute paths to the source files associated with this procedure.
+##
+##-- The `positions` entry is a four column array, indexed from 0 to
+##  `n`, where `n` is the number of statements in the procedure.  The
+##  zero entry corresponds to the entire procedure (starting at
+##  `proc`).
+##
+##-- The first column is an index into `filenames`; it indicates the
+##  file associated with the statement.
+##
+##-- The second column is the line number, starting from 1, on which
+##  the statement begins.
+##
+##-- The third column is the character offset, from the beginning of
+##  the file, to the start of the statement.
+##
+##-- The fourth column is the character offset, from the beginning of
+##  the file, to the end of the statement.
+
+
+    Store := proc( addr, info := Info )
     local filenames,i,info;
 
-        if Info[addr] <> 0 then
-            return NULL
+        if info[addr] <> 0 then
+            # data already stored; skip
+            return NULL;
         end if;
 
         info := [debugopts('lineinfo' = pointto(addr))];
 
+
         if info = [] then
             # no lineinfo available for prc
-            Info[addr] := NULL;
+            info[addr] := NULL;
 
         else
             filenames := ListTools:-MakeUnique(map2(op,1,info));
@@ -159,16 +206,94 @@ local ModuleLoad
             info := subs([seq(filenames[i]=i, i=1..numelems(filenames))], info);
             # Insert filenames and an Array of the statement positions
             # into a two-field record, and store in the sparse table
-            # Info, which is indexed by the procedure address.
-            Info[addr] := Record['packed'](':-filenames' = filenames
-                                           , ':-statement_position' = Array(0..numelems(info)-1, 1..4
-                                                                            , info
-                                                                            , 'datatype'=integer[4]
-                                                                           )
+            # info, which is indexed by the procedure address.
+            info[addr] := Record['packed'](':-filenames' = filenames
+                                           , ':-positions' = Array(0..numelems(info)-1, 1..4
+                                                                   , info
+                                                                   , 'datatype'=integer[4]
+                                                                  )
                                           );
+
+            for file in filenames do
+                if assigned(info[file]) then
+                    info[file] := info[file], addr;
+                else
+                    info[file] := addr;
+                end if;
+            end do;
+
         end if;
+
         return NULL
     end proc;
     #}}}
+
+
+    #}}}
+
+    #{{{ LookupStatement
+
+##DEFINE PROC LookupStatement
+##PROCEDURE \THISPROC
+##HALFLINE ...
+##AUTHOR   Joe Riel
+##DATE     May 2012
+##CALLINGSEQUENCE
+##- \PROC('filename','offset')
+##PARAMETERS
+##- 'filename' : ::string::; source file
+##- 'offset'   : ::nonegint::; character offset from beginning of file
+##- 'addr'     : ::integer::; address of procedure
+##RETURNS
+##- `state` - ::nonnegint::; statement number in procedure
+##
+##NOTES
+##- Because `lineinfo` points to the macro call rather
+##  than its expansion, there is a bijection from
+##  the lineinfo positions to the source.
+##
+##- That is not entirely true.  A file can be included
+##  into separate procedures, so given just the position
+##  info from an include file, we cannot go to the
+##  procedure/statement.  However,
+##
+
+    LookupStatement := proc( filename :: string
+                             , addr :: integer
+                             , lineno :: posint
+                             , offset :: nonnegint
+                             , info := Info
+                           )
+
+        if not assigned(info[filename]) then
+            return 0;
+        end if;
+
+        addrs := [info[filename]];
+
+        # Can we partition the file into procedures?  Maybe.  Hmm.
+        # One danger of using the source as the main buffer is that it
+        # tempts the user to set breakpoints in procedures that
+        # haven't been visited, hence which aren't in the Info table.
+        #
+        # Narrowing to the procedure body prevents that, but does not
+        # seem right.  Better to raise an appropriate error (maple or
+        # emacs?).
+
+
+        # If offset is outside a procedure body, raise an error.
+        # If offset is outside a statement, but on the line of a
+        # statement, use that statement, otherwise, if it is
+        # in a nesting statement, use that, otherwise
+
+
+
+
+
+    end proc;
+
+
+    #}}}
+
 
 end module:
