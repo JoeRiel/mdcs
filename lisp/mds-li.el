@@ -37,6 +37,7 @@
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
 
+;;{{{ First Attempt
 
 (defun mds-li-display-source ()
   "Display the source file in the other window.
@@ -73,6 +74,34 @@ data is available."
     (setq mds-display-source-flag nil)
     (ding)
     (message "no lineinfo data available for current procedure")))
+
+;;}}}
+
+;;{{{ external methods
+
+;; These are intended to be called ...
+
+(defun mds-li-update (buf addr procname state)
+  "Update the source buffer BUF.
+ADDR is the address of PROCNAME,
+
+"
+
+;;}}}
+
+
+;;{{{ mds-src-mode
+
+(define-derived-mode mds-src-mode showstat-mode "source-mode"
+  "Major mode for stepping through source code of a debugged Maple procedure."
+  :group 'mds
+  
+  )
+
+
+;;}}}
+
+
 
 (provide 'mds-li)
 
