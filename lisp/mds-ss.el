@@ -246,7 +246,7 @@ Both go to the first match and do not check for additional matches."
       (let (str bols line)
 	(while (re-search-forward mds-ss-statement-re nil 'move)
 	  (setq	bols (cons (length str) bols)
-		line (match-string-no-properties 2)
+		line (match-string-no-properties 3)
 		str (concat str " " line)))
 	
 	;; NB: There is a bug in debugopts(callstack); the `statement'
@@ -471,11 +471,42 @@ Otherwise raise error indicating Maple is not available."
     (if (looking-at mds--addr-procname-re)
 	(match-string 2))))
 
+(defun mds-ss--regexp-for-statement (keyword)
+  "Return regexp that matches KEYWORD, with indentation,
+including statement number and decoration, given by the
+length of the string in the previous match-group 1."
+  (concat "^"
+	  "[ 0-9*?]\\{"
+	  (number-to-string (length (match-string-no-properties 1)))
+	  "\\}"
+	  keyword
+	  " "
+	  ))
+
 (defun mds-ss-beginning-of-statement ()
-  "Move to beginning of statement on current line."
+  "Move to beginning of statement at point and return statement number.
+For a multi-part statement (if/elif/else, try/catch), the
+beginning is the first keyword, but only when point is at one of the
+keywords."
   (beginning-of-line)
-  (re-search-forward mds-ss-statement-re (line-end-position))
-  (goto-char (match-beginning 2)))
+  (cond
+     ((looking-at "\\( *\\)el\\(if\\|se\\)\\>")
+      ;; at 'elif|else': move back to 'if' at same indent
+      (re-search-backward (mds-ss--regexp-for-statement "if")))
+     ((looking-at "\\( *\\)catch[ :]")
+      ;; at catch: move back to 'try' at same indent
+      (re-search-backward (mds-ss--regexp-for-statement "try")))
+     ((looking-at "\\( *\\)end \\([a-z]+\\)")
+      (re-search-backward (mds-ss--regexp-for-statement (match-string-no-properties 2)))))
+  (when (looking-at mds-ss-statement-re)
+    (goto-char (match-beginning 3))
+    (match-string-no-properties 1)))
+
+(defun mds-ss-get-state ()
+  "Return the statement number associated with a statement."
+  (save-excursion
+    (mds-ss-beginning-of-statement)))
+
 
 ;;}}}
 
@@ -607,10 +638,6 @@ output buffer are then active."
 ;;}}}
 ;;{{{ (*) Stop points
 
-(defun mds-ss-get-state ()
-  (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
-       (match-string-no-properties 1)))
-
 (defvar mds-ss-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
 
@@ -623,15 +650,14 @@ output buffer are then active."
 			nil nil nil nil hist))
 
 (defun mds-breakpoint ()
-  "Set a breakpoint at the current/previous state."
+  "Set a breakpoint at the statement at point."
   (interactive)
   (save-excursion
-    (end-of-line)
     (let ((state (mds-ss-get-state))
 	  (inhibit-read-only t))
       (if state
 	  (progn
-	    ;; FIXME: only replace a space, not a ?
+	    ;; Replace the decoration
 	    (replace-match "*" nil nil nil 2)
 	    (mds-ss-eval-debug-code
 	     (format "debugopts('stopat'=[pointto(%s),%s])" mds-ss-addr state) 'hide))

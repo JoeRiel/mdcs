@@ -98,13 +98,15 @@ The first group identifies SOMETHING.")
 (defconst mds-ss-mark-re "^ +[0-9]+[*!]?"
   "Regexp that matches the statement mark added by showstat.")
 
-(defconst mds-ss-statement-re "^\\( +\\(?:[0-9]+[!*]? +\\)?\\)\\(.*\\)"
+
+(defconst mds-ss-statement-re "^\\(?:\\s-*\\([0-9]+\\)\\([ *?]?\\) +\\)\\(.*\\)"
   "Regexp that matches the start of a line in a showstat buffer.
-The first group contains the indentation, including a statement number and flags.
-The second group is the Maple statement.")
+The first group matches the statement number.
+The second group matches any decoration.
+The third group matches the Maple statement on this line.")
 
 (defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
-  "Regexp that matches the statement number and marks, from the left margin,
+  "Regexp that matches the statement number and decoration, from the left margin,
 in a showstat buffer.")
 
 
