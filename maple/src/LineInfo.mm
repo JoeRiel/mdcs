@@ -168,8 +168,27 @@ local ModuleLoad
 ##  and source position data
 ##  associated with a 'statement' number of a procedure,
 ##  given its address, 'addr'.
+##TEST
+## $include <AssignFunc.mi>
+## $include <lineinfo.mpl>
+## AssignFUNC(mdc:-LineInfo:-Get):
+## AssignLocal(Store, mdc:-LineInfo:-Store):
+## macro(NE='testnoerror'
+##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
+##       ,RE='(verify,record(Or(truefalse,Array)))'
+##       ,TE='testerror'
+##      );
+### mdc(FUNC):
+##
+## Try[NE]("1.0", proc() save f, "f.mpl"; read "f.mpl" end());
+## Try[NE]("1.1", addressof(f), 'assign'="af"):
+## Try[NE]("1.2", Store(af, myinfo));
+## Try("1.3.0", FUNC(af, 0, myinfo), "f.mpl", 1,  5, 66);
+## Try("1.3.1", FUNC(af, 1, myinfo), "f.mpl", 1, 22, 47);
+## Try("1.3.2", FUNC(af, 2, myinfo), "f.mpl", 1, 37, 38);
+## Try[TE]("1.3.err", FUNC(af, 8, myinfo), "%1 index out of range");
 
-    Get := proc( addr :: integer, statement :: posint, info := Info )
+    Get := proc( addr :: integer, statement :: nonnegint, info := Info )
     local i,datum,rec;
 
         rec := info[addr];
