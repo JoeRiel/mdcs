@@ -1,0 +1,5 @@
+;; -*- emacs-lisp -*-
+
+(setq maplev-include-path '("/home/joe/emacs/mdcs/maple/include/")
+      mpldoc-tester-options (format "-maple=\"smaple -B -A2 -I %s\""
+				    (car maplev-include-path)))

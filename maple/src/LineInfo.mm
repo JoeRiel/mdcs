@@ -85,10 +85,55 @@
 LineInfo := module()
 
 export Get
+    ,  LookupStatement
     ,  Store
     ;
 
 local ModuleLoad
+
+##TOPIC Info
+##HALFLINE table storing lineinfo information
+##AUTHOR   Joe Riel
+##DATE     May 2012
+##DESCRIPTION
+##- The 'Info' table stores accumulated lineinfo information.
+##  Its indices consist of addresses of procedures, and filenames
+##  of sources.
+##
+##- The table is created by calls to "Store".
+##
+##- An *address* entry associates the address of a procedure
+##  with its source information.
+##  The entry consists of a packed record with two fields,
+##  'filenames' and 'positions'.
+##
+##-- 'filenames' : list of strings corresponding to the filenames
+##  in which the procedure is defined.
+##
+##-- 'positions' : four column Array, indexed from 0 to `n`,
+##  where `n` is the maximum statement number of the procedure.
+##  Each row holds the data for one statement.
+##  The 0 zero holds the data for the entire procedure.
+##  The columns contain the following data:
+##SET(lead=numeric)
+##--- Index into 'filenames'.
+##--- Line number of the file at which the statement begins.
+##--- File offset of the beginning character position of the statement.
+##--- File offset of the ending character position of the statement.
+##UNSET
+##
+##-- The file offsets are from the beginning of the file (not the line).
+##   An offset of 0 corresponds to the first character in the file.
+##
+##-- The end position does not include a terminator charactor (colon or semicolon).
+##
+##-- If a procedure has no *lineinfo* data, its *address* entry is `NULL`.
+##
+##- A *filename* entry associates a source filename with the procedures
+##  it contains, either wholly or partially.
+##
+##-- An entry consists of an expression sequence of addresses.
+
     , Info
     ;
 
@@ -103,8 +148,8 @@ local ModuleLoad
     #{{{ Get
 
 ##DEFINE PROC Get
-##PROCEDURE \THISMOD[\PROC]
-##HALFLINE return the source filename and statement position
+##PROCEDURE \THISPROC
+##HALFLINE return the source filename and source position data
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
@@ -118,22 +163,28 @@ local ModuleLoad
 ##-- `lineno`   : ::posint::; line number
 ##-- `charbeg`  : ::posint::; file character position of beginning of statement
 ##-- `charend`  : ::posint::; file character position of end of statement
+##DESCRIPTION
+##- Return the source filename
+##  and source position data
+##  associated with a 'statement' number of a procedure,
+##  given its address, 'addr'.
 
-    Get := proc( addr, statement :: posint )
-    local i,info,datum;
+    Get := proc( addr :: integer, statement :: posint, info := Info )
+    local i,datum,rec;
 
-        info := Info[addr];
+        rec := info[addr];
 
-        if info = 0 then
+        if rec = 0 then
+            # nothing saved,
             Store(addr);
             return thisproc(_passed);
-        elif info = NULL then
+        elif rec = NULL then
             return NULL;
         end if;
 
-        datum := info:-statement_position[statement];
+        datum := rec:-positions[statement];
 
-        ( info:-filenames[datum[1]]
+        ( rec:-filenames[datum[1]]
          , seq(datum[i], i = 2..4)  # line, beg, end
         );
 
@@ -161,62 +212,77 @@ local ModuleLoad
 ##  as the index into 'Info'.  If an entry already exists in the
 ##  table, nothing is done.
 ##
-##- The data is stored in the table as a packed record consisting of
-##  two fields, `filenames` and `positions`.
+##- See "Info" for a description of the table structure.
 ##
-##-- The `filenames` entry is a list of strings corresponding to the
-##  absolute paths to the source files associated with this procedure.
+##TEST
+## $include <AssignFunc.mi>
+## $include <lineinfo.mpl>
+## AssignFUNC(mdc:-LineInfo:-Store):
+## macro(NE='testnoerror'
+##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
+##       ,RE='(verify,record(Or(truefalse,Array)))'
+##      );
+### mdc(FUNC):
 ##
-##-- The `positions` entry is a four column array, indexed from 0 to
-##  `n`, where `n` is the number of statements in the procedure.  The
-##  zero entry corresponds to the entire procedure (starting at
-##  `proc`).
-##
-##-- The first column is an index into `filenames`; it indicates the
-##  file associated with the statement.
-##
-##-- The second column is the line number, starting from 1, on which
-##  the statement begins.
-##
-##-- The third column is the character offset, from the beginning of
-##  the file, to the start of the statement.
-##
-##-- The fourth column is the character offset, from the beginning of
-##  the file, to the end of the statement.
+## Try[NE]("1.0", proc() save f, "f.mpl"; read "f.mpl" end());
+## Try[NE]("1.1", addressof(f), 'assign'="af"):
+## Try[RE]("1.2", FUNC(af, myinfo)
+##         , Record['packed']('filenames' = ["f.mpl"]
+##                            , 'positions' = (Array(0..4, 1..4
+##                                                   , [NULL
+##                                                      ,[1,1,5,66]
+##                                                      ,[1,1,22,47]
+##                                                      ,[1,1,37,38]
+##                                                      ,[1,1,40,42]
+##                                                      ,[1,1,50,59]
+##                                                     ]
+##                                                   , 'datatype' = integer[4]))));
+## Try[TA]("1.3", eval(myinfo)
+##         , table( [ af = Record['packed']('filenames' = ["f.mpl"]
+##                                          , 'positions' =  Array(0..4, 1..4
+##                                                                 , [NULL
+##                                                                    ,[1,1,5,66]
+##                                                                    ,[1,1,22,47]
+##                                                                    ,[1,1,37,38]
+##                                                                    ,[1,1,40,42]
+##                                                                    ,[1,1,50,59]
+##                                                                   ]
+##                                                                 , 'datatype' = integer[4]))
+##                    , "f.mpl" = af
+##                  ]
+##                ));
 
+    Store := proc( addr :: integer, info := Info )
+    local file, filenames, i, lineinfo;
 
-    Store := proc( addr, info := Info )
-    local filenames,i,info;
-
-        if info[addr] <> 0 then
-            # data already stored; skip
-            return NULL;
+        if assigned(info[addr]) then
+            return info[addr];
         end if;
 
-        info := [debugopts('lineinfo' = pointto(addr))];
+        lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
 
-
-        if info = [] then
+        if lineinfo = [] then
             # no lineinfo available for prc
             info[addr] := NULL;
 
         else
-            filenames := ListTools:-MakeUnique(map2(op,1,info));
+            filenames := ListTools:-MakeUnique(map2(op,1,lineinfo));
             # Convert filenames to integers, corresponding to position in 'filenames'
-            info := subs([seq(filenames[i]=i, i=1..numelems(filenames))], info);
+            lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
             # Insert filenames and an Array of the statement positions
             # into a two-field record, and store in the sparse table
             # info, which is indexed by the procedure address.
             info[addr] := Record['packed'](':-filenames' = filenames
-                                           , ':-positions' = Array(0..numelems(info)-1, 1..4
-                                                                   , info
+                                           , ':-positions' = Array(0..numelems(lineinfo)-1, 1..4
+                                                                   , lineinfo
                                                                    , 'datatype'=integer[4]
                                                                   )
                                           );
 
+            # Append addr to the entry for each filename.
             for file in filenames do
                 if assigned(info[file]) then
-                    info[file] := info[file], addr;
+                    info[file] := (info[file], addr);
                 else
                     info[file] := addr;
                 end if;
@@ -224,13 +290,11 @@ local ModuleLoad
 
         end if;
 
-        return NULL
+        return info[addr];
+
     end proc;
-    #}}}
-
 
     #}}}
-
     #{{{ LookupStatement
 
 ##DEFINE PROC LookupStatement
@@ -265,6 +329,8 @@ local ModuleLoad
                              , info := Info
                            )
 
+    local addrs;
+
         if not assigned(info[filename]) then
             return 0;
         end if;
@@ -285,9 +351,6 @@ local ModuleLoad
         # If offset is outside a statement, but on the line of a
         # statement, use that statement, otherwise, if it is
         # in a nesting statement, use that, otherwise
-
-
-
 
 
     end proc;
