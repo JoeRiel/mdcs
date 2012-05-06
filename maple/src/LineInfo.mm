@@ -137,15 +137,12 @@ local ModuleLoad
     , Info
     ;
 
-    #{{{ ModuleLoad
+##PROCEDURE ModuleLoad
 
     ModuleLoad := proc()
         # Initialize the info table
         Info := table();
     end proc;
-
-    #}}}
-    #{{{ Get
 
 ##DEFINE PROC Get
 ##PROCEDURE \THISPROC
@@ -208,8 +205,6 @@ local ModuleLoad
         );
 
     end proc;
-    #}}}
-    #{{{ Store
 
 ##DEFINE PROC Store
 ##PROCEDURE \THISPROC
@@ -224,8 +219,7 @@ local ModuleLoad
 ##- `NULL`
 ##DESCRIPTION
 ##- Store the *lineinfo* data of a procedure into the module local
-##  table `Info`.  If the procedure has no lineinfo data, nothing
-##  is done.
+##  table `Info`.  If the procedure has no lineinfo data, store `NULL`.
 ##
 ##- The 'addr' parameter is the address of the procedure.  It is used
 ##  as the index into 'Info'.  If an entry already exists in the
@@ -313,9 +307,6 @@ local ModuleLoad
 
     end proc;
 
-    #}}}
-    #{{{ LookupStatement
-
 ##DEFINE PROC LookupStatement
 ##PROCEDURE \THISPROC
 ##HALFLINE ...
@@ -373,9 +364,5 @@ local ModuleLoad
 
 
     end proc;
-
-
-    #}}}
-
 
 end module:
