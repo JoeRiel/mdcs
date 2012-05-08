@@ -1,7 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD LineInfo
-##DEFINE THISMOD \PKG[\SUBMOD]
-##DEFINE THISPROC \PKG[\SUBMOD][\PROC]
+##DEFINE THISMOD \PKG[LineInfo]
+
 ##MODULE \THISMOD
 ##HALFLINE methods for lineinfo
 ##AUTHOR   Joe Riel
@@ -138,19 +137,21 @@ local ModuleLoad
     ;
 
 ##PROCEDURE ModuleLoad
+##HALFLINE assign module local Info variable an empty table.
+##AUTHOR   Joe Riel
+##DATE     May 2012
 
     ModuleLoad := proc()
         # Initialize the info table
         Info := table();
     end proc;
 
-##DEFINE PROC Get
-##PROCEDURE \THISPROC
+##PROCEDURE \THISMOD[Get]
 ##HALFLINE return the source filename and source position data
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
-##- \PROC('addr','statement')
+##- Get('addr','statement')
 ##PARAMETERS
 ##- 'addr'      : ::integer::; Maple address of procedure
 ##- 'statement' : ::posint::; statement number
@@ -206,13 +207,12 @@ local ModuleLoad
 
     end proc;
 
-##DEFINE PROC Store
-##PROCEDURE \THISPROC
+##PROCEDURE \THISMOD[Store]
 ##HALFLINE store the lineinfo data of a procedure
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
-##- \PROC('addr')
+##- Store('addr')
 ##PARAMETERS
 ##- 'addr' : ::integer::; Maple address of procedure
 ##RETURNS
@@ -307,19 +307,35 @@ local ModuleLoad
 
     end proc;
 
-##DEFINE PROC LookupStatement
-##PROCEDURE \THISPROC
-##HALFLINE ...
+##PROCEDURE \THISMOD[LookupStatement]
+##HALFLINE return the statement number of a procedure given a source position
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##CALLINGSEQUENCE
-##- \PROC('filename','offset')
+##- \PROC('filename','lastaddr','lineno','offset','info')
 ##PARAMETERS
-##- 'filename' : ::string::; source file
-##- 'offset'   : ::nonegint::; character offset from beginning of file
-##- 'addr'     : ::integer::; address of procedure
+##- 'filename' : ::string::; source file name
+##- 'lastaddr' : ::integer::; address of likely procedure
+##- 'lineno'   : ::posint::; line number of position in source file
+##- 'offset'   : ::nonnegint::; character offset (from 0) of position in file
+##- 'info'     : (optional) ::table::; info table (for testing)
 ##RETURNS
-##- `state` - ::nonnegint::; statement number in procedure
+##- `(addr,state)`
+##-- `addr` - ::integer::; procedure address
+##-- `state` - ::nonnegint::; statement number in procedure
+##
+##ALGORITHM
+##- Given 'filename',
+##  get the list of possible procedures (addresses).
+##
+##- Determine the appropriate address.
+##-- From the position information, determine which procedures
+##  are candidates.
+##-- If more than one procedure is a candidate, use 'lastaddr',
+##  provided it matches one of them.  Otherwise exit unsuccessfully.
+##  Multiple matches can occur with an *include* file.
+##
+##- With address determined, find the statement.
 ##
 ##NOTES
 ##- Because `lineinfo` points to the macro call rather
@@ -329,40 +345,74 @@ local ModuleLoad
 ##- That is not entirely true.  A file can be included
 ##  into separate procedures, so given just the position
 ##  info from an include file, we cannot go to the
-##  procedure/statement.  However,
+##  procedure/statement.
 ##
+##TEST
+## $include <AssignFunc.mi>
+## $include "/home/joe/emacs/mdcs/maple/include/lineinfo.mpl"
+## AssignFUNC(mdc:-LineInfo:-LookupStatement):
+## AssignLocal(Store,mdc:-LineInfo:-Store):
+## macro(NE='testnoerror'
+##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
+##       ,RE='(verify,record(Or(truefalse,Array)))'
+##      );
+### mdc(FUNC):
+## Try[NE]("1.0", "\"/home/joe/emacs/mdcs/maple/include/lineinfo.mpl\"", 'assign' = "src"):
+## Try[NE]("1.2", proc() read src; end proc()):
+## Try[NE]("1.1", addressof(f), 'assign'="af"):
+## Try[NE]("1.2", Store(af, myinfo)):
+##
+## Try("1.3.1", FUNC(src, af, 5, 51, myinfo), 3);
+## Try("1.3.2", FUNC(src, af, 5, 10, myinfo), 3);
+## Try("1.3.3", FUNC(src, af, 6, 10, myinfo), 4);
+## Try("1.3.4", FUNC(src, af, 7, 10, myinfo), 4);
 
     LookupStatement := proc( filename :: string
-                             , addr :: integer
+                             , lastaddr :: integer
                              , lineno :: posint
                              , offset :: nonnegint
                              , info := Info
                            )
 
-    local addrs;
+    local addr, addrs, i,n,pos;
 
         if not assigned(info[filename]) then
-            return 0;
+            error "no can do";
         end if;
 
+        # Find appropriate addr by selecting those procedures
+        # whose character range contains 'offset'.  If more than one,
+        # then use the 'lastaddr'.
         addrs := [info[filename]];
+        addrs := select( addr -> ( info[addr]:-positions[0,2] <= offset
+                                   and
+                                   offset <= info[addr]:-positions[0,4]
+                                 )
+                         , addrs );
+        if addrs = [] then
+            error "no candidates";
+        elif 1 < numelems(addrs) then
+            if member(lastaddr, addrs) then
+                addr := lastaddr;
+            else
+                error "no candidates";
+            end if;
+        else
+            addr := addrs[1];
+        end if;
 
-        # Can we partition the file into procedures?  Maybe.  Hmm.
-        # One danger of using the source as the main buffer is that it
-        # tempts the user to set breakpoints in procedures that
-        # haven't been visited, hence which aren't in the Info table.
-        #
-        # Narrowing to the procedure body prevents that, but does not
-        # seem right.  Better to raise an appropriate error (maple or
-        # emacs?).
+        # Search for line position.
+        # Assign 'pos' the Array of position data for 'addr'
+        pos := info[addr]:-positions;
 
-
-        # If offset is outside a procedure body, raise an error.
-        # If offset is outside a statement, but on the line of a
-        # statement, use that statement, otherwise, if it is
-        # in a nesting statement, use that, otherwise
-
+        # Get first statement on or following 'lineno'
+        n := upperbound(pos,1);
+        for i to n while pos[i,2] < lineno do end do;
+        ASSERT(i<=n, "cannot find statement");
+        return i;
 
     end proc;
 
+
 end module:
+

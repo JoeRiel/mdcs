@@ -33,6 +33,7 @@
 (declare-function mds-ss-eval-proc-statement "mds-ss")
 (declare-function mds-ss-get-addr "mds-ss")
 (declare-function mds-ss-get-state "mds-ss")
+(declare-function showstat-mode "mds-ss")
 
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
@@ -81,11 +82,11 @@ data is available."
 
 ;; These are intended to be called ...
 
-(defun mds-li-update (buf addr procname state)
-  "Update the source buffer BUF.
-ADDR is the address of PROCNAME,
+;; (defun mds-li-update (buf addr procname state)
+;;   "Update the source buffer BUF.
+;; ADDR is the address of PROCNAME,
 
-"
+;; "
 
 ;;}}}
 
