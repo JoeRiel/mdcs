@@ -5,7 +5,7 @@
 ##HALFLINE methods for lineinfo
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
-##DESCRIPTION
+##DESCRIPTION(notest)
 ##- Maple 16 partially implements a **lineinfo** feature that,
 ##  when a Maple source file is read (with "read"),
 ##  records the filename and statement positions
@@ -74,12 +74,13 @@
 ##TEST
 ## $include <AssignFunc.mi>
 ## macro(NE=testnoerror):
-### mdc(mdc:-LineInfo:-StoreAll, mdc:-LineInfo:-Get);
+### mdc(mdc:-LineInfo:-Store, mdc:-LineInfo:-Get);
 ##
 ## Try[NE]("1.0", proc() read mdc:-DataFile("Sample.mpl"); end());
 ## Try[NE]("1.1", addressof(MyModule:-A), 'assign'="addr");
-## Try("1.2", mdc:-LineInfo:-Get(addr,1), "/home/joe/maple/toolbox/emacs/data/Sample.mpl",  8, 113, 119);
-## Try("1.3", mdc:-LineInfo:-Get(addr,2), "/home/joe/maple/toolbox/emacs/data/Sample.mpl", 10, 156, 244);
+## Try[NE]("1.2", mdc:-LineInfo:-Store(addr));
+## Try("1.3.0", mdc:-LineInfo:-Get(addr,0), "/home/joe/maple/toolbox/emacs/data/Sample.mpl",  7, 110, 364);
+## Try("1.3.1", mdc:-LineInfo:-Get(addr,1), "/home/joe/maple/toolbox/emacs/data/Sample.mpl", 10, 172, 178);
 
 LineInfo := module()
 
@@ -112,7 +113,7 @@ local ModuleLoad
 ##-- 'positions' : four column Array, indexed from 0 to `n`,
 ##  where `n` is the maximum statement number of the procedure.
 ##  Each row holds the data for one statement.
-##  The 0 zero holds the data for the entire procedure.
+##  The 0 row holds the data for the entire procedure.
 ##  The columns contain the following data:
 ##SET(lead=numeric)
 ##--- Index into 'filenames'.
@@ -312,7 +313,7 @@ local ModuleLoad
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##CALLINGSEQUENCE
-##- \PROC('filename','lastaddr','lineno','offset','info')
+##- LookupStatemen('filename','lastaddr','lineno','offset','info')
 ##PARAMETERS
 ##- 'filename' : ::string::; source file name
 ##- 'lastaddr' : ::integer::; address of likely procedure
