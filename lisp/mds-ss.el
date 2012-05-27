@@ -480,12 +480,6 @@ keywords."
     (goto-char (match-beginning 3))
     (match-string-no-properties 1)))
 
-(defun mds-ss-get-state ()
-  "Return the statement number associated with a statement."
-  (save-excursion
-    (mds-ss-beginning-of-statement)))
-
-
 ;;}}}
 
 ;;{{{ commands
