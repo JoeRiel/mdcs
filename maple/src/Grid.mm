@@ -59,7 +59,7 @@ export CodeString
 ##  to "mdc[mdc]".  They initialize the client
 ##  and instrument the selected procedures.
 ##
-##EXAMPLES(noexecute)
+##EXAMPLES(noexecute,notest)
 ##- Assign a simple procedure that will be run in 'Grid'.
 ##>> hello := proc(nam :: string)
 ##>>  uses Grid;
@@ -127,7 +127,7 @@ export CodeString
 ##
 ##- The wrapper procedure passes its arguments to 'prc'.
 ##
-##EXAMPLES(noexecute)
+##EXAMPLES(noexecute,notest)
 ##- Assign a simple procedure that greets each process.
 ##  Note that while using "printf" is appropriate for normal usage,
 ##  it currently does not work well with the debugger in that the

@@ -423,7 +423,7 @@
 ##
 ##ENDSUBSECTION
 ##
-##EXAMPLES(noexecute)
+##EXAMPLES(noexecute,notest)
 ##- Launch the Maple debugger client, instrumenting "int".
 ##  Assume the Maple Debugger Server is running on a different
 ##  machine, named `gauss`.
@@ -1352,7 +1352,7 @@ $endif
 ##- The memory usage is minimal
 ##> CodeTools:-Usage(efficient(1000));
 ##ENDSUBSECTION
-##EXAMPLES(execute)
+##EXAMPLES(execute,notest)
 ##SUBSECTION Locate a stack overflow
 ##SET(noexecute)
 ##- Set a threshold on the size of the stack.
@@ -1553,7 +1553,7 @@ $endif
 ##  If true, return the assigned indices
 ##  as a sequence of lists.
 ##
-##EXAMPLES
+##EXAMPLES(notest)
 ##> with(mdc):
 ##- Exercise a couple of counters.
 ##> Count(), Count(),Count(12), Count(), Count(12);

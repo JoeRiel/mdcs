@@ -66,7 +66,7 @@ local indexed2slashed
 ##- A problem with passing a string is that parsing it does not necessarily
 ##  return the same procedure.
 ##
-##EXAMPLES
+##EXAMPLES(notest)
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
 ##> macro(printargs=\MOD:-\SUBMOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
@@ -376,13 +376,6 @@ local indexed2slashed
 ##  names of procedures that require the
 ##  use of ~kernelopts(opaquemodules=false)~
 ##  to access.
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-showstat):
-##
-##
-## Try("1.0", FUNC("simplify"));
 
     showstat := proc(p :: string)
     local opacity,prc;

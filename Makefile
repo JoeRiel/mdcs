@@ -250,7 +250,6 @@ test-run:
 	@echo Running tests
 	@$(RM) *.fail
 	@$(call shellerr,ls maple/mtest/*.tst 2> /dev/null | xargs -P4 -n1 $(TESTER))
-	@$(call showerr,$(TESTER) maple/tst/*.tst 2>&1 | egrep --after-context=4 'Warning|Error')
 
 test-extract:
 	@echo Extracting tests
