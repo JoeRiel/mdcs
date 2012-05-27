@@ -9,7 +9,8 @@
 ##- Maple 16 partially implements a **lineinfo** feature that,
 ##  when a Maple source file is read (with "read"),
 ##  records the filename and statement positions
-##  of each procedure in the file.
+##  of each procedure in the file.  The information
+##  can be retrieved with ~debugopts('lineinfo')~.
 ##
 ##  Currently this information is discarded when the procedures
 ##  are saved to a Maple archive (.mla file).
@@ -96,16 +97,22 @@ local ModuleLoad
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##DESCRIPTION
-##- The 'Info' table stores accumulated lineinfo information.
-##  Its indices consist of addresses of procedures, and filenames
-##  of sources.
+##- The 'Info' table, which is created by calls to "Store",
+##  stores accumulated lineinfo information.
+##  Its indices consist of
+##    filenames of sources
+##  and
+##    addresses of procedures.
 ##
-##- The table is created by calls to "Store".
+##- A *filename* entry associates a source filename with the addresses
+##  of the procedures it contains, either wholly or partially.
+##
+##-- An entry consists of an expression sequence of addresses.
 ##
 ##- An *address* entry associates the address of a procedure
 ##  with its source information.
 ##  The entry consists of a packed record with two fields,
-##  'filenames' and 'positions'.
+##  'filenames' and 'positions':
 ##
 ##-- 'filenames' : list of strings corresponding to the filenames
 ##  in which the procedure is defined.
@@ -128,17 +135,12 @@ local ModuleLoad
 ##-- The end position does not include a terminator charactor (colon or semicolon).
 ##
 ##-- If a procedure has no *lineinfo* data, its *address* entry is `NULL`.
-##
-##- A *filename* entry associates a source filename with the procedures
-##  it contains, either wholly or partially.
-##
-##-- An entry consists of an expression sequence of addresses.
 
     , Info
     ;
 
 ##PROCEDURE ModuleLoad
-##HALFLINE assign module local Info variable an empty table.
+##HALFLINE assign the module-local varible Info an empty table.
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 
@@ -148,7 +150,7 @@ local ModuleLoad
     end proc;
 
 ##PROCEDURE \THISMOD[Get]
-##HALFLINE return the source filename and source position data
+##HALFLINE return the source location of a procedure statement
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
@@ -163,10 +165,10 @@ local ModuleLoad
 ##-- `charbeg`  : ::posint::; file character position of beginning of statement
 ##-- `charend`  : ::posint::; file character position of end of statement
 ##DESCRIPTION
-##- Return the source filename
-##  and source position data
+##- Return the source filename and source position data
 ##  associated with a 'statement' number of a procedure,
 ##  given its address, 'addr'.
+##
 ##TEST
 ## $include <AssignFunc.mi>
 ## $include <lineinfo.mpl>
@@ -182,7 +184,7 @@ local ModuleLoad
 ## Try[NE]("1.0", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.1", addressof(f), 'assign'="af"):
 ## Try[NE]("1.2", Store(af, myinfo));
-## Try("1.3.0", FUNC(af, 0, myinfo), "f.mpl", 1,  5, 66);
+## Try("1.3.0", FUNC(af, 0, myinfo), "f.mpl", 1,  5, 67);
 ## Try("1.3.1", FUNC(af, 1, myinfo), "f.mpl", 1, 22, 47);
 ## Try("1.3.2", FUNC(af, 2, myinfo), "f.mpl", 1, 37, 38);
 ## Try[TE]("1.3.err", FUNC(af, 8, myinfo), "%1 index out of range");
