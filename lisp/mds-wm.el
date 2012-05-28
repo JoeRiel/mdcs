@@ -96,13 +96,12 @@ window."
 	    (switch-to-buffer-other-window ss-buf)))))))
 
 ;;}}}
-	  
 
 ;;{{{ display single client
 
 (defun mds-wm-display-client (client)
   "Display the live-showstat buffer and the output buffer of CLIENT.
-nThe split direction and initial size of the showstat window are
+The split direction and initial size of the showstat window are
 determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
 the client."
   (if (not (eq (selected-frame) mds-frame))
