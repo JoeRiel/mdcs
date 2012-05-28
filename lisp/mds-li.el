@@ -30,8 +30,11 @@
 
 ;;}}}
 
+;;; Code:
+
 (eval-when-compile
   (require 'mds-client)
+  (require 'mds-ss)
   (defvar mds-truncate-lines))
 
 (declare-function mds-ss-eval-proc-statement "mds-ss")
