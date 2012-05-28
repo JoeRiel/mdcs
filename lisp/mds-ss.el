@@ -112,7 +112,7 @@ however, such an abomination should break something.")
   (mds-client-send mds-client msg))
 
 (defun mds-ss-eval-debug-code (cmd &optional hide)
-  "Send CMD, with appended newline, to the Maple process and to the output buffer.
+  "Send CMD, with appended newline, to the Maple process.
 Echo the command to the output buffer unless HIDE is non-nil."
   (mds-ss-block-input)
   (unless hide
@@ -120,7 +120,7 @@ Echo the command to the output buffer unless HIDE is non-nil."
   (mds-ss-send-client (concat cmd "\n")))
 
 (defun mds-ss-eval-expr (expr &optional display)
-  "Send EXPR, with appended newline, to the Maple process DISPLAY to the output buffer.
+  "Send EXPR, with newline, to the Maple process DISPLAY to the output buffer.
 If DISPLAY is nil, send EXPR to the output buffer.  This function
 is intended to be used for evaluating Maple expressions."
   (mds-ss-block-input)
@@ -170,7 +170,7 @@ If ALIVE is non-nil, create a live buffer."
 ;;{{{ (*) mds-ss-update
 
 (defun mds-ss-update (buf addr procname state &optional statement)
-  "Update the showstat buffer BUF and the client field addr and
+  "Update the showstat buffer BUF, the client field addr, and
 the buffer local variables `mds-ss-procname', and `mds-ss-state'.
 ADDR is the address of PROCNAME, which is the name of the
 procedure, STATE is the current state; all are strings.  If the
@@ -243,7 +243,7 @@ Both go to the first match and do not check for additional matches."
 	;; test whether that occurs inside a string.
 	
 	(let* ((state-re (regexp-quote (replace-regexp-in-string ";  +" "; " statement)))
-	       (pos (string-match state-re str))) 
+	       (pos (string-match state-re str)))
 	  (if (null pos)
 	      (message "cannot find statement in procedure body")
 	    (setq bols (nreverse bols))
@@ -264,7 +264,7 @@ Both go to the first match and do not check for additional matches."
 
 (defun mds-ss-view-dead-proc (addr procname state statement)
   "View procedure with address ADDR and name PROCNAME in the dead buffer.
-If the STATE is non-nil, use that as the state number to display.  
+If the STATE is non-nil, use that as the state number to display.
 Otherwise, find the statement number from STATEMENT."
   (with-current-buffer (mds-client-dead-buf mds-client)
     (unless (string= procname "")
@@ -287,7 +287,7 @@ Otherwise, find the statement number from STATEMENT."
 ;;{{{ (*) mds-ss-display
 
 (defun mds-ss-display (buf proc)
-  "Insert Maple procedure PROC into the showstat buffer.
+  "Insert into the showstat buffer, BUF, the Maple procedure PROC.
 PROC is the output of a call to showstat.  Use and update
 the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
   (with-current-buffer buf
@@ -344,8 +344,8 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 ;;{{{ (*) mds-ss-display-state
 
 (defun mds-ss-display-state (state)
-  "Move the overlay arrow in the showstat buffer to STATE and
-ensure that the buffer and line are visible.  If the `hl-line'
+  "Move the overlay arrow in the showstat buffer to STATE.
+Ensure that the buffer and line are visible.  If the `hl-line'
 feature is present in this session, then highlight the line.
 POINT is moved to the indentation of the current line."
   (if state
@@ -384,7 +384,7 @@ POINT is moved to the indentation of the current line."
 
 (defun mds-expr-at-point-interactive (prompt &optional default complete)
   "Request Maple identifier in minibuffer, using PROMPT.
-Default is identifier around point. If it is empty use DEFAULT.
+Default is identifier around point.  If it is empty use DEFAULT.
 Minibuffer completion is used if COMPLETE is non-nil."
   ;; Suppress error message
   (if (not default) (setq default t))
@@ -405,7 +405,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
     choice))
 
 (defun mds-expr-at-point (&optional default)
-  "Return the expression at point. 
+  "Return the expression at point.
 This is specialized to work with a few routines; needs to be generalized."
   (cond
    ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
@@ -457,9 +457,9 @@ Otherwise raise error indicating Maple is not available."
        (match-string-no-properties 1))))
 
 (defun mds-ss--regexp-for-statement (keyword)
-  "Return regexp that matches KEYWORD, with indentation,
-including statement number and decoration, given by the
-length of the string in the previous match-group 1."
+  "Return regexp that matches KEYWORD.
+The regexp includes indentation, statement number and decoration,
+given by the length of the string in the previous match-group 1."
   (concat "^"
 	  "[ 0-9*?]\\{"
 	  (number-to-string (length (match-string-no-properties 1)))
@@ -501,7 +501,7 @@ keywords."
   (mds-ss-eval-proc-statement "cont" 'save))
 
 (defun mds-goto-procname (flag)
-  "Goto (stopat) a procedure without setting breakpoints or stopping along the way.
+  "Goto (stopat) a procedure without stopping.
 If FLAG is non-nil, prompt for the procedure name.  If Transient
 Mark mode is enabled and the mark is active, the default is the
 marked region, otherwise the default is the name at or near
@@ -735,7 +735,7 @@ If the state does not have a breakpoint, print a message."
 ;;{{{ (*) Evaluation
 
 (defun mds-eval-and-prettyprint ()
-  "Query an expression in the minibuffer and pretty-print it in the output buffer.
+  "Query for an expression and pretty-print it in the output buffer.
 The default is taken from expression at point.  The Maple
 procedure mdc:-Format:-PrettyPrint is used to break the expression into
 multiple lines."
@@ -769,7 +769,7 @@ If called interactively, EXPR is queried."
 
 
 (defun mds-eval-and-display-expr-global (expr)
-  "Evaluate a Maple expression, EXPR, in a global context.  
+  "Evaluate a Maple expression, EXPR, in a global context.
 If called interactively, EXPR is queried.
 The result is returned in the message area."
   (interactive (list (mds-expr-at-point-interactive
@@ -821,7 +821,7 @@ otherwise hyperlink the raw message."
 
 (defun mds-showexception (raw)
   "Send the 'showexception' command to the debugger.
-If RAW (prefix arg) is non-nil, display the raw output, 
+If RAW (prefix arg) is non-nil, display the raw output,
 otherwise run through StringTools:-FormatMessage."
   (interactive "P")
   (if (not raw)
@@ -843,23 +843,24 @@ the number of activation levels to display."
 ;;{{{ (*) Monitoring
 
 (defun mds-monitor-toggle ()
-  "Toggle the monitoring feature, which 
-provides a continuous display of specified Maple expressions.
+  "Toggle the monitoring feature.
+Monitoring provides a continuous display of specified Maple expressions.
 See `mds-monitor-define'."
   (interactive)
   (mds-ss-eval-proc-statement "_monitor toggle"))
 
 (defun mds-monitor-define (all)
-  "Define a monitor expression for the current procedure or, if ALL is non-nil, all procedures.
+  "Define a monitor expression for the current procedure.
+If ALL is non-nil, the monitor expression applies to all procedures.
 The user is queried for the expression in the minibuffer.  The
-expression must be valid Maple. An empty string, or whitespace,
+expression must be valid Maple.  An empty string, or whitespace,
 removes the monitor expression for the current procedure.
 
 If ALL is non-nil, the monitored expression is used with all
 procedures, otherwise it is used with just the current procedure
 in the showstat buffer; it will only be displayed when that
 procedure is active.  Expressions can be defined for multiple
-procedures.  Only one expression is used with all procedure. 
+procedures.  Only one expression is used with all procedure.
 See `mds-monitor-toggle'."
   (interactive "P")
   (let ((expr (read-string (format "%smonitor expr: "
@@ -912,19 +913,14 @@ STATE is a string corresponding to an integer."
     (message "cannot find state %s" state)))
 
 (defun mds-toggle-truncate-lines (output-buffer)
-  "Toggle the truncation of long lines.  If OUTPUT-BUFFER is
-non-nil, do so in the `mds-out-buffer', otherwise do so in 
-the `mds-ss-buffer'."
+  "Toggle the truncation of long lines.
+If OUTPUT-BUFFER is non-nil, do so in the `mds-out-buffer',
+otherwise do so in the `mds-ss-buffer'."
   (interactive "P")
   (if output-buffer
       (with-current-buffer (mds-client-out-buf mds-client)
 	(toggle-truncate-lines))
     (toggle-truncate-lines)))
-
-(defun mds-activate-procname-at-point ()
-  (if (looking-at mds-ss-where-procname-re)
-      (make-text-button (match-beginning 1) (match-end 1) 
-			:type 'mds-ss-open-button)))
 
 (defun mds-help-debugger ()
   "Display the Maple help page for the tty debugger."
@@ -1005,7 +1001,7 @@ the `mds-ss-buffer'."
 
 (defun mds-ss-set-mode-line (proc &optional label)
   "Set the mode-line of an mds-ss buffer.
-PROC is a string corresponding to the displayed procedure, 
+PROC is a string corresponding to the displayed procedure,
 it is displayed in square brackets after the mode name."
   (setq mode-line-format
 	(list
@@ -1025,7 +1021,7 @@ change).  The purpose is to distinguish the window when
 multiwindows are present and the control panel is used.  For this
 to work, `face-remapping-alist' must be buffer-local."
   (with-current-buffer buf
-    (setq face-remapping-alist 
+    (setq face-remapping-alist
 	  (if off
 	      `((mode-line-inactive
 		 :foreground ,(face-attribute 'mode-line-inactive :foreground t)
@@ -1072,7 +1068,7 @@ to work, `face-remapping-alist' must be buffer-local."
        "----"
        ["Set global watchpoint"      mds-stopwhen-global t]
        ["Set local watchpoint"       mds-stopwhen-local t]
-       ["Set conditional watchpoint" mds-stopwhenif t] 
+       ["Set conditional watchpoint" mds-stopwhenif t]
        ["Clear watchpoint"           mds-stopwhen-clear :keys "C-u w"]
        "----"
        ["Set watchpoint on error"    mds-stoperror t]
@@ -1130,7 +1126,7 @@ to work, `face-remapping-alist' must be buffer-local."
 
 ;;}}}
 
-;;{{{ showstat-mode
+;;{{{ ss-mode
 
 (define-derived-mode mds-ss-mode maplev-proc-mode "showstat-mode"
   "Major mode for stepping through a debugged Maple procedure.
@@ -1214,4 +1210,4 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 
 (provide 'mds-ss)
 
-;; mds-ss.el ends here
+;;; mds-ss.el ends here
