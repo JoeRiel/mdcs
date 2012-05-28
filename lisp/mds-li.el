@@ -30,23 +30,64 @@
 
 ;;}}}
 
+(eval-when-compile
+  (require 'mds-client)
+  (defvar mds-truncate-lines))
+
 (declare-function mds-ss-eval-proc-statement "mds-ss")
 (declare-function mds-ss-get-addr "mds-ss")
 (declare-function mds-ss-get-state "mds-ss")
-(declare-function showstat-mode "mds-ss")
+(declare-function mds-ss-mode "mds-ss")
 
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
 
+(defvar mds-li-arrow-position nil "Marker for current-line")
+(defvar mds-li-file-name ""       "Stores name of the current source-file.")
+
+(mapc #'make-variable-buffer-local
+      '(mds-li-arrow-position
+	mds-li-file-name))
+
+(add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
+
+;;{{{ Buffer
+
+(defun mds-li-create-buffer (client)
+  "Create and return an `mds-li-buffer' with client CLIENT."
+  (let ((buf (generate-new-buffer "*mds-li*")))
+    (with-current-buffer buf
+      (mds-li-mode)
+      (setq mds-client client)
+      (if mds-truncate-lines
+	  (toggle-truncate-lines 1)))
+    buf))
+
+
+;;}}}
+  
 ;;{{{ First Attempt
 
-(defun mds-li-display-source ()
-  "Display the source file in the other window.
-The source file and offset are stored as a cons cell
+(defun mds-li-display-source (buf file beg)
+  "Display, in buffer BUF, the source-file FILE, with point at BEG.
+Move the current statement marker.  The buffer has major-mode
+`mds-li-src-mode'."
+  (pop-to-buffer buf)
+  (unless (string= file mds-li-file-name)
+    (let (buffer-read-only)
+      (delete-region (point-min) (point-max))
+      (insert-file-contents file)
+      (setq mds-li-file-name file)))
+  (goto-char beg)
+  (set-marker mds-li-arrow-position (line-beginning-position))
+  )
+
+(defun mds-li-open-source ()
+  "Open the source-file in the other window.
+The source-file and offset are stored as a cons cell
 in `mds-display-source-flag'; after extracting the contents,
 clear the variable.  Currently this variable is global; it should
 be buffer local though it might not really matter."
-
   (let ((filename (car mds-display-source-flag))
 	(offset   (cdr mds-display-source-flag)))
     (setq mds-display-source-flag nil)
@@ -78,30 +119,16 @@ data is available."
 
 ;;}}}
 
-;;{{{ external methods
+;;{{{ mds-li-mode
 
-;; These are intended to be called ...
-
-;; (defun mds-li-update (buf addr procname state)
-;;   "Update the source buffer BUF.
-;; ADDR is the address of PROCNAME,
-
-;; "
-
-;;}}}
-
-
-;;{{{ mds-src-mode
-
-(define-derived-mode mds-src-mode showstat-mode "source-mode"
+(define-derived-mode mds-li-mode mds-ss-mode "source-mode"
   "Major mode for stepping through source code of a debugged Maple procedure."
   :group 'mds
-  
+  (setq mds-li-arrow-position (make-marker))
   )
 
 
 ;;}}}
-
 
 
 (provide 'mds-li)

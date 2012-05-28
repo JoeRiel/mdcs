@@ -202,7 +202,7 @@ global showstat, showstop;
 
     #}}}
 
-    #{{{ print the debug status
+    #{{{ send debug status to Emacs
 
     if procName <> 0 then
         if statNumber < 0 then
@@ -224,12 +224,17 @@ global showstat, showstop;
             module_flag := true;
         end if;
         if not skip then
-            state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
+            addr := addressof(procName);
+            state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
                 WriteTagf('DBG_SAME_STATE');
             else
                 last_state := state;
                 debugger_printf('DBG_STATE', "%s", state);
+                local src_pos := LineInfo:-Get(addr, statNumber);
+                if src_pos <> NULL then
+                    debugger_printf('SRC_POS', "%s %d %d %d", src_pos);
+                end if;
             end if;
         end if;
     end if;

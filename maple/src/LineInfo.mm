@@ -146,7 +146,7 @@ local ModuleLoad
 
     ModuleLoad := proc()
         # Initialize the info table
-        Info := table();
+        Info := table('sparse');
     end proc;
 
 ##PROCEDURE \THISMOD[Get]
@@ -184,7 +184,7 @@ local ModuleLoad
 ## Try[NE]("1.0", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.1", addressof(f), 'assign'="af"):
 ## Try[NE]("1.2", Store(af, myinfo));
-## Try("1.3.0", FUNC(af, 0, myinfo), "f.mpl", 1,  5, 67);
+## Try("1.3.0", FUNC(af, 0, myinfo), "f.mpl", 1,  5, 66);
 ## Try("1.3.1", FUNC(af, 1, myinfo), "f.mpl", 1, 22, 47);
 ## Try("1.3.2", FUNC(af, 2, myinfo), "f.mpl", 1, 37, 38);
 ## Try[TE]("1.3.err", FUNC(af, 8, myinfo), "%1 index out of range");
@@ -270,10 +270,6 @@ local ModuleLoad
 
     Store := proc( addr :: integer, info := Info )
     local file, filenames, i, lineinfo;
-
-        if assigned(info[addr]) then
-            return info[addr];
-        end if;
 
         lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
 

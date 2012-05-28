@@ -27,6 +27,7 @@
 ;; Each client consists of a list of seven elements.
 
 (declare-function mds-ss-create-buffer "mds-ss")
+(declare-function mds-li-create-buffer "mds-li")
 (declare-function mds-out-create-buffer "mds-out")
 (declare-function mds-queue-create "mds")
 (declare-function mds-writeto-log "mds")
@@ -84,7 +85,8 @@ live-buf dead-buf out-buf addr], where status is initialized to
   (delete-process  (mds-client-proc client))
   (mds-kill-buffer (mds-client-live-buf client))
   (mds-kill-buffer (mds-client-dead-buf client))
-  (mds-kill-buffer (mds-client-out-buf client)))
+  (mds-kill-buffer (mds-client-out-buf client))
+  (mds-kill-buffer (mds-client-li-buf client)))
 
 (defun mds-client-set-status (client status)
   "Set the status of CLIENT to STATUS, which is a symbol."

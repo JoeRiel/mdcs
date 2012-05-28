@@ -449,6 +449,13 @@ Otherwise raise error indicating Maple is not available."
     (if (looking-at mds--addr-procname-re)
 	(match-string-no-properties 2))))
 
+(defun mds-ss-get-state ()
+  "Return the statement number in the line at point."
+  (save-excursion
+    (end-of-line)
+    (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
+       (match-string-no-properties 1))))
+
 (defun mds-ss--regexp-for-statement (keyword)
   "Return regexp that matches KEYWORD, with indentation,
 including statement number and decoration, given by the
@@ -613,12 +620,6 @@ The hyperlinks in the output buffer are then active."
 ;;}}}
 ;;{{{ (*) Stop points
 
-(defun mds-ss-get-state ()
-  "Return the statement number in the line at point."
-  (save-excursion
-    (end-of-line)
-    (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
-       (match-string-no-properties 1))))
 
 (defvar mds-ss-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
