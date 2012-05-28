@@ -1,10 +1,10 @@
-;;; mds-li.el
+;;; mds-li.el --- implement lineinfo mode
 
 ;; Copyright (C) 2012 Joseph S. Riel, all rights reserved
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2012
-;; Keywords:   maple, debugger 
+;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
@@ -42,8 +42,8 @@
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
 
-(defvar mds-li-arrow-position nil "Marker for current-line")
-(defvar mds-li-file-name ""       "Stores name of the current source-file.")
+(defvar mds-li-arrow-position nil "Marker for current-line.")
+(defvar mds-li-file-name ""       "Name of the current source-file.")
 
 (mapc #'make-variable-buffer-local
       '(mds-li-arrow-position
@@ -51,7 +51,7 @@
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
 
-;;{{{ Buffer
+;;{{{ Create Buffer
 
 (defun mds-li-create-buffer (client)
   "Create and return an `mds-li-buffer' with client CLIENT."
@@ -70,8 +70,8 @@
 
 (defun mds-li-display-source (buf file beg)
   "Display, in buffer BUF, the source-file FILE, with point at BEG.
-Move the current statement marker.  The buffer has major-mode
-`mds-li-src-mode'."
+Move the current statement marker.  The buffer has major mode
+`mds-li-mode'."
   (pop-to-buffer buf)
   (unless (string= file mds-li-file-name)
     (let (buffer-read-only)
@@ -79,9 +79,11 @@ Move the current statement marker.  The buffer has major-mode
       (insert-file-contents file)
       (setq mds-li-file-name file)))
   (goto-char beg)
-  (set-marker mds-li-arrow-position (line-beginning-position))
-  )
+  (set-marker mds-li-arrow-position (line-beginning-position)))
 
+;;}}}
+
+;;{{{ old stuff
 (defun mds-li-open-source ()
   "Open the source-file in the other window.
 The source-file and offset are stored as a cons cell
@@ -134,4 +136,4 @@ data is available."
 (provide 'mds-li)
 
 
-;; mds-li.el ends here
+;;; mds-li.el ends here
