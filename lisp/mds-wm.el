@@ -113,8 +113,11 @@ the client."
       ;; without this, there are weird problems with window splits or selecting live-buf
       (sleep-for 0.1))
   (let ((buf1 (mds-client-live-buf client))
-	(buf2 (mds-client-out-buf client)))
-    (delete-other-windows (select-window (display-buffer buf1)))
+	(buf2 (mds-client-out-buf client))
+	(buf3 (mds-client-li-buf client))
+	(win1))
+    
+    (delete-other-windows (setq win1 (select-window (display-buffer buf1))))
     (set-window-buffer (split-window nil 
 				     (and mds-wm-ss-fractional-size
 					  (round (* mds-wm-ss-fractional-size
@@ -123,6 +126,7 @@ the client."
 						      (window-height)))))
 				     mds-wm-side-by-side)
 		       buf2)
+    (set-window-buffer (split-window win1) buf3)
     client))
 
 (defun mds-wm-display-dead (client)
