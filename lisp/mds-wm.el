@@ -1,4 +1,4 @@
-;;; mds-wm.el
+;;; mds-wm.el --- window manager for mds
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -29,7 +29,7 @@
 
 ;;}}}
 
-;;; Code
+;;; Code:
 
 ;;{{{ requirements and declarations
 
@@ -47,32 +47,30 @@
 ;;{{{ customizations
 
 (defgroup mds-wm nil
-  "Maple Debugger Server Window Manager"
+  "Maple Debugger Server Window Manager."
   :group 'mds)
 
 (defcustom mds-wm-side-by-side t
-  "If non-nil, the showstat and output windows are displayed 
-side-by-side in a single client view."
+  "If non-nil, display the showstat and output windows side-by-side in a single client view."
   :type 'boolean
   :group 'mds-wm)
 
 (defcustom mds-wm-ss-fractional-size nil
-  "If non-nil, specifies the fractional size of the showstat
-window in relation to the frame size.  Width is used when
-`mds-wm-side-by-side' is non-nil, otherwise height is used.  If
-nil, then the window is set to half the frame size."
+  "Fractional size of the showstat window in relation to the frame size.
+Width is used when `mds-wm-side-by-side' is non-nil, otherwise height is used.
+If nil, the window is set to half the frame size."
   :type 'float
   :group 'mds-wm)
 
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-frame nil "Frame used by mds")
+(defvar mds-frame nil "Frame used by mds.")
 (defvar mds-clients '())  ;; duplicate, here to avoid warnings
 (defvar mds-wm-grouped-clients '()
-  "List of grouped clients.  Clients which are displayed
-together are combined in a sublist.  Clients that are not grouped
-are not in sublists.")
+  "List of grouped clients.
+Clients which are displayed together are combined in a sublist.  
+Clients that are not grouped are not in sublists.")
 
 ;;}}}
 
@@ -118,7 +116,7 @@ the client."
 	(win1))
     
     (delete-other-windows (setq win1 (select-window (display-buffer buf1))))
-    (set-window-buffer (split-window nil 
+    (set-window-buffer (split-window nil
 				     (and mds-wm-ss-fractional-size
 					  (round (* mds-wm-ss-fractional-size
 						    (if mds-wm-side-by-side
@@ -147,8 +145,8 @@ the client."
 ;;{{{ group common clients
 
 (defun mds-wm-display-group (clients)
-  "Display a group of CLIENTS, which is a list of clients.
-The screen is split vertically such that all showstat buffers 
+  "Display a list of CLIENTS.
+The screen is split vertically such that all showstat buffers
 go on the top and the output buffers on the bottom.  The top
 and bottom panes are then split equally into n smaller panes,
 with n being the number of clients."
@@ -188,8 +186,7 @@ with n being the number of clients."
     (mapcar #'cdr alist)))
 
 (defun mds-wm-group-update (clients)
-  "Call `mds-wm-group-clients' to group the clients, and
-assign the list to `mds-wm-grouped-clients'."
+  "Group CLIENTS and assign the list to `mds-wm-grouped-clients'."
   (setq mds-wm-grouped-clients (mds-wm-group-clients mds-clients)))
 
 ;;}}}
@@ -266,7 +263,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 ;;{{{ Call operating system's window manager to get focus
 
 (defun mds-wm-get-focus-wmctrl ()
-  "Call shell program wmctrl to give emacs the focus.
+  "Call shell program wmctrl to give Emacs the focus.
 This is only appropriate for a linux system."
   (shell-command "wmctrl -xa emacs"))
 
@@ -323,5 +320,4 @@ Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
 
 (provide 'mds-wm)
 
-;; mds-wm.el ends here
-
+;;; mds-wm.el ends here
