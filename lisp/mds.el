@@ -354,7 +354,6 @@ use them to route the message."
      ((string= tag "DBG_SAME_STATE")
 	(mds-goto-current-state))
 
-
      ((string= tag "SRC_POS")
       (unless (string-match "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\)" msg)
 	(error "problem with format in SRC_POS tag"))
@@ -403,6 +402,9 @@ use them to route the message."
 
      ((string= tag "MDC_PRINTF")
       (mds-out-display out-buf msg 'printf))
+
+     ((string= tag "MDC_RESPONSE")
+      (mds-client-assign-result client msg))
 
      ((string= tag "LINE_INFO")
       (mds-li-handle msg))

@@ -26,6 +26,9 @@
 ;;
 ;; Each client consists of a list of seven elements.
 
+(eval-when-compile
+  (defvar mds-ss-result nil))
+
 (declare-function mds-ss-create-buffer "mds-ss")
 (declare-function mds-li-create-buffer "mds-li")
 (declare-function mds-out-create-buffer "mds-out")
@@ -127,7 +130,6 @@ kill the buffers, and decrement `mds-clients-number'."
   (while mds-clients
       (mds-client-delete (cdar mds-clients))))
 
-
 (defun mds-client-interrupt (client)
   ;; Interrupt the kernel.  Alas, I don't know a general way to do
   ;; this, one that works across OSes, Maple interfaces, etc.  More
@@ -142,11 +144,19 @@ kill the buffers, and decrement `mds-clients-number'."
   (ding)
   (message "Interrupting is currently not implemented.  Use quit to close the debugger connection, then manually interrupt Maple."))
 
-
 (defun mds-client-get-maple-release (client)
   "Return the major release of the Maple kernel used by CLIENT.
 The value is an integer."
   (string-to-number (nth 1 (mds-client-id client))))
+
+(defun mds-client-assign-result (client result)
+  "Assign `mds-ss-result' in CLIENT the value RESULT."
+  (with-current-buffer (mds-client-live-buf client)
+    (setq mds-ss-result result)))
+
+(defun mds-client-get-result (client)
+  "Return the value of `mds-ss-result in CLIENT."
+  (buffer-local-value 'mds-ss-result (mds-client-live-buf client)))
 
 
 (provide 'mds-client)

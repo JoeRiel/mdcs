@@ -530,12 +530,23 @@ global showstat, showstop;
                 return 'NULL';
             end if;
             #}}}
+        elif cmd = "_mds_request" then
+            #{{{ _mds_request
+            local expr,val;
+            line := sscanf(original, "%s %s");
+            expr := line[2];
+            val  := eval(parse(expr));
+            debugger_printf('MDC_RESPONSE', "%q\n", val);
+            return 'NULL';
+            #}}}
         elif cmd = "_lineinfo" then
+            #{{{ _lineinfo
             line := sscanf(original, "%s %d %d");
             addr := line[2];
             state := line[3];
             debugger_printf('LINE_INFO', "%Q\n", LineInfo:-Get(addr,state));
             return 'NULL';
+            #}}}
         elif cmd = "statement" then
             #{{{ statement
             # Must be an expression to evaluate globally.

@@ -95,6 +95,7 @@ however, such an abomination should break something.")
 	mds-ss-show-args-flag
 	mds-ss-live-flag
 	mds-ss-procname
+	mds-ss-result
 	mds-ss-state
 	mds-ss-statement
 	))
@@ -141,6 +142,20 @@ code."
   (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd)
   (mds-ss-send-client cmd))
+
+(defun mds-ss-request (expr)
+  "Send the string EXPR to Maple and return the response, as a string.
+A newline is appended to EXPR before it is sent.  EXPR should
+have no spaces."
+  (mds-client-assign-result mds-client nil)
+  (mds-client-send mds-client (format "_mds_request %s\n" expr))
+  (let (result)
+    ;; Loop until the result is returned.
+    (while (null result)
+      (sleep-for 0.0001)
+      (setq result (mds-client-get-result mds-client)))
+    result))
+  
 
 ;;}}}
 
@@ -374,7 +389,6 @@ POINT is moved to the indentation of the current line."
 	(set-window-point (get-buffer-window (current-buffer)) (point))
 	;; Ensure live-ss-buf is displayed.
 	(mds-wm-display-live-buf))))
-
 
 ;;}}}
 
