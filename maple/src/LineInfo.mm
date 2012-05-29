@@ -293,10 +293,10 @@ local ModuleLoad
 
             # Append addr to the entry for each filename.
             for file in filenames do
-                if assigned(info[file]) then
-                    info[file] := (info[file], addr);
-                else
+                if info[file] = 0 then
                     info[file] := addr;
+                else
+                    info[file] := (info[file], addr);
                 end if;
             end do;
 
