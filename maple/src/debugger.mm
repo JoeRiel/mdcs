@@ -535,7 +535,7 @@ global showstat, showstop;
             local expr,val;
             line := sscanf(original, "%s %s");
             expr := line[2];
-            val  := eval(parse(expr));
+            val  := traperror(eval(parse(expr)));
             debugger_printf('MDC_RESPONSE', "%q\n", val);
             return 'NULL';
             #}}}

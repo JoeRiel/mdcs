@@ -71,7 +71,7 @@
 
 ;;}}}
   
-;;{{{ First Attempt
+;;{{{ Display Source
 
 (defun mds-li-display-source (buf file beg)
   "Display, in buffer BUF, the source-file FILE, with point at BEG.
