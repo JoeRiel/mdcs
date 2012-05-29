@@ -45,7 +45,6 @@
 (require 'mds-client)
 ;;(require 'mds-cp)
 ;;(require 'mds-edit)
-(require 'mds-li)
 (require 'mds-login)
 ;;(require 'mds-menu)
 (require 'mds-out)
@@ -54,6 +53,7 @@
 (require 'mds-ss)
 (require 'mds-thing)
 (require 'mds-wm)
+(require 'mds-li)
 
 ;;}}}
 
