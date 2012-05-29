@@ -35,12 +35,14 @@
 (eval-when-compile
   (require 'mds-client)
   (require 'mds-ss)
+  (defvar mds-ss-mode-map)
   (defvar mds-truncate-lines))
 
 (declare-function mds-ss-eval-proc-statement "mds-ss")
 (declare-function mds-ss-get-addr "mds-ss")
 (declare-function mds-ss-get-state "mds-ss")
 (declare-function mds-ss-mode "mds-ss")
+(declare-function mds-ss-request "mds-ss")
 
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
@@ -87,6 +89,7 @@ Move the current statement marker.  The buffer has major mode
 ;;}}}
 
 ;;{{{ old stuff
+
 (defun mds-li-open-source ()
   "Open the source-file in the other window.
 The source-file and offset are stored as a cons cell
@@ -124,6 +127,75 @@ data is available."
 
 ;;}}}
 
+;;{{{ Functions
+
+(defun mds-li-addr ()
+  "Return the address of the current procedure."
+  (with-current-buffer (mds-client-live-buf mds-client)
+    (mds-ss-get-addr)))
+
+(defun mds-li-get-statement (pos)
+  "Get the statement number, as string, associated with POS."
+  (string-to-number (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
+					    mds-li-file-name
+					    (mds-li-addr)
+					    (line-number-at-pos (point))
+					    (1- (point))))))
+
+;;}}}
+
+;;{{{ Commands
+
+(defun mds-li-breakpoint ()
+  "Set breakpoint at point."
+  (interactive)
+  (let ((state (mds-li-get-statement (point))))
+    (with-current-buffer (mds-client-live-buf mds-client)
+      (mds-goto-state (number-to-string state))
+      (mds-breakpoint))))
+
+(defun mds-li-unstopat ()
+  "Clear breakpoint at point."
+  (interactive)
+  (let ((state (mds-li-get-statement (point))))
+    (with-current-buffer (mds-client-live-buf mds-client)
+      (mds-goto-state (number-to-string state))
+      (mds-unstopat))))
+
+(defun mds-li-here (cnt)
+  (interactive "p")
+  (with-current-buffer (mds-client-live-buf mds-client)
+    (mds-here 1)))
+  
+
+
+;;}}}
+
+
+
+;;{{{ mode-map
+
+;; Copy mds-ss-mode-map, but rebind some keys
+
+(defvar mds-li-mode-map
+  (let ((map mds-ss-mode-map)
+	(bindings
+	 '(
+	   ("b" . mds-li-breakpoint)
+	   ("B" . mds-breakpoint-cond)
+	   ("g" . mds-goto-procname)
+	   ("G" . mds-goback-save)
+	   ("h" . mds-li-here)
+	   ("I" . mds-stopwhenif)
+	   ("l" . mds-goto-current-state)
+	   ("L" . mds-ss-refresh)
+	   ("q" . mds-quit)
+	   ("u" . mds-li-unstopat)
+	   )))
+    (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
+	  bindings)
+    map))
+;;}}}
 ;;{{{ mds-li-mode
 
 (define-derived-mode mds-li-mode mds-ss-mode "source-mode"
