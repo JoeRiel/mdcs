@@ -182,7 +182,7 @@ data is available."
 ;; Copy mds-ss-mode-map, but rebind some keys
 
 (defvar mds-li-mode-map
-  (let ((map mds-ss-mode-map)
+  (let ((map (copy-keymap mds-ss-mode-map))
 	(bindings
 	 '(
 	   ("b" . mds-li-breakpoint)
