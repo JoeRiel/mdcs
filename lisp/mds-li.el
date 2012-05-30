@@ -32,6 +32,7 @@
 
 ;;; Code:
 
+;;{{{ Requirements
 (eval-when-compile
   (require 'mds-client)
   (require 'mds-ss)
@@ -44,6 +45,9 @@
 (declare-function mds-ss-mode "mds-ss")
 (declare-function mds-ss-request "mds-ss")
 
+;;}}}
+;;{{{ Variables
+
 ;; FIXME; this cannot be global!
 (defvar mds-display-source-flag nil)
 
@@ -55,6 +59,8 @@
 	mds-li-file-name))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
+
+;;}}}
 
 ;;{{{ Create Buffer
 
@@ -170,8 +176,6 @@ data is available."
 
 
 ;;}}}
-
-
 
 ;;{{{ mode-map
 
