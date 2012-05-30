@@ -46,6 +46,7 @@
 (declare-function mds-ss-request "mds-ss")
 
 ;;}}}
+
 ;;{{{ Variables
 
 ;; FIXME; this cannot be global!
@@ -85,6 +86,7 @@ Move the current statement marker.  The buffer has major mode
 `mds-li-mode'."
   (pop-to-buffer buf)
   (unless (string= file mds-li-file-name)
+    ;; insert the new file
     (let (buffer-read-only)
       (delete-region (point-min) (point-max))
       (insert-file-contents file)
