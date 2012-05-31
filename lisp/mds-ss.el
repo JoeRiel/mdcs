@@ -82,6 +82,7 @@ however, such an abomination should break something.")
 ;;{{{ variables
 
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
+(defvar mds-ss-cursor         mds-cursor-ready "cursor")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
 (defvar mds-ss-live-flag      nil "Non-nil means this buffer is live.")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
@@ -92,6 +93,7 @@ however, such an abomination should break something.")
 (mapc #'make-variable-buffer-local
       '(mds-client
 	mds-ss-arrow-position
+	mds-ss-cursor
 	mds-ss-show-args-flag
 	mds-ss-live-flag
 	mds-ss-procname
