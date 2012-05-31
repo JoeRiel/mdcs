@@ -230,10 +230,14 @@ global showstat, showstop;
                 WriteTagf('DBG_SAME_STATE');
             else
                 last_state := state;
-                debugger_printf('DBG_STATE', "%s", state);
                 local src_pos := LineInfo:-Get(addr, statNumber);
-                if src_pos <> NULL then
-                    debugger_printf('SRC_POS', "%s %d %d %d", src_pos);
+                if src_pos = NULL then
+                    debugger_printf('DBG_STATE', "%s", state);
+                else
+                    debugger_printf('LINE_INFO', "%s %d %d %d:%s"
+                                    , src_pos
+                                    , state
+                                   );
                 end if;
             end if;
         end if;

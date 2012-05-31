@@ -66,17 +66,42 @@ no white-space is allowed between elements.")
   "Regexp that matches an address tag and procedure name.
 The address, with delimiters, is stored in group 1, just the
 address is in group 2, and the procedure name is in group 3.")
-					
 
-(defconst mds--debugger-status-re
-  (concat "^" mds--addr-tag-re "\n" 
+(defconst mds--dbg-state-re
+  (concat mds--addr-tag-re "\n" 
 	  "\\([^\n]+\\):\n"
 	  "\\s-*\\([1-9][0-9]*\\)[ *?]"
 	  "\\(.*\\)")
-  "Regexp that matches the status output of the debugger.
-The first group matches the address, the second matches the
-procedure name, the third group matches the state number,
-the fourth group matches the statement.")
+  "Non-anchored regexp that matches the status output of the debugger.
+It has four groups:
+(1) address of current procedure;
+(2) name of current procedure;
+(3) state number;
+(4) statement.")
+  
+(defconst mds--debugger-status-re
+  (concat "^" mds--dbg-state-re)
+  "Anchored regexp that matches the status output of the debugger.
+It has four groups:
+(1) address of current procedure;
+(2) name of current procedure;
+(3) state number;
+(4) statement.")
+
+(defconst mds--line-info-re
+  (concat "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\):"
+	  mds--dbg-state-re)
+  "Anchored regexp that matches the line-info output/debug status
+output of the debugger.  It has seven groups:
+(1) filename of source;
+(2) line number in source;
+(3) character offset to beginning of statement;
+(4) character offset to end of statemeng;
+(5) address of current procedure;
+(6) name of current procedure;
+(7) state number;
+(8) statement.")
+	  
 
 (defconst mds-procname-assignment-re "^\\([^ \t\n]+\\) := *"
   "Match an assignment to a procedure.
