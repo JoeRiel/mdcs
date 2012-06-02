@@ -1,10 +1,11 @@
+;;; mds.el --- Maple Debugger Server
 ;;; mds.el
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
-;; Keywords:   maple, debugger 
+;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
@@ -63,37 +64,36 @@
   "Maple Debugger Server."
   :group 'tools)
 
-(defcustom mds-port 10000  "Port used by mds server"
+(defcustom mds-port 10000  "Port used by mds server."
   :type 'integer
   :group 'mds)
 
 (defcustom mds-get-focus-function
     (and (= 0 (shell-command "which wmctrl"))
 	 #'mds-wm-get-focus-wmctrl)
-  "Function called to give emacs the focus when starting
-debugging.  The default works on a linux system with wmctrl
-installed. Automatically assigned to nil if wmctrl is not available."  
+  "Function called to give Emacs the focus when starting debugging.
+The default works on a linux system with wmctrl installed.
+Automatically assigned to nil if wmctrl is not available."
   :type 'function
   :group 'mds)
 
 (defcustom mds-show-args-flag t
-  "If non-nil, display args on entry to procedure."
+  "Non-nil means display args on entry to procedure."
   :type 'boolean
   :group 'mds)
 
 (defcustom mds-track-input-flag t
-  "If non-nil, track (echo) the input line to the output buffer
-after each command."
+  "Non-nil means track (echo) the input line to the output buffer after each command."
   :type 'boolean
   :group 'mds)
 
 (defcustom mds-stop-trace-at-error-flag t
-  "If non-nil, stop tracing when an error occurs."
+  "Non-nil means stop tracing when an error occurs."
   :type 'boolean
   :group 'mds)
 
 (defcustom mds-log-messages-flag nil
-  "*When non-nil, write all messages to `mds-log-buffer'."
+  "Non-nil means write all messages to `mds-log-buffer'."
   :type 'boolean
   :group 'mds)
 
@@ -110,14 +110,14 @@ after each command."
 ;;{{{ Variables
 
 (defvar mds-log-buffer nil
-  "Buffer used to record log entries. 
+  "Buffer used to record log entries.
 Name given by `mds-log-buffer-name'.")
 
 (defvar mds-proc nil "Process for the Maple debugger server.")
 
 (defvar mds-keep-dead-clients nil
-  "*When non-nil, keep dead clients.  Useful for inspecting the
-  output buffer of a traced procedure that crashes.")
+  "*Non-nil means keep dead clients.
+Useful for inspecting the output buffer of a traced procedure that crashes.")
 
 ;;}}}
 
@@ -138,12 +138,12 @@ If server is already running, stop then restart it."
       ;; not sure this is a good idea
       (setq mds-frame (car (nth 1 (current-frame-configuration)))))
   (setq mds-clients '()
-	mds-proc (make-network-process 
-		  :name "mds" 
+	mds-proc (make-network-process
+		  :name "mds"
 		  :buffer mds-log-buffer
-		  :family 'ipv4 
+		  :family 'ipv4
 		  :service mds-port
-		  :sentinel 'mds-sentinel 
+		  :sentinel 'mds-sentinel
 		  :filter 'mds-filter
 		  ;; :log 'mds-log
 		  :server 't))
@@ -200,15 +200,15 @@ Do not touch `mds-log-buffer'."
 			   "accepted " "")))
       (mds-wm-group-update mds-clients))
      ((string= msg "deleted\n"))
-     (t (error "unexpected sentinel message: %s" msg)))))
+     (t (error "Unexpected sentinel message: %s" msg)))))
 
 
 (defun mds-start-debugging (proc msg)
-  "Called when debugging first starts.  PROC is input process
-from the client; MSG is the initial output of the debug Maple
-kernel.  Set the status of the client to 'accepted, pass the
-message along for handling by the filter, display the client
-windows, and get the focus."
+  "Called when debugging first starts.
+PROC is input process from the client; MSG is the initial output
+of the debug Maple kernel.  Set the status of the client to
+'accepted, pass the message along for handling by the filter,
+display the client windows, and get the focus."
   (ding)
   (let ((client (cdr (assq proc mds-clients))))
     (mds-client-set-status client 'accepted)
@@ -260,9 +260,9 @@ windows, and get the focus."
 (defun mds-queue-create (proc)
   "Create and return a queue associated with process PROC.
 A temporary (hidden) buffer is created and used, not surprisngly,
-to buffer the incoming data. The returned queue has the
+to buffer the incoming data.  The returned queue has the
 form (PROC . buf).  PROC identifies the process; the queue
-functions do not directly communicate with the process. Data is
+functions do not directly communicate with the process.  Data is
 sent to the queue via `mds-queue-filter'."
   (let ((buf (get-buffer-create (concat " mds-queue-temp-"
 					(process-name proc)))))
@@ -301,7 +301,7 @@ If found, pass it to the function in the queue."
 
 ;;{{{ mds-extract-tag
 
-(defun mds-extract-tag (msg) 
+(defun mds-extract-tag (msg)
   "Return (tag . msg), where the tags have been been removed from MSG.
 The format of MSG must be \"<tag>msg</tag>\", however, the closing tag
 is not checked and will likely be removed from the protocol."
@@ -310,7 +310,7 @@ is not checked and will likely be removed from the protocol."
 	     (len (match-end 0)))
 	(cons tag (substring msg len (- (1+ len)))))
     ;; FIXME: this error gets caught and not displayed
-    (error "no tag in message: '%s...'" (substring msg 0 (min 10 (length msg))))))
+    (error "No tag in message: '%s...'" (substring msg 0 (min 10 (length msg))))))
 
 ;;}}}
 
@@ -334,7 +334,7 @@ use them to route the message."
     (cond
      ((string= tag "DBG_PROMPT")
       ;; Extract the state-number and pass it along
-      (mds-out-display out-buf 
+      (mds-out-display out-buf
 			  (buffer-local-value 'mds-ss-state live-buf)
 			  'prompt)
       (mds-client-set-allow-input client t)
@@ -342,11 +342,11 @@ use them to route the message."
 	  (mds-li-display-source)))
      
      ((string= tag "DBG_STATE")
-     ;; msg is the state output from debugger.  
+     ;; msg is the state output from debugger.
      ;; Extract the procname and state number
      ;; and update the showstat buffer
       (if (not (string-match mds--debugger-status-re msg))
-	  (error "cannot parse current state")
+	  (error "Cannot parse current state")
 	(let ((addr      (match-string 1 msg))
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
@@ -361,7 +361,7 @@ use them to route the message."
 
      ((string= tag "LINE_INFO")
       (unless (string-match mds--line-info-re msg)
-	(error "problem with format in LINE_INFO tag"))
+	(error "Problem with format in LINE_INFO tag"))
       (let ((file (match-string 1 msg))
 	    ;;(line (string-to-number (match-string 2 msg)))
 	    (beg  (1+ (string-to-number (match-string 3 msg))))
@@ -504,7 +504,7 @@ When true, tracing stops if an error is raised."
   (interactive)
   (message "mds version: %s" mds-version))
 
-;;}}}    
+;;}}}
 
 (provide 'mds)
 
