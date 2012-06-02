@@ -21,8 +21,10 @@ TAGS
 *.zip
 *.tags
 
+
 /lisp/*.elc
-/lisp/tst
+/lisp/sandbox/
+/lisp/tst/
 /ChangeLog
 _preview_.mm
 
