@@ -1,7 +1,14 @@
+;;; mds-login.el --- Login methods
 ;; Attempt at providing some login stuff.
 ;; We'll see if it sticks...
 
+
+;;; Commentary:
+;; 
+
 (require 'sha1)
+
+;;; Code:
 
 (eval-when-compile
   (require 'mds-client))
@@ -14,49 +21,59 @@
 The first group matches the label, the second the major version of Maple,
 the third the OS, the fourth the process id of the Maple job.")
 
-(defvar mds-logins nil)
+(defvar mds-logins nil "Assoc-list of logins, indexed by proc.")
 
 (defun mds-login-add (proc)
+  "Add an entry to `mds-logins' for PROC."
   (setq mds-logins
 	(cons (list proc 'get-userid "anonymous") mds-logins)))
 
+(defun mds-login-reset ()
+  "Clear the list of logins."
+  (setq mds-logins nil))
+
 (defun mds-login-delete (proc)
+  "Delete the PROC entry in `mds-logins'."
   (setq mds-logins (delq proc mds-logins)))
 
 (defun mds-login-get-status (proc)
+  "Return the status of the PROC login."
   (let ((entry (assq proc mds-logins)))
     (and entry (cadr entry))))
 
 (defun mds-login-set-status (proc status)
+  "Assign the status of the PROC login to STATUS."
   (let ((entry (assq proc mds-logins)))
     (if entry
 	(setcar (cdr entry) status))))
 
 (defun mds-login-get-userid (proc)
+  "Return the userid of the PROC login."
   (let ((entry (assq proc mds-logins)))
     (and entry (cddr entry))))
 
 (defun mds-login-set-userid (proc userid)
+  "Assign the userid of the PROC login to USERID."
   (let ((entry (assq proc mds-logins)))
     (if entry
 	(setcdr (cdr entry) userid))))
 
 (defun mds-login-query-userid (proc)
+  "Query Maple (PROC) for the userid."
   (process-send-string proc "userid: "))
 
 (defun mds-login-greet (proc msg)
+  "Send a greeting to Maple (PROC).  MSG is supposed to be the user name."
   (process-send-string proc (format "Welcome %s" msg)))
 
 (defun mds-login (proc msg)
-  "Handle login message MSG from process PROC."
+  "Process login of PROC.  MSG is its latest response."
   (let ((status (mds-login-get-status proc)))
     (cond
-
      ((null status)
       ;; Create entry
       (mds-login-add proc)
       (mds-login-query-userid proc))
-     
      ((eq status 'get-userid)
       ;; For now, finish login process
       (if (not (string-match mds-login-id-re msg))
@@ -74,29 +91,6 @@ the third the OS, the fourth the process id of the Maple job.")
 	    (mds-login-greet proc label)))
 	(mds-login-delete proc))))))
 
-
-(defvar mds-login-passkey-alist nil
-  "Alist with each entry (userid . passkey).
-Both userid and passkey are strings.  Passkey
-is the sha1 transformation of the actual password.")
-
-(defun mds-login-get-passkey (userid)
-  (let ((passkey (assoc userid mds-login-passkey-alist)))
-    (if passkey (cdr passkey)
-      (error "No passkey for user %s" userid))))
-  
-
-(defun mds-login-generate-challenge (userid)
-  "Generate a challenge, which consists of a
-cons-cell, (random-string . encrypted-random-string).  Each
-string is 40 characters long."
-  (let ((rand (sha1 (format "%d" (random t)))))
-    (cons rand (sha1 (concat rand (mds-login-get-passkey userid))))))
-
-;; (defun mds-login-verify-response (userid challenge response)
-;;   "Verify the RESPONSE from USERID to a CHALLENGE.  Return non-nil
-;; if the challeng is correct, nil otherwise."
-;;   (let ((passkey (mds-login-get-passkey userid)))
-;;     (string= response (sha1 (concat (mds-login-get-passkey userid) (car rand))))))
-
 (provide 'mds-login)
+
+;;; mds-login.el ends here
