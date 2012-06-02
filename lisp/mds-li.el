@@ -84,7 +84,7 @@
   "Display, in buffer BUF, the source-file FILE, with point at BEG.
 Move the current statement marker.  The buffer has major mode
 `mds-li-mode'."
-  (set-buffer buf)
+  (switch-to-buffer buf)
   (unless (string= file mds-li-file-name)
     ;; insert the new file
     (let (buffer-read-only)
