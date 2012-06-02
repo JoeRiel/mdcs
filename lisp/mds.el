@@ -411,9 +411,6 @@ use them to route the message."
      ((string= tag "MDC_RESPONSE")
       (mds-client-assign-result client msg))
 
-     ((string= tag "LINE_INFO")
-      (mds-li-handle msg))
-
      ((string= tag "DBG_ERROR")
       (mds-out-display out-buf msg 'maple-err))
 

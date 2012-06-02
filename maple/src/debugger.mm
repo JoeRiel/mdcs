@@ -22,7 +22,7 @@
 ##- DBG_STOP : never sent
 ##- DBG_WARN : used to indicate improper action (but also when skip is satisfied)
 ##- DBG_WHERE : long stack output
-##- LINE_INFO : sending line info (filename, lineno, beg, end)
+##- LINE_INFO : sending line info (filename lineno beg end:...)
 ##- MONITOR : message is result of a monitored expression
 ##- MDC_PRINTF : pretty-printed output
 ##- MPL_ERR : a Maple error occurred
@@ -541,14 +541,6 @@ global showstat, showstop;
             expr := line[2];
             val  := traperror(eval(parse(expr)));
             debugger_printf('MDC_RESPONSE', "%q\n", val);
-            return 'NULL';
-            #}}}
-        elif cmd = "_lineinfo" then
-            #{{{ _lineinfo
-            line := sscanf(original, "%s %d %d");
-            addr := line[2];
-            state := line[3];
-            debugger_printf('LINE_INFO', "%Q\n", LineInfo:-Get(addr,state));
             return 'NULL';
             #}}}
         elif cmd = "statement" then

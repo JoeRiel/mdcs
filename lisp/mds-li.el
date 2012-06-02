@@ -50,7 +50,7 @@
 ;;{{{ Variables
 
 ;; FIXME; this cannot be global!
-(defvar mds-display-source-flag nil)
+(defvar mds-display-source-flag nil "Non-nil means display the source file, if available.")
 
 (defvar mds-li-arrow-position nil "Marker for current-line.")
 (defvar mds-li-file-name ""       "Name of the current source-file.")
@@ -93,45 +93,6 @@ Move the current statement marker.  The buffer has major mode
       (setq mds-li-file-name file)))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position)))
-
-;;}}}
-
-;;{{{ old stuff
-
-(defun mds-li-open-source ()
-  "Open the source-file in the other window.
-The source-file and offset are stored as a cons cell
-in `mds-display-source-flag'; after extracting the contents,
-clear the variable.  Currently this variable is global; it should
-be buffer local though it might not really matter."
-  (let ((filename (car mds-display-source-flag))
-	(offset   (cdr mds-display-source-flag)))
-    (setq mds-display-source-flag nil)
-    (find-file-other-window filename)
-    (goto-char (1+ offset))))
-
-(defun mds-li-goto-source ()
-  "Goto the location in the source file corresponding to the
-current statement in the showstat buffer.  If the procedure does
-not have *lineinfo* data, print an appropriate message."
-  (interactive)
-  (mds-ss-eval-proc-statement (format "_lineinfo %s %s"
-				      (mds-ss-get-addr)
-				      (mds-ss-get-state))))
-
-(defun mds-li-handle (msg)
-  "Handle the Maple output returned as a result of calling `mds-li-goto-source'.
-If MSG matches the expected format, assign the variable
-`mds-display-source-flag' a cons-cell consisting of the filename
-and offset; otherwise print a message indicating that no lineinfo
-data is available."
-  (if (string-match "^\\([^ ]+\\), \\([0-9]+\\), \\([0-9]+\\), \\([0-9]+\\)$" msg)
-      (let ((filename (match-string-no-properties 1 msg))
-	    (offset   (string-to-number (match-string-no-properties 3 msg))))
-	(setq mds-display-source-flag (cons filename offset)))
-    (setq mds-display-source-flag nil)
-    (ding)
-    (message "no lineinfo data available for current procedure")))
 
 ;;}}}
 
