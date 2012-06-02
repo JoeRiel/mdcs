@@ -166,13 +166,21 @@
    * Naturally, one will then want history and lots of other cool stuff.
    * Will this actually be used?  Not sure.
 
-** TODO Provide a control panel
+** VERIFY Provide a control panel
    1. Originally envisioned for those not comfortable with Emacs keybindings,
       it would emulate the GUI debugger but would allow keystrokes.
    2. It could also be useful for concurrent control of grouped clients.
    3. A floating frame might be the best approach; it doesn't require
       futzing with windows and the user can move/delete it as required.
       
+
+** LineInfo:
+
+*** TODO Toggle between li and ss buffers
+*** TODO Provide command to go to source
+*** TODO Decorate the li buffer
+
+
 * Long Term
  
 ** DONE Handle exports of unnamed modules.
