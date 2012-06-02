@@ -98,7 +98,7 @@ window."
 ;;{{{ display single client
 
 (defun mds-wm-display-client (client)
-  "Display the live-showstat buffer and the output buffer of CLIENT.
+  "Display the code buffer and the output buffer of CLIENT.
 The split direction and initial size of the showstat window are
 determined by `mds-wm-side-by-side' and `mds-wm-ss-size'.  Return
 the client."
@@ -110,12 +110,13 @@ the client."
   (if mouse-autoselect-window
       ;; without this, there are weird problems with window splits or selecting live-buf
       (sleep-for 0.1))
-  (let ((buf1 (mds-client-live-buf client))
-	(buf2 (mds-client-out-buf client))
-	(buf3 (mds-client-li-buf client))
-	(win1))
-    
-    (delete-other-windows (setq win1 (select-window (display-buffer buf1))))
+
+  ;; Split the frame into a code window and an output window
+  (let ((code-buf (mds-client-live-buf client))
+	(out-buf  (mds-client-out-buf client)))
+    (if (buffer-local-value 'mds-display-source-flag code-buf)
+	(setq code-buf (mds-client-li-buf client)))
+    (delete-other-windows (select-window (display-buffer code-buf)))
     (set-window-buffer (split-window nil
 				     (and mds-wm-ss-fractional-size
 					  (round (* mds-wm-ss-fractional-size
@@ -123,8 +124,7 @@ the client."
 							(window-width)
 						      (window-height)))))
 				     mds-wm-side-by-side)
-		       buf2)
-    (set-window-buffer (split-window win1) buf3)
+		       out-buf)
     client))
 
 (defun mds-wm-display-dead (client)

@@ -352,7 +352,10 @@ use them to route the message."
 	  (mds-ss-update live-buf addr procname state statement))))
 
      ((string= tag "DBG_SAME_STATE")
-	(mds-goto-current-state))
+	(mds-goto-current-state)
+	(when (buffer-local-value 'mds-display-source-flag live-buf)
+	  (set-buffer live-buf)
+	  (switch-to-buffer (mds-client-li-buf client))))
 
      ((string= tag "LINE_INFO")
       (unless (string-match mds--line-info-re msg)
@@ -366,6 +369,8 @@ use them to route the message."
 	    (statement (match-string 8 msg))
 	    (li-buf (mds-client-li-buf client)))
 	(mds-ss-update live-buf addr procname state statement)
+	(set-buffer live-buf)
+	(setq mds-display-source-flag t)
 	(mds-li-display-source li-buf file beg)))
 
      ((string= tag "DBG_SHOW")
