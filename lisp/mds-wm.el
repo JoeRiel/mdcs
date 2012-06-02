@@ -169,11 +169,11 @@ with n being the number of clients."
 		clients (cdr clients))))))
 
 (defun mds-wm-group-clients (clients)
-  "Group clients with a common base name."
+  "Group CLIENTS, an assoc-list of clients, with a common base name."
   (let ((alist '())
 	id base client)
     (while clients
-      (setq client (car clients)
+      (setq client (cdar clients)
 	    id (car (mds-client-id client)))
       (when (string-match "\\([^-]+\\)\\((-[0-9]+\\)?$" id)
 	(setq base (match-string 1 id))

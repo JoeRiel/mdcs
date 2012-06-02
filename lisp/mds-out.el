@@ -23,14 +23,12 @@
   (defvar mds-ss-show-args-flag)
   (defvar mds-ss-state nil)
   (defvar mds-track-input-flag t)
-  (defvar mds-ss-trace)
   (defvar mds-stop-trace-at-error-flag))
 
 (declare-function mds-client-live-buf "mds")
 (declare-function mds-client-out-buf "mds")
 (declare-function mds-client-send "mds")
 (declare-function mds-goto-state "mds-ss")
-(declare-function mds-ss-allow-input "mds-ss")
 (declare-function mds-ss-eval-expr "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-wm-display-dead "mds-wm")
@@ -259,14 +257,14 @@ Optional TAG identifies the message type."
 	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
 	      (let* ((live-buf (mds-client-live-buf mds-client))
-		     (trace-mode (buffer-local-value 'mds-ss-trace live-buf))
+		     (trace-mode (mds-client-get-trace mds-client))
 		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
 		(if show-args
 		    (with-current-buffer live-buf
 		      (if trace-mode
 			  (progn
 			    (setq mds-ss-show-args-flag nil)
-			    (mds-ss-allow-input live-buf t)
+			    (mds-client-set-allow-input mds-client t)
 			    (mds-ss-eval-expr "args"))
 			(if (eq show-args t)
 			    (setq mds-ss-show-args-flag 'now)
@@ -313,9 +311,8 @@ Optional TAG identifies the message type."
 	      ;; maple error
 	      (mds-insert-and-font-lock msg 'mds-maple-error)
 	      (if (and mds-stop-trace-at-error-flag
-		       (buffer-local-value 'mds-ss-trace (mds-client-live-buf mds-client)))
-		  (with-current-buffer (mds-client-live-buf mds-client)
-		    (setq mds-ss-trace nil))))
+		       (mds-client-get-trace mds-client))
+		  (mds-client-set-trace mds-client nil)))
 	     
 	     ((eq tag 'parse-err) 
 	      ;; maple debugger parse error

@@ -4,7 +4,7 @@
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
-;; Keywords:   maple, debugger 
+;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
@@ -32,10 +32,9 @@
 (declare-function mds-writeto-log "mds")
 (declare-function mds-kill-buffer "mds")
 
-
 (defvar mds-client nil "Buffer-local client structure.")
 
-(defvar mds-clients '() 
+(defvar mds-clients '()
   "Assoc-list containing info of accepted clients, indexed by the associated process.
 See `mds-client-create' for the form of each entry.")
 
@@ -43,27 +42,41 @@ See `mds-client-create' for the form of each entry.")
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
 
+(defsubst mds-client-proc     (client) "Return CLIENT's procedure."     (aref client 0))
+(defsubst mds-client-status   (client) "Return CLIENT's status."        (aref client 1))
+(defsubst mds-client-queue    (client) "Return CLIENT's queue."         (aref client 2))
+(defsubst mds-client-id       (client) "Return CLIENT's id."            (aref client 3))
+(defsubst mds-client-live-buf (client) "Return CLIENT's live buffer."   (aref client 4))
+(defsubst mds-client-dead-buf (client) "Return CLIENT's dead buffer."   (aref client 5))
+(defsubst mds-client-out-buf  (client) "Return CLIENT's output buffer." (aref client 6))
 
-(defsubst mds-client-proc     (client) (car client))
-(defsubst mds-client-status   (client) (nth 1 client))
-(defsubst mds-client-queue    (client) (nth 2 client))
-(defsubst mds-client-id       (client) (nth 3 client))
-(defsubst mds-client-live-buf (client) (nth 4 client))
-(defsubst mds-client-dead-buf (client) (nth 5 client))
-(defsubst mds-client-out-buf  (client) (nth 6 client))
+(defsubst mds-client-get-addr (client)      "Get CLIENT's procedure address."       (aref client 7))
+(defsubst mds-client-set-addr (client addr) "Set CLIENT's procedure address, ADDR." (aset client 7 addr))
+
+(defsubst mds-client-get-allow-input (client)      "Get CLIENT's allow-input flag." (aref client 8))
+(defsubst mds-client-set-allow-input (client flag) "Set CLIENT's allow-input FLAG." (aset client 8 flag))
+
+(defsubst mds-client-get-last-cmd (client)     "Get CLIENT's last command." (aref client 9))
+(defsubst mds-client-set-last-cmd (client cmd) "Set CLIENT's last CMD."     (aset client 9 cmd))
+
+(defsubst mds-client-get-trace (client)       "Get CLIENT's trace state." (aref client 10))
+(defsubst mds-client-set-trace (client state) "Set CLIENT's trace STATE." (aset client 10 state))
 
 (defun mds-client-create (proc id)
   "Create a client that is associated with process PROC and has identity ID.
-The returned client structure is a list (PROC status queue ID
-live-buf dead-buf out-buf), where status is initialized to 'new'."
-  (let ((client (list proc)))
-    (setcdr client (list
-		    'login
-		    (mds-queue-create proc)
-		    id
-		    (mds-ss-create-buffer client 'live)
-		    (mds-ss-create-buffer client)
-		    (mds-out-create-buffer client)))
+The returned client structure is a vector [PROC status queue ID
+live-buf dead-buf out-buf addr], where status is initialized to
+'new'."
+  (let ((client (make-vector 11 nil)))
+    (aset client 0 proc)
+    (aset client 1 'login)
+    (aset client 2 (mds-queue-create proc))
+    (aset client 3 id)
+    (aset client 4 (mds-ss-create-buffer client 'live))
+    (aset client 5 (mds-ss-create-buffer client))
+    (aset client 6 (mds-out-create-buffer client))
+    (aset client 7 "") ; addr
+    (aset client 8 t)  ; allow-input
     client))
   
 (defun mds-client-destroy (client)
@@ -75,29 +88,31 @@ live-buf dead-buf out-buf), where status is initialized to 'new'."
 
 (defun mds-client-set-status (client status)
   "Set the status of CLIENT to STATUS, which is a symbol."
-  (setcar (cdr client) status))
+  (aset client 1 status))
 
 (defun mds-client-set-id (client id)
   "Set the identifier of CLIENT to ID.
 Currently ID consists of a four element list of strings,
 \(LABEL VERSION OS MAPLE-PID)."
-  (setcar (nthcdr 3 client) id))
-
+  (aset client 3 id))
 
 (defun mds-client-delete (client)
   "Delete CLIENT from `mds-clients'.  Stop the associated process,
 kill the buffers, and decrement `mds-clients-number'."
   (if client
-      (let ((proc (mds-client-proc client)))
-	(mds-writeto-log proc "removing client")
-	(mds-client-destroy client)
-	;; update `mds-clients' and `mds-clients-number'
-	(setq mds-clients (delq client mds-clients)
-	      mds-clients-number (1- mds-clients-number)))))
+      (let* ((proc (mds-client-proc client))
+	     (entry (assq proc mds-clients)))
+	(if (null entry)
+	    (error "Client is unknown.")
+	  (mds-writeto-log proc "removing client")
+	  (mds-client-destroy client)
+	  ;; update `mds-clients' and `mds-clients-number'
+	  (setq mds-clients (delq entry mds-clients)
+		mds-clients-number (1- mds-clients-number))))))
 
 (defun mds-client-add (client)
   "Add CLIENT to the front of the assoc list of clients, `mds-clients'."
-  (setq mds-clients (cons client mds-clients)
+  (setq mds-clients (cons (cons (mds-client-proc client) client) mds-clients)
 	mds-clients-number (1+ mds-clients-number)))
 
 (defun mds-client-send (client msg)
@@ -105,12 +120,10 @@ kill the buffers, and decrement `mds-clients-number'."
   (let ((proc (mds-client-proc client)))
     (process-send-string proc msg)))
 
-
-
 (defun mds-clients-kill ()
   "Kill all clients in `mds-clients'."
   (while mds-clients
-      (mds-client-delete (car mds-clients))))
+      (mds-client-delete (cdar mds-clients))))
 
 
 (defun mds-client-interrupt (client)

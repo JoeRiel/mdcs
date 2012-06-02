@@ -54,7 +54,7 @@
 
   ;; delete invisible address string
   (let ((ss-buf (current-buffer)) ; assume we are in a ss-buf
-	(ss-addr mds-ss-addr)
+	(ss-addr (mds-client-get-addr mds-client))
 	(client mds-client)
 	(point (point)))
     (set-buffer (get-buffer-create mds-ss-procname))
@@ -69,8 +69,8 @@
       ;; remove numbers and marks, change mode, indent
       (mds-patch-remove-numbers)
       (mds-patch-mode)
-      (setq mds-ss-addr ss-addr
-	    mds-client client)
+      (mds-client-set-addr client ss-addr)
+      (setq mds-client client)
       (maplev-indent-buffer)
       (toggle-truncate-lines 1))
     (switch-to-buffer-other-window (current-buffer))))
@@ -97,7 +97,7 @@
 		(point) (point-max))))
       (mds-client-send mds-client
 		   (format "statement mdc:-InstallPatch(%s,%s)\n"
-			   mds-ss-addr str))
+			   (mds-client-get-addr mds-client) str))
       (message "Installed patch"))))
 ;;}}}
 

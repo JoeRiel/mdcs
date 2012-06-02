@@ -109,9 +109,6 @@ Name given by `mds-log-buffer-name'.")
 
 (defvar mds-proc nil "Process for the Maple debugger server.")
 
-(defvar mds-ss-trace nil
-  "When non-nil, trace through the debugged code.")
-
 (defvar mds-log-messages nil
   "*When non-nil, write all messages to `mds-log-buffer'.")
 
@@ -146,7 +143,8 @@ If server is already running, stop then restart it."
 		  :sentinel 'mds-sentinel 
 		  :filter 'mds-filter
 		  ;; :log 'mds-log
-		  :server 't)))
+		  :server 't))
+  (mds-login-reset))
 (defun mds-stop ()
   "Kill all clients, stop the Emacs mds server.
 Do not touch `mds-log-buffer'."
@@ -168,7 +166,8 @@ Do not touch `mds-log-buffer'."
       ;; A client has attached.
       (let ((conn (match-string 1 msg)))
 	(mds-writeto-log proc (format "client has attached: %s" (substring msg 0 -2)))
-	(let ((status (mds-client-status (assq proc mds-clients))))
+	(let* ((client (cdr (assq proc mds-clients)))
+	       (status (and client (mds-client-status client))))
 	  (cond
 	   ((eq status 'accepted)
 	    ;; Accepted!
@@ -194,7 +193,7 @@ Do not touch `mds-log-buffer'."
       (mds-writeto-log proc
 	       (format "%sclient has unattached"
 		       (if (and (not mds-keep-dead-clients)
-				     (mds-client-delete (assq proc mds-clients)))
+				     (mds-client-delete (cdr (assq proc mds-clients))))
 			   "accepted " "")))
       (mds-wm-group-update mds-clients))
      ((string= msg "deleted\n"))
@@ -208,7 +207,7 @@ kernel.  Set the status of the client to 'accepted, pass the
 message along for handling by the filter, display the client
 windows, and get the focus."
   (ding)
-  (let ((client (assq proc mds-clients)))
+  (let ((client (cdr (assq proc mds-clients))))
     (mds-client-set-status client 'accepted)
     (mds-filter proc msg)
     ;; update groups
@@ -223,7 +222,8 @@ windows, and get the focus."
 
 (defun mds-filter (proc msg)
   "Dispatch message MSG.  If PROC is an accepted client, send the message to its queue."
-  (let ((status (mds-client-status (assq proc mds-clients))))
+  (let* ((client (cdr (assq proc mds-clients)))
+	 (status (and client (mds-client-status client))))
     (cond
      ((eq status 'accepted)
       (when mds-log-messages
@@ -231,7 +231,7 @@ windows, and get the focus."
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
       ;; route msg to queue
-      (mds-queue-filter (mds-client-queue (assq proc mds-clients)) msg))
+      (mds-queue-filter (mds-client-queue client) msg))
      ((eq status 'login)
       ;; initiate the login process.
       (ding)
@@ -291,7 +291,7 @@ If found, pass it to the function in the queue."
 	    (delete-region (point-min) (point))
 	    ;; send msg to correspond showstat filter
 	    (let ((proc (mds-queue-proc queue)))
-	      (with-current-buffer (mds-client-live-buf (assq proc mds-clients))
+	      (with-current-buffer (mds-client-live-buf (cdr (assq proc mds-clients)))
 		(mds-handle-stream proc msg)))))))))
 
 ;;}}}
@@ -318,7 +318,7 @@ is not checked and will likely be removed from the protocol."
 The end of message marker has been removed.  Strip the tags and
 use them to route the message."
 
-  (let* ((client (assq proc mds-clients))
+  (let* ((client (cdr (assq proc mds-clients)))
 	 (live-buf (mds-client-live-buf client))
 	 (dead-buf (mds-client-dead-buf client))
 	 (out-buf  (mds-client-out-buf client))
@@ -334,7 +334,7 @@ use them to route the message."
       (mds-out-display out-buf 
 			  (buffer-local-value 'mds-ss-state live-buf)
 			  'prompt)
-      (mds-ss-allow-input live-buf t))
+      (mds-client-set-allow-input client t))
      
      ((string= tag "DBG_STATE")
      ;; msg is the state output from debugger.  

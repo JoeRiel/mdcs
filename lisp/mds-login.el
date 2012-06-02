@@ -84,7 +84,7 @@ the third the OS, the fourth the process id of the Maple job.")
 	      (ver (match-string 2 msg))   ; maple version (16)
 	      (os (match-string 3 msg))    ; unix/window/etc
 	      (pid (match-string 4 msg))   ; maple pid
-	      (client (assq proc mds-clients)))
+	      (client (cdr (assq proc mds-clients))))
 	  (when client
 	    (mds-client-set-id client (list label ver os pid))
 	    (mds-client-set-status client 'start-debugging)
