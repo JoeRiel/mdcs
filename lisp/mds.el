@@ -92,6 +92,11 @@ after each command."
   :type 'boolean
   :group 'mds)
 
+(defcustom mds-log-messages-flag nil
+  "*When non-nil, write all messages to `mds-log-buffer'."
+  :type 'boolean
+  :group 'mds)
+
 ;;}}}
 
 ;;{{{ Constants
@@ -109,9 +114,6 @@ after each command."
 Name given by `mds-log-buffer-name'.")
 
 (defvar mds-proc nil "Process for the Maple debugger server.")
-
-(defvar mds-log-messages nil
-  "*When non-nil, write all messages to `mds-log-buffer'.")
 
 (defvar mds-keep-dead-clients nil
   "*When non-nil, keep dead clients.  Useful for inspecting the
@@ -227,7 +229,7 @@ windows, and get the focus."
 	 (status (and client (mds-client-status client))))
     (cond
      ((eq status 'accepted)
-      (when mds-log-messages
+      (when mds-log-messages-flag
 	(mds-writeto-log proc "{{{")
 	(mds-writeto-log proc msg)
 	(mds-writeto-log proc "}}}"))
