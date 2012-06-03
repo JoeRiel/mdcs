@@ -81,25 +81,22 @@ however, such an abomination should break something.")
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-ss-arrow-position nil "Marker for state arrow")
-(defvar mds-ss-show-args-flag nil "Show args when entering a procedure")
-(defvar mds-ss-live	      nil "Store current state of active procedure")
-(defvar mds-ss-procname       nil "Name of displayed showstat procedure")
+(defvar mds-ss-arrow-position nil "Marker for state arrow.")
+(defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
+(defvar mds-ss-live-flag      nil "Non-nil means this buffer is live.")
+(defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure")
 (defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
-(defvar mds-ss-watch-alist    nil  "Alist for storing watch variables.  The keys are procedure names, the values are additional alists.")
 
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(mds-client
 	mds-ss-arrow-position
 	mds-ss-show-args-flag
-	mds-ss-live
+	mds-ss-live-flag
 	mds-ss-procname
 	mds-ss-state
 	mds-ss-statement
-	mds-ss-watch-alist
-	mds-this-proc
 	))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-ss-arrow-position)
@@ -161,7 +158,7 @@ If ALIVE is non-nil, create a live buffer."
       (mds-ss-mode)
       (setq mds-client client
 	    mds-ss-arrow-position nil
-	    mds-ss-live alive
+	    mds-ss-live-flag alive
 	    mds-ss-procname ""
 	    mds-ss-state "1"
 	    buffer-read-only 't)
@@ -310,7 +307,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
       (mds-ss-set-mode-line mds-ss-procname (car (mds-client-id mds-client)))
 
       (cond
-       (mds-ss-live
+       (mds-ss-live-flag
 	;; Move the state arrow
 	;; FIXME: only do if necessary
 	(mds-ss-display-state mds-ss-state))
@@ -339,7 +336,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	(mds-ss-display-state mds-ss-state))))
     
     ;; Make buffer visible
-    (if mds-ss-live
+    (if mds-ss-live-flag
 	(display-buffer buf)
       (mds-wm-display-dead mds-client))))
 
@@ -577,7 +574,7 @@ exits."
   "If in the live showstat buffer, send the 'quit' command to the debugger.
 Otherwise delete the dead showstat window."
   (interactive)
-  (if mds-ss-live
+  (if mds-ss-live-flag
       (mds-ss-eval-proc-statement "quit")
     (delete-window (get-buffer-window (mds-client-dead-buf mds-client)))))
 
