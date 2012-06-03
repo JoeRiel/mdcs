@@ -46,32 +46,39 @@ See `mds-client-create' for the form of each entry.")
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
 
-(defsubst mds-client-proc     (client) "Return CLIENT's procedure."     (aref client 0))
-(defsubst mds-client-status   (client) "Return CLIENT's status."        (aref client 1))
-(defsubst mds-client-queue    (client) "Return CLIENT's queue."         (aref client 2))
-(defsubst mds-client-id       (client) "Return CLIENT's id."            (aref client 3))
-(defsubst mds-client-live-buf (client) "Return CLIENT's live buffer."   (aref client 4))
-(defsubst mds-client-dead-buf (client) "Return CLIENT's dead buffer."   (aref client 5))
-(defsubst mds-client-out-buf  (client) "Return CLIENT's output buffer." (aref client 6))
+(defsubst mds-client-proc     (client) "Return CLIENT's procedure."        (aref client 0))
+(defsubst mds-client-status   (client) "Return CLIENT's status."           (aref client 1))
+(defsubst mds-client-queue    (client) "Return CLIENT's queue."            (aref client 2))
+(defsubst mds-client-id       (client) "Return CLIENT's id."               (aref client 3))
+(defsubst mds-client-live-buf (client) "Return CLIENT's live buffer."      (aref client 4))
+(defsubst mds-client-dead-buf (client) "Return CLIENT's dead buffer."      (aref client 5))
+(defsubst mds-client-out-buf  (client) "Return CLIENT's output buffer."    (aref client 6))
+(defsubst mds-client-li-buf   (client) "Return CLIENT's line-info buffer." (aref client 7))
 
-(defsubst mds-client-get-addr (client)      "Get CLIENT's procedure address."       (aref client 7))
-(defsubst mds-client-set-addr (client addr) "Set CLIENT's procedure address, ADDR." (aset client 7 addr))
+(defsubst mds-client-get-addr (client)      "Get CLIENT's procedure address."       (aref client 8))
+(defsubst mds-client-set-addr (client addr) "Set CLIENT's procedure address, ADDR." (aset client 8 addr))
 
-(defsubst mds-client-get-allow-input (client)      "Get CLIENT's allow-input flag." (aref client 8))
-(defsubst mds-client-set-allow-input (client flag) "Set CLIENT's allow-input FLAG." (aset client 8 flag))
+(defsubst mds-client-get-allow-input (client)      "Get CLIENT's allow-input flag." (aref client 9))
+(defsubst mds-client-set-allow-input (client flag) "Set CLIENT's allow-input FLAG." (aset client 9 flag))
 
-(defsubst mds-client-get-last-cmd (client)     "Get CLIENT's last command." (aref client 9))
-(defsubst mds-client-set-last-cmd (client cmd) "Set CLIENT's last CMD."     (aset client 9 cmd))
+(defsubst mds-client-get-last-cmd (client)     "Get CLIENT's last command." (aref client 10))
+(defsubst mds-client-set-last-cmd (client cmd) "Set CLIENT's last CMD."     (aset client 10 cmd))
 
-(defsubst mds-client-get-trace (client)       "Get CLIENT's trace state." (aref client 10))
-(defsubst mds-client-set-trace (client state) "Set CLIENT's trace STATE." (aset client 10 state))
+(defsubst mds-client-get-trace (client)       "Get CLIENT's trace state." (aref client 11))
+(defsubst mds-client-set-trace (client state) "Set CLIENT's trace STATE." (aset client 11 state))
+
+(defsubst mds-client-get-display-source (client)      "Get CLIENT's display-source flag" (aref client 12))
+(defsubst mds-client-set-display-source (client flag) "Set CLIENT's display-source FLAG" (aset client 12 flag))
+
+(defsubst mds-client-get-code-window (client)        "Get CLIENT's code window" (aref client 13))
+(defsubst mds-client-set-code-window (client window) "Set CLIENT's code WINDOW" (aset client 13 window))
 
 (defun mds-client-create (proc id)
   "Create a client that is associated with process PROC and has identity ID.
 The returned client structure is a vector [PROC status queue ID
 live-buf dead-buf out-buf addr], where status is initialized to
 'new'."
-  (let ((client (make-vector 11 nil)))
+  (let ((client (make-vector 14 nil)))
     (aset client 0 proc)
     (aset client 1 'login)
     (aset client 2 (mds-queue-create proc))
@@ -79,8 +86,9 @@ live-buf dead-buf out-buf addr], where status is initialized to
     (aset client 4 (mds-ss-create-buffer client 'live))
     (aset client 5 (mds-ss-create-buffer client))
     (aset client 6 (mds-out-create-buffer client))
-    (aset client 7 "") ; addr
-    (aset client 8 t)  ; allow-input
+    (aset client 7 (mds-li-create-buffer client))
+    (aset client 8 "")  ; addr
+    (aset client 9 t)   ; allow-input
     client))
   
 (defun mds-client-destroy (client)
