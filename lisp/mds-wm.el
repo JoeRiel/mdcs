@@ -38,11 +38,6 @@
 (eval-when-compile
   (require 'mds-client))
 
-(declare-function mds-client-id "mds")
-(declare-function mds-client-live-buf "mds")
-(declare-function mds-client-dead-buf "mds")
-(declare-function mds-client-out-buf  "mds")
-
 ;;}}}
 ;;{{{ customizations
 
@@ -238,22 +233,9 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 
 
 (defvar mds-wm-group nil)
-;; (setq L '#1=(a b c . #1#))
-
-;; (defun mds-wm-circ (L)
-;;   (nconc L L))
-
-;; (setq L (mds-wm-circ '("a" "b" "c")))
-
-;; (let* ((x (car L))
-;;        (y (cadr L)))
-;;   (while (not (eq x y))
-;;     (insert y)
-;;     (setq L (cdr L)
-;; 	  y (cadr L))))
-
 
 ;;}}}
+
 
 (defun mds-wm-active-client ()
   "Return the active client."
