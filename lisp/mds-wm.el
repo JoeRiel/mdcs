@@ -109,9 +109,7 @@ the client."
   ;; Split the frame into a code window and an output window
   (let ((code-buf (mds-client-live-buf client))
 	(out-buf  (mds-client-out-buf client)))
-    (if (buffer-local-value 'mds-display-source-flag code-buf)
-	(setq code-buf (mds-client-li-buf client)))
-    (delete-other-windows (select-window (display-buffer code-buf)))
+    (delete-other-windows (mds-client-set-code-window client (select-window (display-buffer code-buf))))
     (set-window-buffer (split-window nil
 				     (and mds-wm-ss-fractional-size
 					  (round (* mds-wm-ss-fractional-size
@@ -120,6 +118,7 @@ the client."
 						      (window-height)))))
 				     mds-wm-side-by-side)
 		       out-buf)
+    (mds-wm-select-code-window client)
     client))
 
 (defun mds-wm-display-dead (client)
@@ -208,7 +207,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 		     (reverse (cons client (reverse (cdr mds-clients))))
 		     )))
 	;; display and return the client
-	(mds-wm-display-client (car mds-clients)))))
+	(mds-wm-display-client (cdar mds-clients)))))
 
     
 
@@ -300,6 +299,24 @@ Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
 
 ;;}}}
 
+(defun mds-wm-select-code-window (client)
+  "Select the code window of CLIENT."
+  (let ((code-win (mds-client-get-code-window client)))
+    (unless code-win
+      ;; create code window
+      (mds-wm-display-client client)
+      (setq code-win (mds-client-get-code-window client)))
+    ;; Display the selected code buffer in the code window.
+    ;; How expensive is this?  Here we use a conditional.
+    (let ((code-buf (if (mds-client-get-display-source client)
+			(mds-client-li-buf client)
+		      (mds-client-live-buf client))))
+      (unless (eq code-buf (window-buffer code-win))
+	(set-window-buffer code-win code-buf))
+      (set-buffer code-buf))))
+      
+
+;; (cancel-debug-on-entry 'mds-wm-select-code-window)
 (provide 'mds-wm)
 
 ;;; mds-wm.el ends here
