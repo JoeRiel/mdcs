@@ -43,7 +43,7 @@
 
 (require 'maplev)
 (require 'mds-client)
-(require 'mds-cp)
+;;(require 'mds-cp)
 ;;(require 'mds-edit)
 (require 'mds-login)
 ;;(require 'mds-menu)

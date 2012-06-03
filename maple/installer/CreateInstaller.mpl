@@ -139,12 +139,12 @@ uses FT = FileTools, ST = StringTools;
 
     #}}}
     #{{{ Install info files
-    
+
     printf("\nInstalling info files...\n");
     Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
     #}}}
     #{{{ Update dir node
-    
+
     if platform = "unix" then
         printf("\nUpdating info dir node...\n");
         try
@@ -205,7 +205,7 @@ global InstallScript;
                           , seq(`=`(sprintf("lisp/%s",file)$2)
                                 , file = [NULL
                                           , "mds-client.el"
-                                          , "mds-cp.el"
+                                          #, "mds-cp.el"
                                           , "mds-login.el"
                                           , "mds-out.el"
                                           , "mds-patch.el"

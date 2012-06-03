@@ -1,4 +1,4 @@
-;;; mds-cp.el
+;;; mds-cp.el --- Methods for a control panel
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -31,6 +31,8 @@
 
 
 ;;; Code
+
+;;; Code:
 
 (eval-when-compile
   (require 'mds-client)
@@ -200,6 +202,4 @@ to using the key-binding in the active client's live showstat buffer."
 
 (provide 'mds-cp)
 
-;; mds-cp.el ends here
-
-
+;;; mds-cp.el ends here
