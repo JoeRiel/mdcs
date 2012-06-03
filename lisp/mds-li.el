@@ -33,24 +33,17 @@
 ;;; Code:
 
 ;;{{{ Requirements
+
 (eval-when-compile
   (require 'mds-client)
   (require 'mds-ss)
   (defvar mds-ss-mode-map)
   (defvar mds-truncate-lines))
 
-(declare-function mds-ss-eval-proc-statement "mds-ss")
-(declare-function mds-ss-get-addr "mds-ss")
-(declare-function mds-ss-get-state "mds-ss")
-(declare-function mds-ss-mode "mds-ss")
-(declare-function mds-ss-request "mds-ss")
 
 ;;}}}
 
 ;;{{{ Variables
-
-;; FIXME; this cannot be global!
-(defvar mds-display-source-flag nil "Non-nil means display the source file, if available.")
 
 (defvar mds-li-arrow-position nil "Marker for current-line.")
 (defvar mds-li-file-name ""       "Name of the current source-file.")
@@ -63,28 +56,26 @@
 
 ;;}}}
 
-;;{{{ Create Buffer
+;;{{{ Create buffer
 
 (defun mds-li-create-buffer (client)
-  "Create and return an `mds-li-buffer' with client CLIENT."
+  "Create and return an `mds-li-buffer' with `mds-client' set to CLIENT."
   (let ((buf (generate-new-buffer "*mds-li*")))
     (with-current-buffer buf
       (mds-li-mode)
-      (setq mds-client client)
-      (if mds-truncate-lines
-	  (toggle-truncate-lines 1)))
+      (setq mds-client client))
     buf))
 
 
 ;;}}}
-  
-;;{{{ Display Source
 
-(defun mds-li-display-source (buf file beg)
-  "Display, in buffer BUF, the source-file FILE, with point at BEG.
+;;{{{ Update source buffer
+  
+(defun mds-li-update (buffer file beg)
+  "Update source BUFFER with source-file FILE; put point at BEG.
 Move the current statement marker.  The buffer has major mode
 `mds-li-mode'."
-  (switch-to-buffer buf)
+  (set-buffer buffer)
   (unless (string= file mds-li-file-name)
     ;; insert the new file
     (let (buffer-read-only)
@@ -98,16 +89,11 @@ Move the current statement marker.  The buffer has major mode
 
 ;;{{{ Functions
 
-(defun mds-li-addr ()
-  "Return the address of the current procedure."
-  (with-current-buffer (mds-client-live-buf mds-client)
-    (mds-ss-get-addr)))
-
 (defun mds-li-get-statement (pos)
   "Get the statement number, as string, associated with POS."
   (string-to-number (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
 					    mds-li-file-name
-					    (mds-li-addr)
+					    (mds-client-get-addr mds-client)
 					    (line-number-at-pos (point))
 					    (1- (point))))))
 
@@ -169,7 +155,7 @@ Move the current statement marker.  The buffer has major mode
   "Major mode for stepping through source code of a debugged Maple procedure."
   :group 'mds
   (setq mds-li-arrow-position (make-marker))
-  )
+  (if mds-truncate-lines (toggle-truncate-lines 1)))
 
 
 ;;}}}
