@@ -83,7 +83,8 @@ Move the current statement marker.  The buffer has major mode
       (insert-file-contents file)
       (setq mds-li-file-name file)))
   (goto-char beg)
-  (set-marker mds-li-arrow-position (line-beginning-position)))
+  (set-marker mds-li-arrow-position (line-beginning-position))
+  (setq cursor-type mds-cursor-ready))
 
 ;;}}}
 
