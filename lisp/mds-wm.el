@@ -109,9 +109,9 @@ the client."
       ;; first set focus to selected frame;
       ;; without that, xfce doesn't switch frames
       (select-frame-set-input-focus (selected-frame)))
-  (select-frame-set-input-focus mds-frame)
+  (mds-wm-select-frame-set-input-focus mds-frame)
   (if mouse-autoselect-window
-      ;; without this, there are weird probles with windo splits or selecting live-buf
+      ;; without this, there are weird problems with window splits or selecting live-buf
       (sleep-for 0.1))
   (let ((buf1 (mds-client-live-buf client))
 	(buf2 (mds-client-out-buf client)))
@@ -260,7 +260,6 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
   ;; FIXME:
   (car mds-clients))
 
-
 ;;{{{ Call operating system's window manager to get focus
 
 (defun mds-wm-get-focus-wmctrl ()
@@ -270,6 +269,7 @@ This is only appropriate for a linux system."
 
 ;;}}}
 
+;;{{{ mds-wm-toggle-focus-ss-out
 (defun mds-wm-toggle-focus-ss-out ()
   "Toggle focus between ss-live and output buffer."
   (interactive)
@@ -278,7 +278,47 @@ This is only appropriate for a linux system."
 	(pop-to-buffer (if (eq liv (current-buffer))
 			   (mds-client-out-buf mds-client)
 			 liv)))))
+;;}}}
+
+;;{{{ mds-wm-select-frame-set-input-focus
+
+;; Enhanced from select-frame-set-input-focus
+;; to limit the mouse movement.
+
+(defun mds-wm-select-frame-set-input-focus (frame)
+  "Select FRAME, raise it, and set input focus, if possible.
+If `mouse-autoselect-window' is non-nil, and mouse is not inside
+selected window, move mouse pointer to center of FRAME's selected window.  
+Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
+  (select-frame frame)
+  (raise-frame frame)
+  ;; Ensure, if possible, that FRAME gets input focus.
+  (when (memq (window-system frame) '(x w32 ns))
+    (x-focus-frame frame))
+  ;; Move mouse cursor if necessary.
+  (cond
+   (mouse-autoselect-window
+    (let* ((edges (window-inside-edges (frame-selected-window frame)))
+	  (xy (cdr (mouse-position)))
+	  (x (car xy))
+	  (y (cdr xy)))
+      (unless (and x
+		   (>= x (nth 0 edges)) (<= x (nth 2 edges))
+		   (>= y (nth 1 edges)) (<= y (nth 3 edges)))
+	
+	;; Move mouse cursor into FRAME's selected window to avoid that
+	;; Emacs mouse-autoselects another window.
+	(set-mouse-position frame
+			    (/ (+ (nth 0 edges) (nth 2 edges)) 2)
+			    (/ (+ (nth 1 edges) (nth 3 edges)) 2)))))
+   (focus-follows-mouse
+    ;; Move mouse cursor into FRAME to avoid that another frame gets
+    ;; selected by the window manager.
+    (set-mouse-position frame (1- (frame-width frame)) 0))))
+
+;;}}}
 
 (provide 'mds-wm)
 
 ;; mds-wm.el ends here
+
