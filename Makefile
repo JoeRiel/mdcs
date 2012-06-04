@@ -100,7 +100,7 @@ ELFLAGS	= --no-site-file \
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
-ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-client mds-thing mds-li mds
+ELS = mds-re mds-ss mds-out mds-patch mds-wm mds-login mds-client mds-custom mds-thing mds-li mds
 
 LISP_FILES = $(ELS:%=lisp/%.el)
 ELC_FILES = $(LISP_FILES:.el=.elc)

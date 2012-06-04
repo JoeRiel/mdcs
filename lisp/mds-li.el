@@ -36,8 +36,8 @@
 
 (eval-when-compile
   (require 'mds-client)
+  (require 'mds-custom)
   (require 'mds-ss)
-  (defvar mds-ss-mode-map)
   (defvar mds-truncate-lines))
 
 

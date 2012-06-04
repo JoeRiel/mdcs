@@ -44,6 +44,7 @@
 
 (require 'maplev)
 (require 'mds-client)
+(require 'mds-custom)
 (require 'mds-login)
 (require 'mds-out)
 (require 'mds-patch)
@@ -55,15 +56,10 @@
 
 ;;}}}
 
-;;{{{ customizations
+;;{{{ Customization
 
-(defgroup mds nil
-  "Maple Debugger Server."
-  :group 'tools)
-
-(defcustom mds-port 10000  "Port used by mds server."
-  :type 'integer
-  :group 'mds)
+;; This is here rather than mds-custom to avoid
+;; some unpleasant output during byte-compilation.
 
 (defcustom mds-get-focus-function
     (and (= 0 (shell-command "which wmctrl"))
@@ -72,26 +68,6 @@
 The default works on a linux system with wmctrl installed.
 Automatically assigned to nil if wmctrl is not available."
   :type 'function
-  :group 'mds)
-
-(defcustom mds-show-args-flag t
-  "Non-nil means display args on entry to procedure."
-  :type 'boolean
-  :group 'mds)
-
-(defcustom mds-track-input-flag t
-  "Non-nil means track (echo) the input line to the output buffer after each command."
-  :type 'boolean
-  :group 'mds)
-
-(defcustom mds-stop-trace-at-error-flag t
-  "Non-nil means stop tracing when an error occurs."
-  :type 'boolean
-  :group 'mds)
-
-(defcustom mds-log-messages-flag nil
-  "Non-nil means write all messages to `mds-log-buffer'."
-  :type 'boolean
   :group 'mds)
 
 ;;}}}

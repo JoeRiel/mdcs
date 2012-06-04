@@ -38,6 +38,7 @@
 (eval-when-compile
   (require 'maplev)
   (require 'mds-client)
+  (require 'mds-custom)
   (require 'mds-re)
   (require 'mds-ss)
 )

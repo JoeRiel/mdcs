@@ -36,26 +36,8 @@
 ;; avoid compiler warnings
 
 (eval-when-compile
-  (require 'mds-client))
-
-;;}}}
-;;{{{ customizations
-
-(defgroup mds-wm nil
-  "Maple Debugger Server Window Manager."
-  :group 'mds)
-
-(defcustom mds-wm-side-by-side t
-  "If non-nil, display the showstat and output windows side-by-side in a single client view."
-  :type 'boolean
-  :group 'mds-wm)
-
-(defcustom mds-wm-ss-fractional-size nil
-  "Fractional size of the showstat window in relation to the frame size.
-Width is used when `mds-wm-side-by-side' is non-nil, otherwise height is used.
-If nil, the window is set to half the frame size."
-  :type 'float
-  :group 'mds-wm)
+  (require 'mds-client)
+  (require 'mds-custom))
 
 ;;}}}
 ;;{{{ variables

@@ -16,6 +16,7 @@
   (require 'hl-line)
   (require 'maplev)
   (require 'mds-client)
+  (require 'mds-custom)
   (require 'mds-out)
   (require 'mds-re)
   (require 'mds-thing)
@@ -35,39 +36,6 @@
 
 ;;}}}
 
-;;{{{ customization
-
-(defgroup mds nil
-  "Maple Debugger Server."
-  :group 'tools)
-
-(defcustom mds-truncate-lines t
-  "When non-nil, lines in showstat buffer are initially truncated."
-  :type 'boolean
-  :group 'mds)
-
-(defcustom mds-wait-until-ready t
-  "When non-nil, do not send input to Maple until prompt has been received.
-Setting this to nil allows a quicker response, but prevents a notification
-that the debugger may have exited."
-  :type 'boolean
-  :group 'mds)
-
-;;{{{ (*) cursors
-
-(defcustom mds-cursor-waiting 'hollow
-  "Cursor used in showstat buffer when waiting for Maple to respond."
-  :type 'symbol
-  :group 'mds)
-
-(defcustom mds-cursor-ready 'box
-  "Cursor used in showstat buffer when ready for a user input."
-  :type 'symbol
-  :group 'mds)
-
-;;}}}
-
-;;}}}
 ;;{{{ constants
 
 ;; regular expressions
@@ -141,7 +109,7 @@ code."
   (mds-ss-block-input)
   (if save (mds-client-set-last-cmd mds-client cmd))
   (setq cursor-type mds-cursor-waiting)
-  (unless (eobp) (forward-char)) ;; this indicates 'waiting' in tty Emacs, where cursor doesn't change
+  (unless (eobp) (forward-char)) ; this indicates 'waiting' in tty Emacs, where cursor doesn't change
   (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd)
   (mds-ss-send-client cmd))
 
