@@ -311,7 +311,8 @@ use them to route the message."
 			  (buffer-local-value 'mds-ss-state live-buf)
 			  'prompt)
       (mds-client-set-allow-input client t)
-      (mds-wm-select-code-window client))
+      (mds-goto-current-state))
+     ;;(mds-wm-select-code-window client))
      
      ((string= tag "DBG_STATE")
       ;; msg is the state output from debugger.
