@@ -48,7 +48,7 @@ however, such an abomination should break something.")
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-cursor         mds-cursor-ready "cursor")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
-(defvar mds-ss-live-flag      nil "Non-nil means this buffer is live.")
+(defvar mds-ss-dead-flag      nil "Non-nil means this is the ss-dead buffer.")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
 (defvar mds-ss-state          "1" "Current state of procedure")
 (defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
@@ -59,7 +59,7 @@ however, such an abomination should break something.")
 	mds-ss-arrow-position
 	mds-ss-cursor
 	mds-ss-show-args-flag
-	mds-ss-live-flag
+	mds-ss-dead-flag
 	mds-ss-procname
 	mds-ss-result
 	mds-ss-state
@@ -138,7 +138,7 @@ If ALIVE is non-nil, create a live buffer."
       (mds-ss-mode)
       (setq mds-client client
 	    mds-ss-arrow-position nil
-	    mds-ss-live-flag alive
+	    mds-ss-dead-flag (not alive)
 	    mds-ss-procname ""
 	    mds-ss-state "1"
 	    buffer-read-only 't)
@@ -288,7 +288,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
       (mds-ss-set-mode-line mds-ss-procname (car (mds-client-id mds-client)))
 
       (cond
-       (mds-ss-live-flag
+       ((not mds-ss-dead-flag)
 	;; Move the state arrow
 	;; FIXME: only do if necessary
 	(mds-ss-move-state mds-ss-state))
@@ -543,9 +543,9 @@ exits."
   "If in the live showstat buffer, send the 'quit' command to the debugger.
 Otherwise delete the dead showstat window."
   (interactive)
-  (if mds-ss-live-flag
-      (mds-ss-eval-proc-statement "quit")
-    (delete-window (get-buffer-window (mds-client-dead-buf mds-client)))))
+  (if mds-ss-dead-flag
+      (delete-window (get-buffer-window (mds-client-dead-buf mds-client)))
+    (mds-ss-eval-proc-statement "quit")))
 
 (defun mds-return ()
   "Send the 'return' command to the debugger."
