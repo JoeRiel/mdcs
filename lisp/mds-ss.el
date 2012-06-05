@@ -49,8 +49,8 @@ however, such an abomination should break something.")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
 (defvar mds-ss-dead-flag      nil "Non-nil means this is the ss-dead buffer.")
 (defvar mds-ss-procname       nil "Name of displayed showstat procedure.")
-(defvar mds-ss-state          "1" "Current state of procedure")
-(defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer")
+(defvar mds-ss-state          "1" "Current state of procedure.")
+(defvar mds-ss-statement      ""  "String matching a statement; used by dead buffer.")
 
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
@@ -317,7 +317,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 (defun mds-ss-move-state (state)
   "Move the overlay arrow in the showstat buffer to STATE.
 Move POINT to the indentation of the current line.
-If the `hl-line' feature is present in this session, 
+If the `hl-line' feature is present in this session,
 highlight the line."
   (if state
       (let ((buffer-read-only nil))
@@ -562,7 +562,7 @@ Otherwise delete the dead showstat window."
   (mds-ss-eval-proc-statement "step" 'save))
 
 (defun mds-cycle-trace ()
-  "Cycle through the tracing states: 
+  "Cycle through the tracing states:
 'nil', 'cont', 'next', 'into', 'level', and 'step'.
 If nil is selected, tracing does not occur.  Otherwise, when the
 debugger returns control to the server, the selected debugging
@@ -610,7 +610,7 @@ The hyperlinks in the output buffer are then active."
 	    (replace-match "*" nil nil nil 2)
 	    (mds-ss-eval-debug-code (format "debugopts('stopat'=[pointto(%s),%s])"
 					    (mds-client-get-addr mds-client)
-					    state) 
+					    state)
 				    'hide))
 	(ding)
 	(message "could not find state in buffer")))))
@@ -626,8 +626,8 @@ The hyperlinks in the output buffer are then active."
 	      (inhibit-read-only t)
 	      (cond (mds--query-stop-var "stopat-cond" "condition" 'mds-ss-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
-	  (mds-ss-eval-debug-code 
-	   (format "debugopts('stopat'=[pointto(%s),%s,%s])" 
+	  (mds-ss-eval-debug-code
+	   (format "debugopts('stopat'=[pointto(%s),%s,%s])"
 		   (mds-client-get-addr mds-client) state cond) 'hide))
       (ding)
       (message "no previous state in buffer"))))
@@ -692,7 +692,7 @@ If the state does not have a breakpoint, print a message."
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t))
 	  (replace-match " " nil nil nil 2)
-	  (mds-ss-eval-debug-code 
+	  (mds-ss-eval-debug-code
 	   (format "debugopts('stopat'=[pointto(%s),-%s])" (mds-client-get-addr mds-client) state) 'hide))
       (ding)
       (message "no breakpoint at this state"))))
