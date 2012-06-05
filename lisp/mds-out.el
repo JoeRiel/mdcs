@@ -220,9 +220,6 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;{{{ mds-out-display
 
-
-(defvar mds-delay-args nil)
-
 (defun mds-out-display (buf msg &optional tag)
   "Display MSG in BUF, which is assumed an output buffer.
 Optional TAG identifies the message type."
