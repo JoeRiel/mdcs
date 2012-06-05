@@ -141,11 +141,13 @@ Set cursor to ready."
 
 ;; Copy mds-ss-mode-map, but rebind some keys
 
-(defvar mds-li-mode-map
+(defvar mds-li-mode-map nil
+  "Keymap for `mds-li-mode'.")
+
+(unless mds-li-mode-map
   (let ((map (copy-keymap mds-ss-mode-map))
 	(bindings
-	 '(
-	   ("b" . mds-li-breakpoint)
+	 '(("b" . mds-li-breakpoint)
 	   ("B" . mds-breakpoint-cond)
 	   ("g" . mds-goto-procname)
 	   ("G" . mds-goback-save)
@@ -154,11 +156,11 @@ Set cursor to ready."
 	   ("l" . mds-goto-current-state)
 	   ("L" . mds-ss-refresh)
 	   ("q" . mds-quit)
-	   ("u" . mds-li-unstopat)
-	   )))
+	   ("u" . mds-li-unstopat))))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
-    map))
+    (setq mds-li-mode-map map)))
+
 ;;}}}
 ;;{{{ mds-li-mode
 
