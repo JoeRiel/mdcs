@@ -282,7 +282,8 @@ Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
 ;;}}}
 
 (defun mds-wm-select-code-window (client)
-  "Select the code window of CLIENT."
+  "Select the code window of CLIENT.
+If the code window does not exist, create it."
   (let ((code-win (mds-client-get-code-window client)))
     (unless code-win
       ;; create code window

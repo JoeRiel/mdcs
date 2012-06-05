@@ -314,20 +314,25 @@ use them to route the message."
       (mds-wm-select-code-window client))
      
      ((string= tag "DBG_STATE")
-     ;; msg is the state output from debugger.
-     ;; Extract the procname and state number
-     ;; and update the showstat buffer
+      ;; msg is the state output from debugger.
+      ;; Extract the procname and state number,
+      ;; update the showstat buffer, then
+      ;; display the code window.
       (if (not (string-match mds--debugger-status-re msg))
 	  (error "Cannot parse current state")
 	(let ((addr      (match-string 1 msg))
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
-	  (mds-ss-update live-buf addr procname state statement))))
+	  (mds-client-set-display-source client nil)
+	  (mds-ss-update live-buf addr procname state statement)
+	  (mds-wm-select-code-window client)
+	  )))
 
      ((string= tag "DBG_SAME_STATE")
-	(mds-goto-current-state)
-	(mds-wm-select-code-window client))
+      ;; Ignore this because the DBUG_PROMPT is coming.  
+      ;; TODO: This means that the server should suppress this.
+      )
 
      ((string= tag "LINE_INFO")
       (unless (string-match mds--line-info-re msg)
@@ -342,17 +347,19 @@ use them to route the message."
 	    (li-buf (mds-client-li-buf client)))
 	(mds-ss-update live-buf addr procname state statement)
 	(mds-li-update li-buf file beg)
-	(mds-client-set-display-source client t)))
+	(mds-client-set-display-source client t)
+	;; (mds-wm-select-code-window client))
+      ))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).
-     ;; Display in showstat buffer.
-      (mds-ss-display live-buf msg))
+     ;; Insert into live-showstat buffer.
+      (mds-ss-insert-proc live-buf msg))
 
      ((string= tag "DBG_SHOW_INACTIVE")
      ;; msg is an inactive showstat output.
-     ;; Display in showstat buffer.
-      (mds-ss-display dead-buf msg))
+     ;; Insert into dead-showstat buffer.
+      (mds-ss-insert-proc dead-buf msg))
 
      ((string= tag "DBG_EVAL")
       (mds-out-display out-buf msg 'output))

@@ -38,6 +38,7 @@
   (require 'mds-client)
   (require 'mds-custom)
   (require 'mds-ss)
+  (require 'mds-wm)
   (defvar mds-truncate-lines))
 
 
@@ -46,10 +47,12 @@
 ;;{{{ Variables
 
 (defvar mds-li-arrow-position nil "Marker for current-line.")
+(defvar mds-li-beg nil            "Character position of current position.")   
 (defvar mds-li-file-name ""       "Name of the current source-file.")
 
 (mapc #'make-variable-buffer-local
       '(mds-li-arrow-position
+	mds-li-beg
 	mds-li-file-name))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
@@ -84,7 +87,8 @@ Move the current statement marker.  The buffer has major mode
       (setq mds-li-file-name file)))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
-  (setq cursor-type mds-cursor-ready))
+  (setq cursor-type mds-cursor-ready
+	mds-li-beg beg))
 
 ;;}}}
 
@@ -97,6 +101,11 @@ Move the current statement marker.  The buffer has major mode
 					    (mds-client-get-addr mds-client)
 					    (line-number-at-pos (point))
 					    (1- (point))))))
+
+(defun mds-li-goto-current-state (client)
+  "Move point to current statement beginning in line-info buffer of CLIENT."
+  (mds-wm-select-code-window client)
+  (goto-char mds-li-beg))
 
 ;;}}}
 

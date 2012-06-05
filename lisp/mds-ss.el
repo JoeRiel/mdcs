@@ -25,11 +25,7 @@
 ;;{{{ declarations
 
 ;; avoid compiler warnings
-
-(declare-function mds-client-out-buf "mds-client")
-(declare-function mds-client-live-buf "mds-client")
-(declare-function mds-client-dead-buf "mds-client")
-(declare-function mds-client-send "mds-client")
+(declare-function mds-li-goto-current-state "mds-li")
 
 (eval-when-compile
   (defvar mds-show-args-flag))
@@ -170,7 +166,7 @@ otherwise call (maple) showstat to display the new procedure."
       (if (string= addr (mds-client-get-addr mds-client))
 	  ;; Address has not changed; move the arrow
 	  (unless trace
-	    (mds-ss-display-state state))
+	    (mds-ss-move-state state))
 	
 	;; New procedure; send address and procname to the output buffer.
 	(mds-out-display (mds-client-out-buf mds-client)
@@ -254,7 +250,7 @@ Otherwise, find the statement number from STATEMENT."
     (unless (string= procname "")
       (if (string= addr (mds-client-get-addr mds-client))
 	  ;; Already displaying the procedure; just update the arrow.
-	  (mds-ss-display-state (or state
+	  (mds-ss-move-state (or state
 				    (mds-ss-determine-state statement)))
 
 	;; Need to fetch from Maple.
@@ -268,12 +264,13 @@ Otherwise, find the statement number from STATEMENT."
 	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
 
 ;;}}}
-;;{{{ (*) mds-ss-display
+;;{{{ (*) mds-ss-insert-proc
 
-(defun mds-ss-display (buf proc)
+(defun mds-ss-insert-proc (buf proc)
   "Insert into the showstat buffer, BUF, the Maple procedure PROC.
 PROC is the output of a call to showstat.  Use and update
 the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
+
   (with-current-buffer buf
 
     (let ((buffer-read-only nil))
@@ -294,19 +291,16 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
        (mds-ss-live-flag
 	;; Move the state arrow
 	;; FIXME: only do if necessary
-	(mds-ss-display-state mds-ss-state))
+	(mds-ss-move-state mds-ss-state))
 
        ;; From here down, we are in the dead ss-buf
 
        (mds-ss-state
-	(mds-ss-display-state mds-ss-state))
+	(mds-ss-move-state mds-ss-state))
 
        ((string= "" mds-ss-statement)
 	(setq mds-ss-state "1")
-	(mds-ss-display-state "1"))
-
-       ;;((string= "0" mds-ss-statement)
-       ;; (mds-ss-display-state mds-ss-state))
+	(mds-ss-move-state "1"))
 
        (t
 	(let ((state (mds-ss-determine-state mds-ss-statement)))
@@ -317,21 +311,16 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 	  (setq mds-ss-state state)
 	  mds-ss-statement "")
 	;; Move the state arrow
-	(mds-ss-display-state mds-ss-state))))
-    
-    ;; Make buffer visible
-    (if mds-ss-live-flag
-	(display-buffer buf)
-      (mds-wm-display-dead mds-client))))
+	(mds-ss-move-state mds-ss-state))))))
 
 ;;}}}
-;;{{{ (*) mds-ss-display-state
+;;{{{ (*) mds-ss-move-state
 
-(defun mds-ss-display-state (state)
+(defun mds-ss-move-state (state)
   "Move the overlay arrow in the showstat buffer to STATE.
-Ensure that the buffer and line are visible.  If the `hl-line'
-feature is present in this session, then highlight the line.
-POINT is moved to the indentation of the current line."
+Move POINT to the indentation of the current line.
+If the `hl-line' feature is present in this session, 
+highlight the line."
   (if state
       (let ((buffer-read-only nil))
 	;; Find the location of STATE in the buffer.
@@ -353,11 +342,7 @@ POINT is moved to the indentation of the current line."
 	     ((and hl-line-mode hl-line-sticky-flag)
 	      (hl-line-highlight))))
 	  ;; Move point to indentation of the current line (not including the state number).
-	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move))
-	;; Ensure marker is visible in buffer.
-	(set-window-point (get-buffer-window (current-buffer)) (point))
-	;; Ensure live-ss-buf is displayed.
-	(mds-wm-display-live-buf))))
+	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move)))))
 
 ;;}}}
 
@@ -878,13 +863,14 @@ See `mds-monitor-toggle'."
 (defun mds-goto-current-state ()
   "Move cursor to the current state in the showstat buffer."
   (interactive)
-  (pop-to-buffer (mds-client-live-buf mds-client))
-  (mds-ss-update (current-buffer)
-		 (mds-client-get-addr mds-client)
-		 mds-ss-procname
-		 mds-ss-state
-		 mds-ss-statement))
-
+  (if (mds-client-get-display-source mds-client)
+      (mds-li-goto-current-state mds-client)
+    (pop-to-buffer (mds-client-live-buf mds-client))
+    (mds-ss-update (current-buffer)
+		   (mds-client-get-addr mds-client)
+		   mds-ss-procname
+		   mds-ss-state
+		   mds-ss-statement)))
 
 (defun mds-goto-state (state)
   "Move POINT to STATE.
