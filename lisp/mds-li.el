@@ -87,8 +87,7 @@ Move the current statement marker.  The buffer has major mode
       (setq mds-li-file-name file)))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
-  (setq cursor-type mds-cursor-ready
-	mds-li-beg beg))
+  (setq mds-li-beg beg))
 
 ;;}}}
 
@@ -103,9 +102,11 @@ Move the current statement marker.  The buffer has major mode
 					    (1- (point))))))
 
 (defun mds-li-goto-current-state (client)
-  "Move point to current statement beginning in line-info buffer of CLIENT."
+  "Move point to current statement beginning in line-info buffer of CLIENT.
+Set cursor to ready."
   (mds-wm-select-code-window client)
-  (goto-char mds-li-beg))
+  (goto-char mds-li-beg)
+  (setq cursor-type mds-cursor-ready))
 
 ;;}}}
 
