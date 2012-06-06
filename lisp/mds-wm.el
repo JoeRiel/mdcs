@@ -177,7 +177,7 @@ with n being the number of clients."
 If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
   (interactive)
   (if mds-clients
-      (let ((client (car mds-clients)))
+      (let ((client (cdar mds-clients)))
 	(and (> (length mds-clients) 1)
 	     ;; client is already displayed
 	     (get-buffer-window (mds-client-live-buf client) mds-frame)
