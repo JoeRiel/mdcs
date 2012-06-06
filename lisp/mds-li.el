@@ -132,8 +132,18 @@ Set cursor to ready."
   (interactive "p")
   (with-current-buffer (mds-client-live-buf mds-client)
     (mds-here 1)))
-  
 
+(defun mds-li-open-source-at-point ()
+  "Open the file associated with current procedure."
+  (interactive)
+  (if (mds-client-get-display-source mds-client)
+      (with-current-buffer (mds-client-li-buf mds-client)
+	(when mds-li-file-name
+	  (let ((point (point)))
+	    (find-file mds-li-file-name)
+	    (goto-char point))))
+    (beep)
+    (message "No line-info source associated with current procedure.")))
 
 ;;}}}
 
