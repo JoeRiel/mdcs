@@ -177,9 +177,24 @@
 ** LineInfo:
 
 *** TODO Toggle between li and ss buffers
+    * It's not entirely clear how to control this.
+    * There presumably should be a global customizable variable,
+      mds-use-lineinfo-flag, which, if true uses any lineinfo data.
+      However, we don't want to toggle that just to move to the ss buffer
+      because doing so would affect all debug sessions.  It could
+      be made buffer-local, but that seems overkill.   
+      A client flag could be used; it would be initialized to
+      mds-use-lineinfo-flag.  That seems the best approach.
+      
 *** TODO Provide command to go to source
 *** TODO Decorate the li buffer
-
+    This is more difficult than it should be.  First, need to decide
+    how to decorate.  May have to put something in the fringe, which
+    may require a custom bitmap.  Maple does not provide a means to
+    acquire the location of breakpoints in a procedure, so will need
+    to parse the output of showstat.  Hopefully that only needs to be
+    done now and again, since it is probably relatively expensive.
+    New breakpoints may have to be stored.
 
 * Long Term
  
