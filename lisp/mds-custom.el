@@ -46,9 +46,14 @@
   :group 'mds)
 
 (defcustom mds-wait-until-ready t
-  "When non-nil, do not send input to Maple until prompt has been received.
+  "Non-nil means do not send input to Maple until prompt has been received.
 Setting this to nil allows a quicker response, but prevents a notification
 that the debugger may have exited."
+  :type 'boolean
+  :group 'mds)
+
+(defcustom mds-use-lineinfo-flag t
+  "Non-nl means use lineinfo, if available."
   :type 'boolean
   :group 'mds)
 

@@ -291,7 +291,8 @@ If the code window does not exist, create it."
       (setq code-win (mds-client-get-code-window client)))
     ;; Display the selected code buffer in the code window.
     ;; How expensive is this?  Here we use a conditional.
-    (let ((code-buf (if (mds-client-get-display-source client)
+    (let ((code-buf (if (and (mds-client-use-lineinfo-p client)
+			     (mds-client-has-source-p client))
 			(mds-client-li-buf client)
 		      (mds-client-live-buf client))))
       (unless (eq code-buf (window-buffer code-win))

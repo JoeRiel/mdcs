@@ -67,18 +67,21 @@ Maximum is given by `mds-max-number-clients'.")
 (defsubst mds-client-get-trace (client)       "Get CLIENT's trace state." (aref client 11))
 (defsubst mds-client-set-trace (client state) "Set CLIENT's trace STATE." (aset client 11 state))
 
-(defsubst mds-client-get-display-source (client)      "Get CLIENT's display-source flag" (aref client 12))
-(defsubst mds-client-set-display-source (client flag) "Set CLIENT's display-source FLAG" (aset client 12 flag))
+(defsubst mds-client-has-source-p (client)        "Get CLIENT's has-source flag" (aref client 12))
+(defsubst mds-client-set-has-source (client flag) "Set CLIENT's has-source FLAG" (aset client 12 flag))
 
-(defsubst mds-client-get-code-window (client)        "Get CLIENT's code window" (aref client 13))
-(defsubst mds-client-set-code-window (client window) "Set CLIENT's code WINDOW" (aset client 13 window))
+(defsubst mds-client-use-lineinfo-p   (client)      "Get CLIENT's use-lineinfo flag" (aref client 13))
+(defsubst mds-client-set-use-lineinfo (client flag) "Set CLIENT's use-lineinfo FLAG" (aset client 13 flag))
+
+(defsubst mds-client-get-code-window (client)        "Get CLIENT's code window" (aref client 14))
+(defsubst mds-client-set-code-window (client window) "Set CLIENT's code WINDOW" (aset client 14 window))
 
 (defun mds-client-create (proc id)
   "Create a client that is associated with process PROC and has identity ID.
 The returned client structure is a vector [PROC status queue ID
 live-buf dead-buf out-buf addr], where status is initialized to
 'new'."
-  (let ((client (make-vector 14 nil)))
+  (let ((client (make-vector 15 nil)))
     (aset client 0 proc)
     (aset client 1 'login)
     (aset client 2 (mds-queue-create proc))
@@ -89,6 +92,7 @@ live-buf dead-buf out-buf addr], where status is initialized to
     (aset client 7 (mds-li-create-buffer client))
     (aset client 8 "")  ; addr
     (aset client 9 t)   ; allow-input
+    (aset client 13 mds-use-lineinfo-flag)
     client))
   
 (defun mds-client-destroy (client)

@@ -859,9 +859,10 @@ See `mds-monitor-toggle'."
     (message "Refreshed showstat buffer")))
 
 (defun mds-goto-current-state ()
-  "Move cursor to the current state in the showstat buffer."
+  "Move cursor to the current state in the code buffer."
   (interactive)
-  (if (mds-client-get-display-source mds-client)
+  (if (and (mds-client-use-lineinfo-p mds-client)
+	   (mds-client-has-source-p mds-client))
       (mds-li-goto-current-state mds-client)
     (pop-to-buffer (mds-client-live-buf mds-client))
     (mds-ss-update (current-buffer)

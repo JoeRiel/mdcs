@@ -325,10 +325,9 @@ use them to route the message."
 	      (procname  (match-string 2 msg))
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
-	  (mds-client-set-display-source client nil)
+	  (mds-client-set-has-source client nil)
 	  (mds-ss-update live-buf addr procname state statement)
-	  (mds-wm-select-code-window client)
-	  )))
+	  (mds-wm-select-code-window client))))
 
      ((string= tag "DBG_SAME_STATE")
       ;; Ignore this because the DBUG_PROMPT is coming.  
@@ -348,9 +347,7 @@ use them to route the message."
 	    (li-buf (mds-client-li-buf client)))
 	(mds-ss-update live-buf addr procname state statement)
 	(mds-li-update li-buf file beg)
-	(mds-client-set-display-source client t)
-	;; (mds-wm-select-code-window client))
-      ))
+	(mds-client-set-has-source client t)))
 
      ((string= tag "DBG_SHOW")
      ;; msg is showstat output (printout of procedure).

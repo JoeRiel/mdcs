@@ -136,7 +136,7 @@ Set cursor to ready."
 (defun mds-li-open-source-at-point ()
   "Open the file associated with current procedure."
   (interactive)
-  (if (mds-client-get-display-source mds-client)
+  (if (mds-client-has-source-p mds-client)
       (with-current-buffer (mds-client-li-buf mds-client)
 	(when mds-li-file-name
 	  (let ((point (point)))
