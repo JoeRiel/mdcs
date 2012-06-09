@@ -85,7 +85,8 @@
 
 LineInfo := module()
 
-export Get
+export Breakpoints
+    ,  Get
     ,  LookupStatement
     ,  SetRoot
     ,  Store
@@ -439,6 +440,33 @@ local ModuleLoad
 
     end proc;
 
+##PROCEDURE Breakpoints
+##DESCRIPTION
+##- Return the ordered list of statement numbers
+##  at which breakpoints exist in a procedure.
+##
+##- The procedure's address is 'addr'.
+##
+##TEST
+## $include <AssignFunc.mi>
+## AssignFUNC(mdc:-LineInfo:-Breakpoints):
+## macro(NE='testnoerror');
+### mdc(FUNC):
+## Try("1.0", FUNC(addressof(simplify)), []);
+## Try[NE]("1.1.0", stopat(simplify)):
+## Try("1.1.1", FUNC(addressof(simplify)), [1]);
+## Try[NE]("1.2.0", stopat(simplify,10)):
+## Try("1.2.1", FUNC(addressof(simplify)), [1,10]);
+
+    Breakpoints := proc( addr :: integer )
+    local all,state,states,str;
+        str := debugopts('procdump' = pointto(addr));
+        states := NULL;
+        while StringTools:-RegMatch("\n *([0-9]+)\\*(.*)", str, 'all', 'state', 'str') do
+            states := (states, sscanf(state,"%d")[1]);
+        end do;
+        [states];
+    end proc;
 
 end module:
 
