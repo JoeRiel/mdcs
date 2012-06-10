@@ -44,6 +44,19 @@
 
 ;;}}}
 
+;;{{{ Faces
+
+(defface mds-li-breakpoint-face
+  '((((class grayscale) (background light)) (:foreground "LightGray" :bold t))
+    (((class grayscale) (background dark))  (:foreground "DimGray"   :bold t))
+    (((class color)     (background light)) (:foreground "red"))
+    (((class color)     (background dark))  (:foreground "red"))
+    (t (:bold t)))
+  "Face for highlighting breakpoint fringe bitmap."
+  :group 'mds-faces)
+
+;;}}}
+
 ;;{{{ Variables
 
 (defvar mds-li-arrow-position nil "Marker for current-line.")
@@ -69,7 +82,6 @@
       (setq mds-client client))
     buf))
 
-
 ;;}}}
 
 ;;{{{ Update source buffer
@@ -81,10 +93,15 @@ Move the current statement marker.  The buffer has major mode
   (set-buffer buffer)
   (unless (string= file mds-li-file-name)
     ;; insert the new file
-    (let (buffer-read-only)
+    (let (brkpt buffer-read-only)
       (delete-region (point-min) (point-max))
       (insert-file-contents file)
-      (setq mds-li-file-name file)))
+      (setq mds-li-file-name file)
+      (while breakpoints
+      	(setq brkpt (car breakpoints)
+      	      breakpoints (cdr breakpoints))
+      	(goto-char (1+ brkpt))
+      	(mds-li-set-breakpoint (line-beginning-position)))))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
   (setq mds-li-beg beg))
@@ -108,12 +125,27 @@ Set cursor to ready."
   (goto-char mds-li-beg)
   (setq cursor-type mds-cursor-ready))
 
-(defun mds-li--show-breakpoint (pos)
-  "Insert a breakpoint at POS.
-POS should be at the left-margin."
+(define-fringe-bitmap 'mds-li-breakpoint  [60 126 255 255 255 255 126 60])
 
-  )
+(defun mds-li-set-breakpoint (pos)
+  "Set a breakpoint symbol at POS."
+  (mds-li-remove-breakpoint pos)
+  (let* ((display-string
+	  `(left-fringe mds-li-breakpoint . ,(cons 'mds-li-breakpoint-face nil)))
+	 (before-string (propertize "*" 'display display-string))
+	 (ov (make-overlay pos pos)))
+    (overlay-put ov 'before-string before-string)
+    (overlay-put ov 'breakpoint t)
+    ov))
 
+(defun mds-li-remove-breakpoint (pos)
+  "Remove all breakpoint symbols at POS."
+  (let ((overlays (overlays-in pos pos)))
+    (while overlays
+      (let ((ov (car overlays)))
+	(if (overlay-get ov 'breakpoint)
+	    (delete-overlay ov))
+	(setq overlays (cdr overlays))))))
 
 
 

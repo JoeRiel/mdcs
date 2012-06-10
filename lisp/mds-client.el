@@ -27,6 +27,7 @@
 ;; Each client consists of a list of seven elements.
 
 (eval-when-compile
+  (require 'mds-custom)
   (defvar mds-ss-result nil))
 
 (declare-function mds-ss-create-buffer "mds-ss")

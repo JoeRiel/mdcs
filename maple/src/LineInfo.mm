@@ -499,7 +499,7 @@ local ModuleLoad
         result := "";
         while StringTools:-RegMatch("\n *([0-9]+)\\*(.*)", str, 'all', 'state', 'str') do
             state := sscanf(state,"%d")[1];
-            result := sprintf("%s %d", result, begs[state,3]));
+            result := sprintf("%s %d", result, begs[state,3]);
         end do;
         result;
     end proc;
