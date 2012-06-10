@@ -173,7 +173,11 @@ local ModuleLoad
 ##- Return the source filename and source position data
 ##  associated with a 'statement' number of a procedure,
 ##  given its address, 'addr'.
-##
+##OPTIONS
+##opt(ret_begin,truefalse)
+##  True means return just the character offset of the beginning of
+##  the statement.
+##  The default is false.
 ##TEST
 ## $include <AssignFunc.mi>
 ## $include <lineinfo.mpl>
@@ -196,10 +200,13 @@ local ModuleLoad
 ## Try("1.1.2", FUNC(af, 2, myinfo), f_mpl, 1, 37, 38);
 ## Try[TE]("1.1.err", FUNC(af, 8, myinfo), "%1 index out of range");
 
-    Get := proc( addr :: integer, statement :: nonnegint, info := Info )
+    Get := proc( addr :: integer
+                 , statement :: nonnegint
+                 , { ret_begin :: truefalse := false }
+               )
     local i,datum,rec;
 
-        rec := info[addr];
+        rec := Info[addr];
 
         if rec = 0 then
             # nothing saved,
@@ -211,9 +218,13 @@ local ModuleLoad
 
         datum := rec:-positions[statement];
 
-        ( rec:-filenames[datum[1]]
-          , seq(datum[i], i = 2..4)  # line, beg, end
-        );
+        if ret_begin then
+            datum[3];
+        else
+            ( rec:-filenames[datum[1]]
+              , seq(datum[i], i = 2..4)  # line, beg, end
+            );
+        end if;
 
     end proc;
 

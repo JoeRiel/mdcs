@@ -125,6 +125,14 @@ Set cursor to ready."
   (goto-char mds-li-beg)
   (setq cursor-type mds-cursor-ready))
 
+(defun mds-li-goto-state (state)
+  "Move point to the beginning of statement number STATE in the current procedure."
+  (goto-char (1+ (string-to-number 
+		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,ret_begin)" 
+					  (mds-client-get-addr mds-client) state))))))
+  
+
+
 (define-fringe-bitmap 'mds-li-breakpoint  [60 126 255 255 255 255 126 60])
 
 (defun mds-li-set-breakpoint (pos)
@@ -157,6 +165,9 @@ Set cursor to ready."
   "Set breakpoint at point."
   (interactive)
   (let ((state (mds-li-get-statement (point))))
+    ;; set breakpoint in fringe
+    (mds-li-goto-state state)
+    (mds-li-set-breakpoint (line-beginning-position))
     (with-current-buffer (mds-client-live-buf mds-client)
       (mds-goto-state (number-to-string state))
       (mds-breakpoint))))
@@ -165,6 +176,9 @@ Set cursor to ready."
   "Clear breakpoint at point."
   (interactive)
   (let ((state (mds-li-get-statement (point))))
+    ;; clear breakpint in fringe
+    (mds-li-goto-state state)
+    (mds-li-remove-breakpoint (line-beginning-position))
     (with-current-buffer (mds-client-live-buf mds-client)
       (mds-goto-state (number-to-string state))
       (mds-unstopat))))
