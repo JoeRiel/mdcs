@@ -166,13 +166,6 @@
    * Naturally, one will then want history and lots of other cool stuff.
    * Will this actually be used?  Not sure.
 
-** VERIFY Provide a control panel
-   1. Originally envisioned for those not comfortable with Emacs keybindings,
-      it would emulate the GUI debugger but would allow keystrokes.
-   2. It could also be useful for concurrent control of grouped clients.
-   3. A floating frame might be the best approach; it doesn't require
-      futzing with windows and the user can move/delete it as required.
-      
 
 ** LineInfo:
 
@@ -187,7 +180,8 @@
       mds-use-lineinfo-flag.  That seems the best approach.
       
 *** TODO Provide command to go to source
-*** TODO Decorate the li buffer
+*** DONE Decorate the li buffer
+    CLOSED: [2012-06-10 Sun 10:53]
     This is more difficult than it should be.  First, need to decide
     how to decorate.  May have to put something in the fringe, which
     may require a custom bitmap.  Maple does not provide a means to
@@ -196,6 +190,9 @@
     done now and again, since it is probably relatively expensive.
     New breakpoints may have to be stored.
 
+*** DONE Fix setting/clearing breakpoints to work outside current procedure.
+    CLOSED: [2012-06-10 Sun 10:53]
+    
 * Long Term
  
 ** DONE Handle exports of unnamed modules.

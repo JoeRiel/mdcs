@@ -110,14 +110,22 @@ Move the current statement marker.  The buffer has major mode
 
 ;;{{{ Functions
 
-(defun mds-li-get-statement (pos)
-  "Get the statement number, as string, associated with POS."
-  (string-to-number (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
-					    mds-li-file-name
-					    (mds-client-get-addr mds-client)
-					    (line-number-at-pos (point))
-					    (1- (point))))))
+(defun mds-li-get-state-list (pos)
+  "Return the statement information of source at POS.
+If line information is available, a list of three strings is
+returned: address, statement number, and beginning character
+offset."
 
+  (let ((result (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
+					mds-li-file-name
+					(mds-client-get-addr mds-client)
+					(line-number-at-pos (point))
+					(1- (point))))))
+    (if (string= result "\"no candidates\"")
+	(error "No candidates... "))
+    (split-string result ", ")))
+	   
+    
 (defun mds-li-goto-current-state (client)
   "Move point to current statement beginning in line-info buffer of CLIENT.
 Set cursor to ready."
@@ -161,27 +169,25 @@ Set cursor to ready."
 
 ;;{{{ Commands
 
-(defun mds-li-breakpoint ()
-  "Set breakpoint at point."
+(defun mds-li-breakpoint (&optional clear)
+  "Set breakpoint at point.  If optional CLEAR is non-nil, clear the breakpoint."
   (interactive)
-  (let ((state (mds-li-get-statement (point))))
-    ;; set breakpoint in fringe
-    (mds-li-goto-state state)
-    (mds-li-set-breakpoint (line-beginning-position))
-    (with-current-buffer (mds-client-live-buf mds-client)
-      (mds-goto-state (number-to-string state))
-      (mds-breakpoint))))
+  (let ((state (mds-li-get-state-list (point))))
+    ;; Turn on/off fringe bitmap.
+    (goto-char (string-to-number (nth 2 state)))
+    (if clear
+	(mds-li-remove-breakpoint (line-beginning-position))
+      (mds-li-set-breakpoint (line-beginning-position)))
+    ;; Set/clear the actual breakpoint.
+    (mds-ss-eval-debug-code (format "debugopts('stopat'=[pointto(%s),%s%s])"
+				    (car state)
+				    (if clear "-" "")
+				    (nth 1 state)))))
 
 (defun mds-li-unstopat ()
   "Clear breakpoint at point."
   (interactive)
-  (let ((state (mds-li-get-statement (point))))
-    ;; clear breakpint in fringe
-    (mds-li-goto-state state)
-    (mds-li-remove-breakpoint (line-beginning-position))
-    (with-current-buffer (mds-client-live-buf mds-client)
-      (mds-goto-state (number-to-string state))
-      (mds-unstopat))))
+  (mds-li-breakpoint 'clear))
 
 (defun mds-li-here (cnt)
   (interactive "p")

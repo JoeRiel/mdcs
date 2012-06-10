@@ -118,7 +118,7 @@ have no spaces."
     (while (null result)
       (sleep-for 0.0001)
       (setq result (mds-client-get-result mds-client)))
-    result))
+    (substring result 0 -1)))
 
 ;;}}}
 

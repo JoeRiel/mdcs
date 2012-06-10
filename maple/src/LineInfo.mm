@@ -346,22 +346,23 @@ local ModuleLoad
     end proc;
 
 ##PROCEDURE \THISMOD[LookupStatement]
-##HALFLINE return the statement number of a procedure given a source position
+##HALFLINE return statement information at a given source position
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##CALLINGSEQUENCE
-##- LookupStatemen('filename','lastaddr','lineno','offset','info')
+##- LookupStatemen('filename','lastaddr','lineno','offset')
 ##PARAMETERS
 ##- 'filename' : ::string::; source file name
 ##- 'lastaddr' : ::integer::; address of likely procedure
 ##- 'lineno'   : ::posint::; line number of position in source file
 ##- 'offset'   : ::nonnegint::; character offset (from 0) of position in file
-##- 'info'     : (optional) ::table::; info table (for testing)
 ##RETURNS
-##- `(addr,state)`
+##- `(addr,state,offset)`
 ##-- `addr` - ::integer::; procedure address
 ##-- `state` - ::nonnegint::; statement number in procedure
-##
+##-- `offset` - ::nonnegint::; character offset of beginning of statement
+##- ~"no candidates"~ - returned if there are no known source candidates
+##  at position.
 ##ALGORITHM
 ##- Given 'filename',
 ##  get the list of possible procedures (addresses).
@@ -400,31 +401,30 @@ local ModuleLoad
 ## Try[NE]("1.0.3", addressof(f), 'assign'="af"):
 ## Try[NE]("1.0.4", mdc:-LineInfo:-Store(af));
 ##
-## Try("1.1.1", FUNC(src, af, 5, 51), 3);
-## Try("1.1.2", FUNC(src, af, 5, 10), 3);
-## Try("1.1.3", FUNC(src, af, 6, 10), 4);
-## Try("1.1.4", FUNC(src, af, 7, 10), 4);
+## Try("1.1.1", [FUNC](src, af, 5, 51), [af,3,59]);
+## Try("1.1.2", [FUNC](src, af, 5, 10), [af,3,59]);
+## Try("1.1.3", [FUNC](src, af, 6, 10), [af,4,78]);
+## Try("1.1.4", [FUNC](src, af, 7, 10), [af,4,78]);
 
     LookupStatement := proc( filename :: string
                              , lastaddr :: integer
                              , lineno :: posint
                              , offset :: nonnegint
-                             , info := Info
                            )
 
     local addr, addrs, i,n,pos;
 
-        if info[filename] = 0 then
+        if Info[filename] = 0 then
             error "no lineinfo data exists for file '%1'", filename;
         end if;
 
         # Find appropriate addr by selecting those procedures
         # whose character range contains 'offset'.  If more than one,
         # then use the 'lastaddr'.
-        addrs := [info[filename]];
-        addrs := select( addr -> ( info[addr]:-positions[0,2] <= offset
+        addrs := [Info[filename]];
+        addrs := select( addr -> ( Info[addr]:-positions[0,2] <= offset
                                    and
-                                   offset <= info[addr]:-positions[0,4]
+                                   offset <= Info[addr]:-positions[0,4]
                                  )
                          , addrs );
         if addrs = [] then
@@ -441,13 +441,13 @@ local ModuleLoad
 
         # Search for line position.
         # Assign 'pos' the Array of position data for 'addr'
-        pos := info[addr]:-positions;
+        pos := Info[addr]:-positions;
 
         # Get first statement on or following 'lineno'
         n := upperbound(pos,1);
         for i to n while pos[i,2] < lineno do end do;
         ASSERT(i<=n, "cannot find statement");
-        return i;
+        return (addr,i,pos[i,3]);
 
     end proc;
 
