@@ -234,8 +234,9 @@ global showstat, showstop;
                 if src_pos = NULL then
                     debugger_printf('DBG_STATE', "%s", state);
                 else
-                    debugger_printf('LINE_INFO', "%s %d %d %d:%s"
+                    debugger_printf('LINE_INFO', "%s %d %d %d%s:%s"
                                     , src_pos
+                                    , LineInfo:-Breakpoints(addr)
                                     , state
                                    );
                 end if;

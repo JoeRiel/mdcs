@@ -74,7 +74,7 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file beg)
+(defun mds-li-update (buffer file beg breakpoints)
   "Update source BUFFER with source-file FILE; put point at BEG.
 Move the current statement marker.  The buffer has major mode
 `mds-li-mode'."
@@ -107,6 +107,15 @@ Set cursor to ready."
   (mds-wm-select-code-window client)
   (goto-char mds-li-beg)
   (setq cursor-type mds-cursor-ready))
+
+(defun mds-li--show-breakpoint (pos)
+  "Insert a breakpoint at POS.
+POS should be at the left-margin."
+
+  )
+
+
+
 
 ;;}}}
 

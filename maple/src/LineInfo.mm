@@ -440,32 +440,68 @@ local ModuleLoad
 
     end proc;
 
-##PROCEDURE Breakpoints
+##PROCEDURE \THISMOD[Breakpoints]
+##HALFLINE return positions of breakpoints in a procedure
+##AUTHOR   Joe Riel
+##DATE     Jun 2012
+##CALLINGSEQUENCE
+##- Breakpoints('addr')
+##PARAMETERS
+##- 'addr' : ::integer::; address of procedure
+##RETURNS
+##- ::string::
 ##DESCRIPTION
-##- Return the ordered list of statement numbers
-##  at which breakpoints exist in a procedure.
+##- Returns a string consisting of the character offsets
+##  of the beginning of statements with breakpoints
+##  in a procedure.
 ##
-##- The procedure's address is 'addr'.
+##- The parameter 'addr' is address of the procedure.
+##  The procedure is assumed to have an entry
+##  in the *Info* table.
 ##
+##- If there are no breakpoints, return the empty string.
+##  Otherwise return a string consisting of the offsets,
+##  each preceded by a space.  For example, if the
+##  procedure has breakpoints at offsets 12 and 24, the
+##  string returned is ~" 12 24"~.
 ##TEST
 ## $include <AssignFunc.mi>
+## $include <lineinfo.mpl>
 ## AssignFUNC(mdc:-LineInfo:-Breakpoints):
-## macro(NE='testnoerror');
+## AssignLocal(Store, mdc:-LineInfo:-Store):
+## macro(NE='testnoerror'
+##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
+##       ,RE='(verify,record(Or(truefalse,Array)))'
+##       ,TE='testerror'
+##      );
 ### mdc(FUNC):
-## Try("1.0", FUNC(addressof(simplify)), []);
-## Try[NE]("1.1.0", stopat(simplify)):
-## Try("1.1.1", FUNC(addressof(simplify)), [1]);
-## Try[NE]("1.2.0", stopat(simplify,10)):
-## Try("1.2.1", FUNC(addressof(simplify)), [1,10]);
+##
+## Try[NE]("1.0.1", proc() save f, "f.mpl"; read "f.mpl" end());
+## Try[NE]("1.0.2", addressof(f), 'assign'="af"):
+## Try[NE]("1.0.3", mdc:-LineInfo:-SetRoot(currentdir()));
+## Try[NE]("1.0.4", mdc:-LineInfo:-Store(af));
+##
+## Try("1.1.0", FUNC(af), "");
+## Try[NE]("1.1.0", stopat(f));
+## Try("1.1.1", FUNC(af), " 22");
+## Try[NE]("1.2.0", stopat(f,3)):
+## Try("1.2.1", FUNC(af), " 22 40");
 
-    Breakpoints := proc( addr :: integer )
-    local all,state,states,str;
-        str := debugopts('procdump' = pointto(addr));
-        states := NULL;
+    Breakpoints := proc( addr :: integer)
+    local all,begs,prc,result,state,str;
+        prc := pointto(addr);
+        # Quick test to handle proceures with no breakpoints.
+        if not has(eval(prc),'DEBUG') then
+            return "";
+        end if;
+        str := debugopts('procdump' = prc);
+        begs := Info[addr]:-positions;
+        result := "";
         while StringTools:-RegMatch("\n *([0-9]+)\\*(.*)", str, 'all', 'state', 'str') do
-            states := (states, sscanf(state,"%d")[1]);
+            state := sscanf(state,"%d")[1];
+            result := sprintf("%s %d", result, begs[state,3]));
         end do;
-        [states];
+        result;
     end proc;
 
 end module:

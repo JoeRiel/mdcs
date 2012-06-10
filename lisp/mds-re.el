@@ -89,18 +89,19 @@ It has four groups:
 (4) statement.")
 
 (defconst mds--line-info-re
-  (concat "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\):"
+  (concat "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)\\(\\(?: [0-9]+\\)*\\):"
 	  mds--dbg-state-re)
   "Anchored regexp that matches the line-info output/debug status
-output of the debugger.  It has seven groups:
+output of the debugger.  It has the following groups:
 (1) filename of source;
 (2) line number in source;
 (3) character offset to beginning of statement;
-(4) character offset to end of statemeng;
-(5) address of current procedure;
-(6) name of current procedure;
-(7) state number;
-(8) statement.")
+(4) character offset to end of statement;
+(5) states with breakpoints;
+(6) address of current procedure;
+(7) name of current procedure;
+(8) state number;
+(9) statement.")
 	  
 
 (defconst mds-procname-assignment-re "^\\([^ \t\n]+\\) := *"
