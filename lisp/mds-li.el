@@ -39,6 +39,7 @@
   (require 'mds-custom)
   (require 'mds-ss)
   (require 'mds-wm)
+  (require 'maplev)
   (defvar mds-truncate-lines))
 
 
@@ -239,6 +240,7 @@ Set cursor to ready."
   "Major mode for stepping through source code of a debugged Maple procedure."
   :group 'mds
   (setq mds-li-arrow-position (make-marker))
+  (setq tab-width maplev-indent-level)
   (if mds-truncate-lines (toggle-truncate-lines 1)))
 
 
