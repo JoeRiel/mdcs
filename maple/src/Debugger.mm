@@ -207,7 +207,10 @@ $endif
     local argList, rts;
     description `Used by debugger to produce output.`;
 
-        argList := [_rest];
+        argList := subsindets([_rest], `record`
+                              , proc(rec) 'Record'(exports(rec)) end proc
+                             );
+
         try
             # suppress large rtables
             rts := map(x->x=`debugger/describe_rtable`(x)
@@ -220,6 +223,7 @@ $endif
 
         return NULL;
     end proc:
+
 
 #}}}
 #{{{ debugger_readline
