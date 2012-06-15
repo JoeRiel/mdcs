@@ -207,6 +207,10 @@ Set cursor to ready."
     (beep)
     (message "No line-info source associated with current procedure.")))
 
+(defun mds-li-toggle-lineinfo ()
+  (interactive)
+  (mds-client-set-use-lineinfo mds-client (not (mds-client-use-lineinfo-p mds-client))))
+
 ;;}}}
 
 ;;{{{ mode-map
@@ -222,7 +226,7 @@ Set cursor to ready."
 	 '(("b" . mds-li-breakpoint)
 	   ("B" . mds-breakpoint-cond)
 	   ("g" . mds-goto-procname)
-	   ("G" . mds-goback-save)
+	   ("G" . mds-li-open-source-at-point)
 	   ("h" . mds-li-here)
 	   ("I" . mds-stopwhenif)
 	   ("l" . mds-goto-current-state)
