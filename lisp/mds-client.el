@@ -47,7 +47,7 @@ See `mds-client-create' for the form of each entry.")
   "Current number of clients.
 Maximum is given by `mds-max-number-clients'.")
 
-(defsubst mds-client-proc     (client) "Return CLIENT's procedure."        (aref client 0))
+(defsubst mds-client-proc     (client) "Return CLIENT's process."          (aref client 0))
 (defsubst mds-client-status   (client) "Return CLIENT's status."           (aref client 1))
 (defsubst mds-client-queue    (client) "Return CLIENT's queue."            (aref client 2))
 (defsubst mds-client-id       (client) "Return CLIENT's id."               (aref client 3))
