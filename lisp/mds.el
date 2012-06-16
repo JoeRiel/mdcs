@@ -346,7 +346,7 @@ use them to route the message."
 	    (statement 	 (match-string 9 msg))
 	    (li-buf (mds-client-li-buf client)))
 	(mds-ss-update live-buf addr procname state statement)
-	(mds-li-update li-buf file beg (mapcar 'string-to-number (split-string breakpoints)))
+	(mds-li-update li-buf file procname beg (mapcar 'string-to-number (split-string breakpoints)))
 	(mds-client-set-has-source client t)))
 
      ((string= tag "DBG_SHOW")

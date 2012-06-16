@@ -87,7 +87,7 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file beg breakpoints)
+(defun mds-li-update (buffer file procname beg breakpoints)
   "Update source BUFFER with source-file FILE; put point at BEG.
 Move the current statement marker.  The buffer has major mode
 `mds-li-mode'."
@@ -102,7 +102,11 @@ Move the current statement marker.  The buffer has major mode
       	(setq brkpt (car breakpoints)
       	      breakpoints (cdr breakpoints))
       	(goto-char (1+ brkpt))
-      	(mds-li-set-breakpoint (line-beginning-position)))))
+      	(mds-li-set-breakpoint (line-beginning-position)))
+        ;; Update the mode-line
+       (mds-li-set-mode-line file
+			     procname
+			     (car (mds-client-id mds-client)))))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
   (setq mds-li-beg beg))
@@ -213,6 +217,22 @@ Set cursor to ready."
 
 ;;}}}
 
+;;{{{ mode-line
+
+(defun mds-li-set-mode-line (file procname &optional label)
+  "Set the mode-line of the mds-li buffer.
+FILE is the name of the source file, PROCNAME is the current procedure,
+LABEL is the user id."
+  (setq mode-line-format
+	(list
+	 mode-line-buffer-identification
+	 (and label (concat "   " (propertize (format "[%s]" label) 'face 'bold)))
+	 "   "
+	 (propertize (format "[%s: %s]" procname file) 'face 'bold)
+	 "-%-")))
+
+
+;;}}}
 ;;{{{ mode-map
 
 ;; Copy mds-ss-mode-map, but rebind some keys
