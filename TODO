@@ -179,7 +179,8 @@
       A client flag could be used; it would be initialized to
       mds-use-lineinfo-flag.  That seems the best approach.
       
-*** TODO Provide command to go to source
+*** DONE Provide command to go to source
+    CLOSED: [2012-06-16 Sat 13:08]
 *** DONE Decorate the li buffer
     CLOSED: [2012-06-10 Sun 10:53]
     This is more difficult than it should be.  First, need to decide
@@ -192,6 +193,18 @@
 
 *** DONE Fix setting/clearing breakpoints to work outside current procedure.
     CLOSED: [2012-06-10 Sun 10:53]
+    
+*** DONE Display current procedure and filename in mode line
+    CLOSED: [2012-06-16 Sat 13:09]
+*** TODO Provide a means to fix the state number
+    The purpose is to work-around changes to the procedure introduced
+    by the simplifier.  This could be completely manual, partially
+    automatic, or fully automated.  Probably will start with the full
+    manual.
+*** DONE Compile a custom kernel to store line-info in an mla.
+    CLOSED: [2012-06-16 Sat 13:11]
+*** TODO Add an option to cmaple to enable the storing of line-info in an mla.
+    Need to discuss this with Stefan.
     
 * Long Term
  
