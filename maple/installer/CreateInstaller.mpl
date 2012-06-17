@@ -206,6 +206,8 @@ global InstallScript;
                                 , file = [NULL
                                           , "mds-client.el"
                                           #, "mds-cp.el"
+                                          , "mds-custom.el"
+                                          , "mds-li.el"
                                           , "mds-login.el"
                                           , "mds-out.el"
                                           , "mds-patch.el"
