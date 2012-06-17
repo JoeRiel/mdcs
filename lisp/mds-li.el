@@ -63,11 +63,13 @@
 (defvar mds-li-arrow-position nil "Marker for current-line.")
 (defvar mds-li-beg nil            "Character position of current position.")   
 (defvar mds-li-file-name ""       "Name of the current source-file.")
+(defvar mds-li-state 0            "Current state (posint).")
 
 (mapc #'make-variable-buffer-local
       '(mds-li-arrow-position
 	mds-li-beg
-	mds-li-file-name))
+	mds-li-file-name
+	mds-li-state))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
 
@@ -87,10 +89,14 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file procname beg breakpoints)
-  "Update source BUFFER with source-file FILE; put point at BEG.
-Move the current statement marker.  The buffer has major mode
-`mds-li-mode'."
+(defun mds-li-update (buffer file procname state beg breakpoints)
+  "Update source BUFFER with source-file FILE.  
+PROCNAME is the procedure name.
+STATE is  the current state (a string corresponding to an integer).
+BEG is the character position of the beginning of the statement in FILE.
+BREAKPOINTS is a list of the position of the beginning of lines that have breakpoints.
+
+Put point at BEG and move the current statement marker."
   (set-buffer buffer)
   (unless (string= file mds-li-file-name)
     ;; insert the new file
@@ -107,6 +113,7 @@ Move the current statement marker.  The buffer has major mode
        (mds-li-set-mode-line file
 			     procname
 			     (car (mds-client-id mds-client)))))
+  (setq mds-li-state (string-to-number state))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
   (setq mds-li-beg beg))
@@ -211,6 +218,23 @@ Set cursor to ready."
     (beep)
     (message "No line-info source associated with current procedure.")))
 
+;;{{{ (*) Evaluation
+
+(defun mds-li-eval-and-prettyprint-prev ()
+  "Call `mds-eval-and-prettyprint' with point at the preceding statement."
+  (interactive)
+  (save-excursion
+    (if (= 1 mds-li-state)
+	(progn
+	  (beep)
+	  (message "No preceding state."))
+      (mds-li-goto-state (1- mds-li-state))
+      (let ((expr (mds-expr-at-point)))
+	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
+				
+
+;;}}}
+
 ;;}}}
 
 ;;{{{ mode-line
@@ -226,7 +250,6 @@ LABEL is the user id."
 	 "   "
 	 (propertize (format "[%s: %s]" procname file) 'face 'bold)
 	 "-%-")))
-
 
 ;;}}}
 ;;{{{ mode-map
@@ -248,7 +271,9 @@ LABEL is the user id."
 	   ("l" . mds-goto-current-state)
 	   ("L" . mds-ss-refresh)
 	   ("q" . mds-quit)
-	   ("u" . mds-li-unstopat))))
+	   ("u" . mds-li-unstopat)
+	   ("," . mds-li-eval-and-prettyprint-prev)
+	   )))
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
     (setq mds-li-mode-map map)))

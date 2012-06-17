@@ -206,6 +206,15 @@
     CLOSED: [2012-06-16 Sat 13:11]
 *** TODO Add an option to cmaple to enable the storing of line-info in an mla.
     Need to discuss this with Stefan.
+
+*** VERIFY Modify mds-eval-and-prettyprint-prev
+    Did so, using a better technique that should be ported to ss.
+    It uses the preceding statement number, which is closer to what 
+    is desired.  What we really want is the previously executed statement
+    in the current procedure.  That is doable, but may not be robust,
+    particularly with a recursive procedure.
+
+    There is an issue.  The output-buffer isn't quite right.
     
 * Long Term
  
