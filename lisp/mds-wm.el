@@ -171,7 +171,7 @@ with n being the number of clients."
 (defun mds-wm-cycle-clients (&optional backwards)
 
 ;; If client is not visible, make it so without rotating.
-;; That should probably be a seperate function
+;; That should probably be a separate function
 
   "Rotate the ... to first client in on list, then rotate list.
 If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
@@ -180,7 +180,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
       (let ((client (cdar mds-clients)))
 	(and (> (length mds-clients) 1)
 	     ;; client is already displayed
-	     (get-buffer-window (mds-client-live-buf client) mds-frame)
+	     (get-buffer-window (mds-wm-code-buffer client) mds-frame)
 	     ;; rotate list
 	     (setq mds-clients
 		   (if 'backwards
@@ -283,7 +283,8 @@ Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
 
 (defun mds-wm-select-code-window (client)
   "Select the code window of CLIENT.
-If the code window does not exist, create it."
+The code window contains either a live-showstat buffer or a
+line-info buffer.  If the code window does not exist, create it."
   (let ((code-win (mds-client-get-code-window client)))
     (unless code-win
       ;; create code window
@@ -291,14 +292,24 @@ If the code window does not exist, create it."
       (setq code-win (mds-client-get-code-window client)))
     ;; Display the selected code buffer in the code window.
     ;; How expensive is this?  Here we use a conditional.
-    (let ((code-buf (if (and (mds-client-use-lineinfo-p client)
-			     (mds-client-has-source-p client))
-			(mds-client-li-buf client)
-		      (mds-client-live-buf client))))
+    (let ((code-buf (mds-wm-code-buffer client)))
       (unless (eq code-buf (window-buffer code-win))
 	(set-window-buffer code-win code-buf))
       (set-buffer code-buf))))
+
+(defun mds-wm-code-buffer (client)
+  "Return the code-buffer of CLIENT."
+  (if (and (mds-client-use-lineinfo-p client)
+	   (mds-client-has-source-p client))
+      (mds-client-li-buf client)
+    (mds-client-live-buf client)))
       
+
+(defun mds-wm-toggle-code-view ()
+  "Toggle the view of the code between the showstat-live and line-info buffers."
+  (interactive)
+  (mds-client-set-use-lineinfo mds-client (not (mds-client-use-lineinfo-p mds-client)))
+  (mds-wm-select-code-window mds-client))
 
 ;; (cancel-debug-on-entry 'mds-wm-select-code-window)
 (provide 'mds-wm)

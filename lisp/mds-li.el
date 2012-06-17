@@ -211,10 +211,6 @@ Set cursor to ready."
     (beep)
     (message "No line-info source associated with current procedure.")))
 
-(defun mds-li-toggle-lineinfo ()
-  (interactive)
-  (mds-client-set-use-lineinfo mds-client (not (mds-client-use-lineinfo-p mds-client))))
-
 ;;}}}
 
 ;;{{{ mode-line

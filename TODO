@@ -169,7 +169,8 @@
 
 ** LineInfo:
 
-*** TODO Toggle between li and ss buffers
+*** DONE Toggle between li and ss buffers
+    CLOSED: [2012-06-16 Sat 17:23]
     * It's not entirely clear how to control this.
     * There presumably should be a global customizable variable,
       mds-use-lineinfo-flag, which, if true uses any lineinfo data.

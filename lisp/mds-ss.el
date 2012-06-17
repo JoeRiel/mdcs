@@ -952,6 +952,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("t" . mds-cycle-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
+	   ("v" . mds-wm-toggle-code-view)
 	   ("w" . mds-stopwhen-local)
 	   ("W" . mds-stopwhen-global)
 	   ("x" . mds-showexception)
@@ -1071,6 +1072,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Clear output buffer"           mds-out-clear t]
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
+       ["Toggle code view"              mds-wm-toggle-code-view t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
@@ -1155,6 +1157,7 @@ Miscellaneous
 \\[mds-info] display info pages for the Maple debugger
 \\[maplev-help-at-point] display a Maple help page
 \\[maplev-proc-at-point] display a Maple procedure
+\\[mds-wm-toggle-code-view] toggle view of code between showstat and line-info
 \\[mds-toggle-truncate-lines] toggle whether to fold or truncate long lines
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 \\[mds-toggle-show-args] toggle the displaying of arguments when entering a procedure
