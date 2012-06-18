@@ -87,12 +87,10 @@ the client."
   (if mouse-autoselect-window
       ;; without this, there are weird problems with window splits or selecting live-buf
       (sleep-for 0.1))
-
   ;; Split the frame into a code window and an output window
-  (let ((code-buf (mds-client-code-buffer client))
+  (let ((code-win (select-window (display-buffer (mds-client-code-buffer client))))
 	(out-buf  (mds-client-out-buf client)))
-    ;; delete all windows except the selected code-window.
-    (delete-other-windows (mds-client-set-code-window client (select-window (display-buffer code-buf))))
+    (delete-other-windows (mds-client-set-code-window client code-win))
     (set-window-buffer (split-window nil
 				     (and mds-wm-ss-fractional-size
 					  (round (* mds-wm-ss-fractional-size
