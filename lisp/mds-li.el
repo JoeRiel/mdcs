@@ -158,7 +158,7 @@ Set cursor to ready."
 (defun mds-li-goto-state (state)
   "Move point to the beginning of statement number STATE in the current procedure."
   (goto-char (1+ (string-to-number 
-		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,ret_begin)" 
+		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,'ret_begin')" 
 					  (mds-client-get-addr mds-client) state))))))
   
 
