@@ -501,10 +501,13 @@ local ModuleLoad
     Breakpoints := proc( addr :: integer)
     local all,begs,prc,result,state,str;
         prc := pointto(addr);
-        # Quick test to handle proceures with no breakpoints.
-        if not has(eval(prc),'DEBUG') then
-            return "";
-        end if;
+        # Quick test to handle procedures with no breakpoints.
+        # The eval is problematic; some procedures have issues.  The
+        # symptom is delayed.  During debugging, the simulation at
+        # some point runs to completion.
+        # if not has(eval(prc,2),'DEBUG') then
+        #    return "";
+        # end if;
         str := debugopts('procdump' = prc);
         begs := Info[addr]:-positions;
         result := "";

@@ -235,8 +235,8 @@ global showstat, showstop;
                     debugger_printf('DBG_STATE', "%s", state);
                 else
                     debugger_printf('LINE_INFO', "%s %d %d %d%s:%s"
-                                    , src_pos
-                                    , LineInfo:-Breakpoints(addr)
+                                    , src_pos                     # file, lineno, beg, end
+                                    , LineInfo:-Breakpoints(addr) # breakpoints, as a string
                                     , state
                                    );
                 end if;
