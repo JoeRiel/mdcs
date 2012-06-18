@@ -60,13 +60,15 @@
 
 ;;{{{ Variables
 
+(defvar mds-li-addr ""            "Address of the current procedure.")
 (defvar mds-li-arrow-position nil "Marker for current-line.")
 (defvar mds-li-beg nil            "Character position of current position.")   
 (defvar mds-li-file-name ""       "Name of the current source-file.")
 (defvar mds-li-state 0            "Current state (posint).")
 
 (mapc #'make-variable-buffer-local
-      '(mds-li-arrow-position
+      '(mds-li-addr
+	mds-li-arrow-position
 	mds-li-beg
 	mds-li-file-name
 	mds-li-state))
@@ -89,7 +91,7 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file procname state beg breakpoints)
+(defun mds-li-update (buffer file addr procname state beg breakpoints)
   "Update source BUFFER with source-file FILE.  
 PROCNAME is the procedure name.
 STATE is  the current state (a string corresponding to an integer).
@@ -98,21 +100,29 @@ BREAKPOINTS is a list of the position of the beginning of lines that have breakp
 
 Put point at BEG and move the current statement marker."
   (set-buffer buffer)
-  (unless (string= file mds-li-file-name)
-    ;; insert the new file
-    (let (brkpt buffer-read-only)
+  (let ((same-file (string= file mds-li-file-name))
+	(same-addr (string= addr mds-li-addr))
+	buffer-read-only)
+    (unless same-file
+      ;; insert the new file and update buffer-local variable
       (delete-region (point-min) (point-max))
+      (mds-li-remove-breakpoint (point-min))
       (insert-file-contents file)
-      (setq mds-li-file-name file)
-      (while breakpoints
-      	(setq brkpt (car breakpoints)
-      	      breakpoints (cdr breakpoints))
-      	(goto-char (1+ brkpt))
-      	(mds-li-set-breakpoint (line-beginning-position)))
-        ;; Update the mode-line
-       (mds-li-set-mode-line file
-			     procname
-			     (car (mds-client-id mds-client)))))
+      (setq mds-li-file-name file))
+    (unless same-addr
+      ;; insert breakpoints and update buffer-local variable
+      (let (brkpt)
+	(while breakpoints
+	  (setq brkpt (car breakpoints)
+		breakpoints (cdr breakpoints))
+	  (goto-char (1+ brkpt))
+	  (mds-li-set-breakpoint (line-beginning-position))))
+      (setq mds-li-addr addr))
+    (unless (and same-file same-addr)
+      ;; Update the mode-line
+      (mds-li-set-mode-line file
+			    procname
+			    (car (mds-client-id mds-client)))))
   (setq mds-li-state (string-to-number state))
   (goto-char beg)
   (set-marker mds-li-arrow-position (line-beginning-position))
