@@ -390,7 +390,7 @@ use them to route the message."
       (mds-out-display out-buf msg 'printf))
 
      ((string= tag "MDC_RESPONSE")
-      (mds-client-assign-result client msg))
+      (mds-client-set-result client msg))
 
      ((string= tag "DBG_ERROR")
       (mds-out-display out-buf msg 'maple-err))

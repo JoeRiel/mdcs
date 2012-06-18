@@ -111,7 +111,7 @@ code."
   "Send the string EXPR to Maple and return the response, as a string.
 A newline is appended to EXPR before it is sent.  EXPR should
 have no spaces."
-  (mds-client-assign-result mds-client nil)
+  (mds-client-set-result mds-client nil)
   (mds-client-send mds-client (format "_mds_request %s\n" expr))
   (let (result)
     ;; Loop until the result is returned.

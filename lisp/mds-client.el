@@ -162,7 +162,7 @@ kill the buffers, and decrement `mds-clients-number'."
 The value is an integer."
   (string-to-number (nth 1 (mds-client-id client))))
 
-(defun mds-client-assign-result (client result)
+(defun mds-client-set-result (client result)
   "Assign `mds-ss-result' in CLIENT the value RESULT."
   (with-current-buffer (mds-client-live-buf client)
     (setq mds-ss-result result)))
