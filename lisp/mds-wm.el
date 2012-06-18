@@ -89,8 +89,9 @@ the client."
       (sleep-for 0.1))
 
   ;; Split the frame into a code window and an output window
-  (let ((code-buf (mds-client-live-buf client))
+  (let ((code-buf (mds-client-code-buffer client))
 	(out-buf  (mds-client-out-buf client)))
+    ;; delete all windows except the selected code-window.
     (delete-other-windows (mds-client-set-code-window client (select-window (display-buffer code-buf))))
     (set-window-buffer (split-window nil
 				     (and mds-wm-ss-fractional-size
@@ -100,7 +101,6 @@ the client."
 						      (window-height)))))
 				     mds-wm-side-by-side)
 		       out-buf)
-    (mds-wm-select-code-window client)
     client))
 
 (defun mds-wm-display-dead (client)
@@ -129,7 +129,7 @@ with n being the number of clients."
   (if clients
       (let ((n (length clients))
 	    wbot wtop)
-	(setq wtop (select-window (display-buffer (mds-client-live-buf (car clients)))))
+	(setq wtop (mds-wm-select-code-window (car clients)))
 	(delete-other-windows wtop)
 	(setq wbot (split-window-vertically))
 	(while clients
@@ -138,7 +138,7 @@ with n being the number of clients."
 	  (select-window wbot)
 	  (if (> n 1) (setq wbot (split-window-horizontally (/ (window-width) n))))
 
-	  (set-window-buffer wtop (mds-client-live-buf (car clients)))
+	  (set-window-buffer wtop (mds-client-code-buffer (car clients)))
 	  (select-window wtop)
 	  (if (> n 1) (setq wtop (split-window-horizontally (/ (window-width) n))))
 	  ;; split live buffers (top half of frame)
@@ -180,7 +180,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
       (let ((client (cdar mds-clients)))
 	(and (> (length mds-clients) 1)
 	     ;; client is already displayed
-	     (get-buffer-window (mds-wm-code-buffer client) mds-frame)
+	     (get-buffer-window (mds-client-code-buffer client) mds-frame)
 	     ;; rotate list
 	     (setq mds-clients
 		   (if 'backwards
@@ -282,34 +282,27 @@ Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
 ;;}}}
 
 (defun mds-wm-select-code-window (client)
-  "Select the code window of CLIENT.
+  "Select the code window of CLIENT and return it.
 The code window contains either a live-showstat buffer or a
 line-info buffer.  If the code window does not exist, create it."
-  (let ((code-win (mds-client-get-code-window client)))
+  (let* ((code-buf (mds-client-code-buffer client))
+	 (code-win (get-buffer-window code-buf)))
     (unless code-win
       ;; create code window
       (mds-wm-display-client client)
-      (setq code-win (mds-client-get-code-window client)))
-    ;; Display the selected code buffer in the code window.
-    ;; How expensive is this?  Here we use a conditional.
-    (let ((code-buf (mds-wm-code-buffer client)))
-      (unless (eq code-buf (window-buffer code-win))
-	(set-window-buffer code-win code-buf))
-      (set-buffer code-buf))))
-
-(defun mds-wm-code-buffer (client)
-  "Return the code-buffer of CLIENT."
-  (if (and (mds-client-use-lineinfo-p client)
-	   (mds-client-has-source-p client))
-      (mds-client-li-buf client)
-    (mds-client-live-buf client)))
-      
+      (setq code-win (mds-client-get-code-window client))
+      (set-window-buffer code-win code-buf))
+    (set-buffer code-buf)
+    code-win))
 
 (defun mds-wm-toggle-code-view ()
   "Toggle the view of the code between the showstat-live and line-info buffers."
   (interactive)
-  (mds-client-set-use-lineinfo mds-client (not (mds-client-use-lineinfo-p mds-client)))
-  (mds-wm-select-code-window mds-client))
+  (set-window-buffer (get-buffer-window (mds-client-code-buffer mds-client))
+		     (if (mds-client-toggle-line-info-p mds-client)
+			 (mds-client-li-buf mds-client)
+		       (mds-client-live-buf mds-client))))
+
 
 ;; (cancel-debug-on-entry 'mds-wm-select-code-window)
 (provide 'mds-wm)
