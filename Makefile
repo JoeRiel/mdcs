@@ -292,6 +292,12 @@ install-el: $(LISP_FILES)
 	$(MKDIR) $(LISP_DIR)
 	$(CP) $+ $(LISP_DIR)
 
+install-links: $(call print-help,install-links,Install links to the lisp files)
+install-links: $(LISP_FILES) $(ELC_FILES)
+	@$(MKDIR) $(LISP_DIR)
+	ln -nfst $(LISP_DIR) $(realpath $(LISP_FILES))
+	ln -nfst $(LISP_DIR) $(realpath $(ELC_FILES))
+
 
 install-elc: $(call print-help,install-elc,Install elc files and link *.el files)
 install-elc: $(ELC_FILES)
