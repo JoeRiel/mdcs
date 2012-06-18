@@ -197,7 +197,7 @@
     
 *** DONE Display current procedure and filename in mode line
     CLOSED: [2012-06-16 Sat 13:09]
-*** TODO Provide a means to fix the state number
+*** TODO Provide a means to correct the state number
     The purpose is to work-around changes to the procedure introduced
     by the simplifier.  This could be completely manual, partially
     automatic, or fully automated.  Probably will start with the full
@@ -215,6 +215,11 @@
     particularly with a recursive procedure.
 
     There is an issue.  The output-buffer isn't quite right.
+
+*** DONE Fix grouping/clients
+    CLOSED: [2012-06-17 Sun 21:28]
+*** DONE Fix setting/clearing of breakpoints in other procedures
+    CLOSED: [2012-06-17 Sun 21:28]
     
 * Long Term
  
