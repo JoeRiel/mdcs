@@ -422,7 +422,7 @@ local ModuleLoad
         # whose character range contains 'offset'.  If more than one,
         # then use the 'lastaddr'.
         addrs := [Info[filename]];
-        addrs := select( addr -> ( Info[addr]:-positions[0,2] <= offset
+        addrs := select( addr -> ( Info[addr]:-positions[0,3] <= offset
                                    and
                                    offset <= Info[addr]:-positions[0,4]
                                  )
