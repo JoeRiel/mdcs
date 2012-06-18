@@ -137,7 +137,6 @@ Put point at BEG and move the current statement marker."
 If line information is available, a list of three strings is
 returned: address, statement number, and beginning character
 offset."
-
   (let ((result (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
 					mds-li-file-name
 					(mds-client-get-addr mds-client)
@@ -212,9 +211,14 @@ Set cursor to ready."
   (mds-li-breakpoint 'clear))
 
 (defun mds-li-here (cnt)
+  "Skip until the statement at point is reached CNT times."
   (interactive "p")
-  (with-current-buffer (mds-client-live-buf mds-client)
-    (mds-here 1)))
+  (message "Skipping to point...")
+  (let ((addr-state-beg (mds-li-get-state-list (point))))
+    (mds-ss-eval-proc-statement (format "_here %d %s %s"
+					cnt
+					(nth 0 addr-state-beg)
+					(nth 1 addr-state-beg)))))
 
 (defun mds-li-open-source-at-point ()
   "Open the file associated with current procedure."
