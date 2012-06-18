@@ -171,5 +171,16 @@ The value is an integer."
   "Return the value of `mds-ss-result in CLIENT."
   (buffer-local-value 'mds-ss-result (mds-client-live-buf client)))
 
+(defun mds-client-code-buffer (client)
+  "Return the code-buffer of CLIENT."
+  (if (and (mds-client-use-lineinfo-p client)
+	   (mds-client-has-source-p client))
+      (mds-client-li-buf client)
+    (mds-client-live-buf client)))
+
+(defun mds-client-toggle-line-info-p (client)
+  "Toggle the line-info flag of CLIENT and return the new value."
+  (mds-client-set-use-lineinfo client (not (mds-client-use-lineinfo-p client))))
+
 
 (provide 'mds-client)
