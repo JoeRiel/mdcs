@@ -408,7 +408,7 @@ Otherwise raise error indicating Maple is not available."
 
 ;;{{{ functions
 
-(defun mds-ss-get-embdedded-addr ()
+(defun mds-ss-get-embedded-addr ()
   "Return the (hidden) address of the current procedure."
   (save-excursion
     (goto-char (point-min))
@@ -518,7 +518,7 @@ exits."
   (message "Skipping to point...")
   (mds-ss-eval-proc-statement (format "_here %d %s %s"
 				      cnt
-				      (mds-ss-get-embdedded-addr)
+				      (mds-ss-get-embedded-addr)
 				      (mds-ss-get-state))))
 
 
@@ -831,7 +831,7 @@ See `mds-monitor-toggle'."
   (interactive "P")
   (let ((expr (read-string (format "%smonitor expr: "
 				   (if all "[all] " ""))))
-	(addr (if all "0" (mds-ss-get-embdedded-addr))))
+	(addr (if all "0" (mds-client-get-addr mds-client))))
     (mds-ss-eval-proc-statement (format "_monitor define %s %s" addr expr))))
 
 ;;}}}
@@ -901,7 +901,7 @@ otherwise do so in the `mds-ss-buffer'."
   (message "set goback point")
   (mds-ss-eval-proc-statement (format "_goback_save %s %s"
 				      (mds-ss-get-state)
-				      (mds-ss-get-embdedded-addr))))
+				      (mds-ss-get-embedded-addr))))
 
 (defun mds-info ()
   "Display the info page for MDS."
