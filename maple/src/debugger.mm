@@ -39,8 +39,9 @@ option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
 description
     `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
     `Not intended to be called directly.`;
-local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
-    , state, pName, lNum, cond, cmd, err, module_flag, pred, tag;
+local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line
+    , original, prompt, statLevel, state, pName, lNum, cond, cmd, err
+    , module_flag, pred, tag;
 global showstat, showstop;
 
     # Note: 21 appears to be the amount that kernelopts('level')
@@ -282,8 +283,10 @@ global showstat, showstop;
     #}}}
     #{{{ command loop
 
+    prompt := true;
+
     do
-        line := `debugger/readline`();
+        line := `debugger/readline`( prompt );
         # If there's an assignment, make sure it is delimited by spaces.
         i := SearchText(":=",line);
         if i > 1 and SearchText(" := ",line) <> i-1 then
@@ -542,7 +545,8 @@ global showstat, showstop;
             expr := line[2];
             val  := traperror(eval(parse(expr)));
             debugger_printf('MDC_RESPONSE', "%q\n", val);
-            return 'NULL';
+            prompt := false;
+            next;
             #}}}
         elif cmd = "statement" then
             #{{{ statement
@@ -605,7 +609,7 @@ global showstat, showstop;
 
         #}}}
 
-    od;
+    end do;
 
     #}}}
 

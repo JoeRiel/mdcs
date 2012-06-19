@@ -243,8 +243,6 @@ Set cursor to ready."
 	  (beep)
 	  (message "No preceding state."))
       (mds-li-goto-state (1- mds-li-state))
-      ;; hack to allow output buffer to update.
-      (sleep-for 0.01)
       (let ((expr (mds-expr-at-point)))
 	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
 				

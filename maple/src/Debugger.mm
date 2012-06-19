@@ -231,11 +231,13 @@ $endif
 # Used for user-input to the debugger. This lets us easily change the input
 # facilities to take advantage of special features of the Iris in future.
 
-    debugger_readline := proc()
+    debugger_readline := proc( prompt :: truefalse )
     local line,n;
     description `Used by debugger to obtain user-input.`;
         do
-            debugger_printf('DBG_PROMPT', ">");
+            if prompt then
+                debugger_printf('DBG_PROMPT', ">");
+            end if;
             try
                 line := Read();
                 n := -1;
