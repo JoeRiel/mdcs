@@ -154,13 +154,15 @@ Set cursor to ready."
   (goto-char mds-li-beg)
   (setq cursor-type mds-cursor-ready))
 
+(defun mds-li-get-state-at-point ()
+  "Return the statement number, as a string, of the line at point."
+  (nth 1 (mds-li-get-state-list (point))))
+
 (defun mds-li-goto-state (state)
   "Move point to the beginning of statement number STATE in the current procedure."
   (goto-char (1+ (string-to-number 
 		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,'ret_begin')" 
 					  (mds-client-get-addr mds-client) state))))))
-  
-
 
 (define-fringe-bitmap 'mds-li-breakpoint  [60 126 255 255 255 255 126 60])
 
@@ -209,6 +211,15 @@ Set cursor to ready."
   "Clear breakpoint at point."
   (interactive)
   (mds-li-breakpoint 'clear))
+
+(defun mds-li-goback-save ()
+  "Save statement at point as go-back point."
+  (interactive)
+  (message "set go-back point")
+  (let ((addr-state-beg (mds-li-get-state-list (point))))
+    (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+					(nth 1 addr-state-beg)
+					(nth 0 addr-state-beg)))))
 
 (defun mds-li-here (cnt)
   "Skip until the statement at point is reached CNT times."

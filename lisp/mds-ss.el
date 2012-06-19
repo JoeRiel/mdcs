@@ -896,9 +896,9 @@ otherwise do so in the `mds-ss-buffer'."
   (maplev-help-show-topic "debugger"))
 
 (defun mds-goback-save ()
-  "Save current statement as goto point."
+  "Save statement at point as go-back point."
   (interactive)
-  (message "set goback point")
+  (message "set go-back point")
   (mds-ss-eval-proc-statement (format "_goback_save %s %s"
 				      (mds-ss-get-state)
 				      (mds-ss-get-embedded-addr))))
