@@ -77,12 +77,15 @@ Maximum is given by `mds-max-number-clients'.")
 (defsubst mds-client-get-code-window (client)        "Get CLIENT's code window" (aref client 14))
 (defsubst mds-client-set-code-window (client window) "Set CLIENT's code WINDOW" (aset client 14 window))
 
+(defsubst mds-client-quiet-p (client)        "Get CLIENT's quiet flag" (aref client 15))
+(defsubst mds-client-set-quiet (client flag) "Set CLIENT's quiet flag" (aset client 15 flag))
+
 (defun mds-client-create (proc id)
   "Create a client that is associated with process PROC and has identity ID.
 The returned client structure is a vector [PROC status queue ID
 live-buf dead-buf out-buf addr], where status is initialized to
 'new'."
-  (let ((client (make-vector 15 nil)))
+  (let ((client (make-vector 16 nil)))
     (aset client 0 proc)
     (aset client 1 'login)
     (aset client 2 (mds-queue-create proc))
@@ -181,6 +184,10 @@ The value is an integer."
 (defun mds-client-toggle-line-info-p (client)
   "Toggle the line-info flag of CLIENT and return the new value."
   (mds-client-set-use-lineinfo client (not (mds-client-use-lineinfo-p client))))
+
+(defun mds-client-toggle-quiet-p (client)
+  "Toggle the quiet flag of CLIENT and return the new value."
+  (mds-client-set-quiet client (not (mds-client-quiet-p client))))
 
 
 (provide 'mds-client)

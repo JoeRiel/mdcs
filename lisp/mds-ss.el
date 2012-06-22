@@ -85,9 +85,10 @@ Echo the command to the output buffer unless HIDE is non-nil."
   (mds-ss-send-client (concat cmd "\n")))
 
 (defun mds-ss-eval-expr (expr &optional display)
-  "Send EXPR, with newline, to the Maple process DISPLAY to the output buffer.
-If DISPLAY is nil, send EXPR to the output buffer.  This function
-is intended to be used for evaluating Maple expressions."
+  "Send EXPR, with newline, to the Maple process.
+Non-nil DISPLAY means send EXPR to the output buffer.  This
+function is intended to be used for evaluating Maple
+expressions."
   (mds-ss-block-input)
   (mds-out-append-input (mds-client-out-buf mds-client) (or display expr) 'mds-user-input)
   (mds-ss-send-client (concat expr "\n")))
@@ -104,7 +105,8 @@ code."
   (if save (mds-client-set-last-cmd mds-client cmd))
   (setq cursor-type mds-cursor-waiting)
   (unless (eobp) (forward-char)) ; this indicates 'waiting' in tty Emacs, where cursor doesn't change
-  (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd)
+  (unless (mds-client-quiet-p mds-client)
+    (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd))
   (mds-ss-send-client cmd))
 
 (defun mds-ss-request (expr)
@@ -908,6 +910,15 @@ otherwise do so in the `mds-ss-buffer'."
   (interactive)
   (info "mds"))
 
+(defun mds-toggle-quiet (&optional set)
+  "Toggle the quiet mode, which suppresses normal output of executed statements."
+  (interactive)
+  (mds-ss-eval-expr
+   (format "mdc:-Debugger:-SetQuiet(%s)"
+	   (if (mds-client-toggle-quiet-p mds-client)
+	       "true"
+	     "false"))))
+
 ;;}}}
 
 ;;}}}
@@ -945,6 +956,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("p" . mds-showstop)
 	   ("P" . mds-patch)
 	   ("q" . mds-quit)
+	   ("Q" . mds-toggle-quiet)
 	   ("r" . mds-return)
 	   ("R" . mds-stoperror)
 	   ("s" . mds-step)

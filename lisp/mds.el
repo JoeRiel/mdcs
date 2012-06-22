@@ -456,12 +456,13 @@ when entering a procedure."
 (defun mds-toggle-track-input ()
   "Toggle the variable `mds-track-input-flag'.
 When true, executed input statements from the showstat buffer
-are printed to the output buffer."
+are printed to the output buffer.  Return the new value."
   (interactive)
   (message "track input: %s"
 	   (if (setq mds-track-input-flag (not mds-track-input-flag))
 	       "enabled"
-	     "disabled")))
+	     "disabled"))
+  mds-track-input-flag)
 
 
 (defun mds-toggle-stop-trace-at-error ()

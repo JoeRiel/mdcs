@@ -56,8 +56,8 @@ global showstat, showstop;
     and _passed[n][1] = 'DEBUGINFO' then
         procName := _passed[n][2];   # name of procedure
         statNumber := _passed[n][3]; # state number in procedure
-        statLevel := _passed[n][4];  # state level (a posint, starting at 1,
-        # incremented with each "indentation" level)
+        statLevel := _passed[n][4];  (* state level; a posint, starting at 1,
+                                        incremented with each "indentation" level *)
         n := n - 1;
 
         #{{{ handle go_back/here/enter_procname/match_predicate
@@ -142,7 +142,9 @@ global showstat, showstop;
     #}}}
     #{{{ send result to emacs
 
-    if not skip then
+
+    if not skip and ( Quiet implies Respond ) then
+        Respond := false;
         if monitor_result then
             tag := 'MONITOR'
         else
@@ -573,6 +575,7 @@ global showstat, showstop;
         else
             #{{{ expression
             try
+                Respond := true;
                 # Must be an expression to evaluate.
                 line := parse(original,parse_debugger);
                 # See *** comment in 'cmd = "statement"' case above.

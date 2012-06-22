@@ -29,6 +29,7 @@ export GoBack
     ,  Reset
     ,  Restore
     ,  RestoreBuiltins
+    ,  SetQuiet
     ,  SkipBefore
     ,  ShowError
     ,  ShowException
@@ -63,6 +64,8 @@ local _debugger
     , monitor_result := false
     , orig_print
     , orig_stopat
+    , Quiet := false
+    , Respond := false
     , getname
     , replaced
     , skip_before := NULL
@@ -608,6 +611,20 @@ $endif
 
 #}}}
 
+#{{{ SetQuiet
+
+    SetQuiet := proc( quiet :: truefalse
+                      , { toggle :: truefalse := false }
+                    )
+        if toggle then
+            Quiet := not Quiet;
+        else
+            Quiet := quiet;
+        end if;
+        NULL;
+    end proc;
+
+#}}}
 #{{{ GoBack
 
     GoBack := proc({ clear :: truefalse := false }, $ )

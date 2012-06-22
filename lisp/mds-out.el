@@ -240,7 +240,7 @@ Optional TAG identifies the message type."
 	     ((eq tag 'cmd)
 	      ;; Command
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
-	      (if mds-track-input-flag
+	      (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
 		  (insert (mds-out-get-ss-line) "\n")
 		(insert "\n")))
 	     
@@ -268,7 +268,7 @@ Optional TAG identifies the message type."
 			  (setq mds-ss-show-args-flag nil)
 			  (mds-ss-eval-expr "args"))))
 		  (when trace-mode
-		    (if mds-track-input-flag
+		    (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
 			(insert (buffer-local-value 'mds-ss-statement live-buf)))
 		    (insert "\n")
 		    (mds-client-send mds-client (concat trace-mode "\n"))))))
