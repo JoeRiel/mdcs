@@ -1,6 +1,14 @@
 -*- org -*-
 
-* mdcs.14
+* mdcs.1.14.1
+** Fixes to lineinfo
+   1. Fixed asynchronous timing issues
+   2. Fixed display of breakpoints
+   3. Fix mds-here
+   4. Fix monitor features
+   5. Fix eval-and-prettyprint-prev (,)
+** Added a Quiet mode, toggle with the Q-key.
+* mdcs.1.14
 ** First release with line-info mode.
 * mdcs.1.13.6
 ** Fix typo in skip_before description
