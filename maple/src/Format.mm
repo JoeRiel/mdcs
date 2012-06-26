@@ -388,7 +388,7 @@ local indexed2slashed
             catch:
             end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
-            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
+            WriteTagf(TAG_SS_DEAD, "%s", prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;

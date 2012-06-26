@@ -15,8 +15,7 @@
 ##- DBG_ERR : A debugger error occurred
 ##- DBG_EVAL : computed result (user or procedure)
 ##- DBG_INFO : output from "showstop"
-##- DBG_PARSE_ERR : debugger could not interpret input
-##- DBG_SAME_STATE : state has not changed
+##- DBG_SAME : state has not changed
 ##- DBG_STACK : short stack output (can be merged with DBG_WHERE)
 ##- DBG_STATE : debugger statement
 ##- DBG_STOP : never sent
@@ -25,7 +24,7 @@
 ##- LINE_INFO : sending line info (filename lineno beg end:...)
 ##- MONITOR : message is result of a monitored expression
 ##- MDC_PRINTF : pretty-printed output
-##- MPL_ERR : a Maple error occurred
+##- DBG_ERR : a Maple error occurred
 ##- SHOW_EXCEPTION : called from "ShowException"
 ##- WATCHED_CONDS: reports watches
 ##- WATCHED_ERRS : called from "_showstop"
@@ -69,7 +68,7 @@ global showstat, showstop;
                 and statNumber = go_back_state then
                     go_back := false;
                     skip := false;
-                    debugger_printf('CLEAR_ECHO');
+                    debugger_printf(TAG_CLEAR_MSG);
                 end if;
             elif here_cnt > 0 then
                 if here_proc = procName
@@ -78,7 +77,7 @@ global showstat, showstop;
                         here_cnt := here_cnt-1;
                     else
                         skip := false;
-                        debugger_printf('CLEAR_ECHO');
+                        debugger_printf(TAG_CLEAR_MSG);
                         here_cnt := 0;
                     end if;
                 end if;
@@ -90,7 +89,7 @@ global showstat, showstop;
                               ) <> 0 then
                     skip := false;
                     enter_procname := NULL;
-                    debugger_printf('CLEAR_ECHO');
+                    debugger_printf(TAG_CLEAR_MSG);
                 end if;
             elif skip_before <> NULL then
                 if skip_before_halt then
@@ -98,7 +97,7 @@ global showstat, showstop;
                     if SearchText(skip_before, dbg_state, SearchText("\n",dbg_state)+1..-2) <> 0 then
                         skip := false;
                         skip_before_halt := false;
-                        debugger_printf('CLEAR_ECHO');
+                        debugger_printf(TAG_CLEAR_MSG);
                     end if;
                 else
                     skip_before_halt := true;
@@ -108,9 +107,9 @@ global showstat, showstop;
                 if pred <> false then
                     skip := false;
                     if pred = true then
-                        debugger_printf('DBG_WARN', "skip predicate satisfied\n");
+                        debugger_printf(TAG_WARN, "skip predicate satisfied\n");
                     else
-                        debugger_printf('DBG_WARN', "skip predicate satisfied: %Q\n", pred);
+                        debugger_printf(TAG_WARN, "skip predicate satisfied: %Q\n", pred);
                     end if;
                 end if;
                 if SkipCheckStack then
@@ -146,28 +145,28 @@ global showstat, showstop;
     if not skip and ( Quiet implies Respond ) then
         Respond := false;
         if monitor_result then
-            tag := 'MONITOR'
+            tag := TAG_MONITOR
         else
-            tag := 'DBG_EVAL'
+            tag := TAG_EVAL
         end if;
         for i from 1 to n do
             # Use addressof to prevent an object from overriding
             # equality.
             if addressof(_passed[i]) = addressof(lasterror) then
-                debugger_printf('MPL_ERR', "Error, %s\n"
+                debugger_printf(TAG_ERROR, "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..]))
             elif _passed[i] :: list and nops(_passed[i]) >= 1 then
                 if _passed[i][1] = 'DEBUGSTACK' then
                     j := nops(_passed[i]) - 2;
                     while j > 2 do
                         if _passed[i][j+1] = `` then
-                            debugger_printf('DBG_STACK'
+                            debugger_printf(TAG_STACK
                                             , "<%d>\n%a\n"
                                             , addressof(_passed[i][j])
                                             , _passed[i][j]
                                            );
                         else
-                            debugger_printf('DBG_WHERE'
+                            debugger_printf(TAG_WHERE
                                             , "<%d>\n%a: %s\n"
                                             , addressof(_passed[i][j])
                                             , _passed[i][j]
@@ -177,7 +176,7 @@ global showstat, showstop;
                         j := j - 3
                     od
                 elif _passed[i][1] = 'DEBUGERROR' then
-                    debugger_printf('DBG_ERR', "Error, %Q\n",op(_passed[i][2..-1]))
+                    debugger_printf(TAG_ERROR, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
                     if assigned(`debugger/watch_condition`[_passed[i][2]])
                     and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
@@ -211,7 +210,7 @@ global showstat, showstop;
         if statNumber < 0 then
             if not skip then
                 # handle negative statement number (indicates multiple targets)
-                debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
+                debugger_printf(TAG_WARN, "Warning, statement number may be incorrect\n");
             end if;
             statNumber := -statNumber
         end if;
@@ -230,14 +229,14 @@ global showstat, showstop;
             addr := addressof(procName);
             state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
-                WriteTagf('DBG_SAME_STATE');
+                WriteTagf(TAG_SAME);
             else
                 last_state := state;
                 local src_pos := LineInfo:-Get(addr, statNumber);
                 if src_pos = NULL then
-                    debugger_printf('DBG_STATE', "%s", state);
+                    debugger_printf(TAG_STATE, "%s", state);
                 else
-                    debugger_printf('LINE_INFO', "%s %d %d %d%s:%s"
+                    debugger_printf(TAG_LINE_INFO, "%s %d %d %d%s:%s"
                                     , src_pos                     # file, lineno, beg, end
                                     , LineInfo:-Breakpoints(addr) # breakpoints, as a string
                                     , state
@@ -412,7 +411,7 @@ global showstat, showstop;
             #{{{ showstat
 
             if procName = 0 then
-                debugger_printf('DBG_WARN',"Error, not currently in a procedure\n");
+                debugger_printf(TAG_WARN,"Error, not currently in a procedure\n");
             elif nops(line) = 1 and cmd = "list" then
                 i := statNumber - 5;
                 if i < 1 then i := 1 fi;
@@ -546,7 +545,7 @@ global showstat, showstop;
             line := sscanf(original, "%s %s");
             expr := line[2];
             val  := traperror(eval(parse(expr)));
-            debugger_printf('MDC_RESPONSE', "%q\n", val);
+            debugger_printf(TAG_RESULT, "%q\n", val);
             prompt := false;
             next;
             #}}}
@@ -605,7 +604,7 @@ global showstat, showstop;
         #{{{ handle error
 
         if err = lasterror then
-            debugger_printf('DBG_PARSE_ERR', "Error, %s\n"
+            debugger_printf(TAG_ERR, "Error, %s\n"
                             , StringTools:-FormatMessage(lastexception[2..])
                            );
         fi;

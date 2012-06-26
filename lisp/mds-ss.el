@@ -113,14 +113,16 @@ code."
   "Send the string EXPR to Maple and return the response, as a string.
 A newline is appended to EXPR before it is sent.  EXPR should
 have no spaces."
-  (mds-client-set-result mds-client nil)
-  (mds-client-send mds-client (format "_mds_request %s\n" expr))
-  (let (result)
-    ;; Loop until the result is returned.
-    (while (null result)
-      (sleep-for 0.0001)
-      (setq result (mds-client-get-result mds-client)))
-    (substring result 0 -1)))
+  (let ((client mds-client)
+	result)
+    (save-current-buffer
+	(mds-client-set-result client nil)
+	(mds-client-send client (format "_mds_request %s\n" expr))
+	;; Loop until the result is returned.
+	(while (null result)
+	  (sleep-for 0.0001)
+	  (setq result (mds-client-get-result client)))
+	(substring result 0 -1))))
 
 ;;}}}
 
@@ -861,15 +863,16 @@ See `mds-monitor-toggle'."
     (mds-ss-send-client cmd)
     (message "Refreshed showstat buffer")))
 
-(defun mds-goto-current-state ()
+(defun mds-goto-current-state (&optional client)
   "Move cursor to the current state in the code buffer."
   (interactive)
-  (if (and (mds-client-use-lineinfo-p mds-client)
-	   (mds-client-has-source-p mds-client))
-      (mds-li-goto-current-state mds-client)
-    (pop-to-buffer (mds-client-live-buf mds-client))
+  (unless client (setq client mds-client))
+  (if (and (mds-client-use-lineinfo-p client)
+	   (mds-client-has-source-p client))
+      (mds-li-goto-current-state client)
+    (pop-to-buffer (mds-client-live-buf client))
     (mds-ss-update (current-buffer)
-		   (mds-client-get-addr mds-client)
+		   (mds-client-get-addr client)
 		   mds-ss-procname
 		   mds-ss-state
 		   mds-ss-statement)))

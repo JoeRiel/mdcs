@@ -110,7 +110,7 @@ The procname is flush left.  See diatribe in
 `mds-ss-where-procname-re'.")
 
 
-(defconst mds-start-tag-re "^<\\([^>]+\\)>"
+(defconst mds-start-tag-re "^<\\(.\\)>"
   "Regular expression that matches start tag.
 The tag has format <tag-name>.  Group 0 matches the tag,
 group 1 matches tag-name.")

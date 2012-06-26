@@ -527,7 +527,8 @@
 $define LEVEL_DEFAULT 75
 $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
-$define END_OF_MSG "---EOM---"
+
+$include <src/tags.mm>
 
 #$define LOG_READLINE # for debugging (need to close file)
 
@@ -563,8 +564,6 @@ local Connect
     , ModuleApply
     , ModuleLoad
     , ModuleUnload
-    , Read
-    , Write
     , WriteTagf
 
     , printf  # local versions so that globals can be 'debugged'
@@ -1030,27 +1029,6 @@ $endif
 
 #}}}
 
-#{{{ Read
-
-    Read := proc()
-    local res;
-        res := Sockets:-Read(sid);
-        if res = false then
-            error "process %1 disconnected unexpectedly", sid;
-        end if;
-        return res;
-    end proc;
-
-#}}}
-#{{{ Write
-
-    Write := proc(msg :: string)
-        if sid <> -1 then
-            Sockets:-Write(sid, msg);
-        end if;
-    end proc;
-
-#}}}
 #{{{ WriteTagf
 
 ##DEFINE PROC WriteTagf
@@ -1064,28 +1042,43 @@ $endif
 ##- 'rest' : (optional) arguments to "sprintf"
 ##RETURNS
 ##- `NULL`
+##DESCRIPTION
+##- Send a tagged message to the server.
+##- The string that is sent has the form
+##  ~tag lenlen [length msg]~,
+##  where 'tag' is a single character identifying the message type,
+##  `lenlen` is a single digit specifying the length of the LENGTH field,
+##  `length` is a field of digits specifying the length of MSG,
+##  and 'msg' is the message.
+##
+##- The message (`msg`) is created by passing the optional arguments to "sprintf".
+##  If the length of the message exceeds ~max_length~, a short message
+##  indicating what has been done, is substituted.
 
     WriteTagf := proc(tag)
     uses Write = Sockets:-Write;
-    local msg,len;
+    local msg,len,lenlen;
         if _npassed = 1 then
             msg := "";
         else
             msg := sprintf(_rest);
         end if;
-        if  tag <> 'DBG_SHOW'
-        and tag <> 'DBG_SHOW_INACTIVE'
-        and 0 < max_length then
+        len := length(msg);
+        if  tag <> TAG_SS_LIVE
+        and tag <> TAG_SS_DEAD
+        and 0 < max_length
+        and max_length < len then
+            msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
             len := length(msg);
-            if max_length < len then
-                msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
-            end if;
         end if;
-        # hack for now
-        Write(sid, sprintf("<%a>",tag));
-        Write(sid, msg);
-        Write(sid, sprintf("</%a>",tag));
-        Write(sid, END_OF_MSG);
+        lenlen := length(len);
+        Sockets:-Write(sid, cat(tag
+                                , lenlen
+                                , `if`(lenlen=0
+                                       , NULL
+                                       , len
+                                      )));
+        Sockets:-Write(sid, msg);
         if view_flag then
             fprintf('INTERFACE_DEBUG',_rest);
         end if;

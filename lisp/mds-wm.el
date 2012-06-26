@@ -84,9 +84,10 @@ the client."
       ;; without that, xfce doesn't switch frames
       (select-frame-set-input-focus (selected-frame)))
   (mds-wm-select-frame-set-input-focus mds-frame)
-  (if mouse-autoselect-window
-      ;; without this, there are weird problems with window splits or selecting live-buf
-      (sleep-for 0.1))
+  ;; (when mouse-autoselect-window
+  ;;   ;; without this, there are weird problems with window splits or selecting live-buf
+  ;;   ;; alas, with it the sleep-for screws-up the queue-filter.
+  ;;   (sleep-for 0.1)
   ;; Split the frame into a code window and an output window
   (let ((code-win (select-window (display-buffer (mds-client-code-buffer client))))
 	(out-buf  (mds-client-out-buf client)))

@@ -99,34 +99,34 @@ BEG is the character position of the beginning of the statement in FILE.
 BREAKPOINTS is a list of the position of the beginning of lines that have breakpoints.
 
 Put point at BEG and move the current statement marker."
-  (set-buffer buffer)
-  (let ((same-file (string= file mds-li-file-name))
-	(same-addr (string= addr mds-li-addr))
-	buffer-read-only)
-    (unless same-file
-      ;; insert the new file and update buffer-local variable
-      (delete-region (point-min) (point-max))
-      (mds-li-remove-breakpoint (point-min))
-      (insert-file-contents file)
-      (setq mds-li-file-name file))
-    (unless same-addr
-      ;; insert breakpoints and update buffer-local variable
-      (let (brkpt)
-	(while breakpoints
-	  (setq brkpt (car breakpoints)
-		breakpoints (cdr breakpoints))
-	  (goto-char (1+ brkpt))
-	  (mds-li-set-breakpoint (line-beginning-position))))
-      (setq mds-li-addr addr))
-    (unless (and same-file same-addr)
-      ;; Update the mode-line
-      (mds-li-set-mode-line file
-			    procname
-			    (car (mds-client-id mds-client)))))
-  (setq mds-li-state (string-to-number state))
-  (goto-char beg)
-  (set-marker mds-li-arrow-position (line-beginning-position))
-  (setq mds-li-beg beg))
+  (with-current-buffer buffer
+    (let ((same-file (string= file mds-li-file-name))
+	  (same-addr (string= addr mds-li-addr))
+	  buffer-read-only)
+      (unless same-file
+	;; insert the new file and update buffer-local variable
+	(delete-region (point-min) (point-max))
+	(mds-li-remove-breakpoint (point-min))
+	(insert-file-contents file)
+	(setq mds-li-file-name file))
+      (unless same-addr
+	;; insert breakpoints and update buffer-local variable
+	(let (brkpt)
+	  (while breakpoints
+	    (setq brkpt (car breakpoints)
+		  breakpoints (cdr breakpoints))
+	    (goto-char (1+ brkpt))
+	    (mds-li-set-breakpoint (line-beginning-position))))
+	(setq mds-li-addr addr))
+      (unless (and same-file same-addr)
+	;; Update the mode-line
+	(mds-li-set-mode-line file
+			      procname
+			      (car (mds-client-id mds-client)))))
+    (setq mds-li-state (string-to-number state))
+    (goto-char beg)
+    (set-marker mds-li-arrow-position (line-beginning-position))
+    (setq mds-li-beg beg)))
 
 ;;}}}
 
@@ -321,3 +321,4 @@ LABEL is the user id."
 
 
 ;;; mds-li.el ends here
+

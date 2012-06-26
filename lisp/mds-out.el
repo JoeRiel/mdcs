@@ -304,26 +304,16 @@ Optional TAG identifies the message type."
 	      ;; warning
 	      (mds-insert-and-font-lock msg 'mds-warning))
 
-	     ((eq tag 'maple-err)
-	      ;; maple error
+	     ((eq tag 'error)
 	      (mds-insert-and-font-lock msg 'mds-maple-error)
 	      (if (and mds-stop-trace-at-error-flag
 		       (mds-client-get-trace mds-client))
 		  (mds-client-set-trace mds-client nil)))
-	     
-	     ((eq tag 'parse-err) 
-	      ;; maple debugger parse error
-	      (mds-insert-and-font-lock msg 'mds-maple-error))
 
-	     ((eq tag 'stop)
-	      (ding) (sleep-for 0.2) (ding)
-	      (mds-insert-and-font-lock msg 'mds-info))
-
-	     ((or (eq tag 'watch-conds)
-		  (eq tag 'watch-errs))
+	     ((eq tag 'watched)
 	      (mds-insert-and-font-lock msg 'mds-watch))
 
-	     ((eq tag 'debug-info)
+	     ((eq tag 'info)
 	      (mds-insert-and-font-lock msg 'mds-debugger-info))
 
 	     ((and tag (symbolp tag))

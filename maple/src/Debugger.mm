@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Debugger
-##MODULE \MOD[\SUBMOD]
+##DEFINE THISMOD mdc[Debugger]
+##MODULE \THISMOD
 ##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -48,7 +48,6 @@ local _debugger
     , enter_procname := NULL
     , _showstat
     , _showstop
-    , _where
     , _print
     , go_back := false
     , go_back_proc
@@ -165,13 +164,13 @@ $endif
 #{{{ Print and _printf
 
     Printf := proc()
-        debugger_printf('MDC_PRINTF', _rest);
+        debugger_printf(TAG_PRINTF, _rest);
     end proc;
 
     # currently not used
     _print := proc()
         orig_print(_passed);
-        debugger_printf('DBG_WARN', "print output does not display in debugger\n");
+        debugger_printf(TAG_WARN, "print output does not display in debugger\n");
     end proc;
 
 #}}}
@@ -181,9 +180,9 @@ $endif
     local err;
         err := debugopts('lasterror');
         if err = '`(none)`' then
-            debugger_printf('DBG_ERROR', "%a\n", err);
+            debugger_printf(TAG_ERROR, "%a\n", err);
         else
-            debugger_printf('DBG_ERROR', "%s\n", StringTools:-FormatMessage(err));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
 
@@ -194,9 +193,9 @@ $endif
     local except;
         except := debugopts('lastexception');
         if except = '`(none)`' then
-            debugger_printf('SHOW_EXCEPTION', "%a\n", except);
+            debugger_printf(TAG_EXCEPTION, "%a\n", except);
         else
-            debugger_printf('SHOW_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf(TAG_EXCEPTION, "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
 
@@ -206,7 +205,7 @@ $endif
 
 #{{{ debugger_printf
 
-    debugger_printf := proc( tag :: name )
+    debugger_printf := proc( tag :: string )
     local argList, rts;
     description `Used by debugger to produce output.`;
 
@@ -231,33 +230,42 @@ $endif
 #}}}
 #{{{ debugger_readline
 
-# Used for user-input to the debugger. This lets us easily change the input
-# facilities to take advantage of special features of the Iris in future.
+##PROCEDURE \THISMOD[debugger_readline]
+##CALLINGSEQUENCE
+##- debugger_readline('prompt')
+##PARAMETERS
+##- 'prompt' : ::truefalse::; true means send a prompt to the server
+##RETURNS
+##- ::string::
+##DESCRIPTION
+##- Read and return the input from the server.
+##- If 'prompt' is true, send a prompt to the server before
+##  attempting to read input.
 
     debugger_readline := proc( prompt :: truefalse )
     local line,n;
     description `Used by debugger to obtain user-input.`;
         do
             if prompt then
-                debugger_printf('DBG_PROMPT', ">");
+                debugger_printf(TAG_PROMPT);
             end if;
             try
-                line := Read();
-                n := -1;
-                while line[n] = "\n" do
-                    n := n-1;
-                end do;
-                return line[..n];
-            catch "process %1 disconnected unexpectedly":
-                error sprintf("%s; use mdc(reconnect) to reconnect"
-                              , StringTools:-FormatMessage(lastexception[2..])
-                             );
+                line := Sockets:-Read(sid);
             catch:
-                debugger_printf('DBG_ERR'
+                debugger_printf(TAG_ERR
                                 , "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             end try;
+            if line = false then
+                error "process %1 disconnected unexpectedly; use mdc(reconnect) to reconnect", sid;
+            end if;
+            # Remove trailing \n's.
+            n := -1;
+            while line[n] = "\n" do
+                n := n-1;
+            end do;
+            return line[..n];
         end do;
     end proc:
 
@@ -282,11 +290,11 @@ $include <src/debugger.mm>
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
 
-            map[3](debugger_printf, 'DBG_SHOW_INACTIVE', "\n%s", [res]);
+            map[3](debugger_printf, TAG_SS_DEAD, "\n%s", [res]);
 
             # nonl probably means "no newline"
             if procname <> 'showstat[nonl]' then
-                debugger_printf('DBG_NULL', "\n" )
+                debugger_printf(TAG_NULL, "\n" )
             fi
         fi;
         NULL
@@ -337,8 +345,8 @@ $ifdef DONTUSE
                    );
 $endif
         WriteTagf(`if`(dead
-                       , 'DBG_SHOW_INACTIVE'
-                       , 'DBG_SHOW'
+                       , TAG_SS_DEAD
+                       , TAG_SS_LIVE
                       )
                   , "<%d>\n%A"
                   , addr
@@ -357,88 +365,51 @@ $endif
     global showstop;
 
         ls := stopat();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo breakpoints set.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo breakpoints set.\n")
         else
-            debugger_printf('DBG_INFO', "\nBreakpoints in:\n");
-            for i in ls do debugger_printf('DBG_INFO', "   %a\n",i) od
+            debugger_printf(TAG__INFO, "\nBreakpoints in:\n");
+            for i in ls do debugger_printf(TAG_INFO, "   %a\n",i) od
         fi;
         ls := stopwhen();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo variables being watched.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo variables being watched.\n")
         else
-            debugger_printf('DBG_INFO', "\nWatched variables:\n");
+            debugger_printf(TAG_INFO, "\nWatched variables:\n");
             for i in ls do
                 if i :: list then
-                    debugger_printf('DBG_INFO', "   %a in procedure %a\n",i[2],i[1])
+                    debugger_printf(TAG_INFO, "   %a in procedure %a\n",i[2],i[1])
                 elif assigned(`debugger/watch_condition`[i]) then
-                    val := sprintf('DBG_INFO', "%a",`debugger/watch_condition`[i]);
+                    val := sprintf(TAG_INFO, "%a",`debugger/watch_condition`[i]);
                     width := streamcall('INTERFACE_GET(screenwidth)');
                     width := `if`(width :: even, width/2, (width-1)/2);
                     if length(val) > width then
                         val := sprintf("%s ...", val[1..width])
                     fi;
-                    debugger_printf('DBG_INFO', "   %a = %s\n",i,val)
+                    debugger_printf(TAG_INFO, "   %a = %s\n",i,val)
                 else
-                    debugger_printf('DBG_INFO', "   %a\n",i)
+                    debugger_printf(TAG_INFO, "   %a\n",i)
                 fi
             od
         fi;
         ls := stoperror();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo errors being watched.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo errors being watched.\n")
         else
             debugger_printf('WATCHED_ERRS', "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
-                    debugger_printf('DBG_INFO', "   All errors\n")
+                    debugger_printf(TAG_INFO, "   All errors\n")
                 else
-                    debugger_printf('DBG_INFO', "   All untrapped errors\n")
+                    debugger_printf(TAG_INFO, "   All untrapped errors\n")
                 fi
             else
                 if member('traperror',ls) then
-                    debugger_printf('DBG_INFO', "   All trapped errors\n")
+                    debugger_printf(TAG_INFO, "   All trapped errors\n")
                 fi;
                 for i in ls do
-                    if i <> 'traperror' then debugger_printf('DBG_INFO', "   %a\n",i) fi
+                    if i <> 'traperror' then debugger_printf(TAG_INFO, "   %a\n",i) fi
                 od
             fi
         fi;
-        if procname <> 'showstop[nonl]' then debugger_printf('DBG_INFO', "\n") fi;
-        NULL
-    end proc:
-
-#}}}
-#{{{ where
-
-##DEFINE PROC _where
-##PROCEDURE \PROC
-##HALFLINE display stack
-##AUTHOR   Joe Riel
-##DATE     Apr 2012
-##CALLINGSEQUENCE
-##- \PROC('n')
-##PARAMETERS
-##- 'n' : (optional) ::integer::; number of activation levels to display
-##
-
-    _where := proc( n::integer, $ )
-    local stack, i;
-    option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
-        if _npassed = 1 then
-            if n < 1 then debugopts('callstack'=-1) fi;	# To force an error.
-            stack := debugopts('callstack'=n+1)
-        else
-            stack := debugopts('callstack')
-        fi;
-
-        # FIXME DBG_STACK[1-3] is currently not handled
-
-        for i from nops(stack)-2 to 8 by -3 do
-            debugger_printf('DBG_STACK1', "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
-        od;
-        if stack[5] = 'TopLevel' then
-            debugger_printf('DBG_STACK2',"Currently at TopLevel.\n")
-        else
-            debugger_printf('DBG_STACK3',"Currently in %a.\n",stack[5])
-        fi;
+        if procname <> 'showstop[nonl]' then debugger_printf(TAG_INFO, "\n") fi;
         NULL
     end proc:
 
@@ -447,7 +418,7 @@ $endif
 #{{{ stopat
 
 ##DEFINE CMD stopat
-##PROCEDURE \MOD[\SUBMOD][\CMD]
+##PROCEDURE \THISMOD[\CMD]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010

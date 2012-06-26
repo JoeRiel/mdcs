@@ -34,8 +34,9 @@
 (declare-function mds-li-create-buffer "mds-li")
 (declare-function mds-out-create-buffer "mds-out")
 (declare-function mds-queue-create "mds")
-(declare-function mds-writeto-log "mds")
+(declare-function mds-writeto-log-proc "mds")
 (declare-function mds-kill-buffer "mds")
+(declare-function mds-queue-buffer "mds")
 
 (defvar mds-client nil "Buffer-local client structure.")
 
@@ -102,6 +103,7 @@ live-buf dead-buf out-buf addr], where status is initialized to
 (defun mds-client-destroy (client)
   "Destroy a CLIENT by deleting the associated process and buffers."
   (delete-process  (mds-client-proc client))
+  (mds-kill-buffer (mds-queue-buffer (mds-client-queue client)))
   (mds-kill-buffer (mds-client-live-buf client))
   (mds-kill-buffer (mds-client-dead-buf client))
   (mds-kill-buffer (mds-client-out-buf client))
@@ -125,7 +127,7 @@ kill the buffers, and decrement `mds-clients-number'."
 	     (entry (assq proc mds-clients)))
 	(if (null entry)
 	    (error "Client is unknown.")
-	  (mds-writeto-log proc "removing client")
+	  (mds-writeto-log-proc proc "removing client")
 	  (mds-client-destroy client)
 	  ;; update `mds-clients' and `mds-clients-number'
 	  (setq mds-clients (delq entry mds-clients)
