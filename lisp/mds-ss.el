@@ -396,10 +396,11 @@ This is specialized to work with a few routines; needs to be generalized."
 (defun mds-ss-block-input ()
   "If input is allowed block further input.
 Otherwise raise error indicating Maple is not available."
-  (if (and mds-wait-until-ready
-	   (not (mds-client-get-allow-input mds-client)))
-      (error "Maple busy or debugging finished")
-    (mds-client-set-allow-input mds-client nil)))
+  (if (or (not mds-wait-until-ready)
+	  (mds-client-get-allow-input mds-client))
+      (mds-client-set-allow-input mds-client nil)
+    (beep)
+    (message "Maple busy or debugging finished")))
 
 (defun mds-toggle-wait-until-ready ()
   "Toggle the configuration variable `mds-wait-until-ready'."
