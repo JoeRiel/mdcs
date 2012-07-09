@@ -193,9 +193,9 @@ $endif
     local except;
         except := debugopts('lastexception');
         if except = '`(none)`' then
-            debugger_printf(TAG_EXCEPTION, "%a\n", except);
+            debugger_printf(TAG_ERROR, "%a\n", except);
         else
-            debugger_printf(TAG_EXCEPTION, "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
 
