@@ -546,7 +546,7 @@ global showstat, showstop;
             line := sscanf(original, "%s %s");
             expr := line[2];
             val  := traperror(eval(parse(expr)));
-            debugger_printf(TAG_RESULT, "%q\n", val);
+            debugger_printf(TAG_RESULT, "%Q\n", val);
             prompt := false;
             next;
             #}}}
