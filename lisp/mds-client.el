@@ -27,8 +27,7 @@
 ;; Each client consists of a list of seven elements.
 
 (eval-when-compile
-  (require 'mds-custom)
-  (defvar mds-ss-result nil))
+  (require 'mds-custom))
 
 (declare-function mds-ss-create-buffer "mds-ss")
 (declare-function mds-li-create-buffer "mds-li")
@@ -57,8 +56,12 @@ Maximum is given by `mds-max-number-clients'.")
 (defsubst mds-client-out-buf  (client) "Return CLIENT's output buffer."    (aref client 6))
 (defsubst mds-client-li-buf   (client) "Return CLIENT's line-info buffer." (aref client 7))
 
-(defsubst mds-client-get-addr (client)      "Get CLIENT's procedure address."       (aref client 8))
-(defsubst mds-client-set-addr (client addr) "Set CLIENT's procedure address, ADDR." (aset client 8 addr))
+(defsubst mds-client-get-addr (client)
+  "Get CLIENT's current procedure address."
+  (aref client 8))
+(defsubst mds-client-set-addr (client addr)
+  "Set CLIENT's current procedure address to ADDR."
+  (aset client 8 addr))
 
 (defsubst mds-client-get-allow-input (client)      "Get CLIENT's allow-input flag." (aref client 9))
 (defsubst mds-client-set-allow-input (client flag) "Set CLIENT's allow-input FLAG." (aset client 9 flag))
@@ -69,24 +72,67 @@ Maximum is given by `mds-max-number-clients'.")
 (defsubst mds-client-get-trace (client)       "Get CLIENT's trace state." (aref client 11))
 (defsubst mds-client-set-trace (client state) "Set CLIENT's trace STATE." (aset client 11 state))
 
-(defsubst mds-client-has-source-p (client)        "Get CLIENT's has-source flag" (aref client 12))
-(defsubst mds-client-set-has-source (client flag) "Set CLIENT's has-source FLAG" (aset client 12 flag))
+(defsubst mds-client-has-source-p (client)
+  "Get CLIENT's has-source flag.
+True means line-info source is available for the code."
+  (aref client 12))
+(defsubst mds-client-set-has-source (client flag)
+  "Set CLIENT's has-source flag to FLAG.
+True means line-info source is available for the code."
+  (aset client 12 flag))
 
-(defsubst mds-client-use-lineinfo-p   (client)      "Get CLIENT's use-lineinfo flag" (aref client 13))
-(defsubst mds-client-set-use-lineinfo (client flag) "Set CLIENT's use-lineinfo FLAG" (aset client 13 flag))
+(defsubst mds-client-use-lineinfo-p (client)
+  "Get CLIENT's use-lineinfo flag.
+True means to display line-info source, when available."
+  (aref client 13))
+(defsubst mds-client-set-use-lineinfo (client flag) 
+  "Set CLIENT's use-lineinfo flag to FLAG. 
+True means to display line-info source, when available."
+  (aset client 13 flag))
 
-(defsubst mds-client-get-code-window (client)        "Get CLIENT's code window" (aref client 14))
-(defsubst mds-client-set-code-window (client window) "Set CLIENT's code WINDOW" (aset client 14 window))
+(defsubst mds-client-get-code-window (client)
+  "Get CLIENT's code window.
+This is the window used to display the input code; it may contain
+either the ss-live or line-info (li) buffer."
+  (aref client 14))
+(defsubst mds-client-set-code-window (client window) 
+  "Set CLIENT's code window to WINDOW. 
+This is the window used to display the input code; it may contain
+either the ss-live or line-info (li) buffer."
+  (aset client 14 window))
 
-(defsubst mds-client-quiet-p (client)        "Get CLIENT's quiet flag" (aref client 15))
-(defsubst mds-client-set-quiet (client flag) "Set CLIENT's quiet flag" (aset client 15 flag))
+(defsubst mds-client-quiet-p (client)
+  "Get CLIENT's quiet flag.
+True means to hide the echoing of user commands and statements."
+  (aref client 15))
+(defsubst mds-client-set-quiet (client flag)
+  "Set CLIENT's quiet flag to FLAG.
+True means to hide the echoing of user commands and statements."
+  (aset client 15 flag))
+
+(defsubst mds-client-get-statement (client)
+  "Get CLIENT's statement.
+The statement is the current line of Maple code."
+  (aref client 16))
+(defsubst mds-client-set-statement (client statement)
+  "Set CLIENT's statement to STATEMENT.
+The statement is the current line of Maple code."
+  (aset client 16 statement))
+
+(defsubst mds-client-get-result (client)
+  "Return the result of a request to Maple."
+  (aref client 17))
+(defsubst mds-client-set-result (client result)
+  "Set CLIENT's RESULT."
+  (aset client 17 result))
+
 
 (defun mds-client-create (proc id)
   "Create a client that is associated with process PROC and has identity ID.
 The returned client structure is a vector [PROC status queue ID
 live-buf dead-buf out-buf addr], where status is initialized to
 'new'."
-  (let ((client (make-vector 16 nil)))
+  (let ((client (make-vector 18 nil)))
     (aset client 0 proc)
     (aset client 1 'login)
     (aset client 2 (mds-queue-create proc))
@@ -166,15 +212,6 @@ kill the buffers, and decrement `mds-clients-number'."
   "Return the major release of the Maple kernel used by CLIENT.
 The value is an integer."
   (string-to-number (nth 1 (mds-client-id client))))
-
-(defun mds-client-set-result (client result)
-  "Assign `mds-ss-result' in CLIENT the value RESULT."
-  (with-current-buffer (mds-client-live-buf client)
-    (setq mds-ss-result result)))
-
-(defun mds-client-get-result (client)
-  "Return the value of `mds-ss-result in CLIENT."
-  (buffer-local-value 'mds-ss-result (mds-client-live-buf client)))
 
 (defun mds-client-code-buffer (client)
   "Return the code-buffer of CLIENT."

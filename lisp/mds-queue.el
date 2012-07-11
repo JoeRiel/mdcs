@@ -156,6 +156,7 @@ use them to route the message."
 	      (state     (match-string 3 msg))
 	      (statement (match-string 4 msg)))
 	  (mds-client-set-has-source client nil)
+	  (mds-client-set-statement client statement)
 	  (mds-ss-update live-buf addr procname state statement)
 	  (mds-wm-select-code-window client))))
      
@@ -177,6 +178,7 @@ use them to route the message."
 	    (li-buf (mds-client-li-buf client)))
 	(mds-ss-update live-buf addr procname state statement)
 	(mds-li-update li-buf file addr procname state beg (mapcar 'string-to-number (split-string breakpoints)))
+	(mds-client-set-statement client statement)
 	(mds-client-set-has-source client t)))
 
 

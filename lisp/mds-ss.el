@@ -59,7 +59,6 @@ however, such an abomination should break something.")
 	mds-ss-show-args-flag
 	mds-ss-dead-flag
 	mds-ss-procname
-	mds-ss-result
 	mds-ss-state
 	mds-ss-statement
 	))

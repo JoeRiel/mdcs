@@ -203,21 +203,6 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;{{{ mds-out-get-ss-line
 
-;; FIXME: this belongs in mds-ss.el
-
-(defun mds-out-get-ss-line ()
-  "Return the current input line of the live showstat buffer."
-  ;; FIXME :: need to go to current line
-  (with-current-buffer (mds-client-live-buf mds-client)
-    (save-excursion
-      (mds-goto-state mds-ss-state)
-      (beginning-of-line)
-      (if (looking-at mds-out-ss-line-re)
-	  (match-string 1)
-	""))))
-
-;;}}}
-
 ;;{{{ mds-out-display
 
 (defun mds-out-display (buf msg &optional tag)
@@ -241,7 +226,7 @@ Optional TAG identifies the message type."
 	      ;; Command
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
-		  (insert (mds-out-get-ss-line) "\n")
+		  (insert (mds-client-get-statement mds-client) "\n")
 		(insert "\n")))
 	     
 	     ((eq tag 'prompt)
