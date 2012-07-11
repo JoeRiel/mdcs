@@ -186,8 +186,7 @@ kill the buffers, and decrement `mds-clients-number'."
 
 (defun mds-client-send (client msg)
   "Send MSG to CLIENT."
-  (let ((proc (mds-client-proc client)))
-    (process-send-string proc msg)))
+  (process-send-string (mds-client-proc client) msg))
 
 (defun mds-clients-kill ()
   "Kill all clients in `mds-clients'."
