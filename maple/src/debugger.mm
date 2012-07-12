@@ -604,7 +604,7 @@ global showstat, showstop;
         #{{{ handle error
 
         if err = lasterror then
-            debugger_printf(TAG_ERR, "Error, %s\n"
+            debugger_printf(TAG_ERROR, "Error, %s\n"
                             , StringTools:-FormatMessage(lastexception[2..])
                            );
         fi;
