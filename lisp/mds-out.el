@@ -238,25 +238,26 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
-	      (let* ((live-buf (mds-client-live-buf mds-client))
-		     (trace-mode (mds-client-get-trace mds-client))
-		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
-		(if show-args
-		    (with-current-buffer live-buf
-		      (if trace-mode
-			  (progn
-			    (setq mds-ss-show-args-flag nil)
-			    (mds-client-set-allow-input mds-client t)
-			    (mds-ss-eval-expr "args"))
-			(if (eq show-args t)
-			    (setq mds-ss-show-args-flag 'now)
-			  (setq mds-ss-show-args-flag nil)
-			  (mds-ss-eval-expr "args"))))
-		  (when trace-mode
-		    (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
-			(insert (buffer-local-value 'mds-ss-statement live-buf)))
-		    (insert "\n")
-		    (mds-client-send mds-client (concat trace-mode "\n"))))))
+	      ;; (let* ((live-buf (mds-client-live-buf mds-client))
+	      ;; 	     (trace-mode (mds-client-get-trace mds-client))
+	      ;; 	     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
+	      ;; 	(if show-args
+	      ;; 	    (with-current-buffer live-buf
+	      ;; 	      (if trace-mode
+	      ;; 		  (progn
+	      ;; 		    (setq mds-ss-show-args-flag nil)
+	      ;; 		    (mds-client-set-allow-input mds-client t)
+	      ;; 		    (mds-ss-eval-expr "args"))
+	      ;; 		(if (eq show-args t)
+	      ;; 		    (setq mds-ss-show-args-flag 'now)
+	      ;; 		  (setq mds-ss-show-args-flag nil)
+	      ;; 		  (mds-ss-eval-expr "args"))))
+	      ;; 	  (when trace-mode
+	      ;; 	    (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
+	      ;; 		(insert (buffer-local-value 'mds-ss-statement live-buf)))
+	      ;; 	    (insert "\n")
+	      ;; 	    (mds-client-send mds-client (concat trace-mode "\n")))))
+	      )
 
 	     ((eq tag 'output)
 	      (insert msg))
