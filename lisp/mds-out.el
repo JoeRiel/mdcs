@@ -223,14 +223,16 @@ Optional TAG identifies the message type."
 	      (insert msg))
 	     
 	     ((eq tag 'cmd)
-	      ;; Command
+	      ;; Insert the debug command (next, into, etc) that
+	      ;; executes the current Maple statement; if enabled,
+	      ;; insert the statement itself.
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
 		  (insert (mds-client-get-statement mds-client) "\n")
 		(insert "\n")))
 	     
 	     ((eq tag 'prompt)
-	      ;; Insert prompt, with statement number (msg) embedded.
+	      ;; Insert a prompt, with state number (msg) embedded.
 	      ;; Goto beginning of line and replace line, that way
 	      ;; an existing prompt is replaced.
 	      (beginning-of-line)
