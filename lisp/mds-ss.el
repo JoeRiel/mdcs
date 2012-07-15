@@ -577,16 +577,18 @@ To best use the results after tracing, turn off tracing
 mode (select nil), then reenter the debugger from the client.
 The hyperlinks in the output buffer are then active."
   (interactive)
-  (let ((state (mds-client-get-trace mds-client)))
-    (mds-client-set-trace mds-client
-			  (cond
-			   ((null state)           "cont")
-			   ((string= state "cont") "next")
-			   ((string= state "next") "into")
-			   ((string= state "into") "level")
-			   ((string= state "level") "step")
-			   ((string= state "step") nil)))
-    (message (concat "tracing " (or state "disabled")))))
+  (message (concat "tracing " (or
+			       (mds-client-set-trace
+				mds-client
+				(let ((state (mds-client-get-trace mds-client)))
+				  (cond
+				   ((null state)           "cont")
+				   ((string= state "cont") "next")
+				   ((string= state "next") "into")
+				   ((string= state "into") "level")
+				   ((string= state "level") "step")
+				   ((string= state "step") nil))))
+			       "disabled"))))
 
 ;;}}}
 ;;{{{ (*) Stop points
