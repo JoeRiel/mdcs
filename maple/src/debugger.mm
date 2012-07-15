@@ -139,7 +139,7 @@ global showstat, showstop;
     end do;
 
     #}}}
-    #{{{ send result to emacs
+    #{{{ send result to server
 
 
     if not skip and ( Quiet implies Respond ) then
@@ -204,7 +204,7 @@ global showstat, showstop;
 
     #}}}
 
-    #{{{ send debug status to Emacs
+    #{{{ send debug status to server
 
     if procName <> 0 then
         if statNumber < 0 then
@@ -235,11 +235,13 @@ global showstat, showstop;
                 local src_pos := LineInfo:-Get(addr, statNumber);
                 if src_pos = NULL
                 or src_pos[1] = 0 then
-                    debugger_printf(TAG_STATE, "%s", state);
+                    debugger_printf(TAG_STATE, "0 0 0 0:%s"
+                                    , state
+                                   );
                 else
-                    debugger_printf(TAG_LINE_INFO, "%s %d %d %d%s:%s"
-                                    , src_pos                     # file, lineno, beg, end
-                                    , LineInfo:-Breakpoints(addr) # breakpoints, as a string
+                    debugger_printf(TAG_STATE, "%s %d %d %d%s:%s"
+                                    , src_pos
+                                    , LineInfo:-Breakpoints(addr)
                                     , state
                                    );
                 end if;

@@ -115,7 +115,6 @@ communicate with the process.  Data is sent to the queue via
   (defconst mds-tag-error	?E)
   (defconst mds-tag-eval	?O)
   (defconst mds-tag-info	?I)
-  (defconst mds-tag-line-info	?L  "Message is line-info output.")
   (defconst mds-tag-monitor	?M)
   (defconst mds-tag-null	?N)
   (defconst mds-tag-printf	?P)
@@ -143,33 +142,10 @@ communicate with the process.  Data is sent to the queue via
     ;; route MSG to proper buffer
     (cond
      
-     ((= tag (eval-when-compile mds-tag-state))
-      ;; MSG is the state output from debugger.
-      ;; Extract the procname and state number,
-      ;; update the showstat buffer, then
-      ;; display the code window.
-      (unless (string-match mds--debugger-status-re msg)
-	  (error "Cannot parse current state"))
-      (let ((addr      (match-string 1 msg))
-	    (procname  (match-string 2 msg))
-	    (state     (match-string 3 msg))
-	    (statement (match-string 4 msg)))
-	(mds-ss-update live-buf addr procname state statement)
-	(mds-client-set-has-source client nil)
-	;;
-	(mds-client-set-addr client addr)
-	(mds-client-set-procname client procname)
-	(mds-client-set-state client state)
-	(mds-client-set-statement client statement)
-	(mds-out-display out-buf state 'prompt)
-	(mds-goto-current-state client)
-	(mds-client-set-allow-input client 'unblock)
-	))
-
      ((= tag (eval-when-compile mds-tag-eval))
       (mds-out-display out-buf msg 'output))
 
-     ((= tag (eval-when-compile mds-tag-line-info))
+     ((= tag (eval-when-compile mds-tag-state))
       (unless (string-match mds--line-info-re msg)
 	(error "Problem with format in LINE_INFO tag"))
       (let ((file (match-string 1 msg))
@@ -180,8 +156,13 @@ communicate with the process.  Data is sent to the queue via
 	    (state     	 (match-string 8 msg))
 	    (statement 	 (match-string 9 msg))
 	    (li-buf (mds-client-li-buf client)))
-	(mds-li-update li-buf file addr procname state beg (mapcar 'string-to-number (split-string breakpoints)))
-	(mds-client-set-has-source client t)
+	(if (string= file "0")
+	    (progn
+	      (mds-ss-update live-buf addr procname state statement)
+	      (mds-client-set-has-source client nil))
+	  (mds-li-update li-buf file addr procname state beg
+			 (mapcar 'string-to-number (split-string breakpoints)))
+	  (mds-client-set-has-source client t))
 	;;
 	(mds-client-set-addr client addr)
 	(mds-client-set-procname client procname)
