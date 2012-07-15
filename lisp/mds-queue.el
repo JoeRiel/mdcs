@@ -171,6 +171,9 @@ communicate with the process.  Data is sent to the queue via
 	(mds-out-display out-buf state 'prompt)
 	(mds-goto-current-state client)
 	(mds-client-set-allow-input client 'unblock)
+	(let ((trace-mode (mds-client-get-trace client)))
+	  (when trace-mode
+	    (mds-client-send client (concat trace-mode "\n"))))
 	))
 
      ((= tag (eval-when-compile mds-tag-ss-live))
