@@ -229,7 +229,7 @@ global showstat, showstop;
             addr := addressof(procName);
             state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
-                WriteTagf(TAG_SAME);
+                # WriteTagf(TAG_SAME);
             else
                 last_state := state;
                 local src_pos := LineInfo:-Get(addr, statNumber);
@@ -285,7 +285,7 @@ global showstat, showstop;
     #}}}
     #{{{ command loop
 
-    prompt := true;
+    prompt := false;
 
     do
         line := `debugger/readline`( prompt );
@@ -611,6 +611,8 @@ global showstat, showstop;
         fi;
 
         #}}}
+
+        prompt := true;
 
     end do;
 
