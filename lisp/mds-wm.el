@@ -39,6 +39,9 @@
   (require 'mds-client)
   (require 'mds-custom))
 
+(declare-function mds-ss-refresh "mds-ss")
+(declare-function mds-goto-current-state "mds-ss")
+
 ;;}}}
 ;;{{{ variables
 
@@ -297,10 +300,20 @@ line-info buffer.  If the code window does not exist, create it."
 (defun mds-wm-toggle-code-view ()
   "Toggle the view of the code between the showstat-live and line-info buffers."
   (interactive)
-  (set-window-buffer (get-buffer-window (mds-client-code-buffer mds-client))
-		     (if (mds-client-toggle-line-info-p mds-client)
-			 (mds-client-li-buf mds-client)
-		       (mds-client-live-buf mds-client))))
+  (let* ((cur-buf (mds-client-code-buffer mds-client))
+	 li-flag
+	 (new-buf (if (and (mds-client-toggle-line-info-p mds-client)
+			   (mds-client-has-source-p mds-client))
+		      (progn
+			(setq li-flag t)
+			(mds-client-li-buf mds-client))
+		    (mds-client-live-buf mds-client))))
+    (unless (eq cur-buf new-buf)
+      (unless li-flag
+	(mds-ss-refresh mds-client)
+	(mds-goto-current-state mds-client)
+	)
+      (set-window-buffer (get-buffer-window cur-buf) new-buf))))
 
 
 ;; (cancel-debug-on-entry 'mds-wm-select-code-window)
