@@ -8,8 +8,16 @@
 ;;
 ;;; Commentary:
 
-;; This file contains the source for the Emacs Maple debugger server.
+;; This file contains source for the Emacs Maple debugger server.
 ;; It is a part of the Maple Debugger Client Server package.
+;;
+;; Each connection has an associated queue-buffer, which is used to
+;; process the responses from the client.  When a message arrives, it
+;; is appended to the queue-buffer.  The header of the message is
+;; read.  The header includes a tag that identifies the message type
+;; and a length field that specifies its length.  When an entire
+;; message is present, it is removed and dispatched by
+;; `mds-queue-dispatch-tags'.
 
 ;;{{{ License
 
@@ -43,7 +51,7 @@
 
 ;; A queue structure consists of a single cons-cell,
 ;; ( proc . buffer ), where proc is the process
-;; and buffer is the temporary buffer used for the queue.
+;; and buffer is the queue-buffer.
 
 (defsubst mds-queue-proc   (queue) "Return the process component of QUEUE." (car queue))
 (defsubst mds-queue-buffer (queue) "Return the buffer component of QUEUE." (cdr queue))
@@ -107,15 +115,15 @@ communicate with the process.  Data is sent to the queue via
   (defconst mds-tag-error	?E)
   (defconst mds-tag-eval	?O)
   (defconst mds-tag-info	?I)
-  (defconst mds-tag-line-info	?L)
+  (defconst mds-tag-line-info	?L  "Message is line-info output.")
   (defconst mds-tag-monitor	?M)
   (defconst mds-tag-null	?N)
   (defconst mds-tag-printf	?P)
-  (defconst mds-tag-prompt	?>)
-  (defconst mds-tag-result	?R)
-  (defconst mds-tag-same	?%)
-  (defconst mds-tag-ss-dead	?d)
-  (defconst mds-tag-ss-live	?l)
+  (defconst mds-tag-prompt	?>  "Display a prompt.  Message is empty.")
+  (defconst mds-tag-result	?R  "Message is the result of a call to `mds-ss-request'.")
+  (defconst mds-tag-same	?%  "Indicates the state and procedure have not changed.")
+  (defconst mds-tag-ss-dead	?d  "Message is a showstat output for the dead buffer." )
+  (defconst mds-tag-ss-live	?l  "Message is a showstat output for the live buffer." )
   (defconst mds-tag-stack	?K)
   (defconst mds-tag-state	?S)
   (defconst mds-tag-warn	?W)
@@ -126,9 +134,7 @@ communicate with the process.  Data is sent to the queue via
 ;;{{{ mds-queue-dispatch-tags
 
 (defun mds-queue-dispatch-tags (proc tag msg)
-  "Handle tagged message MSG from the client process PROC.
-The end of message marker has been removed.  Strip the tags and
-use them to route the message."
+  "Handle message MSG from process PROC with TAG, which indicates the purpose of the message."
 
   (let* ((client (cdr (assq proc mds-clients)))
 	 (live-buf (mds-client-live-buf client))
@@ -136,35 +142,33 @@ use them to route the message."
     
     ;; route MSG to proper buffer
     (cond
-     ((= tag (eval-when-compile mds-tag-prompt))
-      ;; Extract the state-number and pass it along
-      (mds-out-display out-buf
-		       (buffer-local-value 'mds-ss-state live-buf)
-		       'prompt)
-      (mds-client-set-allow-input client 'unblock)
-      (mds-goto-current-state client))
      
      ((= tag (eval-when-compile mds-tag-state))
-      ;; msg is the state output from debugger.
+      ;; MSG is the state output from debugger.
       ;; Extract the procname and state number,
       ;; update the showstat buffer, then
       ;; display the code window.
-      (if (not (string-match mds--debugger-status-re msg))
-	  (error "Cannot parse current state")
-	(let ((addr      (match-string 1 msg))
-	      (procname  (match-string 2 msg))
-	      (state     (match-string 3 msg))
-	      (statement (match-string 4 msg)))
-	  (mds-client-set-has-source client nil)
-	  (mds-client-set-statement client statement)
-	  (mds-ss-update live-buf addr procname state statement)
-	  (mds-wm-select-code-window client))))
-     
-     ((= tag (eval-when-compile mds-tag-state))
-      ;; Ignore this because the DBUG_PROMPT is coming.  
-      ;; TODO: This means that the server should suppress this.
-      )
-     
+      (unless (string-match mds--debugger-status-re msg)
+	  (error "Cannot parse current state"))
+      (let ((addr      (match-string 1 msg))
+	    (procname  (match-string 2 msg))
+	    (state     (match-string 3 msg))
+	    (statement (match-string 4 msg)))
+	(mds-ss-update live-buf addr procname state statement)
+	(mds-client-set-has-source client nil)
+	;;
+	(mds-client-set-addr client addr)
+	(mds-client-set-procname client procname)
+	(mds-client-set-state client state)
+	(mds-client-set-statement client statement)
+	(mds-out-display out-buf state 'prompt)
+	(mds-goto-current-state client)
+	(mds-client-set-allow-input client 'unblock)
+	))
+
+     ((= tag (eval-when-compile mds-tag-eval))
+      (mds-out-display out-buf msg 'output))
+
      ((= tag (eval-when-compile mds-tag-line-info))
       (unless (string-match mds--line-info-re msg)
 	(error "Problem with format in LINE_INFO tag"))
@@ -176,11 +180,17 @@ use them to route the message."
 	    (state     	 (match-string 8 msg))
 	    (statement 	 (match-string 9 msg))
 	    (li-buf (mds-client-li-buf client)))
-	(mds-ss-update live-buf addr procname state statement)
 	(mds-li-update li-buf file addr procname state beg (mapcar 'string-to-number (split-string breakpoints)))
+	(mds-client-set-has-source client t)
+	;;
+	(mds-client-set-addr client addr)
+	(mds-client-set-procname client procname)
+	(mds-client-set-state client state)
 	(mds-client-set-statement client statement)
-	(mds-client-set-has-source client t)))
-
+	(mds-out-display out-buf state 'prompt)
+	(mds-goto-current-state client)
+	(mds-client-set-allow-input client 'unblock)
+	))
 
      ((= tag (eval-when-compile mds-tag-ss-live))
      ;; msg is showstat output (printout of procedure).
@@ -192,8 +202,15 @@ use them to route the message."
      ;; Insert into dead-showstat buffer.
       (mds-ss-insert-proc (mds-client-dead-buf client) msg))
 
-     ((= tag (eval-when-compile mds-tag-eval))
-      (mds-out-display out-buf msg 'output))
+     ;; IS THIS NEEEDED?
+     ((= tag (eval-when-compile mds-tag-prompt))
+      ;; Extract the state-number and pass it along
+      (mds-out-display out-buf
+		       (buffer-local-value 'mds-ss-state live-buf)
+		       'prompt)
+
+      (mds-client-set-allow-input client 'unblock)
+      (mds-goto-current-state client))
       
      ((= tag (eval-when-compile mds-tag-where))
       (mds-out-display out-buf msg 'where))

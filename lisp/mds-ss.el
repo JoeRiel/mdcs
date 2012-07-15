@@ -110,7 +110,7 @@ code."
 
 (defun mds-ss-request (expr)
   "Send the string EXPR to Maple and return the response, as a string.
-A newline is appended to EXPR before it is sent.  EXPR should
+A newline is appended to EXPR before it is sent (why?).  EXPR should
 have no spaces."
   (let ((client mds-client)
 	result)
@@ -176,13 +176,16 @@ otherwise call (maple) showstat to display the new procedure."
 	
 	(unless trace
 	  ;; Call Maple showstat routine to update the showstat buffer.
-	  (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
+	  ;; (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
+	  (mds-ss-insert-proc buf (format "<%s>\n%s"
+					  addr
+					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)))))
 	(when (and mds-show-args-flag
 		   (string= state "1"))
 	  (setq mds-ss-show-args-flag t))))
 
     ;; Update the buffer-local status
-    (mds-client-set-addr mds-client addr)
+    ;; 5u(mds-client-set-addr mds-client addr)
     (setq mds-ss-procname procname
 	  mds-ss-state    state
 	  mds-ss-statement statement)))
@@ -256,7 +259,7 @@ Otherwise, find the statement number from STATEMENT."
 
 	;; Need to fetch from Maple.
 	;; Set the buffer locals state info.
-	(mds-client-set-addr mds-client addr)
+	;; (mds-client-set-addr mds-client addr)
 	(setq mds-ss-procname   procname
 	      mds-ss-statement  statement
 	      mds-ss-state      state)
@@ -282,7 +285,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
       ;; Hide the address and assign the client addr
       (goto-char (point-min))
       (let ((addr-procname (mds-activate-addr-procname)))
-	(mds-client-set-addr mds-client (car addr-procname))
+	;; (mds-client-set-addr mds-client (car addr-procname))
 	(setq mds-ss-procname (cdr addr-procname)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
@@ -344,8 +347,6 @@ highlight the line."
 	      (hl-line-highlight))))
 	  ;; Move point to indentation of the current line (not including the state number).
 	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move)))))
-
-;;}}}
 
 ;;}}}
 
@@ -854,13 +855,11 @@ See `mds-monitor-toggle'."
 
 ;;{{{ (*) Miscellaneous
 
-(defun mds-ss-refresh ()
+(defun mds-ss-refresh (&optional client)
   "Refresh the showstat buffer."
   (interactive)
-  (let ((cmd (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr mds-client))))
-    (mds-client-set-addr mds-client "")
-    (mds-ss-send-client cmd)
-    (message "Refreshed showstat buffer")))
+  (unless client (setq client mds-client))
+  (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
 
 (defun mds-goto-current-state (&optional client)
   "Move cursor to the current state in the code buffer."
@@ -869,12 +868,13 @@ See `mds-monitor-toggle'."
   (if (and (mds-client-use-lineinfo-p client)
 	   (mds-client-has-source-p client))
       (mds-li-goto-current-state client)
-    (pop-to-buffer (mds-client-live-buf client))
+    ;; (pop-to-buffer (mds-client-live-buf client))
+    (mds-wm-select-code-window client)
     (mds-ss-update (current-buffer)
 		   (mds-client-get-addr client)
-		   mds-ss-procname
-		   mds-ss-state
-		   mds-ss-statement)))
+		   (mds-client-get-procname client)
+		   (mds-client-get-state client)
+		   (mds-client-get-statement client))))
 
 (defun mds-goto-state (state)
   "Move POINT to STATE.
