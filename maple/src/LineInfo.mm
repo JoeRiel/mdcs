@@ -165,7 +165,7 @@ local ModuleLoad
 ##- 'statement' : ::posint::; statement number
 ##RETURNS
 ##- `(filename, lineno, charbeg, charend)`
-##-- `filename` : ::string::; source file name
+##-- `filename` : ::string or 0::; source file name
 ##-- `lineno`   : ::posint::; line number
 ##-- `charbeg`  : ::posint::; file character position of beginning of statement
 ##-- `charend`  : ::posint::; file character position of end of statement
