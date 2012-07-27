@@ -110,24 +110,21 @@ communicate with the process.  Data is sent to the queue via
 ;;{{{ define tags
 
 (eval-and-compile
-  (defconst mds-tag-args	?A)
-  (defconst mds-tag-clear-echo	?C)
-  (defconst mds-tag-error	?E)
-  (defconst mds-tag-eval	?O)
-  (defconst mds-tag-info	?I)
-  (defconst mds-tag-monitor	?M)
-  (defconst mds-tag-null	?N)
+  (defconst mds-tag-clear-echo	?C  "Clear message displayed at bottom of screen")
+  (defconst mds-tag-error	?E  "Message is an error")
+  (defconst mds-tag-eval	?O  "Message is the output from a computation" )
+  (defconst mds-tag-info	?I  "Message is debugger query information")
+  (defconst mds-tag-monitor	?M  "Message is the output of a monitored expression")
   (defconst mds-tag-printf	?P)
   (defconst mds-tag-prompt	?>  "Display a prompt.  Message is empty.")
   (defconst mds-tag-result	?R  "Message is the result of a call to `mds-ss-request'.")
   (defconst mds-tag-same	?%  "Indicates the state and procedure have not changed.")
   (defconst mds-tag-ss-dead	?d  "Message is a showstat output for the dead buffer." )
   (defconst mds-tag-ss-live	?l  "Message is a showstat output for the live buffer." )
-  (defconst mds-tag-stack	?K)
-  (defconst mds-tag-state	?S)
-  (defconst mds-tag-warn	?W)
-  (defconst mds-tag-watched	?w)
-  (defconst mds-tag-where	?H))
+  (defconst mds-tag-stack	?K  "Stack output")
+  (defconst mds-tag-state	?S  "Message defines current state")
+  (defconst mds-tag-warn	?W  "Message is a warning")
+  (defconst mds-tag-watched	?w  "Message is watched errors, conditiona"))
 
 ;;}}}
 ;;{{{ mds-queue-dispatch-tags
@@ -144,6 +141,7 @@ communicate with the process.  Data is sent to the queue via
      
      ((= tag (eval-when-compile mds-tag-eval))
       (mds-out-display out-buf msg 'output))
+
 
      ((= tag (eval-when-compile mds-tag-state))
       (unless (string-match mds--line-info-re msg)
@@ -173,6 +171,7 @@ communicate with the process.  Data is sent to the queue via
 	(mds-client-set-allow-input client 'unblock)
 	(let ((trace-mode (mds-client-get-trace client)))
 	  (when trace-mode
+	    (mds-out-display out-buf trace-mode 'cmd)
 	    (mds-client-send client (concat trace-mode "\n"))))
 	))
 
@@ -196,17 +195,11 @@ communicate with the process.  Data is sent to the queue via
       (mds-client-set-allow-input client 'unblock)
       (mds-goto-current-state client))
       
-     ((= tag (eval-when-compile mds-tag-where))
-      (mds-out-display out-buf msg 'where))
-
-     ((= tag (eval-when-compile mds-tag-args))
-      (mds-out-display out-buf msg 'args))
+     ((= tag (eval-when-compile mds-tag-stack))
+      (mds-out-display out-buf msg 'stack))
 
      ((= tag (eval-when-compile mds-tag-monitor))
       (mds-out-display out-buf msg 'monitor))
-     
-     ((= tag (eval-when-compile mds-tag-stack))
-      (mds-out-display out-buf msg 'stack))
      
      ((= tag (eval-when-compile mds-tag-warn))
       (mds-out-display out-buf msg 'warn))
@@ -228,8 +221,6 @@ communicate with the process.  Data is sent to the queue via
 
      ((= tag (eval-when-compile mds-tag-clear-echo))
       (message ""))
-
-     ((= tag (eval-when-compile mds-tag-null)))
 
      ;; otherwise print to debugger output buffer
      (t (mds-out-display out-buf msg tag)))))

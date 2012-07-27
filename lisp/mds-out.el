@@ -272,8 +272,7 @@ Optional TAG identifies the message type."
 	      (goto-char beg)
 	      (mds-activate-addr-procname 'mds-out-view-proc))
 	     
-	     ((or (eq tag 'stack)
-		  (eq tag 'where))
+	     ((eq tag 'stack)
 	      ;; stack or where
 	      (insert msg)
 	      (goto-char beg)

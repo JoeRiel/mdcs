@@ -292,10 +292,6 @@ $include <src/debugger.mm>
 
             map[3](debugger_printf, TAG_SS_DEAD, "\n%s", [res]);
 
-            # nonl probably means "no newline"
-            if procname <> 'showstat[nonl]' then
-                debugger_printf(TAG_NULL, "\n" )
-            fi
         fi;
         NULL
     end proc:
@@ -367,7 +363,7 @@ $endif
         ls := stopat();
         if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo breakpoints set.\n")
         else
-            debugger_printf(TAG__INFO, "\nBreakpoints in:\n");
+            debugger_printf(TAG_INFO, "\nBreakpoints in:\n");
             for i in ls do debugger_printf(TAG_INFO, "   %a\n",i) od
         fi;
         ls := stopwhen();
@@ -393,7 +389,7 @@ $endif
         ls := stoperror();
         if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo errors being watched.\n")
         else
-            debugger_printf('WATCHED_ERRS', "\nWatched errors:\n");
+            debugger_printf(TAG_WATCHED, "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
                     debugger_printf(TAG_INFO, "   All errors\n")

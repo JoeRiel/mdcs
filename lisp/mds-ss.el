@@ -45,6 +45,7 @@ however, such an abomination should break something.")
 ;;}}}
 ;;{{{ variables
 
+(defvar mds-ss-addr           nil "Address of current displayed procedure")
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
 (defvar mds-ss-dead-flag      nil "Non-nil means this is the ss-dead buffer.")
@@ -55,6 +56,7 @@ however, such an abomination should break something.")
 ;; Make variables buffer-local
 (mapc #'make-variable-buffer-local
       '(mds-client
+	mds-ss-addr
 	mds-ss-arrow-position
 	mds-ss-show-args-flag
 	mds-ss-dead-flag
@@ -164,7 +166,7 @@ otherwise call (maple) showstat to display the new procedure."
 	;; Revert cursor-type to ready status.
 	(setq cursor-type mds-cursor-ready))
       
-      (if (string= addr (mds-client-get-addr mds-client))
+      (if (string= addr mds-ss-addr)
 	  ;; Address has not changed; move the arrow
 	  (unless trace
 	    (mds-ss-move-state state))
@@ -186,7 +188,8 @@ otherwise call (maple) showstat to display the new procedure."
 
     ;; Update the buffer-local status
     ;; 5u(mds-client-set-addr mds-client addr)
-    (setq mds-ss-procname procname
+    (setq mds-ss-addr     addr
+	  mds-ss-procname procname
 	  mds-ss-state    state
 	  mds-ss-statement statement)))
 
@@ -252,20 +255,12 @@ If the STATE is non-nil, use that as the state number to display.
 Otherwise, find the statement number from STATEMENT."
   (with-current-buffer (mds-client-dead-buf mds-client)
     (unless (string= procname "")
-      (if (string= addr (mds-client-get-addr mds-client))
-	  ;; Already displaying the procedure; just update the arrow.
-	  (mds-ss-move-state (or state
-				    (mds-ss-determine-state statement)))
-
-	;; Need to fetch from Maple.
-	;; Set the buffer locals state info.
-	;; (mds-client-set-addr mds-client addr)
-	(setq mds-ss-procname   procname
-	      mds-ss-statement  statement
-	      mds-ss-state      state)
+      (setq mds-ss-procname   procname
+	    mds-ss-statement  statement
+	    mds-ss-state      state)
 	
-	;; Update the dead buffer.
-	(mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr))))))
+      ;; Update the dead buffer.
+      (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr)))))
 
 ;;}}}
 ;;{{{ (*) mds-ss-insert-proc
@@ -349,7 +344,7 @@ highlight the line."
 	  (re-search-forward "^ *[1-9][0-9]*[ *?]? *" nil 'move)))))
 
 ;;}}}
-
+;;}}}
 ;;{{{ select maple expressions
 
 (defun mds-expr-at-point-interactive (prompt &optional default complete)
