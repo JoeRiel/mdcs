@@ -12,9 +12,10 @@ $define TAG_MONITOR    "M" # output of a monitored expression
 $define TAG_PRINTF     "P" #
 $define TAG_PROMPT     ">" # display a prompt
 $define TAG_RESULT     "R" # result of request
+$define TAG_UNLIMITED  "U" # result of request, no length restriction
 $define TAG_SAME       "%" # state is the same as the previous
-$define TAG_SS_DEAD    "d" # showstat output for ss-dead buffer
-$define TAG_SS_LIVE    "l" # showstat output for ss-live buffer
+$define TAG_SS_DEAD    "D" # showstat output for ss-dead buffer
+$define TAG_SS_LIVE    "L" # showstat output for ss-live buffer
 $define TAG_STACK      "K" # stack output
 $define TAG_STATE      "S" # current state (including line-info)
 $define TAG_WARN       "W" # warning

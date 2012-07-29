@@ -1064,15 +1064,19 @@ $endif
             msg := sprintf(_rest);
         end if;
         len := length(msg);
-        if  tag <> TAG_SS_LIVE
+        if tag <> TAG_SS_LIVE
         and tag <> TAG_SS_DEAD
+        and tag <> TAG_UNLIMITED
         and 0 < max_length
         and max_length < len then
             msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
             len := length(msg);
         end if;
         lenlen := length(len);
-        Sockets:-Write(sid, cat(tag
+        Sockets:-Write(sid, cat(`if`(tag=TAG_UNLIMITED
+                                     , TAG_RESULT
+                                     , tag
+                                    )
                                 , lenlen
                                 , `if`(lenlen=0
                                        , NULL

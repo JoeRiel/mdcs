@@ -110,7 +110,7 @@ code."
     (mds-out-display (mds-client-out-buf mds-client) cmd 'cmd))
   (mds-ss-send-client cmd))
 
-(defun mds-ss-request (expr)
+(defun mds-ss-request (expr &optional unlimited)
   "Send the string EXPR to Maple and return the response, as a string.
 A newline is appended to EXPR before it is sent (why?).  EXPR should
 have no spaces."
@@ -118,13 +118,14 @@ have no spaces."
 	result)
     (save-current-buffer
 	(mds-client-set-result client nil)
-	(mds-client-send client (format "_mds_request %s\n" expr))
+	(mds-client-send client (if unlimited
+				    (format "_mds_request %s unlimited\n" expr)
+				  (format "_mds_request %s\n" expr)))
 	;; Loop until the result is returned.
 	(while (null result)
 	  (sleep-for 0.0001)
 	  (setq result (mds-client-get-result client)))
 	(substring result 0 -1))))
-
 ;;}}}
 
 ;;{{{ buffer creation and update
@@ -165,7 +166,6 @@ otherwise call (maple) showstat to display the new procedure."
       (unless trace
 	;; Revert cursor-type to ready status.
 	(setq cursor-type mds-cursor-ready))
-      
       (if (string= addr mds-ss-addr)
 	  ;; Address has not changed; move the arrow
 	  (unless trace
@@ -178,16 +178,15 @@ otherwise call (maple) showstat to display the new procedure."
 	
 	(unless trace
 	  ;; Call Maple showstat routine to update the showstat buffer.
-	  ;; (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" addr)))
 	  (mds-ss-insert-proc buf (format "<%s>\n%s"
 					  addr
-					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)))))
+					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)
+							  'unlimited))))
 	(when (and mds-show-args-flag
 		   (string= state "1"))
 	  (setq mds-ss-show-args-flag t))))
 
     ;; Update the buffer-local status
-    ;; 5u(mds-client-set-addr mds-client addr)
     (setq mds-ss-addr     addr
 	  mds-ss-procname procname
 	  mds-ss-state    state
@@ -280,8 +279,8 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
       ;; Hide the address and assign the client addr
       (goto-char (point-min))
       (let ((addr-procname (mds-activate-addr-procname)))
-	;; (mds-client-set-addr mds-client (car addr-procname))
-	(setq mds-ss-procname (cdr addr-procname)))
+	(setq mds-ss-addr (car addr-procname)
+	      mds-ss-procname (cdr addr-procname)))
 
       ;; Update the mode-line; this adds the procname to the mode-line
       (mds-ss-set-mode-line mds-ss-procname (car (mds-client-id mds-client)))

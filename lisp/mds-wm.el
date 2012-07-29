@@ -310,9 +310,8 @@ line-info buffer.  If the code window does not exist, create it."
 		    (mds-client-live-buf mds-client))))
     (unless (eq cur-buf new-buf)
       (unless li-flag
-	(mds-ss-refresh mds-client)
-	(mds-goto-current-state mds-client)
-	)
+	;;(mds-ss-refresh mds-client)
+	(mds-goto-current-state mds-client))
       (set-window-buffer (get-buffer-window cur-buf) new-buf))))
 
 

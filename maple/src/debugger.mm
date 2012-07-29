@@ -520,10 +520,14 @@ global showstat, showstop;
         elif cmd = "_mds_request" then
             #{{{ _mds_request
             local expr,val;
-            line := sscanf(original, "%s %s");
+            line := sscanf(original, "%s %s %s");
             expr := line[2];
             val  := traperror(eval(parse(expr)));
-            debugger_printf(TAG_RESULT, "%Q\n", val);
+            if nops(line) = 3 and line[3] = "unlimited" then
+                debugger_printf(TAG_UNLIMITED, "%Q\n", val);
+            else
+                debugger_printf(TAG_RESULT, "%Q\n", val);
+            end if;
             prompt := false;
             next;
             #}}}
