@@ -621,7 +621,6 @@ local Connect
 
     Warnings := {}; # initialize
 
-$ifdef BUILD_MLA
 $include <src/DataFile.mm>
 $include <src/Debugger.mm>
 $include <src/Format.mm>
@@ -629,7 +628,6 @@ $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
 $include <src/LineInfo.mm>
-$endif
 
 #{{{ ModuleApply
 
@@ -1679,4 +1677,6 @@ end module:
 
 protect('mdc'):
 
-LibraryTools:-Save('mdc', "mdc.mla");
+#LibraryTools:-Save('mdc', "mdc.mla");
+
+#savelib('mdc'):
