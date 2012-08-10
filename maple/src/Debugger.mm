@@ -252,7 +252,7 @@ $endif
             try
                 line := Sockets:-Read(sid);
             catch:
-                debugger_printf(TAG_ERR
+                debugger_printf(TAG_ERROR
                                 , "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
