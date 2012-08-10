@@ -88,12 +88,10 @@ LineInfo := module()
 export Breakpoints
     ,  Get
     ,  LookupStatement
-    ,  SetRoot
     ,  Store
     ;
 
 local ModuleLoad
-    , Root
 
 ##TOPIC Info
 ##HALFLINE table storing lineinfo information
@@ -150,7 +148,6 @@ local ModuleLoad
     ModuleLoad := proc()
         # Initialize the info table
         Info := table('sparse');
-        Root := "";
         NULL;
     end proc;
 
@@ -192,7 +189,6 @@ local ModuleLoad
 ##
 ## Try[NE]("1.0.1", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.0.2", addressof(f), 'assign'="af"):
-## Try[NE]("1.0.3", mdc:-LineInfo:-SetRoot(currentdir()));
 ## Try[NE]("1.0.4", Store(af, myinfo));
 ## Try[NE]("1.0.5", cat("/home/joe/tmp/mpldoc/f.mpl"), 'assign' = "f_mpl");
 ## Try("1.1.0", FUNC(af, 0, myinfo), f_mpl, 1,  5, 66);
@@ -261,7 +257,6 @@ local ModuleLoad
 ## Try[NE]("1.0", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.1", addressof(f), 'assign'="af"):
 ## Try[NE]("1.2", table('sparse'), 'assign'="myinfo");
-## Try[NE]("1.3", mdc:-LineInfo:-SetRoot(currentdir()));
 ## Try[NE]("1.4", sprintf("%s/f.mpl", currentdir()), 'assign' = "f_mpl");
 ## Try[RE]("1.5", FUNC(af, myinfo)
 ##         , Record['packed']('filenames' = [f_mpl]
@@ -301,15 +296,18 @@ local ModuleLoad
 
         else
             filenames := ListTools:-MakeUnique(map2(op,1,lineinfo));
+
             # Convert filenames to integers, corresponding to position in 'filenames'
             lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
             # Insert filenames and an Array of the statement positions
             # into a two-field record, and store in the sparse table
             # info, which is indexed by the procedure address.
 
-            if Root <> "" then
-                filenames := map(FileTools:-AbsolutePath, filenames, Root);
-            end if;
+            filenames := map(nm -> `if`(nm=0
+                                        , 0
+                                        , FileTools:-AbsolutePath(nm)
+                                       )
+                             , filenames);
 
             info[addr] := Record['packed'](':-filenames' = filenames
                                            , ':-positions' = Array(0..numelems(lineinfo)-1, 1..4
@@ -332,17 +330,6 @@ local ModuleLoad
 
         return info[addr];
 
-    end proc;
-
-##PROCEDURE \THISMOD[SetRoot]
-##HALFLINE store a string as the root directoroy
-##AUTHOR   Joe Riel
-##DATE     May 2012
-##CALLINGSEQUENCE
-##- SetRoot('root')
-
-    SetRoot := proc( root :: string )
-        Root := root;
     end proc;
 
 ##PROCEDURE \THISMOD[LookupStatement]
@@ -489,7 +476,6 @@ local ModuleLoad
 ##
 ## Try[NE]("1.0.1", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.0.2", addressof(f), 'assign'="af"):
-## Try[NE]("1.0.3", mdc:-LineInfo:-SetRoot(currentdir()));
 ## Try[NE]("1.0.4", mdc:-LineInfo:-Store(af));
 ##
 ## Try("1.1.0", FUNC(af), "");
