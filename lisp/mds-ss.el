@@ -181,7 +181,8 @@ otherwise call (maple) showstat to display the new procedure."
 	  (mds-ss-insert-proc buf (format "<%s>\n%s"
 					  addr
 					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)
-							  'unlimited))))
+							  'unlimited)))
+	  (mds-ss-move-state state))
 	(when (and mds-show-args-flag
 		   (string= state "1"))
 	  (setq mds-ss-show-args-flag t))))
