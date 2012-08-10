@@ -212,7 +212,8 @@ global showstat, showstop;
                 last_state := state;
                 local src_pos := LineInfo:-Get(addr, statNumber);
                 if src_pos = NULL
-                or src_pos[1] = 0 then
+                or src_pos[1] = 0
+                or src_pos[2] = -1 then
                     debugger_printf(TAG_STATE, "0 0 0 0:%s"
                                     , state
                                    );
