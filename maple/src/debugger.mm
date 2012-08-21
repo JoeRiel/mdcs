@@ -266,7 +266,7 @@ global showstat, showstop;
     #}}}
     #{{{ command loop
 
-    prompt := false;
+    prompt := true;
 
     do
         line := `debugger/readline`( prompt );

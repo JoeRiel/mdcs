@@ -126,6 +126,7 @@ have no spaces."
 	  (sleep-for 0.0001)
 	  (setq result (mds-client-get-result client)))
 	(substring result 0 -1))))
+
 ;;}}}
 
 ;;{{{ buffer creation and update

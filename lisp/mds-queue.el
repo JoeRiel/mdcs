@@ -166,15 +166,27 @@ communicate with the process.  Data is sent to the queue via
 	(mds-client-set-procname client procname)
 	(mds-client-set-state client state)
 	(mds-client-set-statement client statement)
-	(mds-out-display out-buf state 'prompt)
+	;; 
+	;; (mds-out-display out-buf state 'prompt)
+	;; Necessary, but ...
 	(mds-goto-current-state client)
-	(mds-client-set-allow-input client 'unblock)
+	;; (mds-client-set-allow-input client 'unblock)
+
 	(let ((trace-mode (mds-client-get-trace client)))
 	  (when trace-mode
 	    (mds-out-display out-buf trace-mode 'cmd)
 	    (mds-client-send client (concat trace-mode "\n"))))
 	))
 
+     ((= tag (eval-when-compile mds-tag-prompt))
+      ;; Extract the state-number and pass it along
+      (mds-out-display out-buf
+		       (buffer-local-value 'mds-ss-state live-buf)
+		       'prompt)
+
+      (mds-client-set-allow-input client 'unblock)
+      (mds-goto-current-state client))
+      
      ((= tag (eval-when-compile mds-tag-ss-live))
      ;; msg is showstat output (printout of procedure).
      ;; Insert into live-showstat buffer.
@@ -185,21 +197,17 @@ communicate with the process.  Data is sent to the queue via
      ;; Insert into dead-showstat buffer.
       (mds-ss-insert-proc (mds-client-dead-buf client) msg))
 
-     ;; IS THIS NEEEDED?
-     ((= tag (eval-when-compile mds-tag-prompt))
-      ;; Extract the state-number and pass it along
-      (mds-out-display out-buf
-		       (buffer-local-value 'mds-ss-state live-buf)
-		       'prompt)
-
-      (mds-client-set-allow-input client 'unblock)
-      (mds-goto-current-state client))
-      
      ((= tag (eval-when-compile mds-tag-stack))
       (mds-out-display out-buf msg 'stack))
 
      ((= tag (eval-when-compile mds-tag-monitor))
-      (mds-out-display out-buf msg 'monitor))
+      (mds-out-display out-buf msg 'monitor)
+
+      ;; (mds-out-display out-buf (mds-client-get-state client) 'prompt)
+      ;; (mds-goto-current-state client)
+      ;; (mds-client-set-allow-input client 'unblock)
+
+      )
      
      ((= tag (eval-when-compile mds-tag-warn))
       (mds-out-display out-buf msg 'warn))
@@ -223,7 +231,9 @@ communicate with the process.  Data is sent to the queue via
       (message ""))
 
      ;; otherwise print to debugger output buffer
-     (t (mds-out-display out-buf msg tag)))))
+     (t (mds-out-display out-buf msg tag)))
+
+    ))
 
 ;;}}}
 
