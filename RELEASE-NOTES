@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.1
+** New client/server communication protocol: eliminate matching tags
 * mdcs.1.14.1
 ** Fixes to lineinfo
    1. Fixed asynchronous timing issues
