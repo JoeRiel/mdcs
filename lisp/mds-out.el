@@ -203,21 +203,6 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;{{{ mds-out-get-ss-line
 
-;; FIXME: this belongs in mds-ss.el
-
-(defun mds-out-get-ss-line ()
-  "Return the current input line of the live showstat buffer."
-  ;; FIXME :: need to go to current line
-  (with-current-buffer (mds-client-live-buf mds-client)
-    (save-excursion
-      (mds-goto-state mds-ss-state)
-      (beginning-of-line)
-      (if (looking-at mds-out-ss-line-re)
-	  (match-string 1)
-	""))))
-
-;;}}}
-
 ;;{{{ mds-out-display
 
 (defun mds-out-display (buf msg &optional tag)
@@ -238,14 +223,16 @@ Optional TAG identifies the message type."
 	      (insert msg))
 	     
 	     ((eq tag 'cmd)
-	      ;; Command
+	      ;; Insert the debug command (next, into, etc) that
+	      ;; executes the current Maple statement; if enabled,
+	      ;; insert the statement itself.
 	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
-		  (insert (mds-out-get-ss-line) "\n")
+		  (insert (mds-client-get-statement mds-client) "\n")
 		(insert "\n")))
 	     
 	     ((eq tag 'prompt)
-	      ;; Insert prompt, with statement number (msg) embedded.
+	      ;; Insert a prompt, with state number (msg) embedded.
 	      ;; Goto beginning of line and replace line, that way
 	      ;; an existing prompt is replaced.
 	      (beginning-of-line)
@@ -253,25 +240,26 @@ Optional TAG identifies the message type."
 	      (insert "(*" msg "*) ")
 	      (mds-put-face beg (point) 'mds-prompt)
 	      (delete-region (point) (line-end-position))
-	      (let* ((live-buf (mds-client-live-buf mds-client))
-		     (trace-mode (mds-client-get-trace mds-client))
-		     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
-		(if show-args
-		    (with-current-buffer live-buf
-		      (if trace-mode
-			  (progn
-			    (setq mds-ss-show-args-flag nil)
-			    (mds-client-set-allow-input mds-client t)
-			    (mds-ss-eval-expr "args"))
-			(if (eq show-args t)
-			    (setq mds-ss-show-args-flag 'now)
-			  (setq mds-ss-show-args-flag nil)
-			  (mds-ss-eval-expr "args"))))
-		  (when trace-mode
-		    (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
-			(insert (buffer-local-value 'mds-ss-statement live-buf)))
-		    (insert "\n")
-		    (mds-client-send mds-client (concat trace-mode "\n"))))))
+	      ;; (let* ((live-buf (mds-client-live-buf mds-client))
+	      ;; 	     (trace-mode (mds-client-get-trace mds-client))
+	      ;; 	     (show-args  (buffer-local-value 'mds-ss-show-args-flag live-buf)))
+	      ;; 	(if show-args
+	      ;; 	    (with-current-buffer live-buf
+	      ;; 	      (if trace-mode
+	      ;; 		  (progn
+	      ;; 		    (setq mds-ss-show-args-flag nil)
+	      ;; 		    (mds-client-set-allow-input mds-client t)
+	      ;; 		    (mds-ss-eval-expr "args"))
+	      ;; 		(if (eq show-args t)
+	      ;; 		    (setq mds-ss-show-args-flag 'now)
+	      ;; 		  (setq mds-ss-show-args-flag nil)
+	      ;; 		  (mds-ss-eval-expr "args"))))
+	      ;; 	  (when trace-mode
+	      ;; 	    (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
+	      ;; 		(insert (buffer-local-value 'mds-ss-statement live-buf)))
+	      ;; 	    (insert "\n")
+	      ;; 	    (mds-client-send mds-client (concat trace-mode "\n")))))
+	      )
 
 	     ((eq tag 'output)
 	      (insert msg))
@@ -284,8 +272,7 @@ Optional TAG identifies the message type."
 	      (goto-char beg)
 	      (mds-activate-addr-procname 'mds-out-view-proc))
 	     
-	     ((or (eq tag 'stack)
-		  (eq tag 'where))
+	     ((eq tag 'stack)
 	      ;; stack or where
 	      (insert msg)
 	      (goto-char beg)

@@ -7,28 +7,6 @@
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
 ##- \PROC()
-##DESCRIPTION
-##- blah blah
-##
-##SUBSECTION Tags
-##- CLEAR_ECHO : clear message in echo area
-##- DBG_ERR : A debugger error occurred
-##- DBG_EVAL : computed result (user or procedure)
-##- DBG_INFO : output from "showstop"
-##- DBG_SAME : state has not changed
-##- DBG_STACK : short stack output (can be merged with DBG_WHERE)
-##- DBG_STATE : debugger statement
-##- DBG_STOP : never sent
-##- DBG_WARN : used to indicate improper action (but also when skip is satisfied)
-##- DBG_WHERE : long stack output
-##- LINE_INFO : sending line info (filename lineno beg end:...)
-##- MONITOR : message is result of a monitored expression
-##- MDC_PRINTF : pretty-printed output
-##- DBG_ERR : a Maple error occurred
-##- SHOW_EXCEPTION : called from "ShowException"
-##- WATCHED_CONDS: reports watches
-##- WATCHED_ERRS : called from "_showstop"
-##ENDSUBSECTION
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.
@@ -139,7 +117,7 @@ global showstat, showstop;
     end do;
 
     #}}}
-    #{{{ send result to emacs
+    #{{{ send result to server
 
 
     if not skip and ( Quiet implies Respond ) then
@@ -166,7 +144,7 @@ global showstat, showstop;
                                             , _passed[i][j]
                                            );
                         else
-                            debugger_printf(TAG_WHERE
+                            debugger_printf(TAG_STACK
                                             , "<%d>\n%a: %s\n"
                                             , addressof(_passed[i][j])
                                             , _passed[i][j]
@@ -183,7 +161,7 @@ global showstat, showstop;
                     then
                         return
                     fi;
-                    debugger_printf('WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
+                    debugger_printf(TAG_WATCHED, "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
                 elif i < n then
                     # list/set that is part of a continued sequence
                     debugger_printf(tag, "%a,\n",_passed[i])
@@ -204,7 +182,7 @@ global showstat, showstop;
 
     #}}}
 
-    #{{{ send debug status to Emacs
+    #{{{ send debug status to server
 
     if procName <> 0 then
         if statNumber < 0 then
@@ -229,17 +207,20 @@ global showstat, showstop;
             addr := addressof(procName);
             state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
-                WriteTagf(TAG_SAME);
+                # WriteTagf(TAG_SAME);
             else
                 last_state := state;
                 local src_pos := LineInfo:-Get(addr, statNumber);
                 if src_pos = NULL
-                or src_pos[1] = 0 then
-                    debugger_printf(TAG_STATE, "%s", state);
+                or src_pos[1] = 0
+                or src_pos[2] = -1 then
+                    debugger_printf(TAG_STATE, "0 0 0 0:%s"
+                                    , state
+                                   );
                 else
-                    debugger_printf(TAG_LINE_INFO, "%s %d %d %d%s:%s"
-                                    , src_pos                     # file, lineno, beg, end
-                                    , LineInfo:-Breakpoints(addr) # breakpoints, as a string
+                    debugger_printf(TAG_STATE, "%s %d %d %d%s:%s"
+                                    , src_pos
+                                    , LineInfo:-Breakpoints(addr)
                                     , state
                                    );
                 end if;
@@ -338,8 +319,6 @@ global showstat, showstop;
             debugopts('steplevel' = Level);
             return
         elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-            # debugger_printf('DBG_STOP',"stopping\n");
-            # ssystem("sleep 1"); FIXME: may need to delay here.
             debugopts('interrupt'=true)
         elif cmd = "where" then
             if nops(line) = 1 then
@@ -351,7 +330,6 @@ global showstat, showstop;
             n := debugopts('callstack');
             n := [op(1,n),op(5..-1,n)];
             n := subsop(seq(3*i=``,i=1..(nops(n)+1)/3),n);
-            # n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
             return n;
         elif cmd = "stopat" then
             #{{{ stopat
@@ -543,10 +521,14 @@ global showstat, showstop;
         elif cmd = "_mds_request" then
             #{{{ _mds_request
             local expr,val;
-            line := sscanf(original, "%s %s");
+            line := sscanf(original, "%s %s %s");
             expr := line[2];
             val  := traperror(eval(parse(expr)));
-            debugger_printf(TAG_RESULT, "%q\n", val);
+            if nops(line) = 3 and line[3] = "unlimited" then
+                debugger_printf(TAG_UNLIMITED, "%Q\n", val);
+            else
+                debugger_printf(TAG_RESULT, "%Q\n", val);
+            end if;
             prompt := false;
             next;
             #}}}
@@ -611,6 +593,8 @@ global showstat, showstop;
         fi;
 
         #}}}
+
+        prompt := true;
 
     end do;
 

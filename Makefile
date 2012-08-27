@@ -131,12 +131,14 @@ mla := $(maple-pkg).mla
 mla: $(call print-help,mla,Create Maple archive: $(mla))
 mla: remove-preview $(mla)
 
-# build mla.  This assumes the %.mpl file
-# contains a Library:-Save command
+# Build mla. 
+# Note that we need to provide the full path to the include directive,
+# otherwise the lineinfo data is relative.
 %.mla: maple/src/%.mpl $(mms)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@$(call showerr,echo $$($(MAPLE) -I maple -D BUILD_MLA -q $< ))
+	@smarch -c $@
+	@sload -Q -b . -I $$(pwd)/maple $<
 
 # }}}
 
