@@ -167,10 +167,10 @@ communicate with the process.  Data is sent to the queue via
 	(mds-client-set-state client state)
 	(mds-client-set-statement client statement)
 	;; 
-	;; (mds-out-display out-buf state 'prompt)
-	;; Necessary, but ...
+	;; This is needed with do loops missing a 'for'; because of
+	;; the bug in the kernel, they have to switch to showstat
+	;; buffer.  Maybe there is a cheaper method.
 	(mds-goto-current-state client)
-	;; (mds-client-set-allow-input client 'unblock)
 
 	(let ((trace-mode (mds-client-get-trace client)))
 	  (when trace-mode
