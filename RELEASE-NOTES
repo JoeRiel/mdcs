@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.2
+** Quick fix; forgot to distribute mds-queue.el
 * mdcs.2.0.1
 ** New client/server communication protocol: eliminate matching tags
 * mdcs.1.14.1

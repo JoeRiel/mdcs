@@ -174,6 +174,7 @@ uses FT = FileTools, ST = StringTools;
     end if;
     #}}}
     NULL;
+
 end proc:
 #}}}
 #{{{ CreateInstaller
@@ -184,7 +185,7 @@ local installer, version;
 global InstallScript;
 
     # This is updated by bin/version
-    version := "2.0.1";
+    version := "2.0.2";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
@@ -211,6 +212,7 @@ global InstallScript;
                                           , "mds-login.el"
                                           , "mds-out.el"
                                           , "mds-patch.el"
+                                          , "mds-queue.el"
                                           , "mds-re.el"
                                           , "mds-ss.el"
                                           , "mds-thing.el"
