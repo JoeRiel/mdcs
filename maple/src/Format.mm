@@ -308,8 +308,9 @@ local indexed2slashed
         elif rest :: procedure then
             if top then
                 if _rest :: name then
-                    Format:-showstat(convert(rest,string));
+                    Format:-showstat(convert(_rest,string));
                 else
+                    "else";
                     # rest is an evaluated expression.  Assign to
                     # a the global name _fake_name, which is then
                     # displayed.  This is done because
