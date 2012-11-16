@@ -310,7 +310,6 @@ local indexed2slashed
                 if _rest :: name then
                     Format:-showstat(convert(_rest,string));
                 else
-                    "else";
                     # rest is an evaluated expression.  Assign to
                     # a the global name _fake_name, which is then
                     # displayed.  This is done because

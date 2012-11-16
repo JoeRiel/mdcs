@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs.2.0.3
+** Modify enter_procname to activate regardless if at statement 1
+** Add Debugger:-Enter procname (currently undocumented)
 * mdcs.2.0.2
 ** Quick fix; forgot to distribute mds-queue.el
 * mdcs.2.0.1
