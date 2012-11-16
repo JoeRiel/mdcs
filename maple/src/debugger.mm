@@ -60,10 +60,8 @@ global showstat, showstop;
                     end if;
                 end if;
             elif enter_procname <> NULL then
-                if statNumber = 1
-                and SearchText(enter_procname
+                if SearchText(enter_procname
                                , sprintf("%a",procName)
-                               #, -length(enter_procname)..-1
                               ) <> 0 then
                     skip := false;
                     enter_procname := NULL;
@@ -480,12 +478,14 @@ global showstat, showstop;
             #}}}
         elif cmd = "_enter" then
             #{{{ _enter
+
             line := sscanf(original, "%s %s");
             enter_procname := line[2];
             go_back_proc := procName;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
+
             #}}}
         elif cmd = "_goback_save" then
             #{{{ _goback_save

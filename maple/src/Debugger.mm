@@ -22,7 +22,8 @@ Debugger := module()
 
 #{{{ declarations
 
-export GoBack
+export Enter
+    ,  GoBack
     ,  Monitor
     ,  Printf
     ,  Replace
@@ -592,6 +593,17 @@ $endif
     end proc;
 
 #}}}
+#{{{ Enter
+
+    Enter := proc(pname :: string := "")
+        enter_procname := `if`(pname = ""
+                               , NULL
+                               , pname
+                              );
+    end proc;
+
+#}}}
+
 #{{{ GoBack
 
     GoBack := proc({ clear :: truefalse := false }, $ )
