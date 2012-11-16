@@ -1249,7 +1249,7 @@ $include <src/LineInfo.mm>
 ##  skipping flag by calling ~mdc()~ from Maple.
 ##
 ##OPTIONS
-##- Some of the options are mutually exclusive.
+##-(nolead) Some of the options are mutually exclusive.
 ##
 ##opt(before,truefalse)
 ##  Match 'ex', which must be a string, against the Maple code
