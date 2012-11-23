@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.4
+** Modify LineInfo:-Get so it works with versions of Maple before 15
 * mdcs.2.0.3
 ** Modify enter_procname to activate regardless if at statement 1
 ** Add Debugger:-Enter procname (currently undocumented)
