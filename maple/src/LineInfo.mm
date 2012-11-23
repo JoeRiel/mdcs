@@ -288,7 +288,11 @@ local ModuleLoad
     Store := proc( addr :: integer, info := Info )
     local file, filenames, i, lineinfo;
 
-        lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
+        try
+            lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
+        catch:
+            lineinfo := [];
+        end try;
 
         if lineinfo = [] then
             # no lineinfo available for prc
