@@ -553,11 +553,13 @@ The following table describes each of the execution commands.
 Continue: run until the next breakpoint or watchpoint, or until the program terminates.
 
 @kindex g
+@kindex @kbd{C-u g}
 @findex mds-goto-procname
 @anchor{mds-goto-procname}
 @item g (@code{mds-goto-procname})
-Goto a procedure, that is, skip until the selected procedure is entered.
-The name of the procedure is surmised from the code at point.  If called
+Goto a procedure, that is, skip until the selected procedure is active.
+The name of the procedure is surmised from the code at point; if no function
+call if found, the name is queried in the minibuffer.  If called
 with an argument, @kbd{C-u g}, the procedure name is queried in the
 minibuffer, the default is taken from the code at point.  This feature
 is built on the skipping mechanism; it does not use breakpoints.  It
