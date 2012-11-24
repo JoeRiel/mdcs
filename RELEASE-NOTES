@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.5
+** Change thisproc to procname to work with Maple 12 and 13.
 * mdcs.2.0.4
 ** Modify LineInfo:-Get so it works with versions of Maple before 15
 * mdcs.2.0.3
