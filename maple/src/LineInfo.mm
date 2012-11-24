@@ -207,7 +207,7 @@ local ModuleLoad
         if rec = 0 then
             # nothing saved,
             Store(addr);
-            return thisproc(_passed);
+            return procname(_passed);
         elif rec = NULL then
             return NULL;
         end if;
