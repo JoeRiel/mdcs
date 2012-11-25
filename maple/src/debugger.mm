@@ -117,7 +117,6 @@ global showstat, showstop;
     #}}}
     #{{{ send result to server
 
-
     if not skip and ( Quiet implies Respond ) then
         Respond := false;
         if monitor_result then
@@ -129,8 +128,11 @@ global showstat, showstop;
             # Use addressof to prevent an object from overriding
             # equality.
             if addressof(_passed[i]) = addressof(lasterror) then
-                debugger_printf(TAG_ERROR, "Error, %s\n"
-                                , StringTools:-FormatMessage(lastexception[2..]))
+                local last_exception := lastexception[2..];
+                if last_exception :: indexed then
+                    last_exception := "use showexception (x) or showerror (X)";
+                end if;
+                debugger_printf(TAG_ERROR, "Error, %s\n", last_exception);
             elif _passed[i] :: list and nops(_passed[i]) >= 1 then
                 if _passed[i][1] = 'DEBUGSTACK' then
                     j := nops(_passed[i]) - 2;
