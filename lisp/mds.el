@@ -120,6 +120,7 @@ If server is already running, stop then restart it."
 		  :filter 'mds-filter
 		  ;; :log 'mds-log
 		  :server 't))
+  (set-process-query-on-exit-flag mds-proc mds-query-on-exit-flag)
   (mds-login-reset))
 
 (defun mds-stop ()

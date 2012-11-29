@@ -53,9 +53,15 @@ that the debugger may have exited."
   :group 'mds)
 
 (defcustom mds-use-lineinfo-flag t
-  "Non-nl means use lineinfo, if available."
+  "Non-nil means use lineinfo, if available."
   :type 'boolean
   :group 'mds)
+
+(defcustom mds-query-on-exit-flag nil
+  "Non-nil means query for confirmation to kill mds process when exiting Emacs."
+  :type 'boolean
+  :group 'mds)
+
 
 ;;{{{ Cursors
 
