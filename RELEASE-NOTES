@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.6
+** Add mds-query-on-exit-flag
 * mdcs.2.0.5
 ** Change thisproc to procname to work with Maple 12 and 13.
 * mdcs.2.0.4
