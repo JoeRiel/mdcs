@@ -179,6 +179,7 @@ otherwise call (maple) showstat to display the new procedure."
 	
 	(unless trace
 	  ;; Call Maple showstat routine to update the showstat buffer.
+	  (setq mds-ss-state state)
 	  (mds-ss-insert-proc buf (format "<%s>\n%s"
 					  addr
 					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)
