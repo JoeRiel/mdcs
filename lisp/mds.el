@@ -241,7 +241,6 @@ display the client windows, and get the focus."
 
 (defun mds-writeto-log-proc (proc msg)
   "Write PROC: MSG to log buffer."
-;;  (mds-writeto-log (format "%s: %s\n" proc msg)))
   (mds-writeto-log (format "%s\n" msg)))
 
 (defun mds-writeto-log (msg)
