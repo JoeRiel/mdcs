@@ -187,6 +187,9 @@ communicate with the process.  Data is sent to the queue via
       (mds-client-set-allow-input client 'unblock)
       (mds-goto-current-state client))
       
+     ((= tag (eval-when-compile mds-tag-result))
+      (mds-client-set-result client msg))
+
      ((= tag (eval-when-compile mds-tag-ss-live))
      ;; msg is showstat output (printout of procedure).
      ;; Insert into live-showstat buffer.
@@ -217,9 +220,6 @@ communicate with the process.  Data is sent to the queue via
 
      ((= tag (eval-when-compile mds-tag-printf))
       (mds-out-display out-buf msg 'printf))
-
-     ((= tag (eval-when-compile mds-tag-result))
-      (mds-client-set-result client msg))
 
      ((= tag (eval-when-compile mds-tag-info))
       (mds-out-display out-buf msg 'info))
