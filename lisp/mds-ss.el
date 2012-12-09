@@ -169,17 +169,24 @@ otherwise call (maple) showstat to display the new procedure."
 	(setq cursor-type mds-cursor-ready))
       (if (string= addr mds-ss-addr)
 	  ;; Address has not changed; move the arrow
-	  (unless trace
-	    (mds-ss-move-state state))
+	  (progn
+	    (unless trace
+	      (mds-ss-move-state state))
+	    (setq mds-ss-procname procname
+		  mds-ss-state    state
+		  mds-ss-statement statement))
 	
 	;; New procedure; send address and procname to the output buffer.
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
 	
+	(setq mds-ss-addr     addr
+	      mds-ss-procname procname
+	      mds-ss-state    state
+	      mds-ss-statement statement)
 	(unless trace
 	  ;; Call Maple showstat routine to update the showstat buffer.
-	  (setq mds-ss-state state)
 	  (mds-ss-insert-proc buf (format "<%s>\n%s"
 					  addr
 					  (mds-ss-request (format "debugopts('procdump'=pointto(%s))" addr)
@@ -187,13 +194,7 @@ otherwise call (maple) showstat to display the new procedure."
 	  (mds-ss-move-state state))
 	(when (and mds-show-args-flag
 		   (string= state "1"))
-	  (setq mds-ss-show-args-flag t))))
-
-    ;; Update the buffer-local status
-    (setq mds-ss-addr     addr
-	  mds-ss-procname procname
-	  mds-ss-state    state
-	  mds-ss-statement statement)))
+	  (setq mds-ss-show-args-flag t))))))
 
 ;;}}}
 ;;{{{ (*) mds-ss-determine-state
@@ -867,7 +868,6 @@ See `mds-monitor-toggle'."
   (if (and (mds-client-use-lineinfo-p client)
 	   (mds-client-has-source-p client))
       (mds-li-goto-current-state client)
-    ;; (pop-to-buffer (mds-client-live-buf client))
     (mds-wm-select-code-window client)
     (mds-ss-update (current-buffer)
 		   (mds-client-get-addr client)

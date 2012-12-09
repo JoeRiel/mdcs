@@ -155,20 +155,18 @@ communicate with the process.  Data is sent to the queue via
 	    (statement 	 (match-string 9 msg))
 	    (li-buf (mds-client-li-buf client)))
 	(if (string= file "0")
-	    (progn
-	      (mds-ss-update live-buf addr procname state statement)
-	      (mds-client-set-has-source client nil))
+	    (mds-client-set-has-source client nil)
 	  (mds-li-update li-buf file addr procname state beg
 			 (mapcar 'string-to-number (split-string breakpoints)))
 	  (mds-client-set-has-source client t))
-	;;
+
 	(mds-client-set-addr client addr)
 	(mds-client-set-procname client procname)
 	(mds-client-set-state client state)
 	(mds-client-set-statement client statement)
-	;; 
+
 	;; This is needed with do loops missing a 'for'; because of
-	;; the bug in the kernel, they have to switch to showstat
+	;; the bug in the kernel, they have to switch to the showstat
 	;; buffer.  Maybe there is a cheaper method.
 	(mds-goto-current-state client)
 
