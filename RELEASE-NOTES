@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs.2.0.7
+** Extend mds-query-on-exit-flag to work with client processes (not just server)
+** Fix bug which displayed wrong statement number in output buffer when using stopat with a statement
+** Remove an unnecessary call to mds-ss-update
+
 * mdcs.2.0.6
 ** Add mds-query-on-exit-flag
 * mdcs.2.0.5
