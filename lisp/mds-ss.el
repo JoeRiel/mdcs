@@ -629,11 +629,11 @@ The hyperlinks in the output buffer are then active."
     (if (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
 	(let ((state (match-string-no-properties 1))
 	      (inhibit-read-only t)
-	      (cond (mds--query-stop-var "stopat-cond" "condition" 'mds-ss-stopwhen-history-list)))
+	      (cnd (mds--query-stop-var "stopat-cond" "condition" 'mds-ss-stopwhen-history-list)))
 	  (replace-match "?" nil nil nil 2)
 	  (mds-ss-eval-debug-code
 	   (format "debugopts('stopat'=[pointto(%s),%s,%s])"
-		   (mds-client-get-addr mds-client) state cond) 'hide))
+		   (mds-ss-get-embedded-addr) state cnd) 'hide))
       (ding)
       (message "no previous state in buffer"))))
 
