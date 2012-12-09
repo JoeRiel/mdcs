@@ -196,6 +196,7 @@ True means to hide the echoing of user commands and statements."
 The returned client structure is a vector [PROC status queue ID
 live-buf dead-buf out-buf addr], where status is initialized to
 'new'."
+  (set-process-query-on-exit-flag proc mds-query-on-exit-flag)
   (let ((client (make-vector 20 nil)))
     (aset client 0 proc)
     (aset client 1 'login)
