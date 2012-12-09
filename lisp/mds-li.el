@@ -207,6 +207,22 @@ Set cursor to ready."
 				    (if clear "-" "")
 				    (nth 1 state)))))
 
+(defun mds-li-breakpoint-cond ()
+  "Set a conditional breakpoint at the current state."
+  (interactive)
+  (let ((state (mds-li-get-state-list (point))))
+    ;; Turn on/off fringe bitmap.
+    (goto-char (string-to-number (nth 2 state)))
+    (mds-li-set-breakpoint (line-beginning-position))
+    ;; Set/clear the actual breakpoint.
+    (mds-ss-eval-debug-code (format "debugopts('stopat'=[pointto(%s),%s,%s])"
+				    (car state)
+				    (nth 1 state)
+				    (mds--query-stop-var
+				     "stopat-cond" "condition"
+				     'mds-ss-stopwhen-history-list))
+			    'hide)))
+
 (defun mds-li-unstopat ()
   "Clear breakpoint at point."
   (interactive)
@@ -288,7 +304,7 @@ LABEL is the user id."
   (let ((map (copy-keymap mds-ss-mode-map))
 	(bindings
 	 '(("b" . mds-li-breakpoint)
-	   ("B" . mds-breakpoint-cond)
+	   ("B" . mds-li-breakpoint-cond)
 	   ("g" . mds-goto-procname)
 	   ("G" . mds-li-open-source-at-point)
 	   ("h" . mds-li-here)
