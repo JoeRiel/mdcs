@@ -614,7 +614,7 @@ The hyperlinks in the output buffer are then active."
 	    ;; Replace the decoration
 	    (replace-match "*" nil nil nil 2)
 	    (mds-ss-eval-debug-code (format "debugopts('stopat'=[pointto(%s),%s])"
-					    (mds-client-get-addr mds-client)
+					    (mds-ss-get-embedded-addr)
 					    state)
 				    'hide))
 	(ding)
@@ -698,7 +698,9 @@ If the state does not have a breakpoint, print a message."
 	      (inhibit-read-only t))
 	  (replace-match " " nil nil nil 2)
 	  (mds-ss-eval-debug-code
-	   (format "debugopts('stopat'=[pointto(%s),-%s])" (mds-client-get-addr mds-client) state) 'hide))
+	   (format "debugopts('stopat'=[pointto(%s),-%s])"
+		   (mds-ss-get-embedded-addr) state)
+	   'hide))
       (ding)
       (message "no breakpoint at this state"))))
 
