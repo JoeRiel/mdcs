@@ -1152,7 +1152,7 @@ $include <src/LineInfo.mm>
 
 #{{{ Version
 
-    Version := "2.0.7";
+    Version := "2.0.8";
 
 #}}}
 

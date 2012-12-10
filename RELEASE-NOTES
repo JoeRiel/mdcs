@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs.2.0.8
+** Fix setting/clearing breakpoints in ss-dead buffer
+** Fix setting conditional breakpoints in lineinfo buffer
+** Build mdc.mla properly
+** Modify stopwarning so mdc does not appear in showstop list  
 * mdcs.2.0.7
 ** Extend mds-query-on-exit-flag to work with client processes (not just server)
 ** Fix bug which displayed wrong statement number in output buffer when using stopat with a statement
