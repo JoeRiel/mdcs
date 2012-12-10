@@ -820,7 +820,9 @@ $include <src/LineInfo.mm>
                     msg := StringTools:-FormatMessage(_passed);
                     if ormap(StringTools:-RegMatch, Warnings, msg) then
                         WARNING := proc(msg::{string, symbol})
-                            DEBUG();
+                            # This is done to prevent showstop from
+                            # detecting this as a stop point.
+                            ``||"DEBUG"();
                             print(INTERFACE_WARN(1,msg,args[2 .. -1]))
                         end proc;
                         WARNING(args);
