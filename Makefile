@@ -209,7 +209,7 @@ hdb: install-mla $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
-	@$(RM) maple/src/_preview_.mm
+	@$(RM) $@ maple/src/_preview_.mm
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
@@ -362,7 +362,7 @@ $(installer): hdb mla info
 
 installer-zip: $(call print-help,installer-zip,Create Maple installer zip file)
 installer-zip: installer
-	zip mdcs-ins-$(subst .,-,$(VERSION)).zip $(installer) README-installer run-installer run-installer.bat
+	zip $(pkg)-ins-$(subst .,-,$(VERSION)).zip $(installer) README-installer run-installer run-installer.bat
 
 # }}}
 # {{{ zip
