@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE CMD InstallPatch
-##PROCEDURE \MOD[\CMD]
+##PROCEDURE mdc[InstallPatch]
 ##HALFLINE install a patched procedure
 ##AUTHOR   Joe Riel
 ##DATE     Oct 2011

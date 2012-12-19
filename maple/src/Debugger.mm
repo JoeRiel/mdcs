@@ -1,6 +1,5 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE THISMOD mdc[Debugger]
-##MODULE \THISMOD
+##MODULE mdc[Debugger]
 ##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -231,7 +230,7 @@ $endif
 #}}}
 #{{{ debugger_readline
 
-##PROCEDURE \THISMOD[debugger_readline]
+##PROCEDURE mdc[Debugger][debugger_readline]
 ##CALLINGSEQUENCE
 ##- debugger_readline('prompt')
 ##PARAMETERS
@@ -415,7 +414,7 @@ $endif
 #{{{ stopat
 
 ##DEFINE CMD stopat
-##PROCEDURE \THISMOD[\CMD]
+##PROCEDURE mdc[Debugger][stopat]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010

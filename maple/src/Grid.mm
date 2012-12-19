@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD Grid
-##MODULE(help) \MOD[\SUBMOD]
+##MODULE(help) mdc[Grid]
 ##HALFLINE submodule for debugging Grid-based procedures
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -12,8 +12,8 @@
 ##
 ##- The exports are
 ##
-##-- "\MOD[\SUBMOD][CodeString]" : instrument a block of code
-##-- "\MOD[\SUBMOD][Procedure]" : instrument a procedure
+##-- "mdc[Grid][CodeString]" : instrument a block of code
+##-- "mdc[Grid][Procedure]" : instrument a procedure
 ##
 ##SEEALSO
 ##- "Grid"
@@ -28,7 +28,7 @@ export CodeString
 #{{{ CodeString
 
 ##DEFINE CMD CodeString
-##PROCEDURE(help) \MOD[\SUBMOD][\CMD]
+##PROCEDURE(help) mdc[Grid][CodeString]
 ##HALFLINE instrument a block of code for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
@@ -43,7 +43,7 @@ export CodeString
 ##- The `\CMD` command
 ##  instruments a string of code that is
 ##  passed to "Grid[Launch]" so that it
-##  can be debugged with "mdc".
+##  can be debugged with `mdc`.
 ##  It does so by returning a new string of code
 ##  that contains a call to `mdc` just before
 ##  executing the code that launches the debugging.
@@ -56,7 +56,7 @@ export CodeString
 ##  that executes the parallel procedures.
 ##
 ##- The remaining arguments are optional arguments
-##  to "mdc[mdc]".  They initialize the client
+##  to `mdc`.  They initialize the client
 ##  and instrument the selected procedures.
 ##
 ##EXAMPLES(noexecute,notest)
@@ -86,7 +86,7 @@ export CodeString
 ##SEEALSO
 ##- "Grid"
 ##- "mdc"
-##- "mdc[mdc]"
+##- "mdc[ModuleApply]"
 ##- "mdc[Grid]"
 ##- "mdc[Grid][Procedure]"
 
@@ -104,7 +104,7 @@ export CodeString
 #{{{ Procedure
 
 ##DEFINE CMD Procedure
-##PROCEDURE(help) \MOD[\SUBMOD][\CMD]
+##PROCEDURE(help) mdc[Grid][Procedure]
 ##HALFLINE instrument a procedure for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
@@ -118,12 +118,12 @@ export CodeString
 ##DESCRIPTION
 ##- The `\CMD` command
 ##  wraps a procedure, 'prc', in another procedure that
-##  can be passed to "Grid[Launch]" and which launches "mdc".
+##  can be passed to "Grid[Launch]" and which launches `mdc`.
 ##
 ##- The 'prc' parameter is the procedure to execute.
 ##
 ##- The remaining arguments to `\CMD` are passed
-##  to "mdc[mdc]".
+##  to `mdc`.
 ##
 ##- The wrapper procedure passes its arguments to 'prc'.
 ##
@@ -144,9 +144,10 @@ export CodeString
 ##> Grid:-Launch(Hello, "Maple Debugger", 'numnodes'=2);
 ##SEEALSO
 ##- "Grid"
-##- "mdc[mdc]"
+##- "mdc"
+##- "mdc[ModuleApply]"
 ##- "mdc[Grid]"
-##- "mdc[Grid][CodeBlock]"
+##- "mdc[Grid][CodeString]"
 
     Procedure := proc(prc :: procedure)
         subs('_opts' = _rest

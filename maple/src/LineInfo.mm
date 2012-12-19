@@ -1,7 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE THISMOD \PKG[LineInfo]
 
-##MODULE \THISMOD
+##MODULE mdc[LineInfo]
 ##HALFLINE methods for lineinfo
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
@@ -140,7 +139,7 @@ local ModuleLoad
     , Info
     ;
 
-##PROCEDURE ModuleLoad
+##PROCEDURE mdc[LineInfo][ModuleLoad]
 ##HALFLINE assign the module-local varible Info an empty table.
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
@@ -151,7 +150,7 @@ local ModuleLoad
         NULL;
     end proc;
 
-##PROCEDURE \THISMOD[Get]
+##PROCEDURE mdc[LineInfo][Get]
 ##HALFLINE return the source location of a procedure statement
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
@@ -224,7 +223,7 @@ local ModuleLoad
 
     end proc;
 
-##PROCEDURE \THISMOD[Store]
+##PROCEDURE mdc[LineInfo][Store]
 ##HALFLINE store the lineinfo data of a procedure
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
@@ -336,7 +335,7 @@ local ModuleLoad
 
     end proc;
 
-##PROCEDURE \THISMOD[LookupStatement]
+##PROCEDURE mdc[LineInfo][LookupStatement]
 ##HALFLINE return statement information at a given source position
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
@@ -442,7 +441,7 @@ local ModuleLoad
 
     end proc;
 
-##PROCEDURE \THISMOD[Breakpoints]
+##PROCEDURE mdc[LineInfo][Breakpoints]
 ##HALFLINE return positions of breakpoints in a procedure
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2012

@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE CMD Monitor
-##PROCEDURE(help) \PKG[\CMD]
+##PROCEDURE(help) mdc[Monitor]
 ##HALFLINE set and query a monitor expression
 ##AUTHOR   Joe Riel
 ##DATE     Mar 2012
@@ -126,7 +126,7 @@
 ##
 ##SEEALSO
 ##- "mdc"
-##- "mdc[package]"
+##- "mdc[ModuleApply]"
 ##- "kernelopts"
 
 $define IDENTIFIER {name,string}

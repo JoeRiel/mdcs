@@ -6,8 +6,8 @@
 
 ##DEFINE MOD mdc
 ##DEFINE CMD mdc
-##PACKAGE(help) \PKG[package]
-##TITLE \PKG
+##PACKAGE(help) mdc
+##TITLE mdc
 ##HALFLINE Overview of the Maple Debugger Client package
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -32,10 +32,10 @@
 ##
 ##- The `\MOD` module is an appliable module
 ##  that launches the Maple Debugger Client.
-##  See "\CMD" for details.
+##  See "mdc[ModuleApply]" for details.
 ##
-##- The submodule "\MOD[Grid]" provides several exports
-##  for using "Grid" with the `\MOD`.
+##- The submodule "mdc[Grid]" provides several exports
+##  for using the "Grid" package with `\MOD`.
 ##
 ##- The user interface of the *Maple Debugger Server*,
 ##  which controls the debugger, is described in its
@@ -51,8 +51,7 @@
 ##SUBSECTION Exports
 ##- "mdc[Grid]" : submodule for debugging "Grid" processes.
 ##- "mdc[Count]" : implements a counter
-##- "mdc[DataFile"] : return path to file in data directory of installed toolbox
-##- "mdc[mdc]" : main export
+##- "mdc[ModuleApply]" : main export
 ##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
 ##- "mdc[Monitor]" : set/query monitor expressions
 ##- "mdc[Skip]" : set skip options
@@ -61,15 +60,14 @@
 ##ENDSUBSECTION
 ##
 ##SEEALSO
-##- "mdc"
+##- "mdc[ModuleApply]"
 ##- "debugger"
 ##- "Grid"
 ##ENDMPLDOC
 
 
-##PROCEDURE(help) \CMD[ModuleApply]
+##PROCEDURE(help) mdc[ModuleApply]
 ##HALFLINE Maple Debugger Client
-##ALIAS mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -82,7 +80,7 @@
 ##DESCRIPTION
 ##- The `\CMD` command is an appliable module that
 ##  launches the "Maple Debugger Client".
-##  For package details, see "\MOD[package]".
+##  For package details, see "mdc".
 ##  If the client successfully connects to a *Maple Debugger Server*,
 ##  it replaces the standard Maple "debugger" with
 ##  procedures that transfer debugging control to the server.
@@ -513,13 +511,13 @@
 ##- "regular expressions" : Help:Regular_Expressions
 ##
 ##SEEALSO
-##- "\MOD[package]"
+##- "mdc"
 ##- "debugger"
-##- "\MOD[Grid]"
-##- "\MOD[Count]"
-##- "\MOD[Monitor]"
-##- "\MOD[Skip]"
-##- "\MOD[TraceLevel]"
+##- "mdc[Grid]"
+##- "mdc[Count]"
+##- "mdc[Monitor]"
+##- "mdc[Skip]"
+##- "mdc[TraceLevel]"
 ##ENDMPLDOC
 
 #}}}
@@ -933,7 +931,7 @@ $include <src/LineInfo.mm>
 #{{{ Connect
 
 ##DEFINE PROC Connect
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE mdc[Connect]
 ##HALFLINE initiate a connection to a Maple debugger server
 
     Connect := proc(host :: string
@@ -1014,7 +1012,7 @@ $include <src/LineInfo.mm>
 #{{{ Disconnect
 
 ##DEFINE PROC Disconnect
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE mdc[Disconnect]
 ##HALFLINE terminate connection to Maple debugger server
 
     Disconnect := proc( { quiet :: truefalse := false } )
@@ -1032,7 +1030,7 @@ $include <src/LineInfo.mm>
 #{{{ WriteTagf
 
 ##DEFINE PROC WriteTagf
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE mdc[WriteTagf]
 ##AUTHOR   Joe Riel
 ##DATE     Nov 2011
 ##CALLINGSEQUENCE
@@ -1093,7 +1091,7 @@ $include <src/LineInfo.mm>
 #{{{ CreateID
 
 ##DEFINE PROC CreateID
-##PROCEDURE \MOD[\PROC]
+##PROCEDURE mdc[CreateID]
 ##HALFLINE create a formatted ID that identifies the client
 ##CALLINGSEQUENCE
 ##- \PROC('label')
@@ -1159,7 +1157,7 @@ $include <src/LineInfo.mm>
 #{{{ Sleep
 
 ##DEFINE CMD Sleep
-##PROCEDURE(help) \MOD[\CMD]
+##PROCEDURE(help) mdc[Sleep]
 ##HALFLINE pause execution of the engine
 ##AUTHOR   Joe Riel
 ##DATE     Aug 2011
@@ -1204,7 +1202,7 @@ $include <src/LineInfo.mm>
 #{{{ Skip
 
 ##DEFINE CMD Skip
-##PROCEDURE(help) \MOD[\CMD]
+##PROCEDURE(help) mdc[Skip]
 ##HALFLINE assign the skip predicate
 ##AUTHOR   Joe Riel
 ##DATE     Jan 2012
@@ -1334,7 +1332,7 @@ $include <src/LineInfo.mm>
 ##>>    end do;
 ##>>    V;
 ##>> end proc:
-##- The ~skip_until[alloc]~ option to "mdc"
+##- The ~skip_until[alloc]~ option to `mdc`
 ##  is equivalent to calling `Skip` with
 ##  option `bytesalloc`.
 ##> mdc(inefficent, skip_until[alloc]=10^8):
@@ -1425,8 +1423,8 @@ $include <src/LineInfo.mm>
 ##
 ##ENDSUBSECTION
 ##SEEALSO
-##- "mdc[package]"
 ##- "mdc"
+##- "mdc[ModuleApply]"
 
     Skip := proc(ex := NULL
                  , { before :: truefalse := false }
@@ -1518,7 +1516,7 @@ $include <src/LineInfo.mm>
 #{{{ Count
 
 ##DEFINE CMD Count
-##PROCEDURE(help) \MOD[\CMD]
+##PROCEDURE(help) mdc[Count]
 ##HALFLINE increment a counter
 ##AUTHOR   Joe Riel
 ##DATE     Sep 2011
@@ -1530,7 +1528,7 @@ $include <src/LineInfo.mm>
 ##DESCRIPTION
 ##- The `\CMD` command increments a counter and returns the result.
 ##  It is intended to be used with the conditional form of the
-##  `stopat` option to "mdc[mdc]" to stop the debugger inside a
+##  `stopat` option to `mdc` to stop the debugger inside a
 ##  procedure after a specified number of calls.
 ##
 ##- The optional parameters 'indx1',...,'indx2' are used
@@ -1538,7 +1536,7 @@ $include <src/LineInfo.mm>
 ##  It is allowable to use no indices, which is the usual case
 ##  if you need only one counter.
 ##
-##- The counter incremented is local to the "mdc" module.  Different
+##- The counter incremented is local to the `mdc` module.  Different
 ##  counters can be specified by passing arbitrary arguments
 ##  ('indices') to \CMD.
 ##
@@ -1580,6 +1578,7 @@ $include <src/LineInfo.mm>
 ##> Count(reset);
 ##SEEALSO
 ##- "mdc"
+##- "mdc[ModuleApply]"
 ##- "stopat"
 ##
 ##TEST
@@ -1637,7 +1636,7 @@ $include <src/LineInfo.mm>
 #{{{ TraceLevel
 
 ##DEFINE CMD TraceLevel
-##PROCEDURE(help) \MOD[\CMD]
+##PROCEDURE(help) mdc[TraceLevel]
 ##HALFLINE set and query the tracing level
 ##AUTHOR   Joe Riel
 ##DATE     Mar 2012
@@ -1650,7 +1649,7 @@ $include <src/LineInfo.mm>
 ##DESCRIPTION
 ##- The `\CMD` command sets and queries the tracing level,
 ##  which is used by the level tracing mode.
-##  See the `level` option in "\MOD[mdc]".
+##  See the `level` option in `mdc`.
 ##
 ##- The optional 'lev' parameter assigns the level.
 ##  If not provided the value is not changed.
@@ -1662,7 +1661,7 @@ $include <src/LineInfo.mm>
 ##> mdc:-TraceLevel();
 ##SEEALSO
 ##- "mdc"
-##- "mdc[package]"
+##- "mdc[ModuleApply]"
 
     TraceLevel := proc( lev :: posint := NULL )
     local prev;

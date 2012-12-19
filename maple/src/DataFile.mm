@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE CMD DataFile
-##MODULE \PKG[\CMD]
+##MODULE mdc[DataFile]
 ##HALFLINE return the path to a data file provided with the toolbox
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
