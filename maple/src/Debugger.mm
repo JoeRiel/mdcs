@@ -37,6 +37,7 @@ export Enter
     ,  Skip
     ,  stopat
     ,  unstopat
+    ,  GetName
     ;
 
 global DEBUGGER_PROCS;
@@ -65,7 +66,6 @@ local _debugger
     , orig_stopat
     , Quiet := false
     , Respond := false
-    , getname
     , replaced
     , skip_before := NULL
     , skip_before_halt := true
@@ -450,7 +450,7 @@ $endif
         if p :: list then
             return procname(op(p));
         end if;
-        pnam := getname(p);
+        pnam := GetName(p);
         # debugbuiltins is a module local, which is a design flaw, but
         # avoiding it is tricky.  Passing it as a keyword parameter is
         # not possible because cond is optional yet declared as 'uneval'.
@@ -525,7 +525,7 @@ $endif
         if p :: list then
             return procname(op(p));
         end if;
-        pnam := getname(p);
+        pnam := GetName(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
         else                  debugopts('stopat'=[pnam, -st, 'cond'])
@@ -539,9 +539,9 @@ $endif
 
 #}}}
 
-#{{{ getname
+#{{{ GetName
 
-    getname := proc(p :: {name,string}, $)
+    GetName := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
