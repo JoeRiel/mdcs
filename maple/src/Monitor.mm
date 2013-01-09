@@ -137,7 +137,7 @@ local addr, expr, prev;
     if prc = "all" then
         addr := 0;
     else
-        addr := addressof(getname(prc));
+        addr := addressof(GetName(prc));
     end if;
 
     if assigned(monitor_expr[addr]) then
