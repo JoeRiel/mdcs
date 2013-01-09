@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs.2.0.9
+** Modify help so ?mdc points to module.  Needed so that parent would work properly.
+** Return the first procedure in the stopats argument.  This is quite handy.
 * mdcs.2.0.8
 ** Fix setting/clearing breakpoints in ss-dead buffer
 ** Fix setting conditional breakpoints in lineinfo buffer
