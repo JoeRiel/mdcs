@@ -619,6 +619,7 @@ local Connect
 
     Warnings := {}; # initialize
 
+
 $include <src/DataFile.mm>
 $include <src/Debugger.mm>
 $include <src/Format.mm>
@@ -681,11 +682,13 @@ $include <src/LineInfo.mm>
 
         #}}}
         #{{{ ignoretester
+
         if ignoretester then
             if assigned('TESTER_SOURCEDIR') then
                 return NULL;
             end if;
         end if;
+
         #}}}
 
         debugbuiltins := debug_builtins;
@@ -901,30 +904,30 @@ $include <src/LineInfo.mm>
 
 #{{{ ModuleLoad
 
-    ModuleLoad := proc()
-        debugbuiltins := GetDefault(':-debug_builtins', false);
-        SkipCheckStack := GetDefault(':-skip_check_stack', false);
-        TypeTools:-AddType('synonym'
-                           , proc(x,nm)
-                                 x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
-                             end proc
-                          );
-    end proc;
+ModuleLoad := proc()
+    debugbuiltins := GetDefault(':-debug_builtins', false);
+    SkipCheckStack := GetDefault(':-skip_check_stack', false);
+    TypeTools:-AddType('synonym'
+                       , proc(x,nm)
+                             x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
+                         end proc
+                      );
+end proc;
 
 #}}}
 #{{{ ModuleUnload
 
-    ModuleUnload := proc()
-        TypeTools:-RemoveType('synonym');
-        Debugger:-RestoreBuiltins();
-        if sid <> -1 then
-            try
-                Sockets:-Close( sid );
-            catch:
-            end try;
-        end if;
-        Debugger:-Restore();
-    end proc;
+ModuleUnload := proc()
+    TypeTools:-RemoveType('synonym');
+    Debugger:-RestoreBuiltins();
+    if sid <> -1 then
+        try
+            Sockets:-Close( sid );
+        catch:
+        end try;
+    end if;
+    Debugger:-Restore();
+end proc;
 
 #}}}
 
@@ -934,79 +937,79 @@ $include <src/LineInfo.mm>
 ##PROCEDURE mdc[Connect]
 ##HALFLINE initiate a connection to a Maple debugger server
 
-    Connect := proc(host :: string
-                    , port :: posint
-                    , id :: string
-                    , { emacs :: {string,procedure} := "emacs" }
-                    , { launch_emacs :: truefalse := false }
-                    , { quiet :: truefalse := false }
-                    , { verbose :: truefalse := false }
-                    , $
-                   )
-    local cmd,connected,line,sys;
+Connect := proc(host :: string
+                , port :: posint
+                , id :: string
+                , { emacs :: {string,procedure} := "emacs" }
+                , { launch_emacs :: truefalse := false }
+                , { quiet :: truefalse := false }
+                , { verbose :: truefalse := false }
+                , $
+               )
+local cmd,connected,line,sys;
 
-        Debugger:-Reset();
+    Debugger:-Reset();
 
-        if sid <> -1 then
-            try
-                Sockets:-Close(sid);
-            catch:
-            end try;
-        end if;
-
+    if sid <> -1 then
         try
-            sid := Sockets:-Open(host, port);
+            Sockets:-Close(sid);
         catch:
-            if launch_emacs then
-                if emacs :: procedure then
-                    emacs();
-                else
-                    sys := kernelopts('platform');
-                    cmd := sprintf("%s", emacs);
-                    try
-                        system['launch'](cmd);
-                    catch:
-                        error "problem launching emacs";
-                    end try;
-                end if;
-                to 5 do
-                    try
-                        sid := Sockets:-Open(host, port);
-                        connected := true;
-                        break;
-                    catch:
-                        Sleep(1);
-                    end try;
-                end do;
-                if connected <> true then
-                    error "could not connect to Maple Debugger Server";
-                end if;
-            end if;
         end try;
-        Host := host;
-        Port := port;
-        # handle login (hack for now)
-        try
-            line := Sockets:-Read(sid);
-        catch "invalid socket ID", "argument does not refer to an open socket connection":
-            error "cannot connect to Debugger server.  Server may not be running."
-        end try;
+    end if;
 
-        if line = "userid: " then
-            Sockets:-Write(sid, id);
-            line := Sockets:-Read(sid);
-            if not quiet then
-                printf("%s\n", line);
+    try
+        sid := Sockets:-Open(host, port);
+    catch:
+        if launch_emacs then
+            if emacs :: procedure then
+                emacs();
+            else
+                sys := kernelopts('platform');
+                cmd := sprintf("%s", emacs);
+                try
+                    system['launch'](cmd);
+                catch:
+                    error "problem launching emacs";
+                end try;
             end if;
-            if verbose then
-                printf("Connected to %s on port %d, with id %s\n"
-                       , host, port, id );
+            to 5 do
+                try
+                    sid := Sockets:-Open(host, port);
+                    connected := true;
+                    break;
+                catch:
+                    Sleep(1);
+                end try;
+            end do;
+            if connected <> true then
+                error "could not connect to Maple Debugger Server";
             end if;
-            return NULL;
         end if;
+    end try;
+    Host := host;
+    Port := port;
+    # handle login (hack for now)
+    try
+        line := Sockets:-Read(sid);
+    catch "invalid socket ID", "argument does not refer to an open socket connection":
+        error "cannot connect to Debugger server.  Server may not be running."
+    end try;
+
+    if line = "userid: " then
+        Sockets:-Write(sid, id);
+        line := Sockets:-Read(sid);
+        if not quiet then
+            printf("%s\n", line);
+        end if;
+        if verbose then
+            printf("Connected to %s on port %d, with id %s\n"
+                   , host, port, id );
+        end if;
+        return NULL;
+    end if;
 
 
-    end proc;
+end proc;
 
 #}}}
 #{{{ Disconnect
@@ -1015,15 +1018,15 @@ $include <src/LineInfo.mm>
 ##PROCEDURE mdc[Disconnect]
 ##HALFLINE terminate connection to Maple debugger server
 
-    Disconnect := proc( { quiet :: truefalse := false } )
-        if sid <> -1 then
-            if not quiet then
-                printf("goodbye\n");
-            end if;
-            Sockets:-Close(sid);
-            sid := -1;
+Disconnect := proc( { quiet :: truefalse := false } )
+    if sid <> -1 then
+        if not quiet then
+            printf("goodbye\n");
         end if;
-    end proc;
+        Sockets:-Close(sid);
+        sid := -1;
+    end if;
+end proc;
 
 #}}}
 
@@ -1053,39 +1056,39 @@ $include <src/LineInfo.mm>
 ##  If the length of the message exceeds ~max_length~, a short message
 ##  indicating what has been done, is substituted.
 
-    WriteTagf := proc(tag)
-    uses Write = Sockets:-Write;
-    local msg,len,lenlen;
-        if _npassed = 1 then
-            msg := "";
-        else
-            msg := sprintf(_rest);
-        end if;
+WriteTagf := proc(tag)
+uses Write = Sockets:-Write;
+local msg,len,lenlen;
+    if _npassed = 1 then
+        msg := "";
+    else
+        msg := sprintf(_rest);
+    end if;
+    len := length(msg);
+    if tag <> TAG_SS_LIVE
+    and tag <> TAG_SS_DEAD
+    and tag <> TAG_UNLIMITED
+    and 0 < max_length
+    and max_length < len then
+        msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
         len := length(msg);
-        if tag <> TAG_SS_LIVE
-        and tag <> TAG_SS_DEAD
-        and tag <> TAG_UNLIMITED
-        and 0 < max_length
-        and max_length < len then
-            msg := sprintf("%s... ---output too long (%d bytes)---\n", msg[1..100],len);
-            len := length(msg);
-        end if;
-        lenlen := length(len);
-        Sockets:-Write(sid, cat(`if`(tag=TAG_UNLIMITED
-                                     , TAG_RESULT
-                                     , tag
-                                    )
-                                , lenlen
-                                , `if`(lenlen=0
-                                       , NULL
-                                       , len
-                                      )));
-        Sockets:-Write(sid, msg);
-        if view_flag then
-            fprintf('INTERFACE_DEBUG',_rest);
-        end if;
-        return NULL;
-    end proc;
+    end if;
+    lenlen := length(len);
+    Sockets:-Write(sid, cat(`if`(tag=TAG_UNLIMITED
+                                 , TAG_RESULT
+                                 , tag
+                                )
+                            , lenlen
+                            , `if`(lenlen=0
+                                   , NULL
+                                   , len
+                                  )));
+    Sockets:-Write(sid, msg);
+    if view_flag then
+        fprintf('INTERFACE_DEBUG',_rest);
+    end if;
+    return NULL;
+end proc;
 
 #}}}
 #{{{ CreateID
@@ -1130,27 +1133,27 @@ $include <src/LineInfo.mm>
 ## Try[TE]("10.3", FUNC("\n"), msg);
 
 
-    CreateID := proc(label :: string,$)
-    local ver;
-        if length(label) = 0 then
-            error "label cannot be empty";
-        elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
-            error "invalid characters in label '%1'", label;
-        end if;
-        ver := kernelopts('version');
-        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-        return sprintf(":%s:%s:%s:%d:"
-                       , label
-                       , ver
-                       , kernelopts('platform,pid')
-                      );
-    end proc;
+CreateID := proc(label :: string,$)
+local ver;
+    if length(label) = 0 then
+        error "label cannot be empty";
+    elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
+        error "invalid characters in label '%1'", label;
+    end if;
+    ver := kernelopts('version');
+    ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
+    return sprintf(":%s:%s:%s:%d:"
+                   , label
+                   , ver
+                   , kernelopts('platform,pid')
+                  );
+end proc;
 
 #}}}
 
 #{{{ Version
 
-    Version := "2.0.8";
+Version := "2.0.8";
 
 #}}}
 
@@ -1182,21 +1185,21 @@ $include <src/LineInfo.mm>
 ##SEEALSO
 ##- "Threads[Sleep]"
 
-    Sleep := proc( t :: nonnegint )
-    local cmd,sys;
-        try
-            Threads:-Sleep( t )
-        catch:
-            sys := kernelopts('platform');
-            if sys = "windows" or sys = "dos" then
-                cmd := sprintf("timeout \t %d \nobreak", t);
-            else
-                cmd := sprintf("sleep %d", t);
-            end if;
-            system(cmd);
-        end try;
-        return NULL;
-    end proc;
+Sleep := proc( t :: nonnegint )
+local cmd,sys;
+    try
+        Threads:-Sleep( t )
+    catch:
+        sys := kernelopts('platform');
+        if sys = "windows" or sys = "dos" then
+            cmd := sprintf("timeout \t %d \nobreak", t);
+        else
+            cmd := sprintf("sleep %d", t);
+        end if;
+        system(cmd);
+    end try;
+    return NULL;
+end proc;
 
 #}}}
 #{{{ Skip
@@ -1426,91 +1429,91 @@ $include <src/LineInfo.mm>
 ##- "mdc"
 ##- "mdc[ModuleApply]"
 
-    Skip := proc(ex := NULL
-                 , { before :: truefalse := false }
-                 , { bytesalloc :: posint := NULL }
-                 , { stacklevel :: posint := NULL }
-                 , { usehastype :: truefalse := false }
-                 , { exact :: truefalse := false }
-                 , { matchlocals :: truefalse := false }
-                )
-    local alloc_orig, alloc_max;
+Skip := proc(ex := NULL
+             , { before :: truefalse := false }
+             , { bytesalloc :: posint := NULL }
+             , { stacklevel :: posint := NULL }
+             , { usehastype :: truefalse := false }
+             , { exact :: truefalse := false }
+             , { matchlocals :: truefalse := false }
+            )
+local alloc_orig, alloc_max;
 
-        if before then
-            if not ex :: string then
-                error ( "target must be a string when using 'before' option, "
-                        "received %1", ex );
-            end if;
-            return Debugger:-SkipBefore(ex);
+    if before then
+        if not ex :: string then
+            error ( "target must be a string when using 'before' option, "
+                    "received %1", ex );
+        end if;
+        return Debugger:-SkipBefore(ex);
 
-        elif bytesalloc <> NULL then
+    elif bytesalloc <> NULL then
 
-            alloc_orig := kernelopts(':-bytesalloc');
-            alloc_max := alloc_orig + bytesalloc;
+        alloc_orig := kernelopts(':-bytesalloc');
+        alloc_max := alloc_orig + bytesalloc;
 
-            match_predicate := proc()
-            local alloc;
-                alloc := kernelopts(':-bytesalloc');
-                if alloc_max < alloc then
-                    sprintf("allocated bytes increased by %a"
-                            , alloc - alloc_orig
-                           );
-                else
-                    false;
-                end if;
-            end proc;
-
-
-        elif stacklevel <> NULL then
-
-            match_predicate := subs('_S' = stacklevel+51  # 48 = 20+4+4+20, but 51 is better
-                                    , proc()
-                                      local lev;
-                                          lev := kernelopts(':-level');
-                                          if _S < lev then
-                                              sprintf("stack level [%d] exceeded %d"
-                                                      , lev - 51
-                                                      , stacklevel
-                                                     );
-                                          else
-                                              false;
-                                          end if;
-                                      end proc
-                                   );
-        elif ex = NULL then
-
-        elif exact then
-            if matchlocals then
-                match_predicate := proc()
-                local n;
-                    _npassed > 0 and [ex] = subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]);
-                end proc;
+        match_predicate := proc()
+        local alloc;
+            alloc := kernelopts(':-bytesalloc');
+            if alloc_max < alloc then
+                sprintf("allocated bytes increased by %a"
+                        , alloc - alloc_orig
+                       );
             else
-                match_predicate := proc() evalb(_passed = ex) end proc;
+                false;
             end if;
+        end proc;
 
-        elif usehastype then
-            if not ex :: type then
-                error "argument must be a type when using hastype, received '%1'", ex;
-            end if;
-            match_predicate := proc() hastype([_passed],ex) end proc;
 
-        elif matchlocals then
+    elif stacklevel <> NULL then
+
+        match_predicate := subs('_S' = stacklevel+51  # 48 = 20+4+4+20, but 51 is better
+                                , proc()
+                                  local lev;
+                                      lev := kernelopts(':-level');
+                                      if _S < lev then
+                                          sprintf("stack level [%d] exceeded %d"
+                                                  , lev - 51
+                                                  , stacklevel
+                                                 );
+                                      else
+                                          false;
+                                      end if;
+                                  end proc
+                               );
+    elif ex = NULL then
+
+    elif exact then
+        if matchlocals then
             match_predicate := proc()
             local n;
-                _npassed > 0 and has(subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]),ex);
+                _npassed > 0 and [ex] = subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]);
             end proc;
-
-        elif ex :: 'And(procedure,Not(name))' then
-            match_predicate := eval(ex);
-
         else
-            match_predicate := proc() has([_passed],ex) end proc;
+            match_predicate := proc() evalb(_passed = ex) end proc;
         end if;
 
-        return eval(match_predicate);
+    elif usehastype then
+        if not ex :: type then
+            error "argument must be a type when using hastype, received '%1'", ex;
+        end if;
+        match_predicate := proc() hastype([_passed],ex) end proc;
 
-    end proc;
+    elif matchlocals then
+        match_predicate := proc()
+        local n;
+            _npassed > 0 and has(subs([seq(n=cat('``',n), n=indets([_passed],`local`))],[_passed]),ex);
+        end proc;
+
+    elif ex :: 'And(procedure,Not(name))' then
+        match_predicate := eval(ex);
+
+    else
+        match_predicate := proc() has([_passed],ex) end proc;
+    end if;
+
+    return eval(match_predicate);
+
+end proc;
 
 #}}}
 #{{{ Count
@@ -1591,46 +1594,46 @@ $include <src/LineInfo.mm>
 ## Try[AS]("1.2", [FUNC('indices')], [[],[1]]);
 ## Try("1.3", FUNC('reset'));
 
-    Count := proc( { reset :: truefalse := false }
-                   , { value :: truefalse := false }
-                   , { indices :: truefalse := false }
-                 )
-        if reset then
-            cnt := table();
-            return NULL;
-        elif value then
-            if assigned(cnt[_rest]) then
-                return cnt[_rest];
-            else
-                return 0;
-            end if;
-        elif indices then
-            return :-indices(cnt);
-        end if;
-
-        if assigned(cnt[_passed]) then
-            cnt[_passed] := cnt[_passed] + 1;
+Count := proc( { reset :: truefalse := false }
+               , { value :: truefalse := false }
+               , { indices :: truefalse := false }
+             )
+    if reset then
+        cnt := table();
+        return NULL;
+    elif value then
+        if assigned(cnt[_rest]) then
+            return cnt[_rest];
         else
-            cnt[_passed] := 1;
+            return 0;
         end if;
-    end proc:
+    elif indices then
+        return :-indices(cnt);
+    end if;
+
+    if assigned(cnt[_passed]) then
+        cnt[_passed] := cnt[_passed] + 1;
+    else
+        cnt[_passed] := 1;
+    end if;
+end proc:
 
 #}}}
 #{{{ GetDefault
 
-    GetDefault := proc( opt :: name, default := NULL, $ )
-    global mdc_default;
-    description "Read the global table 'mdc_default' for default values.";
-        if assigned(mdc_default[opt]) then
-            return mdc_default[opt];
-        else
-            return default;
-        end if;
-    end proc;
+GetDefault := proc( opt :: name, default := NULL, $ )
+global mdc_default;
+description "Read the global table 'mdc_default' for default values.";
+    if assigned(mdc_default[opt]) then
+        return mdc_default[opt];
+    else
+        return default;
+    end if;
+end proc;
 #}}}
 #{{{ Monitor
 
-    Monitor := Debugger:-Monitor;
+Monitor := Debugger:-Monitor;
 
 #}}}
 #{{{ TraceLevel
@@ -1663,14 +1666,14 @@ $include <src/LineInfo.mm>
 ##- "mdc"
 ##- "mdc[ModuleApply]"
 
-    TraceLevel := proc( lev :: posint := NULL )
-    local prev;
-        prev := Level;
-        if lev <> NULL then
-            Level := lev;
-        end if;
-        prev;
-    end proc;
+TraceLevel := proc( lev :: posint := NULL )
+local prev;
+    prev := Level;
+    if lev <> NULL then
+        Level := lev;
+    end if;
+    prev;
+end proc;
 
 #}}}
 
