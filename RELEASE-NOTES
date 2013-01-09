@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs.2.0.10
+** Convert returned stopats from a string to a name, if needed (allows handling locals).
 * mdcs.2.0.9
 ** Modify help so ?mdc points to module.  Needed so that parent would work properly.
 ** Return the first procedure in the stopats argument.  This is quite handy.
