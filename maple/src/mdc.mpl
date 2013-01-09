@@ -76,7 +76,7 @@
 ##- 'stopats' : (optional) ::seq({string,name,list})::; procedures to instrument
 ##param_opts(\CMD)
 ##RETURNS
-##- `NULL`
+##- first procedure in 'stopats'
 ##DESCRIPTION
 ##- The `\CMD` command is an appliable module that
 ##  launches the "Maple Debugger Client".
@@ -92,9 +92,12 @@
 ##  toolbar during a running computation.
 ##
 ##- The optional 'stopats' parameter specifies the procedures to
-##  instrument.  Using it is equivalent to calling `\CMD` with
+##  instrument.  Using it is nearly equivalent to calling `\CMD` with
 ##  the `stopat` option; this provides a convenient shortcut.
 ##  See the `stopat` option for the usage.
+##  The first procedure instrumented via the 'stopats' parameter
+##  is returned.  That makes it convenient to instrument and call
+##  a procedure by doing ~mdc(someproc)(...)~.
 ##
 ##- The target procedures can also be instrumented by passing the
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
@@ -630,7 +633,7 @@ $include <src/LineInfo.mm>
 
 #{{{ ModuleApply
 
-    ModuleApply := proc( stopats :: seq({string,name,list,set({string,name,list})})
+    ModuleApply := proc( stopats :: seq({string,name,list})
                          , { debug_builtins :: truefalse := debugbuiltins }
                          , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                          , { exit :: truefalse := false }
@@ -777,6 +780,7 @@ $include <src/LineInfo.mm>
         end if;
 
         #{{{ stopat
+
         if stopat :: set then
             map(Debugger:-stopat, stopat);
         elif stopat <> "" then
@@ -895,8 +899,17 @@ $include <src/LineInfo.mm>
         end if;
         #}}}
 
+        if stopats = NULL then
+            return NULL;
+        else
+            stp := [stopats][1];
+            if stp :: list then
+                return stp[1];
+            else
+                return stp;
+            end if;
+        end if;
 
-        return NULL;
 
     end proc;
 
