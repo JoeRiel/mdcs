@@ -899,16 +899,18 @@ $include <src/LineInfo.mm>
         end if;
         #}}}
 
+        #{{{ return first procedure
+
         if stopats = NULL then
             return NULL;
         else
             stp := [stopats][1];
             if stp :: list then
-                return stp[1];
-            else
-                return stp;
+                stp := stp[1];
             end if;
+            return Debugger:-GetName(stp);
         end if;
+        #}}}
 
 
     end proc;
