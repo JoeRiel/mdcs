@@ -153,4 +153,4 @@ the address and procname."
 
 (provide 'mds-re)
 
-;; mds-re.el ends ehre
+;; mds-re.el ends here
