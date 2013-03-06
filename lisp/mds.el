@@ -42,17 +42,17 @@
 ;;{{{ Lisp Requirements
 
 (require 'maplev)
-(require 'mds-client)
-(require 'mds-custom)
-(require 'mds-login)
-(require 'mds-out)
-(require 'mds-patch)
-(require 'mds-queue)
-(require 'mds-re)
-(require 'mds-ss)
+(require 'mds-client)  ; client structure
+(require 'mds-custom)  ; variables to customize
+(require 'mds-login)   ; 
+(require 'mds-out)     ; output buffer
+(require 'mds-patch)   ; live patching
+(require 'mds-queue)   ; handle the queue and dispatch tags
+(require 'mds-re)      ; regular expressions
+(require 'mds-ss)      ; showstat buffers
 (require 'mds-thing)
-(require 'mds-wm)
-(require 'mds-li)
+(require 'mds-wm)      ; window manager
+(require 'mds-li)      ; lineinfo buffer
 
 ;;}}}
 
