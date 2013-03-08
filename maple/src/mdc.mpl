@@ -565,6 +565,7 @@ local Connect
     , ModuleApply
     , ModuleLoad
     , ModuleUnload
+    , PrintRtable   # module to "fix" `print/rtable`
     , WriteTagf
 
     , printf  # local versions so that globals can be 'debugged'
@@ -630,6 +631,7 @@ $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
 $include <src/LineInfo.mm>
+$include <src/PrintRtable.mm>
 
 #{{{ ModuleApply
 
@@ -677,9 +679,7 @@ $include <src/LineInfo.mm>
         #{{{ exit
 
         if exit then
-            Debugger:-RestoreBuiltins();
-            Debugger:-Restore();
-            Disconnect(_options['quiet']);
+            ModuleUnload();
             return NULL;
         end if;
 
@@ -927,21 +927,21 @@ ModuleLoad := proc()
                              x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
                          end proc
                       );
+    if IsWorksheetInterface('Standard') then
+        PrintRtable:-Replace();
+    end if;
 end proc;
 
 #}}}
 #{{{ ModuleUnload
 
 ModuleUnload := proc()
+    Disconnect(':-quiet' = Quiet);
     TypeTools:-RemoveType('synonym');
     Debugger:-RestoreBuiltins();
-    if sid <> -1 then
-        try
-            Sockets:-Close( sid );
-        catch:
-        end try;
-    end if;
     Debugger:-Restore();
+    PrintRtable:-Restore();
+    return NULL;
 end proc;
 
 #}}}
