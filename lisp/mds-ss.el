@@ -218,7 +218,7 @@ If not found, display a message."
       (forward-line)
       (setq point (point))
       ;; move to next line in procedure
-      (if (not (re-search-forward mds-ss-line-re nil 'move))
+      (if (not (re-search-forward mds-re-ss-line nil 'move))
 	  (setq done 'failure)
 	(setq state (match-string-no-properties 1)
 	      line  (match-string-no-properties 2)
@@ -234,7 +234,7 @@ If not found, display a message."
 		;; need to check more lines
 		(let ((pos 0))
 		  (while
-		      (when (re-search-forward mds-ss-line-re nil 'move)
+		      (when (re-search-forward mds-re-ss-line nil 'move)
 			(setq pos (+ pos len 1)
 			      line (match-string-no-properties 2)
 			      len (length line)
@@ -274,7 +274,7 @@ Both go to the first match and do not check for additional matches."
       ;; beginning of each line in bols.
 
       (let (str bols line)
-	(while (re-search-forward mds-ss-statement-re nil 'move)
+	(while (re-search-forward mds-re-ss-statement nil 'move)
 	  (setq	bols (cons (length str) bols)
 		line (match-string-no-properties 3)
 		str (concat str " " line)))
@@ -291,7 +291,7 @@ Both go to the first match and do not check for additional matches."
 	      (message "cannot find statement in procedure body")
 	    (setq bols (nreverse bols))
 	    (goto-char (point-min))
-	    (re-search-forward mds-ss-statement-re)
+	    (re-search-forward mds-re-ss-statement)
 	    (while (and bols
 			(>= pos (car bols)))
 	      (setq bols (cdr bols))
@@ -435,7 +435,7 @@ This is specialized to work with a few routines; needs to be generalized."
     (match-string-no-properties 1))
    ((looking-at " *return \\(.*\\);?$")
     (match-string-no-properties 1))
-   ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
+   ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
@@ -468,7 +468,7 @@ Otherwise raise error indicating Maple is not available."
   "Return the (hidden) address of the current procedure."
   (save-excursion
     (goto-char (point-min))
-    (if (looking-at mds--addr-procname-re)
+    (if (looking-at mds-re-addr-procname)
 	(match-string-no-properties 2))))
 
 (defun mds-ss-get-state ()
@@ -509,7 +509,7 @@ keywords."
      ((looking-at "\\( *\\)end \\([a-z]+\\)")
       (setq column (length (match-string-no-properties 1)))
       (re-search-backward (mds-ss--regexp-for-statement column (match-string-no-properties 2)))))
-    (when (looking-at mds-ss-statement-re)
+    (when (looking-at mds-re-ss-statement)
       (goto-char (match-beginning 3))
       (match-string-no-properties 1))))
 

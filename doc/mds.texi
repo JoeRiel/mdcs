@@ -1133,13 +1133,13 @@ The line-info buffer displays the source file of the
 current Maple procedure during debugging.  An arrow in the
 left margin points to the current line in the procedure.
 
-This mode uses an undocumented, experimental feature of Maple 16.
+This mode uses an undocumented, experimental feature introduced in Maple 16.
 As such, there are a few limitations with using it.
 
 @menu
 * Accessing LineInfo::          Creating the line-info data.
 * LineInfo Mode::               Available commands.
-* LineInfo Caveats::            Bugs.
+* LineInfo Caveats::            Limitations.
 @end menu
 
 @node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer

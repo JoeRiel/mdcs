@@ -145,7 +145,7 @@ Do not touch `mds-log-buffer'."
 PROC is a client process, MSG is the message from the client."
   (unless (eq msg "")
     (cond
-     ((string-match mds--client-attach-re msg)
+     ((string-match mds-re-client-attach msg)
       ;; A client has attached.
       (let ((conn (match-string 1 msg)))
 	(mds-writeto-log-proc proc (format "client has attached: %s" (substring msg 0 -2)))
