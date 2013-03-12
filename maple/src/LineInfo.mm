@@ -300,38 +300,43 @@ local ModuleLoad
         else
             filenames := ListTools:-MakeUnique(map2(op,1,lineinfo));
 
-            missing := remove(FileTools:-Exists or Testzero, filenames);
-            if missing <> [] then
-                WARNING("cannot find source files: %1", missing);
+            if filenames = [""] then
+                # The empty string indicates the source is a Maple worksheet.
                 info[addr] := NULL;
             else
-                # Convert filenames to integers, corresponding to position in 'filenames'
-                lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
-                # Insert filenames and an Array of the statement positions
-                # into a two-field record, and store in the sparse table
-                # info, which is indexed by the procedure address.
+                missing := remove(FileTools:-Exists or Testzero, filenames);
+                if missing <> [] then
+                    WARNING("cannot find source files: %1", missing);
+                    info[addr] := NULL;
+                else
+                    # Convert filenames to integers, corresponding to position in 'filenames'
+                    lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
+                    # Insert filenames and an Array of the statement positions
+                    # into a two-field record, and store in the sparse table
+                    # info, which is indexed by the procedure address.
 
-                filenames := map(nm -> `if`(nm=0
-                                            , 0
-                                            , FileTools:-AbsolutePath(nm)
-                                           )
-                                 , filenames);
+                    filenames := map(nm -> `if`(nm=0
+                                                , 0
+                                                , FileTools:-AbsolutePath(nm)
+                                               )
+                                     , filenames);
 
-                info[addr] := Record['packed'](':-filenames' = filenames
-                                               , ':-positions' = Array(0..numelems(lineinfo)-1, 1..4
-                                                                       , lineinfo
-                                                                       , 'datatype' = integer[4]
-                                                                      )
-                                              );
+                    info[addr] := Record['packed'](':-filenames' = filenames
+                                                   , ':-positions' = Array(0..numelems(lineinfo)-1, 1..4
+                                                                           , lineinfo
+                                                                           , 'datatype' = integer[4]
+                                                                          )
+                                                  );
 
-                # Append addr to the entry for each filename.
-                for file in filenames do
-                    if info[file] = 0 then
-                        info[file] := addr;
-                    else
-                        info[file] := (info[file], addr);
-                    end if;
-                end do;
+                    # Append addr to the entry for each filename.
+                    for file in filenames do
+                        if info[file] = 0 then
+                            info[file] := addr;
+                        else
+                            info[file] := (info[file], addr);
+                        end if;
+                    end do;
+                end if;
 
             end if;
         end if;
