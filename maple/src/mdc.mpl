@@ -106,39 +106,35 @@
 ##
 ##
 ##SUBSECTION Skipping
-##- *Skipping* is the automatic execution of code until a predicate returns true,
-##  then entering the debugger at that point.
-##  It provide a convenient means to locate the source of an
-##  expression in a computation.
-##
-##- When skipping, no debugger output is displayed
-##  until the predicate is satisfied.
-##
-##- The predicate, a Maple procedure that is passed the computed
+##desc_skipping
+##- The skip predicate, a Maple procedure that is passed the computed
 ##  output of each executed Maple statement in the running code, is
-##  defined by using the `skip_until` option, or the more powerful
-##  "mdc:-Skip" command.
+##  defined by using the `skip_until` option, or via the "mdc:-Skip"
+##  command.
 ##
-##- The `skip_check_stack` option passes the top stack entry to the
-##  predicate.  This can be useful because an expression may appear on
-##  the stack without being the output of a statement.
-##  *This option is memory intensive*.
+##- The `skip_check_stack` option causes the top of the call stack to
+##  be passed to the skip predicate (the computed output is also
+##  passed to the predicate, in a separate call).  This can be useful
+##  because an expression may appear on the stack without being the
+##  output of a statement.  *This option is memory intensive*.
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Tracing
-##- *Tracing* is the automatic execution and display of the debugged
+##-(nolead)
+##  *Tracing* is the automatic execution and display of the debugged
 ##  code.  The debugger server has commands for enabling tracing.
 ##  Tracing generally continues until the debugger exits,
 ##  though it can be interrupted manually.
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Monitoring
-##- *Monitoring* is the continuous display of selected Maple
+##-(nolead)
+##  *Monitoring* is the continuous display of selected Maple
 ##  expressions as the debugger steps through code.
 ##  See "mdc[Monitor]" for a procedure to setup monitoring.
 ##ENDSUBSECTION
 ##
-##OPTIONS
+##OPTIONS(collapsed)
 ##
 ##SUBSECTION Instrumentation Options
 ##-(lead="indent")
@@ -832,6 +828,7 @@ $include <src/PrintRtable.mm>
             end if;
             protect('WARNINGS');
         end if;
+
         #}}}
         #{{{ unstoperror
 
@@ -1222,16 +1219,17 @@ end proc;
 ##RETURNS
 ##- `procedure`
 ##DESCRIPTION
+##desc_skipping
+##
 ##- The `\CMD` command
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
 ##
-##- The current or newly assigned predicate is returned.
-##
-##- If called with no arguments,
+##- The newly assigned predicate is returned.
+##  If \CMD is called with no arguments,
 ##  the current predicate is returned.
 ##
-##- If 'ex' is a procedure (but not a name),
+##- If the 'ex' parameter is a procedure (but not a name),
 ##  it is used as the predicate,
 ##  otherwise, the predicate is the procedure
 ##  ~proc() has([_passed],ex) end proc~.
@@ -1250,11 +1248,12 @@ end proc;
 ##  assign a predicate during a debugging session.
 ##
 ##NOTES
-##- If the skip predicate is not satisfied, Maple will continue
-##  executing the code until the debugger exits.  The internal flag
-##  used to enable skipping will remain active, so skipping will
-##  resume when the debugger is reentered.  To avoid this, clear the
-##  skipping flag by calling ~mdc()~ from Maple.
+##-(nolead)
+##  If the skip predicate is not satisfied, Maple continues executing
+##  the code until the debugger exits.  The internal flag used to
+##  enable skipping remains active, so skipping resumes when the
+##  debugger is reentered.  To avoid this, clear the skipping flag by
+##  calling ~mdc()~ from Maple.
 ##
 ##OPTIONS
 ##-(nolead) Some of the options are mutually exclusive.
@@ -1287,14 +1286,21 @@ end proc;
 ##EXAMPLES(noexecute,notest)
 ##SUBSECTION Locate the source of an expression
 ##
-##- Assign the predicate to stop when _x^2_ is computed.
+##-(nolead)
+##  Determine the exact point
+##  where _x^2_ is computed when symbolically integrating _x_
+##  with respect to _x_.
+##-(nolead) Call \CMD with parameter _x^2_, that assigns the desired skip predicate.
 ##> mdc:-Skip(x^2):
+##-(nolead) Instrument "int" for debugging.
 ##> mdc(int):
-##- Call `int`, which launches the debugger.
+##-(nolead) Call `int`, which launches the debugger.
 ##  To start the skipping, type **S** in the debugger.
 ##> int(x,x);
 ##
-##- Use the `usehastype` option to stop skipping when a square appears.
+##- Use the `usehastype` option to stop skipping when a square (power
+##  of two) appears while doing the integration; this occurs before
+##  the appearance of _x^2_.  Use "forget" to clear `int`\'s remember table.
 ##> mdc:-Skip(anything^2, usehastype):
 ##> forget(int):
 ##> int(x,x);
@@ -1306,7 +1312,7 @@ end proc;
 ##
 ##- Create a custom predicate with "patmatch".
 ##  Note that we first verify that ~_npassed=1~; without that,
-##  a statement that returns `NULL` generates an error because
+##  a statement that returns `NULL` raises an error because
 ##  the wrong number of arguments are passed to `patmatch`.
 ##> mdc:-Skip(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
 ##> forget(int):
@@ -1314,7 +1320,8 @@ end proc;
 ##
 ##ENDSUBSECTION
 ##SUBSECTION Stop before executing a particular statement
-##- Use the `before` option to stop skipping before the
+##-(nolead)
+##  Use the `before` option to stop skipping before the
 ##  `INTERFACE_PLOT3D` streamcall is made.
 ##
 ##> mdc:-Skip("INTERFACE_PLOT3D",'before');
@@ -1323,7 +1330,8 @@ end proc;
 ##ENDSUBSECTION
 ##SUBSECTION Locate the source of intensive memory usage
 ##
-##- Set a threshold on the memory allocated.
+##-(nolead)
+##  Set a threshold on the memory allocated.
 ##  This is useful for quickly locating bottlenecks in a program.
 ##  When, after the debugger returns from skipping,
 ##  the stack (displayed with the 'K' key) contains
@@ -1332,7 +1340,7 @@ end proc;
 ##> restart;
 ##- Assign a procedure that inefficiently increase the sign of
 ##  a Vector a term at a time by constructing an entirely new Vector.
-##>> inefficent := proc(n)
+##>> ugly := proc(n)
 ##>> local i,x,V;
 ##>>    V := Vector();
 ##>>    for i to n do
@@ -1343,13 +1351,13 @@ end proc;
 ##- The ~skip_until[alloc]~ option to `mdc`
 ##  is equivalent to calling `Skip` with
 ##  option `bytesalloc`.
-##> mdc(inefficent, skip_until[alloc]=10^8):
-##> inefficent(1000);
+##> mdc(ugly, skip_until[alloc]=10^8):
+##> ugly(1000);
 ##
 ##- The proper way to increase the size of a Vector is
 ##  to use Maple's dynamic resizing ability.  Here
 ##  is the equivalent procedure
-##>> efficent := proc(n)
+##>> nice := proc(n)
 ##>> local i,V;
 ##>>    V := Vector();
 ##>>    for i to n do
@@ -1358,14 +1366,14 @@ end proc;
 ##>>    V;
 ##>> end proc:
 ##- The memory usage is minimal
-##> CodeTools:-Usage(efficient(1000));
+##> CodeTools:-Usage(nice(1000));
 ##ENDSUBSECTION
 ##EXAMPLES(execute,notest)
 ##SUBSECTION Locate a stack overflow
 ##SET(noexecute)
-##- Set a threshold on the size of the stack.
-##  This is useful for catching a *stack overflow*
-##  while it is occurring.
+##-(nolead)
+##  Set a threshold on the size of the stack.  This is useful for
+##  catching a *stack overflow* while it is occurring.
 ##
 ##> restart;
 ##> mdc:-Skip('stacklevel' = 1000):
@@ -1383,7 +1391,8 @@ end proc;
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Match an expression with a local variable
-##- Assign a procedure that computes an expression, ~exp(x)~,
+##-(nolead)
+##  Assign a procedure that computes an expression, ~exp(x)~,
 ##  with a local variable, ~x~, that we want to locate using skipping.
 ##>> f := proc()
 ##>> local x,y;
@@ -1398,9 +1407,10 @@ end proc;
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Printing a value on exit
-##- Returning a non-boolean expression halts the skipping
-##  and displays the expression.  This can be used to provide
-##  a useful message.  The following example illustrates the
+##-(nolead)
+##  If the predicate returns a non-boolean expression, the skipping
+##  halts and the expression is displayed.  This can be used to
+##  provide a useful message.  The following example illustrates the
 ##  use, if not the usefulness.
 ##
 ##>> timeskip := proc()
