@@ -412,12 +412,6 @@
 ##  If a set of strings, clear those error messages.
 ##  The default value is false.
 ##
-##opt(usegrid,truefalse)
-##  If true, append the "Grid" node-number to the label.
-##  This option is  added by the "mdc[Grid]" exports to instrument
-##  procedures for use with Grid.
-##  The default value is false.
-##
 ##opt(view,truefalse)
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
@@ -668,7 +662,6 @@ $include <src/PrintRtable.mm>
                          , { unstoperror :: {truefalse,string,set,identical(true)} := false }
                          , { unstopwhen :: { name, list, set } := NULL }
                          , { untraperror :: {truefalse,string,set,identical(true)} := false }
-                         , { usegrid :: truefalse := false }
                          , { view :: truefalse := GetDefault(':-view',false) }
                          , $
                        )
@@ -710,13 +703,9 @@ $include <src/PrintRtable.mm>
         end if;
 
         #}}}
-        #{{{ usegrid (assign lbl)
+        #{{{ assign lbl
 
-        if usegrid then
-            lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
-        else
-            lbl := label;
-        end if;
+        lbl := label;
 
         #}}}
         #{{{ showoptions
