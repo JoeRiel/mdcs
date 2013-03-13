@@ -1194,11 +1194,12 @@ Version := "2.0.10";
 ##  server.  It is provided here with the hope that it might
 ##  be useful elsewhere.
 ##
-##EXAMPLES(noexecute)
+##EXAMPLES
 ##> mdc:-Sleep(1);
 ##
 ##SEEALSO
 ##- "Threads[Sleep]"
+##- "mdc"
 
 Sleep := proc( t :: nonnegint )
 local cmd,sys;
@@ -1294,7 +1295,7 @@ end proc;
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
 ##
-##EXAMPLES(notest,noexecute)
+##EXAMPLES(noexecute,notest)
 ##SUBSECTION Locate the source of an expression
 ##
 ##- Assign the predicate to stop when _x^2_ is computed.
@@ -1440,6 +1441,7 @@ end proc;
 ##> f();
 ##
 ##ENDSUBSECTION
+##UNSET
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[ModuleApply]"
@@ -1667,7 +1669,7 @@ Monitor := Debugger:-Monitor;
 ##DESCRIPTION
 ##- The `\CMD` command sets and queries the tracing level,
 ##  which is used by the level tracing mode.
-##  See the `level` option in `mdc`.
+##  See the `level` option in `mdc[ModuleApply]`.
 ##
 ##- The optional 'lev' parameter assigns the level.
 ##  If not provided the value is not changed.
