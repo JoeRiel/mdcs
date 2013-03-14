@@ -1697,6 +1697,4 @@ end module:
 
 protect('mdc'):
 
-#LibraryTools:-Save('mdc', "mdc.mla");
-
 #savelib('mdc'):
