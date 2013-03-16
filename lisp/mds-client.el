@@ -269,7 +269,10 @@ kill the buffers, and decrement `mds-clients-number'."
   ;; a way to force it to interrupt?  That currently is *not* handled
   ;; by the Debugger code.
   (ding)
-  (message "Interrupting is currently not implemented.  Use quit to close the debugger connection, then manually interrupt Maple."))
+  (message
+   (concat "Interrupting is currently not implemented.  "
+	   "Use quit to close the debugger connection, "
+	   "then manually interrupt Maple.")))
 
 (defun mds-client-get-maple-release (client)
   "Return the major release of the Maple kernel used by CLIENT.
