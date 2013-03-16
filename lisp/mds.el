@@ -280,7 +280,7 @@ are printed to the output buffer.  Return the new value."
 When true, tracing stops if an error is raised."
   (interactive)
   (message "stop tracing at error: %s"
-	   (if (setq mds-track-input-flag (not mds-stop-trace-at-error-flag))
+	   (if (setq mds-stop-trace-at-error-flag (not mds-stop-trace-at-error-flag))
 	       "enabled"
 	     "disabled")))
 
