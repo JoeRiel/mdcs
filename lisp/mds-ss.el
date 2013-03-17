@@ -147,7 +147,7 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-ss-procname ""
 	    mds-ss-state "1"
 	    buffer-read-only 't)
-      (if mds-truncate-lines
+      (if mds-truncate-lines-flag
 	  (toggle-truncate-lines 1)))
     buf))
 
@@ -448,16 +448,16 @@ This is specialized to work with a few routines; needs to be generalized."
 (defun mds-ss-block-input ()
   "If input is allowed block further input.
 Otherwise raise error indicating Maple is not available."
-  (if (or (not mds-wait-until-ready)
+  (if (or (not mds-wait-until-ready-flag)
 	  (mds-client-get-allow-input mds-client))
       (mds-client-set-allow-input mds-client nil)
     (beep)
     (message "Maple busy or debugging finished")))
 
 (defun mds-toggle-wait-until-ready ()
-  "Toggle the configuration variable `mds-wait-until-ready'."
+  "Toggle the configuration variable `mds-wait-until-ready-flag'."
   (interactive)
-  (setq mds-wait-until-ready (not mds-wait-until-ready)))
+  (setq mds-wait-until-ready-flag (not mds-wait-until-ready-flag)))
 
 ;;}}}
 
@@ -1142,7 +1142,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle code view"              mds-wm-toggle-code-view t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
-       ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
+       ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
        ["Toggle mds-stop-trace-at-error-flag"   mds-toggle-stop-trace-at-error-flag t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]

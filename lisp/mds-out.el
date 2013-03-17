@@ -19,7 +19,7 @@
 (eval-when-compile
   (require 'mds-re)
   (require 'mds-client)
-  (defvar mds-truncate-lines)
+  (defvar mds-truncate-lines-flag)
   (defvar mds-ss-show-args-flag)
   (defvar mds-ss-state nil)
   (defvar mds-track-input-flag t)
@@ -151,7 +151,7 @@ The first group matches the statement, with some indentation.")
     (with-current-buffer buf
       (mds-out-mode)
       (setq mds-client client)
-      (if mds-truncate-lines
+      (if mds-truncate-lines-flag
 	  (toggle-truncate-lines 1)))
     buf))
 

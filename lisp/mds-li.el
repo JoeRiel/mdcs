@@ -40,7 +40,7 @@
   (require 'mds-ss)
   (require 'mds-wm)
   (require 'maplev)
-  (defvar mds-truncate-lines))
+  (defvar mds-truncate-lines-flag))
 
 
 ;;}}}
@@ -327,7 +327,7 @@ LABEL is the user id."
   :group 'mds
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
-  (if mds-truncate-lines (toggle-truncate-lines 1)))
+  (if mds-truncate-lines-flag (toggle-truncate-lines 1)))
 
 
 ;;}}}
