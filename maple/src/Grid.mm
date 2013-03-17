@@ -1,11 +1,10 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Grid
 ##MODULE(help) mdc[Grid]
 ##HALFLINE submodule for debugging Grid-based procedures
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##DESCRIPTION
-##- The `\MOD[\SUBMOD]` submodule exports procedures for instrumenting
+##- The `mdc[Grid]` submodule exports procedures for instrumenting
 ##  code written for parallel computation using the "Grid"
 ##  package so that they can be debugged with the *Maple Debugger
 ##  Client*.
@@ -25,26 +24,23 @@ export CodeString
     ,  Procedure
     ;
 
-#{{{ CodeString
-
-##DEFINE CMD CodeString
 ##PROCEDURE(help) mdc[Grid][CodeString]
 ##HALFLINE instrument a block of code for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('defs', 'launch')
+##- CodeString('defs', 'launch')
 ##PARAMETERS
 ##- 'defs'   : ::string::; code that defines procedures
 ##- 'launch' : ::string::; code that calls the procedures
 ##RETURNS
 ##- ::string::; string of code to be passed to "Grid[Launch]"
 ##DESCRIPTION
-##- The `\CMD` command
-##  instruments a string of code that is
+##- The `CodeString` command
+##  instruments a string of Maple code that is
 ##  passed to "Grid[Launch]" so that it
 ##  can be debugged with `mdc`.
-##  It does so by returning a new string of code
+##  It does so by returning a new string of Maple code
 ##  that contains a call to `mdc` just before
 ##  executing the code that launches the debugging.
 ##  This returned string can be passed to `Grid[Launch]`.
@@ -59,8 +55,8 @@ export CodeString
 ##  to `mdc`.  They initialize the client
 ##  and instrument the selected procedures.
 ##
-##EXAMPLES(noexecute,notest)
-##- Assign a simple procedure that will be run in 'Grid'.
+##EXAMPLES(notest)
+##- Assign a simple procedure to run in 'Grid'.
 ##>> hello := proc(nam :: string)
 ##>>  uses Grid;
 ##>>     printf("Hi, %s.  I'm node %d of %d\n", nam, MyNode(),NumNodes());
@@ -68,7 +64,7 @@ export CodeString
 ##>>  end proc:
 ##- Assign a string that, when parsed and evaluated, assigns the
 ##  previously defined `hello` procedure.
-##> defs := sprintf("%a:=%a:", hello, eval(hello))
+##> defs := sprintf("%a:=%a:", hello, eval(hello));
 ##
 ##- Assign the string that, when parsed and evaluated, calls `hello`.
 ##> launch := sprintf("hello(%a):", "Debugger");
@@ -76,13 +72,14 @@ export CodeString
 ##- Create the block of code, a string, that is passed to
 ##  ~Grid[Launch]~.  The 'stopat' option is passed to 'mdc'
 ##  so that the debugger stops in the `hello` procedure.
-##> Code := \MOD:-\SUBMOD:-\CMD(defs, launch, 'stopat'=hello);
+##> Code := mdc:-Grid:-CodeString(defs, launch, stopat=hello);
 ##
 ##- Launch Grid with two nodes.
 ##  This initiates two independent debugging sessions
-##  on the Maple Debugger Server.  They are grouped
-##  together so that both can be readily observed and controlled.
-##> Grid:-Launch(Code,'numnodes'=2);
+##  on the Maple Debugger Server.
+##  In Emacs, issue the command ~mds-wm-cycle-groups~
+##  to display both debugging sessions.
+##>(noexecute) Grid:-Launch(Code,numnodes=2);
 ##SEEALSO
 ##- "Grid"
 ##- "mdc"
@@ -92,7 +89,7 @@ export CodeString
 
     CodeString := proc(defs :: string, launch :: string)
         cat(defs
-            , sprintf("mdc('label'=\"%s_%d\",%q,'usegrid'=true):"
+            , sprintf("mdc('label'=\"%s_%d\",%q):"
                       , kernelopts('username,pid')
                       , _rest)
             , launch
@@ -100,29 +97,25 @@ export CodeString
 
     end proc:
 
-#}}}
-#{{{ Procedure
-
-##DEFINE CMD Procedure
 ##PROCEDURE(help) mdc[Grid][Procedure]
 ##HALFLINE instrument a procedure for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('prc', 'opts')
+##- Procedure('prc', 'opts')
 ##PARAMETERS
 ##- 'prc'  : procedure
 ##param_opts(mdc)
 ##RETURNS
 ##- ::procedure::;
 ##DESCRIPTION
-##- The `\CMD` command
+##- The `Procedure` command
 ##  wraps a procedure, 'prc', in another procedure that
 ##  can be passed to "Grid[Launch]" and which launches `mdc`.
 ##
 ##- The 'prc' parameter is the procedure to execute.
 ##
-##- The remaining arguments to `\CMD` are passed
+##- The remaining arguments to `Procedure` are passed
 ##  to `mdc`.
 ##
 ##- The wrapper procedure passes its arguments to 'prc'.
@@ -139,9 +132,11 @@ export CodeString
 ##>>    Barrier();
 ##>> end proc:
 ##- Instrument `hello` for debugging with `mdc` in Grid.
-##> Hello := \MOD:-\SUBMOD:-\CMD(hello, 'stopat'=hello);
-##- Launch Grid.
-##> Grid:-Launch(Hello, "Maple Debugger", 'numnodes'=2);
+##> Hello := mdc:-Grid:-Procedure(hello, stopat=hello);
+##- Launch Grid and start the debugger.
+##  In Emacs, issue the command ~mds-wm-cycle-groups~
+##  to display both debugging sessions.
+##> Grid:-Launch(Hello, "Maple Debugger", numnodes=2);
 ##SEEALSO
 ##- "Grid"
 ##- "mdc"
@@ -157,13 +152,12 @@ export CodeString
                    prc := _prc;
                    mdc('label' = _lbl
                        , _opts
-                       , 'usegrid'=true
                       );
                    prc(_rest);
                end proc
             );
     end proc;
 
-#}}}
 
+##
 end module:

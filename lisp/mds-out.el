@@ -201,8 +201,6 @@ from going to a statement that does not correspond to procedure evaluation."
 
 ;;}}}
 
-;;{{{ mds-out-get-ss-line
-
 ;;{{{ mds-out-display
 
 (defun mds-out-display (buf msg &optional tag)
@@ -226,7 +224,7 @@ Optional TAG identifies the message type."
 	      ;; Insert the debug command (next, into, etc) that
 	      ;; executes the current Maple statement; if enabled,
 	      ;; insert the statement itself.
-	      (mds-insert-and-font-lock msg 'mds-debugger-cmd)
+	      ;; (mds-insert-and-font-lock msg 'mds-debugger-cmd)
 	      (if (and mds-track-input-flag (not (mds-client-quiet-p mds-client)))
 		  (insert (mds-client-get-statement mds-client) "\n")
 		(insert "\n")))

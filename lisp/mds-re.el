@@ -30,7 +30,7 @@
 
 ;;}}}
 
-
+(require 'rx)
 
 (defconst mds--addr-tag-re "<\\(-?[0-9]+\\)>"
   "Regexp that matches an address tag.  The first group matches the address,
@@ -129,7 +129,20 @@ The first group identifies SOMETHING.")
   "Regexp that matches the start of a line in a showstat buffer.
 The first group matches the statement number.
 The second group matches any decoration.
-The third group matches the Maple statement on this line.")
+The third group matches the Maple statement.")
+
+(defconst mds-ss-line-re
+  (rx line-start
+      (+ blank)
+      (opt (group (1+ digit))
+	   (opt (char ?* ??))
+	   (+ blank))
+      (group (not blank) (* not-newline))
+      line-end)
+  "Regex that matches a body line in the showstat output.
+The first group matches the statement number (may be nil).
+The second group matches the Maple statement.")
+
 
 (defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
   "Regexp that matches the statement number and decoration, from the left margin,
@@ -153,4 +166,4 @@ the address and procname."
 
 (provide 'mds-re)
 
-;; mds-re.el ends ehre
+;; mds-re.el ends here

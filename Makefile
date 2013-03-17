@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.0.10
+VERSION := 2.1.0
 
 include help-system.mak
 
@@ -344,6 +344,7 @@ install-mla: $(mla)
 uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX_DIR))
 uninstall:
 	@rm -rf $(TOOLBOX_DIR)
+	@rm -f $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
 
 # }}}
 # {{{ installer

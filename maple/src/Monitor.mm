@@ -14,8 +14,8 @@
 ##DESCRIPTION
 ##- The `\CMD` command
 ##  sets and queries a *monitor expression* for a procedure.
-##  When monitoring is enabled, and the selected procedure is current,
-##  the expression is evaluated after each statement
+##  When monitoring is enabled, and the procedure is current
+##  in the debugger, the expression is evaluated after each statement
 ##  and the result is displayed in the debugger output buffer.
 ##
 ##- The monitor expression previously set for the procedure is

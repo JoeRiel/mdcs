@@ -168,13 +168,7 @@ communicate with the process.  Data is sent to the queue via
 	;; This is needed with do loops missing a 'for'; because of
 	;; the bug in the kernel, they have to switch to the showstat
 	;; buffer.  Maybe there is a cheaper method.
-	(mds-goto-current-state client)
-
-	(let ((trace-mode (mds-client-get-trace client)))
-	  (when trace-mode
-	    (mds-out-display out-buf trace-mode 'cmd)
-	    (mds-client-send client (concat trace-mode "\n"))))
-	))
+	(mds-goto-current-state client)))
 
      ((= tag (eval-when-compile mds-tag-prompt))
       ;; Extract the state-number and pass it along
@@ -183,7 +177,12 @@ communicate with the process.  Data is sent to the queue via
 		       'prompt)
 
       (mds-client-set-allow-input client 'unblock)
-      (mds-goto-current-state client))
+      (mds-goto-current-state client)
+
+      (let ((trace-mode (mds-client-get-trace client)))
+	(when trace-mode
+	  (mds-out-display out-buf trace-mode 'cmd)
+	  (mds-client-send client (concat trace-mode "\n")))))
       
      ((= tag (eval-when-compile mds-tag-result))
       (mds-client-set-result client msg))

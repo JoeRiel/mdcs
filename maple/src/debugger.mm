@@ -195,7 +195,7 @@ global showstat, showstop;
 
         dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
         # Set module_flag true if next statement appears to
-        # evaluate a module, which causes a debugger error if one
+        # evaluate to a module, which causes a debugger error if one
         # attempts to step into it.  The test is simple and uses
         # builtins to keep this fast.
         if SearchText("module ()", dbg_state) = 0 then
@@ -314,9 +314,6 @@ global showstat, showstop;
             return
         elif cmd = "return" then
             debugopts('steplevel'=evalLevel-statLevel*5);
-            return
-        elif cmd = "level" then
-            debugopts('steplevel' = Level);
             return
         elif cmd = "quit" or cmd = "done" or cmd = "stop" then
             debugopts('interrupt'=true)
