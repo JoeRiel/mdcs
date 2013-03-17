@@ -56,7 +56,6 @@
 ##- "mdc[Monitor]" : set/query monitor expressions
 ##- "mdc[Skip]" : set skip options
 ##- "mdc[Sleep]" : utility routine for sleeping
-##- "mdc[TraceLevel]" : set/query the *level* tracing mode
 ##ENDSUBSECTION
 ##
 ##SEEALSO
@@ -175,7 +174,6 @@
 ##- `host` : id of debugger server
 ##- `ignoretester` : used with the Maplesoft test environment
 ##- `launch_emacs` : enables auto-launch of Emacs
-##- `level` : sets level for tracing
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
 ##- `quiet` : suppress greeting from server
@@ -238,11 +236,6 @@
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
 ##  The default value is false; this option is sticky.
-##
-##opt(level,posint)
-##  Sets the level used when tracing with the *level* mode.
-##  Analogous to "printlevel", but the scale differs.
-##  The default value is 75; this option is sticky.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
@@ -510,12 +503,10 @@
 ##- "mdc[Count]"
 ##- "mdc[Monitor]"
 ##- "mdc[Skip]"
-##- "mdc[TraceLevel]"
 ##ENDMPLDOC
 
 #}}}
 
-$define LEVEL_DEFAULT 75
 $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 
@@ -539,7 +530,6 @@ export Count
     ,  Monitor
     ,  Sleep
     ,  Skip
-    ,  TraceLevel
     ,  Version
     ,  HelpMDS
     ,  _pexports
@@ -567,7 +557,6 @@ local Connect
     , cnt
     , debugbuiltins := false
     , Host
-    , Level := LEVEL_DEFAULT
     , match_predicate := () -> true
     , max_length
     , Port
@@ -634,7 +623,6 @@ $include <src/PrintRtable.mm>
                          , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                          , { label :: string := kernelopts('username') }
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
-                         , { level :: posint := GetDefault(':-level',LEVEL_DEFAULT) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
@@ -690,7 +678,6 @@ $include <src/PrintRtable.mm>
         view_flag := view; # and not IsWorksheetInterface();
         max_length := maxlength;
 
-        Level := level;
 
         #{{{ max_length
 
@@ -1650,46 +1637,6 @@ end proc;
 #{{{ Monitor
 
 Monitor := Debugger:-Monitor;
-
-#}}}
-#{{{ TraceLevel
-
-##DEFINE CMD TraceLevel
-##PROCEDURE(help) mdc[TraceLevel]
-##HALFLINE set and query the tracing level
-##AUTHOR   Joe Riel
-##DATE     Mar 2012
-##CALLINGSEQUENCE
-##- \CMD('lev')
-##PARAMETERS
-##- 'lev' : (optional) ::posint::
-##RETURNS
-##- ::posint::; previous level
-##DESCRIPTION
-##- The `\CMD` command sets and queries the tracing level,
-##  which is used by the level tracing mode.
-##  See the `level` option in `mdc[ModuleApply]`.
-##
-##- The optional 'lev' parameter assigns the level.
-##  If not provided the value is not changed.
-##
-##- The previous level value is returned.
-##EXAMPLES
-##> mdc:-TraceLevel();
-##> mdc:-TraceLevel(100);
-##> mdc:-TraceLevel();
-##SEEALSO
-##- "mdc"
-##- "mdc[ModuleApply]"
-
-TraceLevel := proc( lev :: posint := NULL )
-local prev;
-    prev := Level;
-    if lev <> NULL then
-        Level := lev;
-    end if;
-    prev;
-end proc;
 
 #}}}
 

@@ -618,7 +618,7 @@ Otherwise delete the dead showstat window."
 
 (defun mds-cycle-trace ()
   "Cycle through the tracing states:
-'nil', 'cont', 'next', 'into', 'level', and 'step'.
+'nil', 'cont', 'next', 'into', and 'step'.
 If nil is selected, tracing does not occur.  Otherwise, when the
 debugger returns control to the server, the selected debugging
 command is immediately executed.
@@ -635,8 +635,7 @@ The hyperlinks in the output buffer are then active."
 				   ((null state)           "cont")
 				   ((string= state "cont") "next")
 				   ((string= state "next") "into")
-				   ((string= state "into") "level")
-				   ((string= state "level") "step")
+				   ((string= state "into") "step")
 				   ((string= state "step") nil))))
 			       "disabled"))))
 
