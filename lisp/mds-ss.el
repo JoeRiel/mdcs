@@ -201,8 +201,61 @@ otherwise call (maple) showstat to display the new procedure."
 
 (defun mds-ss-determine-state (statement)
   "Search buffer for STATEMENT and return the statement number.
+If not found, display a message."
+  (let ((case-fold-search nil)
+	(point (point-min))
+	term-statement
+	cmp done len line state)
+    ;; remove 'while true ' from statement.
+    ;; debugopts(callstack) inserts that into 'for x in X do ... end do' loops
+    (while (string-match "while true " statement)
+      (setq statement
+	    (concat (substring statement 0 (match-beginning 0))
+		    (substring statement (match-end 0)))))
+    (setq term-statement (concat statement ";"))
+    (while (not done)
+      (goto-char point)
+      (forward-line)
+      (setq point (point))
+      ;; move to next line in procedure
+      (if (not (re-search-forward mds-ss-line-re nil 'move))
+	  (setq done 'failure)
+	(setq state (match-string-no-properties 1)
+	      line  (match-string-no-properties 2)
+	      len   (length line)
+	      cmp (compare-strings line nil nil term-statement nil nil))
+	(if (eq cmp t)
+	    (setq done 'success)
+	  (if (<= cmp (- -1 len))
+	      ;; line matches start of term-statement;
+	      ;; check whether it matches statement (added ;)
+	      (if (string= line statement)
+		  (setq done 'success)
+		;; need to check more lines
+		(let ((pos 0))
+		  (while
+		      (when (re-search-forward mds-ss-line-re nil 'move)
+			(setq pos (+ pos len 1)
+			      line (match-string-no-properties 2)
+			      len (length line)
+			      cmp (compare-strings line nil nil term-statement pos nil))
+			(if (eq cmp t)
+			    (null (setq done 'success))
+			  (if (<= cmp (- -1 len))
+			      ;; line matches term-statement;
+			      ;; check whether it matches statement
+			      (if (eq t (compare-strings line nil nil statement pos nil))
+				  (null (setq done 'success))
+				'continue)))))))))))
+    (if (eq done 'success)
+	state
+      (message "cannot find statement in procedure body"))))
+
+(defun mds-ss-determine-state-OLD (statement)
+  "Search buffer for STATEMENT and return the statement number.
 Two search routines are used; the second only if the first fails.
 Both go to the first match and do not check for additional matches."
+
   (goto-char (point-min))
   (let ((case-fold-search nil))
     ;; Try simple technique first; works for one-liners.
@@ -248,7 +301,6 @@ Both go to the first match and do not check for additional matches."
 	    ;; clear buffer-local `mds-ss-statement'
 	    (setq mds-ss-statement "")
 	    (mds-ss-get-state)))))))
-
 ;;}}}
 ;;{{{ (*) mds-ss-view-dead-proc
 
@@ -566,7 +618,7 @@ Otherwise delete the dead showstat window."
 
 (defun mds-cycle-trace ()
   "Cycle through the tracing states:
-'nil', 'cont', 'next', 'into', 'level', and 'step'.
+'nil', 'cont', 'next', 'into', and 'step'.
 If nil is selected, tracing does not occur.  Otherwise, when the
 debugger returns control to the server, the selected debugging
 command is immediately executed.
@@ -583,8 +635,7 @@ The hyperlinks in the output buffer are then active."
 				   ((null state)           "cont")
 				   ((string= state "cont") "next")
 				   ((string= state "next") "into")
-				   ((string= state "into") "level")
-				   ((string= state "level") "step")
+				   ((string= state "into") "step")
 				   ((string= state "step") nil))))
 			       "disabled"))))
 

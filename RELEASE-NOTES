@@ -1,5 +1,12 @@
 -*- org -*-
 
+* mdcs.2.1.0
+** Improve LineInfo handling
+** Clean-up Grid stuff; eliminate usegrid option
+** Improve documentation
+** Fix tracing bug
+** Eliminate 'level' tracing option
+
 * mdcs.2.0.10
 ** Convert returned stopats from a string to a name, if needed (allows handling locals).
 * mdcs.2.0.9

@@ -344,6 +344,7 @@ install-mla: $(mla)
 uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX_DIR))
 uninstall:
 	@rm -rf $(TOOLBOX_DIR)
+	@rm -f $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
 
 # }}}
 # {{{ installer

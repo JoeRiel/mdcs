@@ -56,7 +56,6 @@
 ##- "mdc[Monitor]" : set/query monitor expressions
 ##- "mdc[Skip]" : set skip options
 ##- "mdc[Sleep]" : utility routine for sleeping
-##- "mdc[TraceLevel]" : set/query the *level* tracing mode
 ##ENDSUBSECTION
 ##
 ##SEEALSO
@@ -106,39 +105,35 @@
 ##
 ##
 ##SUBSECTION Skipping
-##- *Skipping* is the automatic execution of code until a predicate returns true,
-##  then entering the debugger at that point.
-##  It provide a convenient means to locate the source of an
-##  expression in a computation.
-##
-##- When skipping, no debugger output is displayed
-##  until the predicate is satisfied.
-##
-##- The predicate, a Maple procedure that is passed the computed
+##desc_skipping
+##- The skip predicate, a Maple procedure that is passed the computed
 ##  output of each executed Maple statement in the running code, is
-##  defined by using the `skip_until` option, or the more powerful
-##  "mdc:-Skip" command.
+##  defined by using the `skip_until` option, or via the "mdc:-Skip"
+##  command.
 ##
-##- The `skip_check_stack` option passes the top stack entry to the
-##  predicate.  This can be useful because an expression may appear on
-##  the stack without being the output of a statement.
-##  *This option is memory intensive*.
+##- The `skip_check_stack` option causes the top of the call stack to
+##  be passed to the skip predicate (the computed output is also
+##  passed to the predicate, in a separate call).  This can be useful
+##  because an expression may appear on the stack without being the
+##  output of a statement.  *This option is memory intensive*.
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Tracing
-##- *Tracing* is the automatic execution and display of the debugged
+##-(nolead)
+##  *Tracing* is the automatic execution and display of the debugged
 ##  code.  The debugger server has commands for enabling tracing.
 ##  Tracing generally continues until the debugger exits,
 ##  though it can be interrupted manually.
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Monitoring
-##- *Monitoring* is the continuous display of selected Maple
+##-(nolead)
+##  *Monitoring* is the continuous display of selected Maple
 ##  expressions as the debugger steps through code.
 ##  See "mdc[Monitor]" for a procedure to setup monitoring.
 ##ENDSUBSECTION
 ##
-##OPTIONS
+##OPTIONS(collapsed)
 ##
 ##SUBSECTION Instrumentation Options
 ##-(lead="indent")
@@ -179,7 +174,6 @@
 ##- `host` : id of debugger server
 ##- `ignoretester` : used with the Maplesoft test environment
 ##- `launch_emacs` : enables auto-launch of Emacs
-##- `level` : sets level for tracing
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
 ##- `quiet` : suppress greeting from server
@@ -242,11 +236,6 @@
 ##  then launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
 ##  The default value is false; this option is sticky.
-##
-##opt(level,posint)
-##  Sets the level used when tracing with the *level* mode.
-##  Analogous to "printlevel", but the scale differs.
-##  The default value is 75; this option is sticky.
 ##
 ##opt(maxlength,nonnegint)
 ##  Limits the length of string the client sends to the server.
@@ -412,12 +401,6 @@
 ##  If a set of strings, clear those error messages.
 ##  The default value is false.
 ##
-##opt(usegrid,truefalse)
-##  If true, append the "Grid" node-number to the label.
-##  This option is  added by the "mdc[Grid]" exports to instrument
-##  procedures for use with Grid.
-##  The default value is false.
-##
 ##opt(view,truefalse)
 ##  If true, the remote debugging session is echoed on the client machine.
 ##  This only has an effect with command-line maple.
@@ -520,12 +503,10 @@
 ##- "mdc[Count]"
 ##- "mdc[Monitor]"
 ##- "mdc[Skip]"
-##- "mdc[TraceLevel]"
 ##ENDMPLDOC
 
 #}}}
 
-$define LEVEL_DEFAULT 75
 $define MDC # to allow minting w/out include path
 $define MDS_DEFAULT_PORT 10\000
 
@@ -549,7 +530,6 @@ export Count
     ,  Monitor
     ,  Sleep
     ,  Skip
-    ,  TraceLevel
     ,  Version
     ,  HelpMDS
     ,  _pexports
@@ -565,6 +545,7 @@ local Connect
     , ModuleApply
     , ModuleLoad
     , ModuleUnload
+    , PrintRtable   # module to "fix" `print/rtable`
     , WriteTagf
 
     , printf  # local versions so that globals can be 'debugged'
@@ -576,7 +557,6 @@ local Connect
     , cnt
     , debugbuiltins := false
     , Host
-    , Level := LEVEL_DEFAULT
     , match_predicate := () -> true
     , max_length
     , Port
@@ -630,6 +610,7 @@ $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
 $include <src/LineInfo.mm>
+$include <src/PrintRtable.mm>
 
 #{{{ ModuleApply
 
@@ -642,7 +623,6 @@ $include <src/LineInfo.mm>
                          , { ignoretester :: truefalse := GetDefault(':-ignoretester',true) }
                          , { label :: string := kernelopts('username') }
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
-                         , { level :: posint := GetDefault(':-level',LEVEL_DEFAULT) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
@@ -666,7 +646,6 @@ $include <src/LineInfo.mm>
                          , { unstoperror :: {truefalse,string,set,identical(true)} := false }
                          , { unstopwhen :: { name, list, set } := NULL }
                          , { untraperror :: {truefalse,string,set,identical(true)} := false }
-                         , { usegrid :: truefalse := false }
                          , { view :: truefalse := GetDefault(':-view',false) }
                          , $
                        )
@@ -677,9 +656,7 @@ $include <src/LineInfo.mm>
         #{{{ exit
 
         if exit then
-            Debugger:-RestoreBuiltins();
-            Debugger:-Restore();
-            Disconnect(_options['quiet']);
+            ModuleUnload();
             return NULL;
         end if;
 
@@ -701,7 +678,6 @@ $include <src/LineInfo.mm>
         view_flag := view; # and not IsWorksheetInterface();
         max_length := maxlength;
 
-        Level := level;
 
         #{{{ max_length
 
@@ -710,13 +686,9 @@ $include <src/LineInfo.mm>
         end if;
 
         #}}}
-        #{{{ usegrid (assign lbl)
+        #{{{ assign lbl
 
-        if usegrid then
-            lbl := sprintf("%s-%d", label, :-Grid:-MyNode());
-        else
-            lbl := label;
-        end if;
+        lbl := label;
 
         #}}}
         #{{{ showoptions
@@ -843,6 +815,7 @@ $include <src/LineInfo.mm>
             end if;
             protect('WARNINGS');
         end if;
+
         #}}}
         #{{{ unstoperror
 
@@ -927,21 +900,21 @@ ModuleLoad := proc()
                              x::symbol and length(x)=length(nm) and SearchText(x,nm)=1;
                          end proc
                       );
+    if IsWorksheetInterface('Standard') then
+        PrintRtable:-Replace();
+    end if;
 end proc;
 
 #}}}
 #{{{ ModuleUnload
 
 ModuleUnload := proc()
+    Disconnect(':-quiet' = Quiet);
     TypeTools:-RemoveType('synonym');
     Debugger:-RestoreBuiltins();
-    if sid <> -1 then
-        try
-            Sockets:-Close( sid );
-        catch:
-        end try;
-    end if;
     Debugger:-Restore();
+    PrintRtable:-Restore();
+    return NULL;
 end proc;
 
 #}}}
@@ -1194,11 +1167,12 @@ Version := "2.0.10";
 ##  server.  It is provided here with the hope that it might
 ##  be useful elsewhere.
 ##
-##EXAMPLES(noexecute)
+##EXAMPLES
 ##> mdc:-Sleep(1);
 ##
 ##SEEALSO
 ##- "Threads[Sleep]"
+##- "mdc"
 
 Sleep := proc( t :: nonnegint )
 local cmd,sys;
@@ -1232,16 +1206,17 @@ end proc;
 ##RETURNS
 ##- `procedure`
 ##DESCRIPTION
+##desc_skipping
+##
 ##- The `\CMD` command
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
 ##
-##- The current or newly assigned predicate is returned.
-##
-##- If called with no arguments,
+##- The newly assigned predicate is returned.
+##  If \CMD is called with no arguments,
 ##  the current predicate is returned.
 ##
-##- If 'ex' is a procedure (but not a name),
+##- If the 'ex' parameter is a procedure (but not a name),
 ##  it is used as the predicate,
 ##  otherwise, the predicate is the procedure
 ##  ~proc() has([_passed],ex) end proc~.
@@ -1260,11 +1235,12 @@ end proc;
 ##  assign a predicate during a debugging session.
 ##
 ##NOTES
-##- If the skip predicate is not satisfied, Maple will continue
-##  executing the code until the debugger exits.  The internal flag
-##  used to enable skipping will remain active, so skipping will
-##  resume when the debugger is reentered.  To avoid this, clear the
-##  skipping flag by calling ~mdc()~ from Maple.
+##-(nolead)
+##  If the skip predicate is not satisfied, Maple continues executing
+##  the code until the debugger exits.  The internal flag used to
+##  enable skipping remains active, so skipping resumes when the
+##  debugger is reentered.  To avoid this, clear the skipping flag by
+##  calling ~mdc()~ from Maple.
 ##
 ##OPTIONS
 ##-(nolead) Some of the options are mutually exclusive.
@@ -1294,17 +1270,24 @@ end proc;
 ##  When true, the predicate is ~proc() hastype([_passed],ex) end proc~.
 ##  The default value is false.
 ##
-##EXAMPLES(notest,noexecute)
+##EXAMPLES(noexecute,notest)
 ##SUBSECTION Locate the source of an expression
 ##
-##- Assign the predicate to stop when _x^2_ is computed.
+##-(nolead)
+##  Determine the exact point
+##  where _x^2_ is computed when symbolically integrating _x_
+##  with respect to _x_.
+##-(nolead) Call \CMD with parameter _x^2_, that assigns the desired skip predicate.
 ##> mdc:-Skip(x^2):
+##-(nolead) Instrument "int" for debugging.
 ##> mdc(int):
-##- Call `int`, which launches the debugger.
+##-(nolead) Call `int`, which launches the debugger.
 ##  To start the skipping, type **S** in the debugger.
 ##> int(x,x);
 ##
-##- Use the `usehastype` option to stop skipping when a square appears.
+##- Use the `usehastype` option to stop skipping when a square (power
+##  of two) appears while doing the integration; this occurs before
+##  the appearance of _x^2_.  Use "forget" to clear `int`\'s remember table.
 ##> mdc:-Skip(anything^2, usehastype):
 ##> forget(int):
 ##> int(x,x);
@@ -1316,7 +1299,7 @@ end proc;
 ##
 ##- Create a custom predicate with "patmatch".
 ##  Note that we first verify that ~_npassed=1~; without that,
-##  a statement that returns `NULL` generates an error because
+##  a statement that returns `NULL` raises an error because
 ##  the wrong number of arguments are passed to `patmatch`.
 ##> mdc:-Skip(() -> _npassed=1 and patmatch(_passed,a::algebraic*x^2)):
 ##> forget(int):
@@ -1324,7 +1307,8 @@ end proc;
 ##
 ##ENDSUBSECTION
 ##SUBSECTION Stop before executing a particular statement
-##- Use the `before` option to stop skipping before the
+##-(nolead)
+##  Use the `before` option to stop skipping before the
 ##  `INTERFACE_PLOT3D` streamcall is made.
 ##
 ##> mdc:-Skip("INTERFACE_PLOT3D",'before');
@@ -1333,7 +1317,8 @@ end proc;
 ##ENDSUBSECTION
 ##SUBSECTION Locate the source of intensive memory usage
 ##
-##- Set a threshold on the memory allocated.
+##-(nolead)
+##  Set a threshold on the memory allocated.
 ##  This is useful for quickly locating bottlenecks in a program.
 ##  When, after the debugger returns from skipping,
 ##  the stack (displayed with the 'K' key) contains
@@ -1342,7 +1327,7 @@ end proc;
 ##> restart;
 ##- Assign a procedure that inefficiently increase the sign of
 ##  a Vector a term at a time by constructing an entirely new Vector.
-##>> inefficent := proc(n)
+##>> ugly := proc(n)
 ##>> local i,x,V;
 ##>>    V := Vector();
 ##>>    for i to n do
@@ -1353,13 +1338,13 @@ end proc;
 ##- The ~skip_until[alloc]~ option to `mdc`
 ##  is equivalent to calling `Skip` with
 ##  option `bytesalloc`.
-##> mdc(inefficent, skip_until[alloc]=10^8):
-##> inefficent(1000);
+##> mdc(ugly, skip_until[alloc]=10^8):
+##> ugly(1000);
 ##
 ##- The proper way to increase the size of a Vector is
 ##  to use Maple's dynamic resizing ability.  Here
 ##  is the equivalent procedure
-##>> efficent := proc(n)
+##>> nice := proc(n)
 ##>> local i,V;
 ##>>    V := Vector();
 ##>>    for i to n do
@@ -1368,14 +1353,14 @@ end proc;
 ##>>    V;
 ##>> end proc:
 ##- The memory usage is minimal
-##> CodeTools:-Usage(efficient(1000));
+##> CodeTools:-Usage(nice(1000));
 ##ENDSUBSECTION
 ##EXAMPLES(execute,notest)
 ##SUBSECTION Locate a stack overflow
 ##SET(noexecute)
-##- Set a threshold on the size of the stack.
-##  This is useful for catching a *stack overflow*
-##  while it is occurring.
+##-(nolead)
+##  Set a threshold on the size of the stack.  This is useful for
+##  catching a *stack overflow* while it is occurring.
 ##
 ##> restart;
 ##> mdc:-Skip('stacklevel' = 1000):
@@ -1393,7 +1378,8 @@ end proc;
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Match an expression with a local variable
-##- Assign a procedure that computes an expression, ~exp(x)~,
+##-(nolead)
+##  Assign a procedure that computes an expression, ~exp(x)~,
 ##  with a local variable, ~x~, that we want to locate using skipping.
 ##>> f := proc()
 ##>> local x,y;
@@ -1408,9 +1394,10 @@ end proc;
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Printing a value on exit
-##- Returning a non-boolean expression halts the skipping
-##  and displays the expression.  This can be used to provide
-##  a useful message.  The following example illustrates the
+##-(nolead)
+##  If the predicate returns a non-boolean expression, the skipping
+##  halts and the expression is displayed.  This can be used to
+##  provide a useful message.  The following example illustrates the
 ##  use, if not the usefulness.
 ##
 ##>> timeskip := proc()
@@ -1440,6 +1427,7 @@ end proc;
 ##> f();
 ##
 ##ENDSUBSECTION
+##UNSET
 ##SEEALSO
 ##- "mdc"
 ##- "mdc[ModuleApply]"
@@ -1651,51 +1639,9 @@ end proc;
 Monitor := Debugger:-Monitor;
 
 #}}}
-#{{{ TraceLevel
-
-##DEFINE CMD TraceLevel
-##PROCEDURE(help) mdc[TraceLevel]
-##HALFLINE set and query the tracing level
-##AUTHOR   Joe Riel
-##DATE     Mar 2012
-##CALLINGSEQUENCE
-##- \CMD('lev')
-##PARAMETERS
-##- 'lev' : (optional) ::posint::
-##RETURNS
-##- ::posint::; previous level
-##DESCRIPTION
-##- The `\CMD` command sets and queries the tracing level,
-##  which is used by the level tracing mode.
-##  See the `level` option in `mdc`.
-##
-##- The optional 'lev' parameter assigns the level.
-##  If not provided the value is not changed.
-##
-##- The previous level value is returned.
-##EXAMPLES
-##> mdc:-TraceLevel();
-##> mdc:-TraceLevel(100);
-##> mdc:-TraceLevel();
-##SEEALSO
-##- "mdc"
-##- "mdc[ModuleApply]"
-
-TraceLevel := proc( lev :: posint := NULL )
-local prev;
-    prev := Level;
-    if lev <> NULL then
-        Level := lev;
-    end if;
-    prev;
-end proc;
-
-#}}}
 
 end module:
 
 protect('mdc'):
-
-#LibraryTools:-Save('mdc', "mdc.mla");
 
 #savelib('mdc'):

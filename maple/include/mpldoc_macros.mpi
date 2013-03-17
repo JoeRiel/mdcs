@@ -51,6 +51,17 @@
 ##  ~kernelopts(opaquemodules=false)~.
 ##ENDDEFINE
 
+##DEFINE desc_skipping
+##-(nolead)
+##  *Skipping* is the automatic execution of code until a predicate returns true,
+##  then entering the debugger at that point.
+##  It provide a convenient means to locate the source of an
+##  expression in a computation.
+##
+##- When skipping, no debugger output is displayed
+##  until the predicate is satisfied.
+##ENDDEFINE
+
 #--------------
 #OPTIONS macros
 #--------------
