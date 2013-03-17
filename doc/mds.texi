@@ -64,7 +64,8 @@ Texts.  A copy of the license is included in the section entitled
 @menu
 * Introduction::                Installing and configuring
 * Launching MDS::               Starting and stopping the server
-* Showstat Buffer::             Stepping through code
+* Showstat Buffer::             Stepping through interpreted code
+* LineInfo Buffer::             Stepping through source code
 * Output Buffer::               Maple output
 * Debugging Tips::              Tips and technique
 * Main Index::                  The main index 
@@ -107,9 +108,29 @@ Showstat Mode
 * Patching::                    Live patching Maple procedures
 * Help::                        Getting help
 
+LineInfo Buffer
+
+* Accessing LineInfo::          Creating the line-info data
+* LineInfo Mode::               Available commands     
+* LineInfo Caveats::            Bugs
+
+LineInfo Caveats
+
+* Preprocessor macros::         
+* for-less do-loops::           
+* use statement::               
+* Declaration Self-Assignment::  
+
 Output Buffer
 
 * Output buffer commands::      
+
+Debugging Tips
+
+* Set breakpoint in calling procedure::  
+* Locate source of unexpected result::  
+* Assign a variable::           
+* Save a local result::         
 
 Command and Variable Index
 
@@ -218,13 +239,14 @@ This permits testing changes without access to the full source code.
 MDS should work with earlier versions of Emacs but has not been tested.
 @item Maple 14+  
 MDS should work with earlier versions of Maple but has not been tested.
+Some features, such as the line-info buffer, see @ref{LineInfo Buffer},
+are only available on Maple 16+.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
 regardless whether you use MDS.
-See 
-@url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}
-for a recent version.
+The latest version is available at
+@url{https://github.com/JoeRiel/maplev}.
 Debian and Ubuntu provide a version with the @file{emacs-goodies-el}
 package, but it is dated.
 @end table
@@ -287,8 +309,13 @@ commands to the @key{f12} and @key{CTRL}-@key{f12} keystrokes, do
 (global-set-key [C-f12] 'mds-windows-cycle-groups)
 @end example
 
+If you use MDS frequently, you may want to start 
+the server in your @file{.emacs} file.  Do this 
+by adding the command
 
-
+@example
+(mds) ; launch Maple Debugger Server
+@end example
 
 @node Customization, Feedback, Configuration, Introduction
 @comment  node-name,  next,  previous,  up
@@ -427,7 +454,7 @@ which displays Maple output during debugging.
 @findex mds-stop
 To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Launching MDS, Top
+@node Showstat Buffer, LineInfo Buffer, Launching MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
@@ -1089,15 +1116,219 @@ with the default the word under then cursor.
 
 @end table
 
+@node LineInfo Buffer, Output Buffer, Showstat Buffer, Top
+@chapter LineInfo Buffer
+@cindex lineinfo buffer
+
+The line-info buffer displays the source file of the 
+current Maple procedure during debugging.  An arrow in the
+left margin points to the current line in the procedure.
+
+This mode uses an undocumented, experimental feature of Maple 16.
+As such, there are a few limitations with using it.
+
+@menu
+* Accessing LineInfo::          Creating the line-info data
+* LineInfo Mode::               Available commands     
+* LineInfo Caveats::            Bugs
+@end menu
+
+@node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
+@section Accessing LineInfo
+@cindex Accessing LineInfo
+
+The line-info buffer is active whenever line-info data is available for
+a procedure.  Line-info data is available when a Maple source file
+is read into Maple, either with the Maple @code{read} command, or by
+passing the file as input to tty Maple.
+
+The line-info data stores the location of the source file relative to
+the current directory.  If the code being debugged changes current
+directory, the line-info source file may become inaccessible, in which
+case the debugger switches to the showstat buffer (interpreted
+code-view).  To avoid this, use an absolute path to the source file.
 
 
-@node Output Buffer, Debugging Tips, Showstat Buffer, Top
+@node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
+@section LineInfo Mode
+@cindex LineInfo Mode
+
+The line-info buffer has the major mode @code{mds-li-mode},
+which binds the same keys as @code{mds-showstat-mode}
+to equivalent commands; see @ref{Showstat Mode}.
+In addition, it provides the following commands:
+
+@table @asis
+
+@kindex v
+@findex mds-wm-toggle-code-view
+@item v (@code{mds-wm-toggle-code-view})
+
+Toggle the code-view between the interpreted-code (showstat-live buffer)
+and source-code (line-info buffer).
+This command (and key) can be used in the showstat-live buffer to return
+to the line-info buffer.
+
+Toggling is useful to verify that source-code has been interpreted properly.
+There are a few constructs that currently are not handled by the line-info
+feature; @ref{LineInfo Caveats}.
+
+
+@kindex G
+@findex mds-li-open-source-at-point
+@item G (@code{mds-li-open-source-at-point})
+
+Open the file associated with current procedure.
+
+@end table
+
+@node LineInfo Caveats,  , LineInfo Mode, LineInfo Buffer
+@section LineInfo Caveats
+@cindex LineInfo Caveats
+
+There are a few known bugs with the line-info feature.
+
+@menu
+* Preprocessor macros::         
+* for-less do-loops::           
+* use statement::               
+* Declaration Self-Assignment::  
+@end menu
+
+@node  Preprocessor macros, for-less do-loops, LineInfo Caveats, LineInfo Caveats
+@subsection Preprocessor macros
+@cindex Preprocessor macros
+
+Preprocessor macro definitions that expand to more than one Maple statement
+are not handled properly.  Avoid these when writing Maple source code.
+For example, 
+
+@example
+$define CB  "cbSignalStrength"                # this is okay
+$define IF(x) if x<0 then 1 else 2 end if     # this is not
+@end example
+
+
+@node for-less do-loops, use statement, Preprocessor macros, LineInfo Caveats
+@subsection for-less do-loops
+@cindex for-less do-loops
+
+A @strong{for}-less @strong{do}-loop does not store the data for the @strong{do}
+statement.  This causes the debugger to automatically switch to the
+showstat buffer when the current statement is the @strong{do} statement.
+The debugger switches back to the lineinfo buffer when the @strong{do}
+statement is no longer active.
+
+For an example, see the following code.  When the cursor reaches the
+marked statement, the debugger switches to the showstat buffer.  If an
+@strong{into} debugger command is then executed, the assignment
+statement, @code{x[i] := i+1}, becomes the active statement and the
+debugger switches back to the line-info buffer.
+
+@example
+@anchor{do-loop}
+@iftex
+    i := 1;
+=>  @strong{while} i < 5 @strong{do}
+        x[i] := i+1;
+    @strong{end do};
+@end iftex
+@ifinfo
+    i := 1;
+=>  while i < 5 do
+        x[i] := i+1;
+    end do;
+@end ifinfo
+@end example
+
+@node use statement, Declaration Self-Assignment, for-less do-loops, LineInfo Caveats
+@subsection use statement
+@cindex use statement
+
+The line-info data generated for a procedure
+with a @strong{use}-statement is incorrect.
+Use the @strong{uses} statement instead.
+
+@node Declaration Self-Assignment,  , use statement, LineInfo Caveats
+@subsection Declaration Self-Assignment
+
+Maple 16 has an undocumented feature such that if, in a local
+declaration, a variable is assigned to itself, the assignment is removed
+from the interpreted procedure.  The purpose of this is prevent a mint
+warning of an unused variable if the variable is not assigned in the
+procedure body; this frequently happens with an index to a @code{seq}
+procedure.  For example, one might do
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x := x; # dummy assignment to avoid mint nag
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x := x; # dummy assignment to avoid mint nag
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+This is interpreted by Maple as
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x; # note the assignment is removed
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x;
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+The line-info data for such a procedure is incorrect.  To avoid this, do
+not use this feature in your source code.  If debugging a Maple procedure
+that uses this, switch to viewing interpreted code.
+
+To avoid a mint warning without using this feature, use a preprocessor
+conditional that is enabled only during mint, say by assigning the
+preprocessor variable @code{MINT_ONLY} in the mint resource file
+(@file{.mintrc}.  For example,
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x;
+$ifdef MINT_ONLY
+    x := NULL;
+$endif
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x;
+$ifdef MINT_ONLY
+    x := NULL;
+$endif
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+
+@node Output Buffer, Debugging Tips, LineInfo Buffer, Top
 @chapter Output Buffer
 @cindex output buffer
 
 
-The output buffer displays Maple output during debugging.  
-It also echos the user input, and optionally, the input statements executed.
+The output buffer displays Maple output during debugging.  It also echos
+the user input, and optionally, the input statements executed.
 
 The following is representative of the output buffer content
 
@@ -1142,8 +1373,16 @@ does not change.
 @chapter Debugging Tips
 @cindex debugging tips
 
+@menu
+* Set breakpoint in calling procedure::  
+* Locate source of unexpected result::  
+* Assign a variable::           
+* Save a local result::         
+@end menu
 
+@node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
 @section Set breakpoint in calling procedure
+@cindex Set breakpoint in calling procedure
 
 After using @command{stoperror} to stop the debugger at the location of
 an error, you realize that the real problem lies in an ``upstream''
@@ -1163,12 +1402,14 @@ In the showstat-dead buffer, set a breakpoint at an appropriate
 statement in the calling procedure.
 
 @item
-Quit the debugger (@kbd{q}) and reexecute the code in Maple.  
+Quit the debugger (@kbd{q}) and re-execute the code in Maple.  
 The debugger will halt in the procedure of interest.
 
 @end enumerate
 
+@node  Locate source of unexpected result, Assign a variable, Set breakpoint in calling procedure, Debugging Tips
 @section Locate source of unexpected result
+@cindex Locate source of unexpected result
 
 A computation gives the wrong result, but it is not apparent which
 procedure, or what line of code, is the culprit. 
@@ -1186,6 +1427,45 @@ that skips code until a condition is met.
 See the examples in the @code{mdc[SkipUntil]} help page, in Maple.
 With a predicate assigned, skip to the condition by typing
 @kbd{S} in the showstat buffer.
+
+@node Assign a variable, Save a local result, Locate source of unexpected result, Debugging Tips
+@section Assign a variable
+@cindex Assign a variable
+
+To assign to a Maple variable, evaluate an assignment
+statement using @code{mds-eval-and-display-expr}, which is mapped to
+the @kbd{e} key.  For example, @kbd{e x := 1 @key{RET}} assigns 1 to
+the variable @code{x}.  If @code{x} is a local variable, the local
+variable is reassigned; this is useful for temporarily altering
+the operation of a procedure.  If @code{x} is not a local variable,
+a global variable is assigned; this is useful for making an internal 
+value available for further manipulation when exiting the debugger.
+
+To assign the value of a local variable to a global variable
+with the same name, evaluate, for example, 
+@code{assign(:-x,x)}.
+
+@node Save a local result,  , Assign a variable, Debugging Tips
+@section Save a local result
+@cindex Save a local result
+
+While debugging, it is frequently useful to save a local result to an
+external file so that it can be manipulated afterwards.
+One way to do this is to first save the result to a global
+variable, @ref{Assign a variable}, then save the global
+to a file by evaluating the Maple @code{save} statement in a global
+context, using @code{mds-eval-and-display-expr-global},
+which is mapped to the @kbd{E} key.
+
+For example, to save the value of the local variable @code{x}
+to the file @file{/tmp/x.mpl}, do
+
+@example @asis
+e assign(:-x,x) @key{RET}
+E save x, "/tmp/x.mpl" @key{RET}
+@end example
+
+File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 
 
 @node Main Index, Key Index, Debugging Tips, Top
