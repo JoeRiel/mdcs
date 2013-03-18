@@ -23,7 +23,7 @@
 @copying
 MDS is an Emacs package that implements a Maple Debugger Server.
 It is part of the Maple Debugger Client/Server Architecture. 
-Maple is a computer algebra system from Maplesoft Inc.
+Maple is a computer algebra system from @w{Waterloo Maple Inc}.
 
 This manual is for MDS version @value{VERSION}.
 
@@ -68,9 +68,15 @@ Texts.  A copy of the license is included in the section entitled
 * LineInfo Buffer::             Stepping through source code
 * Output Buffer::               Maple output
 * Debugging Tips::              Tips and technique
-* Main Index::                  The main index 
+
+Indices
+
 * Key Index::                   Key bindings and where they are described
-* Command and Variable Index::  Indices of commands and variables
+* Function Index::              Functions mentioned in the manual
+* Variable Index::              Variables mentioned in the manual
+* Concept Index::               Concepts and features
+
+License
 
 * GNU Free Documentation License::  Copying this manual
 
@@ -131,11 +137,6 @@ Debugging Tips
 * Locate source of unexpected result::  
 * Assign a variable::           
 * Save a local result::         
-
-Command and Variable Index
-
-* Command Index::               An index of commands
-* Variable Index::              An index of variables
 
 @end detailmenu
 @end menu
@@ -1305,7 +1306,7 @@ that uses this, switch to viewing interpreted code.
 To avoid a mint warning without using this feature, use a preprocessor
 conditional that is enabled only during mint, say by assigning the
 preprocessor variable @code{MINT_ONLY} in the mint resource file
-(@file{.mintrc}.  For example,
+(@file{.mintrc}).  For example,
 
 @example @asis
 @iftex
@@ -1376,7 +1377,7 @@ does not change.
 
 
 
-@node  Debugging Tips, Main Index, Output Buffer, Top
+@node  Debugging Tips, Key Index, Output Buffer, Top
 @chapter Debugging Tips
 @cindex debugging tips
 
@@ -1476,33 +1477,25 @@ E save x, "/tmp/x.mpl" @key{RET}
 File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 
 
-@node Main Index, Key Index, Debugging Tips, Top
-@unnumbered Main Index
-@printindex cp
-
-@node Key Index, Command and Variable Index, Main Index, Top
+@node Key Index, Function Index, Debugging Tips, Top
 @unnumbered Key Index
 @printindex ky
 
-@node Command and Variable Index, GNU Free Documentation License, Key Index, Top
-@unnumbered Command and Variable Index
-
-@menu
-* Command Index::               An index of commands
-* Variable Index::              An index of variables
-@end menu
-
-@node Command Index, Variable Index, Command and Variable Index, Command and Variable Index
-@section Function Index
+@node Function Index, Variable Index, Key Index, Top
+@unnumbered Function Index
 @printindex fn
 
-@node Variable Index,  , Command Index, Command and Variable Index
-@section Variable Index
+@node Variable Index, Concept Index, Function Index, Top
+@unnumbered Variable Index
 @printindex vr
 
-@node GNU Free Documentation License,  , Command and Variable Index, Top
+@node Concept Index, GNU Free Documentation License, Variable Index, Top
+@unnumbered Concept Index
+@printindex cp
+
+@node GNU Free Documentation License,  , Concept Index, Top
 @appendix GNU Free Documentation License
 @include fdl.texi
 
-
+@summarycontents
 @bye
