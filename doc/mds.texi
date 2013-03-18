@@ -62,70 +62,70 @@ Texts.  A copy of the license is included in the section entitled
 @end ifnottex
 
 @menu
-* Introduction::                Installing and configuring
-* Launching MDS::               Starting and stopping the server
-* Showstat Buffer::             Stepping through interpreted code
-* LineInfo Buffer::             Stepping through source code
-* Output Buffer::               Maple output
-* Debugging Tips::              Tips and technique
+* Introduction::                Installing and configuring.
+* Launching MDS::               Starting and stopping the server.
+* Showstat Buffer::             Stepping through interpreted code.
+* LineInfo Buffer::             Stepping through source code.
+* Output Buffer::               Maple output.
+* Debugging Tips::              Tips and technique.
 
 Indices
 
-* Key Index::                   Key bindings and where they are described
-* Function Index::              Functions mentioned in the manual
-* Variable Index::              Variables mentioned in the manual
-* Concept Index::               Concepts and features
+* Key Index::                   Key bindings and where they are described.
+* Function Index::              Functions mentioned in the manual.
+* Variable Index::              Variables mentioned in the manual.
+* Concept Index::               Concepts and features.
 
 License
 
-* GNU Free Documentation License::  Copying this manual
+* GNU Free Documentation License::  Copying this manual.
 
 @detailmenu
  --- The Detailed Node Listing ---
 
 Introduction
 
-* Summary::                     Summary of what MDS does
-* Requirements::                What is needed to run MDS
-* Installation::                How to install MDS
-* Configuration::               How to configure MDS
-* Customization::               Customize MDS variables
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
-* Emacs::                       Configuring @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}.
 
 Showstat Buffer
 
-* Live Showstat Buffer::        
-* Dead Showstat Buffer::        
-* Showstat Mode::               
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
 
 Showstat Mode
 
-* Execution::                   Executing procedure statements
-* Status::                      Determining debugger status
-* Breakpoints::                 Setting and clearing breakpoints
-* Watchpoints::                 Setting and clearing watchpoints
-* Evaluation::                  Evaluating expressions
-* Miscellaneous::               Miscellaneous commands
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
 * Monitoring::                  
-* Patching::                    Live patching Maple procedures
-* Help::                        Getting help
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
 
 LineInfo Buffer
 
-* Accessing LineInfo::          Creating the line-info data
-* LineInfo Mode::               Available commands     
-* LineInfo Caveats::            Bugs
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Bugs.
 
 LineInfo Caveats
 
-* Preprocessor macros::         
-* for-less do-loops::           
-* use statement::               
-* Declaration Self-Assignment::  
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use @code{uses}.
+* Declaration Self-Assignment::  Avoid this undocumented feature.
 
 Output Buffer
 
@@ -133,10 +133,10 @@ Output Buffer
 
 Debugging Tips
 
-* Set breakpoint in calling procedure::  
-* Locate source of unexpected result::  
-* Assign a variable::           
-* Save a local result::         
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where expression originate.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
 
 @end detailmenu
 @end menu
@@ -146,11 +146,11 @@ Debugging Tips
 @cindex introduction
 
 @menu
-* Summary::                     Summary of what MDS does
-* Requirements::                What is needed to run MDS
-* Installation::                How to install MDS
-* Configuration::               How to configure MDS
-* Customization::               Customize MDS variables
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -274,7 +274,7 @@ to run MDS.
 
 
 @menu
-* Emacs::                       Configuring @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}.
 @end menu
 
 @node Emacs,  , Configuration, Configuration
@@ -473,9 +473,9 @@ Both use @code{mds-showstat-mode}, though some commands are handled
 differently.
 
 @menu
-* Live Showstat Buffer::        
-* Dead Showstat Buffer::        
-* Showstat Mode::               
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
 @end menu
 
 @node Live Showstat Buffer, Dead Showstat Buffer, Showstat Buffer, Showstat Buffer
@@ -545,15 +545,15 @@ The following sections describe these bindings and commands.
 They are grouped according to function.
 
 @menu
-* Execution::                   Executing procedure statements
-* Status::                      Determining debugger status
-* Breakpoints::                 Setting and clearing breakpoints
-* Watchpoints::                 Setting and clearing watchpoints
-* Evaluation::                  Evaluating expressions
-* Miscellaneous::               Miscellaneous commands
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
 * Monitoring::                  
-* Patching::                    Live patching Maple procedures
-* Help::                        Getting help
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
 @end menu
 
 @node Execution, Status, Showstat Mode, Showstat Mode
@@ -1136,9 +1136,9 @@ This mode uses an undocumented, experimental feature of Maple 16.
 As such, there are a few limitations with using it.
 
 @menu
-* Accessing LineInfo::          Creating the line-info data
-* LineInfo Mode::               Available commands     
-* LineInfo Caveats::            Bugs
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Bugs.
 @end menu
 
 @node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
@@ -1197,10 +1197,10 @@ Open the file associated with current procedure.
 There are a few known bugs with the line-info feature.
 
 @menu
-* Preprocessor macros::         
-* for-less do-loops::           
-* use statement::               
-* Declaration Self-Assignment::  
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use @code{uses}.
+* Declaration Self-Assignment::  Avoid this undocumented feature.
 @end menu
 
 @node  Preprocessor macros, for-less do-loops, LineInfo Caveats, LineInfo Caveats
@@ -1256,6 +1256,27 @@ debugger switches back to the line-info buffer.
 The line-info data generated for a procedure
 with a @strong{use}-statement is incorrect.
 Use the @strong{uses} statement instead.
+
+For example, instead of 
+
+@example
+f := proc(M :: Matrix, X :: Vector)
+local V;
+    use LA = LinearAlgebra in
+        V := LA:-LinearSolve(A,X);
+    end use;
+end proc;
+@end example
+
+@noindent do this.
+
+@example
+f := proc(M :: Matrix, X :: Vector)
+local V;
+uses LA = LinearAlgebra;
+    V := LA:-LinearSolve(A,X);
+end proc;
+@end example
 
 @node Declaration Self-Assignment,  , use statement, LineInfo Caveats
 @subsection Declaration Self-Assignment
@@ -1382,10 +1403,10 @@ does not change.
 @cindex debugging tips
 
 @menu
-* Set breakpoint in calling procedure::  
-* Locate source of unexpected result::  
-* Assign a variable::           
-* Save a local result::         
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where an expression originates.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
 @end menu
 
 @node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
@@ -1441,18 +1462,19 @@ With a predicate assigned, skip to the condition by typing
 @section Assign a variable
 @cindex Assign a variable
 
-To assign to a Maple variable, evaluate an assignment
-statement using @command{mds-eval-and-display-expr}, which is mapped to
-the @kbd{e} key.  For example, @kbd{e x := 1 @key{RET}} assigns 1 to
-the variable @code{x}.  If @code{x} is a local variable, the local
-variable is reassigned; this is useful for temporarily altering
-the operation of a procedure.  If @code{x} is not a local variable,
-a global variable is assigned; this is useful for making an internal 
-value available for further manipulation when exiting the debugger.
+To assign to a Maple variable, evaluate an assignment statement using
+the command @command{mds-eval-and-display-expr}, which is mapped to the
+@kbd{e} key.  For example, @kbd{e x := 1 @key{RET}} assigns 1 to the
+variable @code{x}.  If @code{x} is a local variable, the local variable
+is reassigned; this is useful for temporarily altering the operation of
+a procedure.  If @code{x} is not a local variable, a global variable is
+assigned; this is useful for making an internal value available for
+further manipulation after exiting the debugger.
 
-To assign the value of a local variable to a global variable
-with the same name, evaluate, for example, 
-@code{assign(:-x,x)}.
+To assign the value of a local variable to a global variable with the
+same name, use the Maple @command{assign} procedure; for example,
+evaluate @code{assign(:-x,x)} to assign the value of the local variable
+@code{x} to the global variable @code{:-x}.
 
 @node Save a local result,  , Assign a variable, Debugging Tips
 @section Save a local result
