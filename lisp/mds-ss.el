@@ -1,4 +1,4 @@
-;;; mds-ss.el --- mds-ss-mode
+;;; mds-ss.el --- Assign mds-ss-mode
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -39,13 +39,13 @@
   "Match the procname printed by the where command.
 It is flush-left, presumably contains no spaces, and is terminated
 with a colon.  The colon is omitted from the group-one match.
-A more precise regular expression would allow spaces inside backquotes,
+A more precise regular expression would allow spaces inside back-quotes,
 however, such an abomination should break something.")
 
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-ss-addr           nil "Address of current displayed procedure")
+(defvar mds-ss-addr           nil "Address of current displayed procedure.")
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
 (defvar mds-ss-dead-flag      nil "Non-nil means this is the ss-dead buffer.")
@@ -909,13 +909,13 @@ See `mds-monitor-toggle'."
 ;;{{{ (*) Miscellaneous
 
 (defun mds-ss-refresh (&optional client)
-  "Refresh the showstat buffer."
+  "Refresh the showstat buffer for CLIENT."
   (interactive)
   (unless client (setq client mds-client))
   (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
 
 (defun mds-goto-current-state (&optional client)
-  "Move cursor to the current state in the code buffer."
+  "Move cursor to the current state in the code buffer for CLIENT."
   (interactive)
   (unless client (setq client mds-client))
   (if (and (mds-client-use-lineinfo-p client)
@@ -965,7 +965,7 @@ otherwise do so in the `mds-ss-buffer'."
   (interactive)
   (info "mds"))
 
-(defun mds-toggle-quiet (&optional set)
+(defun mds-toggle-quiet ()
   "Toggle the quiet mode, which suppresses normal output of executed statements."
   (interactive)
   (mds-ss-eval-expr

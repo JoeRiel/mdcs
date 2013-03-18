@@ -1,4 +1,4 @@
-;;; mds-client.el
+;;; mds-client.el --- Assign the structure used for each mds client
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -24,7 +24,7 @@
 
 ;; Client Data Structure
 ;;
-;; The client structure is a vector. 
+;; The client structure is a vector.
 ;;
 ;; 0 - process
 ;; 1 - status
@@ -50,6 +50,8 @@
 ;; 18 - quiet-flag
 ;; 19 - trace-flag
 
+;;; Code:
+
 (eval-when-compile
   (require 'mds-custom))
 
@@ -64,7 +66,8 @@
 (defvar mds-client nil "Buffer-local client structure.")
 
 (defvar mds-clients '()
-  "Assoc-list containing info of accepted clients, indexed by the associated process.
+  "Assoc-list containing info of accepted clients.
+The list is indexed by the associated process.
 See `mds-client-create' for the form of each entry.")
 
 (defvar mds-clients-number 0
@@ -91,8 +94,8 @@ Maximum is given by `mds-max-number-clients'.")
 This is the window used to display the input code; it may contain
 either the ss-live or line-info (li) buffer."
   (aref client 8))
-(defsubst mds-client-set-code-window (client window) 
-  "Set CLIENT's code window to WINDOW. 
+(defsubst mds-client-set-code-window (client window)
+  "Set CLIENT's code window to WINDOW.
 This is the window used to display the input code; it may contain
 either the ss-live or line-info (li) buffer."
   (aset client 8 window))
@@ -139,7 +142,7 @@ The statement is the current line of Maple code."
   (aset client 13 cmd))
 
 (defsubst mds-client-get-result (client)
-  "Return the result of a request to Maple."
+  "Return the result of a request to a Maple CLIENT."
   (aref client 14))
 (defsubst mds-client-set-result (client result)
   "Set CLIENT's RESULT."
@@ -168,8 +171,8 @@ True means line-info source is available for the code."
   "Get CLIENT's use-lineinfo flag.
 True means to display line-info source, when available."
   (aref client 17))
-(defsubst mds-client-set-use-lineinfo (client flag) 
-  "Set CLIENT's use-lineinfo flag to FLAG. 
+(defsubst mds-client-set-use-lineinfo (client flag)
+  "Set CLIENT's use-lineinfo flag to FLAG.
 True means to display line-info source, when available."
   (aset client 17 flag))
 
@@ -230,13 +233,14 @@ Currently ID consists of a four element list of strings,
   (aset client 3 id))
 
 (defun mds-client-delete (client)
-  "Delete CLIENT from `mds-clients'.  Stop the associated process,
-kill the buffers, and decrement `mds-clients-number'."
+  "Delete CLIENT from `mds-clients'.
+Stop the associated process, kill the buffers, and decrement
+`mds-clients-number'."
   (if client
       (let* ((proc (mds-client-proc client))
 	     (entry (assq proc mds-clients)))
 	(if (null entry)
-	    (error "Client is unknown.")
+	    (error "Client is unknown")
 	  (mds-writeto-log-proc proc "removing client")
 	  (mds-client-destroy client)
 	  ;; update `mds-clients' and `mds-clients-number'
@@ -249,7 +253,7 @@ kill the buffers, and decrement `mds-clients-number'."
 	mds-clients-number (1+ mds-clients-number)))
 
 (defun mds-client-send (client msg)
-  "Send MSG to CLIENT."
+  "Send the Maple CLIENT a MSG."
   (process-send-string (mds-client-proc client) msg))
 
 (defun mds-clients-kill ()
@@ -258,6 +262,8 @@ kill the buffers, and decrement `mds-clients-number'."
       (mds-client-delete (cdar mds-clients))))
 
 (defun mds-client-interrupt (client)
+  "Interrupt the Maple kernel of CLIENT.
+Alas, this currently is not implemented."
   ;; Interrupt the kernel.  Alas, I don't know a general way to do
   ;; this, one that works across OSes, Maple interfaces, etc.  More
   ;; exactly, I only know of one method that works for one case; when
@@ -296,3 +302,5 @@ The value is an integer."
 
 
 (provide 'mds-client)
+
+;;; mds-client.el ends here

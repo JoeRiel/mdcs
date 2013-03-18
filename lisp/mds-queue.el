@@ -130,7 +130,8 @@ communicate with the process.  Data is sent to the queue via
 ;;{{{ mds-queue-dispatch-tags
 
 (defun mds-queue-dispatch-tags (proc tag msg)
-  "Handle message MSG from process PROC with TAG, which indicates the purpose of the message."
+  "Handle input from Maple client PROC.
+TAG identifies the operation, MSG is the message."
 
   (let* ((client (cdr (assq proc mds-clients)))
 	 (live-buf (mds-client-live-buf client))

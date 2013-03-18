@@ -41,7 +41,7 @@
   :group 'tools)
 
 (defcustom mds-truncate-lines-flag t
-  "When non-nil, lines in showstat buffer are initially truncated."
+  "Non-nil means lines in showstat buffer are initially truncated."
   :type 'boolean
   :group 'mds)
 
