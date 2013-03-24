@@ -12,8 +12,8 @@
 
 (eval-when-compile
   (require 'mds-client))
-(declare-function mds-client-set-id "mds")
-(declare-function mds-client-set-status "mds")
+(declare-function mds-client-set-id "mds-client")
+(declare-function mds-client-set-status "mds-client")
 
 
 (defconst mds-login-id-re ":\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):\\([^:]+\\):"

@@ -45,7 +45,7 @@
 
 ;; avoid compiler warnings
 
-(declare-function mds-client-out-buf "mds")
+(declare-function mds-client-out-buf "mds-client")
 (declare-function mds-ss-eval-proc-statement "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-ss-modeline-hilite "mds-ss")

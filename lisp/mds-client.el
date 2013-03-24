@@ -55,13 +55,13 @@
 (eval-when-compile
   (require 'mds-custom))
 
-(declare-function mds-ss-create-buffer "mds-ss")
+(declare-function mds-kill-buffer "mds")
 (declare-function mds-li-create-buffer "mds-li")
 (declare-function mds-out-create-buffer "mds-out")
-(declare-function mds-queue-create "mds")
+(declare-function mds-queue-buffer "mds-queue")
+(declare-function mds-queue-create "mds-queue")
+(declare-function mds-ss-create-buffer "mds-ss")
 (declare-function mds-writeto-log-proc "mds")
-(declare-function mds-kill-buffer "mds")
-(declare-function mds-queue-buffer "mds")
 
 (defvar mds-client nil "Buffer-local client structure.")
 
