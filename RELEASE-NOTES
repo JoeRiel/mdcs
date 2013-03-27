@@ -1,5 +1,6 @@
 -*- org -*-
-
+* mdcs.2.1.1
+** Improve documentation (info)
 * mdcs.2.1.0
 ** Improve LineInfo handling
 ** Clean-up Grid stuff; eliminate usegrid option
