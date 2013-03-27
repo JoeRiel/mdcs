@@ -1,4 +1,4 @@
-;;; mds-patch.el
+;;; mds-patch.el --- Apply a temporary patch to a procedure
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -34,6 +34,8 @@
 ;; 02110-1301, USA.
 
 ;;}}}
+
+;;; Code:
 
 (eval-when-compile
   (require 'maplev)
@@ -79,7 +81,7 @@
 ;;{{{ Cleanup buffer
 
 (defun mds-patch-remove-numbers ()
-  "Remove the statement numbers and debug marks from buffer."
+  "Remove the statement numbers and debug decoration from buffer."
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -130,3 +132,5 @@
 ;;}}}
 
 (provide 'mds-patch)
+
+;;; mds-patch.el ends here

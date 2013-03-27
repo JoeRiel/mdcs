@@ -40,7 +40,7 @@
   (require 'mds-ss)
   (require 'mds-wm)
   (require 'maplev)
-  (defvar mds-truncate-lines))
+  (defvar mds-truncate-lines-flag))
 
 
 ;;}}}
@@ -62,7 +62,7 @@
 
 (defvar mds-li-addr ""            "Address of the current procedure.")
 (defvar mds-li-arrow-position nil "Marker for current-line.")
-(defvar mds-li-beg nil            "Character position of current position.")   
+(defvar mds-li-beg nil            "Character position of current position.")
 (defvar mds-li-file-name ""       "Name of the current source-file.")
 (defvar mds-li-state 0            "Current state (posint).")
 
@@ -92,11 +92,13 @@
 ;;{{{ Update source buffer
   
 (defun mds-li-update (buffer file addr procname state beg breakpoints)
-  "Update source BUFFER with source-file FILE.  
+  "Update source BUFFER with source-file FILE.
+ADDR is the address of PROCNAME.
 PROCNAME is the procedure name.
 STATE is  the current state (a string corresponding to an integer).
 BEG is the character position of the beginning of the statement in FILE.
-BREAKPOINTS is a list of the position of the beginning of lines that have breakpoints.
+BREAKPOINTS is a list of the position of the beginning of lines
+that have breakpoints.
 
 Put point at BEG and move the current statement marker."
   (with-current-buffer buffer
@@ -160,8 +162,8 @@ Set cursor to ready."
 
 (defun mds-li-goto-state (state)
   "Move point to the beginning of statement number STATE in the current procedure."
-  (goto-char (1+ (string-to-number 
-		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,'ret_begin')" 
+  (goto-char (1+ (string-to-number
+		  (mds-ss-request (format "mdc:-LineInfo:-Get(%s,%d,'ret_begin')"
 					  (mds-client-get-addr mds-client) state))))))
 
 (define-fringe-bitmap 'mds-li-breakpoint  [60 126 255 255 255 255 126 60])
@@ -327,7 +329,7 @@ LABEL is the user id."
   :group 'mds
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
-  (if mds-truncate-lines (toggle-truncate-lines 1)))
+  (if mds-truncate-lines-flag (toggle-truncate-lines 1)))
 
 
 ;;}}}

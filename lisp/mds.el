@@ -65,7 +65,7 @@
     (and (= 0 (shell-command "which wmctrl"))
 	 #'mds-wm-get-focus-wmctrl)
   "Function called to give Emacs the focus when starting debugging.
-The default works on a linux system with wmctrl installed.
+The default works on a Linux system with wmctrl installed.
 Automatically assigned to nil if wmctrl is not available."
   :type 'function
   :group 'mds)
@@ -74,7 +74,7 @@ Automatically assigned to nil if wmctrl is not available."
 
 ;;{{{ Constants
 
-(defconst mds-version "2.1.0" "Version number of mds.")
+(defconst mds-version "2.1.1" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -141,7 +141,8 @@ Do not touch `mds-log-buffer'."
 ;;{{{ Sentinel
 
 (defun mds-sentinel (proc msg)
-  "Monitor the client processes and handle any changes."
+  "Monitor the client processes and handle any change.
+PROC is a client process, MSG is the message from the client."
   (unless (eq msg "")
     (cond
      ((string-match mds--client-attach-re msg)
@@ -183,8 +184,8 @@ Do not touch `mds-log-buffer'."
 
 
 (defun mds-start-debugging (proc msg)
-  "Called when debugging first starts.
-PROC is input process from the client; MSG is the initial output
+  "Start debugging a Maple client.
+PROC is input process from the client, MSG is the initial output
 of the debug Maple kernel.  Set the status of the client to
 'accepted, pass the message along for handling by the filter,
 display the client windows, and get the focus."
@@ -203,7 +204,7 @@ display the client windows, and get the focus."
 ;;{{{ Filter
 
 (defun mds-filter (proc msg)
-  "Dispatch message MSG.  If PROC is an accepted client, send the message to its queue."
+  "If PROC is an accepted client, send MSG to its queue."
   (let* ((client (cdr (assq proc mds-clients)))
 	 (status (and client (mds-client-status client))))
     (cond
@@ -244,6 +245,7 @@ display the client windows, and get the focus."
   (mds-writeto-log (format "%s\n" msg)))
 
 (defun mds-writeto-log (msg)
+"Insert MSG into the log buffer."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert msg)))

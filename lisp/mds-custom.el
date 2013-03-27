@@ -40,12 +40,12 @@
   "Maple Debugger Server."
   :group 'tools)
 
-(defcustom mds-truncate-lines t
-  "When non-nil, lines in showstat buffer are initially truncated."
+(defcustom mds-truncate-lines-flag t
+  "Non-nil means lines in showstat buffer are initially truncated."
   :type 'boolean
   :group 'mds)
 
-(defcustom mds-wait-until-ready t
+(defcustom mds-wait-until-ready-flag t
   "Non-nil means do not send input to Maple until prompt has been received.
 Setting this to nil allows a quicker response, but prevents a notification
 that the debugger may have exited."

@@ -1,4 +1,4 @@
-;;; mds-ss.el --- mds-ss-mode
+;;; mds-ss.el --- Assign mds-ss-mode
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -39,13 +39,13 @@
   "Match the procname printed by the where command.
 It is flush-left, presumably contains no spaces, and is terminated
 with a colon.  The colon is omitted from the group-one match.
-A more precise regular expression would allow spaces inside backquotes,
+A more precise regular expression would allow spaces inside back-quotes,
 however, such an abomination should break something.")
 
 ;;}}}
 ;;{{{ variables
 
-(defvar mds-ss-addr           nil "Address of current displayed procedure")
+(defvar mds-ss-addr           nil "Address of current displayed procedure.")
 (defvar mds-ss-arrow-position nil "Marker for state arrow.")
 (defvar mds-ss-show-args-flag nil "Non-nil means show args when entering a procedure.")
 (defvar mds-ss-dead-flag      nil "Non-nil means this is the ss-dead buffer.")
@@ -147,7 +147,7 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-ss-procname ""
 	    mds-ss-state "1"
 	    buffer-read-only 't)
-      (if mds-truncate-lines
+      (if mds-truncate-lines-flag
 	  (toggle-truncate-lines 1)))
     buf))
 
@@ -448,16 +448,16 @@ This is specialized to work with a few routines; needs to be generalized."
 (defun mds-ss-block-input ()
   "If input is allowed block further input.
 Otherwise raise error indicating Maple is not available."
-  (if (or (not mds-wait-until-ready)
+  (if (or (not mds-wait-until-ready-flag)
 	  (mds-client-get-allow-input mds-client))
       (mds-client-set-allow-input mds-client nil)
     (beep)
     (message "Maple busy or debugging finished")))
 
 (defun mds-toggle-wait-until-ready ()
-  "Toggle the configuration variable `mds-wait-until-ready'."
+  "Toggle the configuration variable `mds-wait-until-ready-flag'."
   (interactive)
-  (setq mds-wait-until-ready (not mds-wait-until-ready)))
+  (setq mds-wait-until-ready-flag (not mds-wait-until-ready-flag)))
 
 ;;}}}
 
@@ -909,13 +909,13 @@ See `mds-monitor-toggle'."
 ;;{{{ (*) Miscellaneous
 
 (defun mds-ss-refresh (&optional client)
-  "Refresh the showstat buffer."
+  "Refresh the showstat buffer for CLIENT."
   (interactive)
   (unless client (setq client mds-client))
   (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
 
 (defun mds-goto-current-state (&optional client)
-  "Move cursor to the current state in the code buffer."
+  "Move cursor to the current state in the code buffer for CLIENT."
   (interactive)
   (unless client (setq client mds-client))
   (if (and (mds-client-use-lineinfo-p client)
@@ -965,7 +965,7 @@ otherwise do so in the `mds-ss-buffer'."
   (interactive)
   (info "mds"))
 
-(defun mds-toggle-quiet (&optional set)
+(defun mds-toggle-quiet ()
   "Toggle the quiet mode, which suppresses normal output of executed statements."
   (interactive)
   (mds-ss-eval-expr
@@ -1142,7 +1142,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle code view"              mds-wm-toggle-code-view t]
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
-       ["Toggle mds-wait-until-ready"   mds-toggle-wait-until-ready t]
+       ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
        ["Toggle mds-stop-trace-at-error-flag"   mds-toggle-stop-trace-at-error-flag t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]
