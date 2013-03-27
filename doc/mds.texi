@@ -685,6 +685,7 @@ option to @code{mdc} is true.
 @kindex t
 @findex mds-trace
 @vindex mds-stop-trace-at-error-flag
+@cindex tracing
 @anchor{tracing}
 @item t (@command{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
