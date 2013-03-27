@@ -1,3 +1,8 @@
+;;; mds-thing.el --- Create mds things
+
+
+;;; Commentary:
+;; 
 
 (require 'thingatpt)
 
@@ -7,6 +12,8 @@
 ;;   (interactive)
 ;;   (let ((procname (thing-at-point 'procname)))
 ;;     (message procname)))
+
+;;; Code:
 
 (defun mds-thing-bounds-of-procname-at-point ()
   "Return the start and end points of the procedure name at point.
@@ -43,4 +50,4 @@ buffer."
 
 (provide 'mds-thing)
 
-;; mds-thing.el ends here
+;;; mds-thing.el ends here

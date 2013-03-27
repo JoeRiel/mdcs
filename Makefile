@@ -39,7 +39,7 @@ endif
 MINT := mint
 
 CP := cp --archive
-BROWSER := firefox
+BROWSER := x-www-browser
 MAKEINFO := makeinfo
 MKDIR := mkdir -p
 MTAGS := mtags

@@ -23,7 +23,7 @@
 @copying
 MDS is an Emacs package that implements a Maple Debugger Server.
 It is part of the Maple Debugger Client/Server Architecture. 
-Maple is a computer algebra system from Maplesoft Inc.
+Maple is a computer algebra system from @w{Waterloo Maple Inc}.
 
 This manual is for MDS version @value{VERSION}.
 
@@ -62,59 +62,81 @@ Texts.  A copy of the license is included in the section entitled
 @end ifnottex
 
 @menu
-* Introduction::                Installing and configuring
-* Launching MDS::               Starting and stopping the server
-* Showstat Buffer::             Stepping through code
-* Output Buffer::               Maple output
-* Debugging Tips::              Tips and technique
-* Main Index::                  The main index 
-* Key Index::                   Key bindings and where they are described
-* Command and Variable Index::  Indices of commands and variables
+* Introduction::                Installing and configuring.
+* Launching MDS::               Starting and stopping the server.
+* Showstat Buffer::             Stepping through interpreted code.
+* LineInfo Buffer::             Stepping through source code.
+* Output Buffer::               Maple output.
+* Debugging Tips::              Tips and technique.
 
-* GNU Free Documentation License::  Copying this manual
+Indices
+
+* Key Index::                   Key bindings and where they are described.
+* Function Index::              Functions mentioned in the manual.
+* Variable Index::              Variables mentioned in the manual.
+* Concept Index::               Concepts and features.
+
+License
+
+* GNU Free Documentation License::  Copying this manual.
 
 @detailmenu
  --- The Detailed Node Listing ---
 
 Introduction
 
-* Summary::                     Summary of what MDS does
-* Requirements::                What is needed to run MDS
-* Installation::                How to install MDS
-* Configuration::               How to configure MDS
-* Customization::               Customize MDS variables
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
 * Feedback::                    Bug reports, ideas, etc.
 
 Configuration
 
-* Emacs::                       Configuring @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}.
 
 Showstat Buffer
 
-* Live Showstat Buffer::        
-* Dead Showstat Buffer::        
-* Showstat Mode::               
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
 
 Showstat Mode
 
-* Execution::                   Executing procedure statements
-* Status::                      Determining debugger status
-* Breakpoints::                 Setting and clearing breakpoints
-* Watchpoints::                 Setting and clearing watchpoints
-* Evaluation::                  Evaluating expressions
-* Miscellaneous::               Miscellaneous commands
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
 * Monitoring::                  
-* Patching::                    Live patching Maple procedures
-* Help::                        Getting help
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
+
+LineInfo Buffer
+
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Bugs.
+
+LineInfo Caveats
+
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use @code{uses}.
+* Declaration Self-Assignment::  Avoid this undocumented feature.
 
 Output Buffer
 
 * Output buffer commands::      
 
-Command and Variable Index
+Debugging Tips
 
-* Command Index::               An index of commands
-* Variable Index::              An index of variables
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where expression originate.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
 
 @end detailmenu
 @end menu
@@ -124,11 +146,11 @@ Command and Variable Index
 @cindex introduction
 
 @menu
-* Summary::                     Summary of what MDS does
-* Requirements::                What is needed to run MDS
-* Installation::                How to install MDS
-* Configuration::               How to configure MDS
-* Customization::               Customize MDS variables
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
 * Feedback::                    Bug reports, ideas, etc.
 @end menu
 
@@ -218,13 +240,14 @@ This permits testing changes without access to the full source code.
 MDS should work with earlier versions of Emacs but has not been tested.
 @item Maple 14+  
 MDS should work with earlier versions of Maple but has not been tested.
+Some features, such as the line-info buffer, see @ref{LineInfo Buffer},
+are only available on Maple 16+.
 @item MapleV mode
 An Emacs mode for developing Maple source code.
 If you use Maple with Emacs, you definitely want to have this,
 regardless whether you use MDS.
-See 
-@url{http://www.mapleprimes.com/blog/joe-riel/emacs-mode-for-maple}
-for a recent version.
+The latest version is available at
+@url{https://github.com/JoeRiel/maplev}.
 Debian and Ubuntu provide a version with the @file{emacs-goodies-el}
 package, but it is dated.
 @end table
@@ -251,7 +274,7 @@ to run MDS.
 
 
 @menu
-* Emacs::                       Configuring @file{.emacs}
+* Emacs::                       Configuring @file{.emacs}.
 @end menu
 
 @node Emacs,  , Configuration, Configuration
@@ -287,8 +310,13 @@ commands to the @key{f12} and @key{CTRL}-@key{f12} keystrokes, do
 (global-set-key [C-f12] 'mds-windows-cycle-groups)
 @end example
 
+If you use MDS frequently, you may want to start 
+the server in your @file{.emacs} file.  Do this 
+by adding the command
 
-
+@example
+(mds) ; launch Maple Debugger Server
+@end example
 
 @node Customization, Feedback, Configuration, Introduction
 @comment  node-name,  next,  previous,  up
@@ -305,7 +333,7 @@ The most useful customizations are the following:
 @table @asis
 
 @vindex mds-get-focus-function
-@item @code{mds-get-focus-function}
+@item @command{mds-get-focus-function}
 A function that calls the window manager to transfer
 focus to Emacs.  This is called when a Maple client begins debugging.
 The default is nil unless the command @command{wmctrl}
@@ -335,11 +363,12 @@ The default value is nil.
 
 @vindex mds-show-args-flag
 @findex mds-toggle-show-args
-@item @code{mds-show-args-flag}
+@item @command{mds-show-args-flag}
 A boolean variable that when non-nil causes the arguments
 to a procedure to be automatically displayed when first
 entering the procedure.  The default displays arguments.
-The command @code{mds-toggle-show-args} toggles this variable.
+The command @command{mds-toggle-show-args} toggles this flag.
+@findex mds-toggle-show-args
 
 @vindex mds-stop-trace-at-error-flag
 @findex mds-toggle-stop-trace-at-error
@@ -351,7 +380,8 @@ an error occurs while tracing.
 @xref{tracing}.
 The default is to stop.
 The command @code{mds-toggle-stop-trace-at-error}
-toggles this variable.
+toggles this flag.
+@findex mds-toggle-stop-trace-at-error
 
 @vindex mds-track-input-flag
 @findex mds-toggle-track-input
@@ -359,20 +389,25 @@ toggles this variable.
 A boolean value that, when non-nil, causes the input line of
 the procedure being debugged to be echoed to the output buffer
 when the line is executed.  The default echos the line.
-The command @code{mds-toggle-track-input} toggles this variable.
+The command @code{mds-toggle-track-input} toggles this flag.
+@findex mds-toggle-track-input
 
-@vindex mds-truncate-lines
-@item @code{mds-truncate-lines}
+@vindex mds-truncate-lines-flag
+@item @code{mds-truncate-lines-flag}
 A boolean value that, when non-nil, causes lines in the showstat and 
 output windows to be truncated at the right edge of the screen 
 rather than wrapping.  The default truncates lines.
+The command @command{mds-toggle-truncate-lines} toggles this flag.
+@findex mds-toggle-truncate-lines
 
-@vindex mds-wait-until-ready
-@item @code{mds-wait-until-ready}
+@vindex mds-wait-until-ready-flag
+@item @code{mds-wait-until-ready-flag}
 A boolean value that, when non-nil, forces the debugger to wait until
 a prompt has been received to send the user's response.  Setting it
 to nil allows pipe-lining responses, but prevents a notification when
 the debugger has exited.  The default is to wait for a prompt.
+This flag is toggled with the command @command{mds-toggle-wait-until-ready}.
+@findex mds-toggle-wait-until-ready
 
 @vindex mds-wm-side-by-side
 @item @code{mds-wm-side-by-side}
@@ -427,7 +462,7 @@ which displays Maple output during debugging.
 @findex mds-stop
 To stop the server, use @kbd{M-x mds-stop}.
 
-@node Showstat Buffer, Output Buffer, Launching MDS, Top
+@node Showstat Buffer, LineInfo Buffer, Launching MDS, Top
 @chapter Showstat Buffer
 @cindex showstat buffer
 
@@ -438,9 +473,9 @@ Both use @code{mds-showstat-mode}, though some commands are handled
 differently.
 
 @menu
-* Live Showstat Buffer::        
-* Dead Showstat Buffer::        
-* Showstat Mode::               
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
 @end menu
 
 @node Live Showstat Buffer, Dead Showstat Buffer, Showstat Buffer, Showstat Buffer
@@ -510,15 +545,15 @@ The following sections describe these bindings and commands.
 They are grouped according to function.
 
 @menu
-* Execution::                   Executing procedure statements
-* Status::                      Determining debugger status
-* Breakpoints::                 Setting and clearing breakpoints
-* Watchpoints::                 Setting and clearing watchpoints
-* Evaluation::                  Evaluating expressions
-* Miscellaneous::               Miscellaneous commands
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
 * Monitoring::                  
-* Patching::                    Live patching Maple procedures
-* Help::                        Getting help
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
 @end menu
 
 @node Execution, Status, Showstat Mode, Showstat Mode
@@ -549,14 +584,14 @@ The following table describes each of the execution commands.
 
 @kindex c
 @findex mds-cont
-@item c (@code{mds-cont})
+@item c (@command{mds-cont})
 Continue: run until the next breakpoint or watchpoint, or until the program terminates.
 
 @kindex g
 @kindex @kbd{C-u g}
 @findex mds-goto-procname
 @anchor{mds-goto-procname}
-@item g (@code{mds-goto-procname})
+@item g (@command{mds-goto-procname})
 Goto a procedure, that is, skip until the selected procedure is active.
 The name of the procedure is surmised from the code at point; if no function
 call if found, the name is queried in the minibuffer.  If called
@@ -572,7 +607,7 @@ it was called; @pxref{mds-goback-save}.
 @kindex h
 @findex mds-here
 @anchor{mds-here}
-@item h (@code{mds-here})
+@item h (@command{mds-here})
 Execute code until the statement at which the command was executed
 is reached.  This is similar to setting a breakpoint at the
 statement, then continuing, however, it uses the skipping mechanism
@@ -592,16 +627,16 @@ it was called; @pxref{mds-goback-save}.
 
 @kindex i
 @findex mds-into
-@item i (@code{mds-into})
-Into: halfway between @code{next} (@code{n}) and @code{step}
-(@code{s}).  Executes the next statement.  Execution stops before the
+@item i (@command{mds-into})
+Into: halfway between @command{next} (@kbd{n}) and @command{step}
+(@kbd{s}).  Executes the next statement.  Execution stops before the
 following statement within the current function, regardless of whether
 it is at the current nesting level or in the body of a control
 structure. Execution does not stop in a called function.
 
 @kindex n
 @findex mds-next
-@item n (@code{mds-next})
+@item n (@command{mds-next})
 Next: execute the next statement.  If the statement
 is a control structure (for example, @code{if} or @code{for}), it is
 executed in its entirety before execution stops again. Likewise, if
@@ -611,7 +646,7 @@ Debugger as though a breakpoint had been set.
 
 @kindex o
 @findex mds-outfrom
-@item o (@code{mds-outfrom})
+@item o (@command{mds-outfrom})
 Outfrom: execute until the current statement sequence has finished, or
 until a breakpoint or watchpoint is encountered. If this command is
 executed while stopped in a loop, execution continues until just
@@ -624,18 +659,18 @@ before the first statement to be executed after the closing @code{end if}.
 
 @kindex q
 @findex mds-quit
-@item q (@code{mds-quit})
+@item q (@command{mds-quit})
 Quit: terminate debugging.
 
 @kindex r
 @findex mds-return
-@item r (@code{mds-return})
+@item r (@command{mds-return})
 Return: execute statements until the first statement to be executed
 after the currently executing procedure returns.
 
 @kindex s
 @findex mds-step
-@item s (@code{mds-step})
+@item s (@command{mds-step})
 Step: execute the next statement at any level.  Execution stops before
 the following statement, regardless of whether it is at the current
 nesting level, in the body of a control structure (for example,
@@ -643,15 +678,16 @@ nesting level, in the body of a control structure (for example,
 
 @kindex S
 @findex mds-skip
-@item S (@code{mds-skip})
+@item S (@command{mds-skip})
 Skip forward until the predicate assigned by the @code{skip_until}
 option to @code{mdc} is true.
 
 @kindex t
 @findex mds-trace
 @vindex mds-stop-trace-at-error-flag
+@cindex tracing
 @anchor{tracing}
-@item t (@code{mds-trace})
+@item t (@command{mds-trace})
 Cycle through tracing modes.  The selected tracing mode, 
 @strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
 determines where the debugger temporarily halts and what output 
@@ -670,7 +706,7 @@ moving to places of interest.
 
 @kindex @key{SPACE}
 @findex mds-send-last-command
-@item @key{SPACE} (@code{mds-send-last-command})
+@item @key{SPACE} (@command{mds-send-last-command})
 Re-execute the last command that executed a program statement.
 The saved commands are
 @command{cont},
@@ -684,7 +720,7 @@ and
 
 @kindex @kbd{C-c C-c}
 @findex mds-kill-maple
-@item C-c C-c (@code{mds-kill-maple})
+@item C-c C-c (@command{mds-kill-maple})
 Kill the maple process.
 This can be used to stop a runaway Maple computation (say an infinite loop).
 @strong{This currently is not implemented.}
@@ -702,7 +738,7 @@ of the debugger.
 
 @kindex k
 @findex mds-showstack
-@item k (@code{mds-showstack})
+@item k (@command{mds-showstack})
 Showstack: display an abbreviated form of the calling stack.
 Only the names of the procedures are shown.  The name of the current
 procedure is not shown.  Each name is an active link.  Clicking on a link
@@ -710,7 +746,7 @@ procedure is not shown.  Each name is an active link.  Clicking on a link
 
 @kindex K
 @findex mds-where
-@item K (@code{mds-where})
+@item K (@command{mds-where})
 Where: display the calling stack. 
 The latest entry is shown last.
 For each entry in the stack,
@@ -722,25 +758,25 @@ For example @kbd{C-u 2 K} displays the topmost (most recent) two entries.
 The procedure names are active links.  Clicking on a link opens the
 procedure in the @strong{showstat dead} buffer, at the calling line.  
 Breakpoints can be set in the opened procedure.
-Use @code{M-x mds-goto-current-state} (@kbd{l})
+Use @command{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
 
 @kindex p
 @findex mds-showstop
-@item p (@code{mds-showstop})
+@item p (@command{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
 @kindex x
 @findex mds-showexception
-@item x (@code{mds-showexception})
+@item x (@command{mds-showexception})
 Showexception: display the value of @code{lastexception}.
 The output is formatted;
 to see the raw exception, use @kbd{C-u x}.
 
 @kindex X
 @findex mds-showerror
-@item X (@code{mds-showerror})
+@item X (@command{mds-showerror})
 Showerror: display the value of @code{lasterror}.
 The output is formatted;
 to see the raw exception, use @kbd{C-u X}.
@@ -765,14 +801,14 @@ A statement with a breakpoint has an asterisk to the right of the statement numb
 
 @kindex b
 @findex mds-breakpoint
-@item b (@code{mds-breakpoint})
+@item b (@command{mds-breakpoint})
 Stopat:  Set a breakpoint at the start of the statement at the cursor.
 An asterisk appears to the right of the statement number.
 The debugger is halted each time it reaches the statement.
 
 @kindex B
 @findex mds-breakpoint-cond
-@item B (@code{mds-breakpoint-cond})
+@item B (@command{mds-breakpoint-cond})
 Stopat-cond:  Set a conditional breakpoint at the start of the statement at the cursor.
 The condition is entered in the mini-buffer.  It must be a Maple boolean expression.
 A question mark appears to the right of the statement number.
@@ -781,30 +817,30 @@ The debugger is halted each time it reaches the statement and the condition eval
 @kindex G
 @findex mds-goback-save
 @anchor{mds-goback-save}
-@item G (@code{mds-goback-save})
+@item G (@command{mds-goback-save})
 Save the statement at point as a @strong{goback} point.  You may return
 to a goback point, after exiting the debugger, by executing
 @code{mdc(goback)} in the Maple client and then entering the debugger
 by executing the debugged Maple command.
 
-If @code{mds-goback-save} is executed in the dead showstat buffer,
+If @command{mds-goback-save} is executed in the dead showstat buffer,
 @pxref{Dead Showstat Buffer}, the goback point is set in the
 corresponding procedure.
 
-The goback point is overwritten when @code{mds-goto-procname},
-@pxref{mds-goto-procname}, or @code{mds-here}, @pxref{mds-here}, are
+The goback point is overwritten when @command{mds-goto-procname},
+@pxref{mds-goto-procname}, or @command{mds-here}, @pxref{mds-here}, are
 called because they also save the goback point, to permit recovery.
 
 @kindex p
 @findex mds-showstop
-@item p (@code{mds-showstop})
+@item p (@command{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.  Conditional breakpoints are
 not included.
 
 @kindex u
 @findex mds-unstopat
-@item u (@code{mds-unstopat})
+@item u (@command{mds-unstopat})
 Unstopat: Clear a breakpoint at the start of the statement at the cursor.
 
 @end table
@@ -837,21 +873,21 @@ Note that a global watchpoint must be reset each time the procedure is debugged.
 
 @kindex I
 @findex mds-stopwhenif
-@item I (@code{mds-stopwhenif})
+@item I (@command{mds-stopwhenif})
 stopwhenif:  Set a conditional watchpoint on the specified global variable.
 The variable name and conditional value are entered separately in the mini-buffer.
 Use @kbd{C-u W} to clear a conditional watchpoint.
 
 @kindex p
 @findex mds-showstop
-@item p (@code{mds-showstop})
+@item p (@command{mds-showstop})
 Showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
 
 @kindex w
 @kindex C-u w
 @findex mds-stopwhen-local
-@item w (@code{mds-stopwhen-local})
+@item w (@command{mds-stopwhen-local})
 stopwhen: Set a local watchpoint.   
 The variable name is entered in the mini-buffer.
 Use @kbd{C-u w} to clear a local watchpoint.
@@ -859,7 +895,7 @@ Use @kbd{C-u w} to clear a local watchpoint.
 
 @kindex W
 @findex mds-stopwhen-global
-@item W (@code{mds-stopwhen-global})
+@item W (@command{mds-stopwhen-global})
 stopwhen: Set a global watchpoint. 
 The variable name is entered in the mini-buffer.
 Use @kbd{C-u W} to clear a global watchpoint.
@@ -879,33 +915,33 @@ MDS can evaluate expressions using the current context of Maple.
 
 @kindex a
 @findex mds-args
-@item a (@code{mds-args})
+@item a (@command{mds-args})
 Display the arguments of the current procedure as a vertical list of values.
 
 @kindex A
 @findex mds-show-args-as-equations
-@item A (@code{mds-show-args-as-equations})
+@item A (@command{mds-show-args-as-equations})
 Display the arguments of the current procedure as a vertical list of equations.
 The left-side of each equation is the formal parameter, 
 the right-side is the value.
 
 @kindex e
 @findex mds-eval-and-display-expr
-@item e (@code{mds-eval-and-display-expr})
+@item e (@command{mds-eval-and-display-expr})
 Evaluate an expression in the current context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
 
 @kindex E
 @findex mds-eval-and-display-expr-global
-@item E (@code{mds-eval-and-display-expr-global})
+@item E (@command{mds-eval-and-display-expr-global})
 Evaluate an expression in the global context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
 
 @kindex .
 @findex mds-eval-and-prettyprint
-@item . (@code{mds-eval-and-prettyprint})
+@item . (@command{mds-eval-and-prettyprint})
 Evaluate an expression and prettyprint the result.
 The pretty-printing depends on the type of the evaluated expression.
 The first line of the display (after the echoing of the expression)
@@ -929,8 +965,8 @@ c = NULL
 
 @kindex ,
 @findex mds-eval-and-prettyprint-prev
-@item . (@code{mds-eval-and-prettyprint-prev})
-Works like @code{mds-eval-and-prettyprint} but uses expression at previous line
+@item . (@command{mds-eval-and-prettyprint-prev})
+Works like @command{mds-eval-and-prettyprint} but uses expression at previous line
 (skipping useless lines).
 
 @end table
@@ -943,7 +979,7 @@ Works like @code{mds-eval-and-prettyprint} but uses expression at previous line
 
 @kindex L
 @findex mds-ss-refresh
-@item L (@code{mds-ss-refresh})
+@item L (@command{mds-ss-refresh})
 Refresh the procedure.
 This is frequently needed after patching a procedure
 (@pxref{Patching}).
@@ -952,7 +988,7 @@ that happens only if the name of the procedure has changed.
 
 @kindex T
 @findex mds-toggle-truncate-lines
-@item T (@code{mds-toggle-truncate-lines})
+@item T (@command{mds-toggle-truncate-lines})
 Toggle the truncating/wrapping of long lines. 
 With prefix argument (@kbd{C-u T}) do so in the @emph{debugger output buffer}.
 
@@ -973,12 +1009,12 @@ of the procedure.
 @table @asis
 @kindex m
 @findex mds-monitor-toggle
-@item m (@code{mds-monitor-toggle})
+@item m (@command{mds-monitor-toggle})
 Toggle the monitoring operation.
 
 @kindex M
 @findex mds-monitor-define
-@item M (@code{mds-monitor-define})
+@item M (@command{mds-monitor-define})
 Define a monitor expression for the current procedure.
 With prefix argument (@kbd{C-u M}) the monitor expression
 applies to all procedure.  Both types of monitor expressions
@@ -998,19 +1034,19 @@ The following commands are currently assigned.
 @kindex P
 @findex mds-patch
 @findex mds-patch-mode
-@item P (@code{mds-patch})
+@item P (@command{mds-patch})
 Patch a procedure.  This is executed from the live showstat buffer.
 It opens a buffer that contains a copy of the current procedure.
 The name of the buffer is that of the procedure.
 The buffer has major-mode @code{mds-patch-mode}, which is
 a derivative of @code{maplev-mode}.  
 @inforef{Top,,maplev}.
-Edit this buffer as desired then execute @code{mds-patch-install}
+Edit this buffer as desired then execute @command{mds-patch-install}
 to install the patch.
 
 @kindex @kbd{C-c C-p}
 @findex mds-patch-install
-@item @kbd{C-c C-p} (@code{mds-patch-install})
+@item @kbd{C-c C-p} (@command{mds-patch-install})
 Install the patch in the patch buffer.
 This is executed from the patch buffer.
 
@@ -1023,13 +1059,13 @@ The following steps explain how to patch a procedure.
 Stop the debugger in the procedure to be patched.
 @findex mds-patch
 @item
-Execute @code{mds-patch} (@kbd{P}).
+Execute @command{mds-patch} (@kbd{P}).
 This opens a buffer that contains a copy of the procedure.
 @item
 Edit the procedure.
 @findex mds-patch-install
 @item
-Execute @code{mds-patch-install}
+Execute @command{mds-patch-install}
 (@kbd{C-c C-p}, or use the @strong{Install} entry in the @strong{Patch} menu).
 @item
 Return to the Maple debugger showstat buffer.
@@ -1072,32 +1108,257 @@ Display the help for this mode.
 
 @kindex H
 @findex mds-info
-@item H (@code{mds-info})
+@item H (@command{mds-info})
 Open the @command{info} document for MDS mode (this document).
 
 @kindex C-?
 @findex maplev-help-at-point
-@item C-? (@code{maplev-help-at-point})
+@item C-? (@command{maplev-help-at-point})
 Display a Maple help page.  The topic is entered in the mini-buffer,
 with the default the word under the cursor.
 
 @kindex M-?
 @findex maplev-proc-at-point
-@item M-? (@code{maplev-proc-at-point})
+@item M-? (@command{maplev-proc-at-point})
 Display a Maple procedure.  The procedure name is entered in the mini-buffer,
 with the default the word under then cursor.
 
 @end table
 
+@node LineInfo Buffer, Output Buffer, Showstat Buffer, Top
+@chapter LineInfo Buffer
+@cindex lineinfo buffer
+
+The line-info buffer displays the source file of the 
+current Maple procedure during debugging.  An arrow in the
+left margin points to the current line in the procedure.
+
+This mode uses an undocumented, experimental feature of Maple 16.
+As such, there are a few limitations with using it.
+
+@menu
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Bugs.
+@end menu
+
+@node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
+@section Accessing LineInfo
+@cindex Accessing LineInfo
+
+The line-info buffer is active whenever line-info data is available for
+a procedure.  Line-info data is available when a Maple source file
+is read into Maple, either with the Maple @code{read} command, or by
+passing the file as input to tty Maple.
+
+The line-info data stores the location of the source file relative to
+the current directory.  If the code being debugged changes current
+directory, the line-info source file may become inaccessible, in which
+case the debugger switches to the showstat buffer (interpreted
+code-view).  To avoid this, use an absolute path to the source file.
 
 
-@node Output Buffer, Debugging Tips, Showstat Buffer, Top
+@node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
+@section LineInfo Mode
+@cindex LineInfo Mode
+
+The line-info buffer has the major mode @code{mds-li-mode},
+which binds the same keys as @code{mds-showstat-mode}
+to equivalent commands; see @ref{Showstat Mode}.
+In addition, it provides the following commands:
+
+@table @asis
+
+@kindex v
+@findex mds-wm-toggle-code-view
+@item v (@command{mds-wm-toggle-code-view})
+
+Toggle the code-view between the interpreted-code (showstat-live buffer)
+and source-code (line-info buffer).
+This command (and key) can be used in the showstat-live buffer to return
+to the line-info buffer.
+
+Toggling is useful to verify that source-code has been interpreted properly.
+There are a few constructs that currently are not handled by the line-info
+feature; @ref{LineInfo Caveats}.
+
+
+@kindex G
+@findex mds-li-open-source-at-point
+@item G (@command{mds-li-open-source-at-point})
+
+Open the file associated with current procedure.
+
+@end table
+
+@node LineInfo Caveats,  , LineInfo Mode, LineInfo Buffer
+@section LineInfo Caveats
+@cindex LineInfo Caveats
+
+There are a few known bugs with the line-info feature.
+
+@menu
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use @code{uses}.
+* Declaration Self-Assignment::  Avoid this undocumented feature.
+@end menu
+
+@node  Preprocessor macros, for-less do-loops, LineInfo Caveats, LineInfo Caveats
+@subsection Preprocessor macros
+@cindex Preprocessor macros
+
+Preprocessor macro definitions that expand to more than one Maple statement
+are not handled properly.  Avoid these when writing Maple source code.
+For example, 
+
+@example
+$define CB  "cbSignalStrength"                # this is okay
+$define IF(x) if x<0 then 1 else 2 end if     # this is not
+@end example
+
+
+@node for-less do-loops, use statement, Preprocessor macros, LineInfo Caveats
+@subsection for-less do-loops
+@cindex for-less do-loops
+
+A @strong{for}-less @strong{do}-loop does not store the data for the @strong{do}
+statement.  This causes the debugger to automatically switch to the
+showstat buffer when the current statement is the @strong{do} statement.
+The debugger switches back to the lineinfo buffer when the @strong{do}
+statement is no longer active.
+
+For an example, see the following code.  When the cursor reaches the
+marked statement, the debugger switches to the showstat buffer.  If an
+@strong{into} debugger command is then executed, the assignment
+statement, @code{x[i] := i+1}, becomes the active statement and the
+debugger switches back to the line-info buffer.
+
+@example
+@anchor{do-loop}
+@iftex
+    i := 1;
+=>  @strong{while} i < 5 @strong{do}
+        x[i] := i+1;
+    @strong{end do};
+@end iftex
+@ifinfo
+    i := 1;
+=>  while i < 5 do
+        x[i] := i+1;
+    end do;
+@end ifinfo
+@end example
+
+@node use statement, Declaration Self-Assignment, for-less do-loops, LineInfo Caveats
+@subsection use statement
+@cindex use statement
+
+The line-info data generated for a procedure
+with a @strong{use}-statement is incorrect.
+Use the @strong{uses} statement instead.
+
+For example, instead of 
+
+@example
+f := proc(M :: Matrix, X :: Vector)
+local V;
+    use LA = LinearAlgebra in
+        V := LA:-LinearSolve(A,X);
+    end use;
+end proc;
+@end example
+
+@noindent do this.
+
+@example
+f := proc(M :: Matrix, X :: Vector)
+local V;
+uses LA = LinearAlgebra;
+    V := LA:-LinearSolve(A,X);
+end proc;
+@end example
+
+@node Declaration Self-Assignment,  , use statement, LineInfo Caveats
+@subsection Declaration Self-Assignment
+
+Maple 16 has an undocumented feature such that if, in a local
+declaration, a variable is assigned to itself, the assignment is removed
+from the interpreted procedure.  The purpose of this is prevent a mint
+warning of an unused variable if the variable is not assigned in the
+procedure body; this frequently happens with an index to a @code{seq}
+procedure.  For example, one might do
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x := x; # dummy assignment to avoid mint nag
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x := x; # dummy assignment to avoid mint nag
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+This is interpreted by Maple as
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x; # note the assignment is removed
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x;
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+The line-info data for such a procedure is incorrect.  To avoid this, do
+not use this feature in your source code.  If debugging a Maple procedure
+that uses this, switch to viewing interpreted code.
+
+To avoid a mint warning without using this feature, use a preprocessor
+conditional that is enabled only during mint, say by assigning the
+preprocessor variable @code{MINT_ONLY} in the mint resource file
+(@file{.mintrc}).  For example,
+
+@example @asis
+@iftex
+f := @strong{proc}(X)
+@strong{local} x;
+$ifdef MINT_ONLY
+    x := NULL;
+$endif
+    seq(x, x = X);
+@strong{end proc};
+@end iftex
+@ifinfo
+f := proc(X)
+local x;
+$ifdef MINT_ONLY
+    x := NULL;
+$endif
+    seq(x, x = X);
+end proc;
+@end ifinfo
+@end example
+
+
+@node Output Buffer, Debugging Tips, LineInfo Buffer, Top
 @chapter Output Buffer
 @cindex output buffer
 
 
-The output buffer displays Maple output during debugging.  
-It also echos the user input, and optionally, the input statements executed.
+The output buffer displays Maple output during debugging.  It also echos
+the user input, and optionally, the input statements executed.
 
 The following is representative of the output buffer content
 
@@ -1119,7 +1380,7 @@ Debugger commands that evaluate program code are echoed in the buffer.
 If the @code{mds-track-input-flag} variable is non-nil, 
 the corresponding statement is printed after the debugger command.  
 This provides a visual trace of the commands executed.
-Use @code{mds-toggle-track-input} to toggle the variable.
+Use @command{mds-toggle-track-input} to toggle the variable.
 
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
@@ -1138,12 +1399,20 @@ does not change.
 
 
 
-@node  Debugging Tips, Main Index, Output Buffer, Top
+@node  Debugging Tips, Key Index, Output Buffer, Top
 @chapter Debugging Tips
 @cindex debugging tips
 
+@menu
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where an expression originates.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
+@end menu
 
+@node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
 @section Set breakpoint in calling procedure
+@cindex Set breakpoint in calling procedure
 
 After using @command{stoperror} to stop the debugger at the location of
 an error, you realize that the real problem lies in an ``upstream''
@@ -1151,7 +1420,7 @@ procedure.  To debug it, you want to set a breakpoint in that procedure.
 
 @enumerate
 @item
-Use the @command{mds-where} command (@kbd{W}) to display the
+Use the @command{mds-where} command (@kbd{K}) to display the
 stack contents in the output buffer.
 
 @item
@@ -1160,15 +1429,18 @@ displayed in the showstat-dead buffer
 
 @item
 In the showstat-dead buffer, set a breakpoint at an appropriate
-statement in the calling procedure.
+statement in the calling procedure.  Do this by putting the cursor
+on the appropriate statement and executing @command{mds-breakpoint} (@kbd{b}).
 
 @item
-Quit the debugger (@kbd{q}) and reexecute the code in Maple.  
+Quit the debugger (@kbd{q}) and re-execute the code in Maple.  
 The debugger will halt in the procedure of interest.
 
 @end enumerate
 
+@node  Locate source of unexpected result, Assign a variable, Set breakpoint in calling procedure, Debugging Tips
 @section Locate source of unexpected result
+@cindex Locate source of unexpected result
 
 A computation gives the wrong result, but it is not apparent which
 procedure, or what line of code, is the culprit. 
@@ -1187,34 +1459,66 @@ See the examples in the @code{mdc[SkipUntil]} help page, in Maple.
 With a predicate assigned, skip to the condition by typing
 @kbd{S} in the showstat buffer.
 
+@node Assign a variable, Save a local result, Locate source of unexpected result, Debugging Tips
+@section Assign a variable
+@cindex Assign a variable
 
-@node Main Index, Key Index, Debugging Tips, Top
-@unnumbered Main Index
-@printindex cp
+To assign to a Maple variable, evaluate an assignment statement using
+the command @command{mds-eval-and-display-expr}, which is mapped to the
+@kbd{e} key.  For example, @kbd{e x := 1 @key{RET}} assigns 1 to the
+variable @code{x}.  If @code{x} is a local variable, the local variable
+is reassigned; this is useful for temporarily altering the operation of
+a procedure.  If @code{x} is not a local variable, a global variable is
+assigned; this is useful for making an internal value available for
+further manipulation after exiting the debugger.
 
-@node Key Index, Command and Variable Index, Main Index, Top
+To assign the value of a local variable to a global variable with the
+same name, use the Maple @command{assign} procedure; for example,
+evaluate @code{assign(:-x,x)} to assign the value of the local variable
+@code{x} to the global variable @code{:-x}.
+
+@node Save a local result,  , Assign a variable, Debugging Tips
+@section Save a local result
+@cindex Save a local result
+
+While debugging, it is frequently useful to save a local result to an
+external file so that it can be manipulated afterwards.
+One way to do this is to first save the result to a global
+variable, @ref{Assign a variable}, then save the global
+to a file by evaluating the Maple @code{save} statement in a global
+context, using @code{mds-eval-and-display-expr-global},
+which is mapped to the @kbd{E} key.
+
+For example, to save the value of the local variable @code{x}
+to the file @file{/tmp/x.mpl}, do
+
+@example @asis
+e assign(:-x,x) @key{RET}
+E save x, "/tmp/x.mpl" @key{RET}
+@end example
+
+File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
+
+
+@node Key Index, Function Index, Debugging Tips, Top
 @unnumbered Key Index
 @printindex ky
 
-@node Command and Variable Index, GNU Free Documentation License, Key Index, Top
-@unnumbered Command and Variable Index
-
-@menu
-* Command Index::               An index of commands
-* Variable Index::              An index of variables
-@end menu
-
-@node Command Index, Variable Index, Command and Variable Index, Command and Variable Index
-@section Function Index
+@node Function Index, Variable Index, Key Index, Top
+@unnumbered Function Index
 @printindex fn
 
-@node Variable Index,  , Command Index, Command and Variable Index
-@section Variable Index
+@node Variable Index, Concept Index, Function Index, Top
+@unnumbered Variable Index
 @printindex vr
 
-@node GNU Free Documentation License,  , Command and Variable Index, Top
+@node Concept Index, GNU Free Documentation License, Variable Index, Top
+@unnumbered Concept Index
+@printindex cp
+
+@node GNU Free Documentation License,  , Concept Index, Top
 @appendix GNU Free Documentation License
 @include fdl.texi
 
-
+@summarycontents
 @bye

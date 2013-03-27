@@ -49,7 +49,7 @@
 (defvar mds-clients '())  ;; duplicate, here to avoid warnings
 (defvar mds-wm-grouped-clients '()
   "List of grouped clients.
-Clients which are displayed together are combined in a sublist.  
+Clients which are displayed together are combined in a sublist.
 Clients that are not grouped are not in sublists.")
 
 ;;}}}
@@ -59,7 +59,7 @@ Clients that are not grouped are not in sublists.")
 (defun mds-wm-display-live-buf ()
   "Display the live showstat buffer.
 If the buffer is already displayed, do nothing.  If the output
-buffer is diplayed, display the showstat buffer in another
+buffer is displayed, display the showstat buffer in another
 window."
   (let ((ss-buf (mds-client-live-buf mds-client)))
     (unless (get-buffer-window ss-buf) ;; what about on other frame?
@@ -229,7 +229,7 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 
 (defun mds-wm-get-focus-wmctrl ()
   "Call shell program wmctrl to give Emacs the focus.
-This is only appropriate for a linux system."
+This is only appropriate for a Linux system."
   (shell-command "wmctrl -xa emacs"))
 
 ;;}}}
@@ -253,7 +253,7 @@ This is only appropriate for a linux system."
 (defun mds-wm-select-frame-set-input-focus (frame)
   "Select FRAME, raise it, and set input focus, if possible.
 If `mouse-autoselect-window' is non-nil, and mouse is not inside
-selected window, move mouse pointer to center of FRAME's selected window.  
+selected window, move mouse pointer to center of FRAME's selected window.
 Otherwise, if `focus-follows-mouse' is non-nil, move mouse cursor to FRAME."
   (select-frame frame)
   (raise-frame frame)

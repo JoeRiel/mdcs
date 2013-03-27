@@ -1,10 +1,10 @@
-;;; mds-re.el
+;;; mds-re.el --- Assign regular expressions
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
-;; Keywords:   maple, debugger 
+;; Keywords:   maple, debugger
 ;;
 ;;; Commentary:
 
@@ -30,23 +30,26 @@
 
 ;;}}}
 
+;;; Code:
+
 (require 'rx)
 
 (defconst mds--addr-tag-re "<\\(-?[0-9]+\\)>"
-  "Regexp that matches an address tag.  The first group matches the address,
-the total match includes the delimiters.")
+  "Regexp that matches an address tag.
+The first group matches the address, the total match includes the
+delimiters.")
 
 (defconst mds--simple-name-re  "[a-zA-Z_~][a-zA-Z0-9_]*"
   "Regular expression for a simple name.")
 
 (defconst mds--quoted-name-re  "`[^`\n\\\\]*\\(?:\\\\.[^`\n\\\\]*\\)*`"
   "Regular expression for a Maple quoted name.
-It correctly handles escaped backquotes in a name, but not doubled
-backquotes.  It intentionally fails for the exceptional case where a
+It correctly handles escaped back-quotes in a name, but not doubled
+back-quotes.  It intentionally fails for the exceptional case where a
 name has a newline character.")
 
-(defconst mds--symbol-re (concat "\\(?:" 
-				 mds--simple-name-re 
+(defconst mds--symbol-re (concat "\\(?:"
+				 mds--simple-name-re
 				 "\\|"
 				 mds--quoted-name-re
 				 "\\)")
@@ -57,51 +60,52 @@ name has a newline character.")
 	  "\\(?::-" mds--symbol-re "\\)*" ; optional module components
           "\\(?:\\[[^[]]*\\]\\)*"         ; optional indices
           "\\(?:()\\|([^*][^()]*)\\)*")   ; optional arguments (crude, no parens)
-  "Regular expression for Maple names.  Unlike `maplev--name-re',
-no white-space is allowed between elements.")
+  "Regular expression for Maple names.
+Unlike `maplev--name-re', no white-space is allowed between
+elements.")
 
 (defconst mds--addr-procname-re (concat "\\(" mds--addr-tag-re "\n\\)"
 					"\\(" mds--name-re "\\)"
-					"\\(?:[: ]? *\\)") 
+					"\\(?:[: ]? *\\)")
   "Regexp that matches an address tag and procedure name.
 The address, with delimiters, is stored in group 1, just the
 address is in group 2, and the procedure name is in group 3.")
 
 (defconst mds--dbg-state-re
-  (concat mds--addr-tag-re "\n" 
+  (concat mds--addr-tag-re "\n"
 	  "\\([^\n]+\\):\n"
 	  "\\s-*\\([1-9][0-9]*\\)[ *?]"
 	  "\\(.*\\)")
   "Non-anchored regexp that matches the status output of the debugger.
 It has four groups:
-(1) address of current procedure;
-(2) name of current procedure;
-(3) state number;
-(4) statement.")
+\(1) address of current procedure;
+\(2) name of current procedure;
+\(3) state number;
+\(4) statement.")
   
 (defconst mds--debugger-status-re
   (concat "^" mds--dbg-state-re)
   "Anchored regexp that matches the status output of the debugger.
 It has four groups:
-(1) address of current procedure;
-(2) name of current procedure;
-(3) state number;
-(4) statement.")
+\(1) address of current procedure;
+\(2) name of current procedure;
+\(3) state number;
+\(4) statement.")
 
 (defconst mds--line-info-re
   (concat "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)\\(\\(?: [0-9]+\\)*\\):"
 	  mds--dbg-state-re)
-  "Anchored regexp that matches the line-info output/debug status
-output of the debugger.  It has the following groups:
-(1) filename of source;
-(2) line number in source;
-(3) character offset to beginning of statement;
-(4) character offset to end of statement;
-(5) states with breakpoints;
-(6) address of current procedure;
-(7) name of current procedure;
-(8) state number;
-(9) statement.")
+  "Anchored regexp that matches the line-info output of the debugger.
+It has the following groups:
+\(1) filename of source;
+\(2) line number in source;
+\(3) character offset to beginning of statement;
+\(4) character offset to end of statement;
+\(5) states with breakpoints;
+\(6) address of current procedure;
+\(7) name of current procedure;
+\(8) state number;
+\(9) statement.")
 	  
 
 (defconst mds-procname-assignment-re "^\\([^ \t\n]+\\) := *"
@@ -145,8 +149,8 @@ The second group matches the Maple statement.")
 
 
 (defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
-  "Regexp that matches the statement number and decoration, from the left margin,
-in a showstat buffer.")
+  "Regexp that matches the statement number and decoration in a showstat buffer.
+It is anchored to the left margin.")
 
 
 (defun mds-activate-addr-procname (&optional button)
@@ -166,4 +170,4 @@ the address and procname."
 
 (provide 'mds-re)
 
-;; mds-re.el ends here
+;;; mds-re.el ends here
