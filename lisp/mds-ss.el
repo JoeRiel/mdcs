@@ -301,6 +301,7 @@ Both go to the first match and do not check for additional matches."
 	    ;; clear buffer-local `mds-ss-statement'
 	    (setq mds-ss-statement "")
 	    (mds-ss-get-state)))))))
+
 ;;}}}
 ;;{{{ (*) mds-ss-view-dead-proc
 
@@ -477,13 +478,13 @@ Otherwise raise error indicating Maple is not available."
     (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
        (match-string-no-properties 1))))
 
-(defun mds-ss--regexp-for-statement (keyword)
-  "Return regexp that matches KEYWORD.
-The regexp includes indentation, statement number and decoration,
-given by the length of the string in the previous match-group 1."
+(defun mds-ss--regexp-for-statement (column keyword)
+  "Return regexp that matches, starting at COLUMN, KEYWORD.
+The text from left-margin to COLUMN consists of a statement number,
+optional decoration, and spaces."
   (concat "^"
-	  "[ 0-9*?]\\{"
-	  (number-to-string (length (match-string-no-properties 1)))
+	  "[ 0-9*?!]\\{"
+	  (number-to-string column)
 	  "\\}"
 	  keyword
 	  " "
@@ -495,18 +496,22 @@ For a multi-part statement (if/elif/else, try/catch), the
 beginning is the first keyword, but only when point is at one of the
 keywords."
   (beginning-of-line)
-  (cond
+  (let (column)
+    (cond
      ((looking-at "\\( *\\)el\\(if\\|se\\)\\>")
       ;; at 'elif|else': move back to 'if' at same indent
-      (re-search-backward (mds-ss--regexp-for-statement "if")))
+      (setq column (length (match-string-no-properties 1)))
+      (re-search-backward (mds-ss--regexp-for-statement column "if")))
      ((looking-at "\\( *\\)catch[ :]")
       ;; at catch: move back to 'try' at same indent
-      (re-search-backward (mds-ss--regexp-for-statement "try")))
+      (setq column (length (match-string-no-properties 1)))
+      (re-search-backward (mds-ss--regexp-for-statement column "try")))
      ((looking-at "\\( *\\)end \\([a-z]+\\)")
-      (re-search-backward (mds-ss--regexp-for-statement (match-string-no-properties 2)))))
-  (when (looking-at mds-ss-statement-re)
-    (goto-char (match-beginning 3))
-    (match-string-no-properties 1)))
+      (setq column (length (match-string-no-properties 1)))
+      (re-search-backward (mds-ss--regexp-for-statement column (match-string-no-properties 2)))))
+    (when (looking-at mds-ss-statement-re)
+      (goto-char (match-beginning 3))
+      (match-string-no-properties 1))))
 
 ;;}}}
 
