@@ -18,9 +18,9 @@
 
 ;;; Code:
 
+(require 'mds-re)
+(require 'mds-client)
 (eval-when-compile
-  (require 'mds-re)
-  (require 'mds-client)
   (defvar mds-truncate-lines-flag)
   (defvar mds-ss-show-args-flag)
   (defvar mds-ss-state nil)

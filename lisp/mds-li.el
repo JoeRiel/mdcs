@@ -34,14 +34,13 @@
 
 ;;{{{ Requirements
 
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-ss)
+(require 'mds-wm)
+(require 'maplev)
 (eval-when-compile
-  (require 'mds-client)
-  (require 'mds-custom)
-  (require 'mds-ss)
-  (require 'mds-wm)
-  (require 'maplev)
   (defvar mds-truncate-lines-flag))
-
 
 ;;}}}
 

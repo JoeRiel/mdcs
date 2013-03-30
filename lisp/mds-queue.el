@@ -40,13 +40,12 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'mds-re)
-  (require 'mds-ss)
-  (require 'mds-li)
-  (require 'mds-out)
-  (require 'mds-wm))
+(require 'mds-client)
+(require 'mds-re)
+(require 'mds-ss)
+(require 'mds-li)
+(require 'mds-out)
+(require 'mds-wm)
 
 
 ;; A queue structure consists of a single cons-cell,

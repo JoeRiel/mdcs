@@ -34,12 +34,10 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'wid-edit)
-  (require 'widget)
-  (require 'mds-wm))
-  
+(require 'mds-client)
+(require 'wid-edit)
+(require 'widget)
+(require 'mds-wm)
 
 ;;{{{ declarations
 

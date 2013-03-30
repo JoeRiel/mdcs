@@ -52,8 +52,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-custom))
+(require 'mds-custom)
 
 (declare-function mds-kill-buffer "mds")
 (declare-function mds-li-create-buffer "mds-li")

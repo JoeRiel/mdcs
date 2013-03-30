@@ -35,9 +35,8 @@
 
 ;; avoid compiler warnings
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'mds-custom))
+(require 'mds-client)
+(require 'mds-custom)
 
 (declare-function mds-ss-refresh "mds-ss")
 (declare-function mds-goto-current-state "mds-ss")

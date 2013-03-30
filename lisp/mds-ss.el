@@ -12,15 +12,14 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'hl-line)
-  (require 'maplev)
-  (require 'mds-client)
-  (require 'mds-custom)
-  (require 'mds-out)
-  (require 'mds-re)
-  (require 'mds-thing)
-  (require 'mds-wm))
+(require 'hl-line)
+(require 'maplev)
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-out)
+(require 'mds-re)
+(require 'mds-thing)
+(require 'mds-wm)
 
 ;;{{{ declarations
 
@@ -612,7 +611,6 @@ The hyperlinks in the output buffer are then active."
 ;;}}}
 ;;{{{ (*) Stop points
 
-
 (defvar mds-ss-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
 
@@ -1200,6 +1198,7 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 \\[mds-ss-refresh] refresh procedure in the buffer
 "
   :group 'mds
+  :abbrev-table nil
 
   (setq mds-ss-procname ""
 	mds-ss-state ""
