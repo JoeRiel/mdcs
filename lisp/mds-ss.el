@@ -478,41 +478,6 @@ Otherwise raise error indicating Maple is not available."
     (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
        (match-string-no-properties 1))))
 
-(defun mds-ss--regexp-for-statement (column keyword)
-  "Return regexp that matches, starting at COLUMN, KEYWORD.
-The text from left-margin to COLUMN consists of a statement number,
-optional decoration, and spaces."
-  (concat "^"
-	  "[ 0-9*?!]\\{"
-	  (number-to-string column)
-	  "\\}"
-	  keyword
-	  " "
-	  ))
-
-(defun mds-ss-beginning-of-statement ()
-  "Move to beginning of statement at point and return statement number.
-For a multi-part statement (if/elif/else, try/catch), the
-beginning is the first keyword, but only when point is at one of the
-keywords."
-  (beginning-of-line)
-  (let (column)
-    (cond
-     ((looking-at "\\( *\\)el\\(if\\|se\\)\\>")
-      ;; at 'elif|else': move back to 'if' at same indent
-      (setq column (length (match-string-no-properties 1)))
-      (re-search-backward (mds-ss--regexp-for-statement column "if")))
-     ((looking-at "\\( *\\)catch[ :]")
-      ;; at catch: move back to 'try' at same indent
-      (setq column (length (match-string-no-properties 1)))
-      (re-search-backward (mds-ss--regexp-for-statement column "try")))
-     ((looking-at "\\( *\\)end \\([a-z]+\\)")
-      (setq column (length (match-string-no-properties 1)))
-      (re-search-backward (mds-ss--regexp-for-statement column (match-string-no-properties 2)))))
-    (when (looking-at mds-re-ss-statement)
-      (goto-char (match-beginning 3))
-      (match-string-no-properties 1))))
-
 ;;}}}
 
 ;;{{{ commands
@@ -774,20 +739,18 @@ multiple lines."
     (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
 
 (defun mds-eval-and-prettyprint-prev ()
-  "Move backward to previous statement and call `mds-eval-and-prettyprint'."
+  "Call `mds-eval-and-prettyprint' with point at the preceding statement."
   (interactive)
   (save-excursion
-    (let ((col (current-column)))
-      (forward-line -1)
-      (mds-ss-beginning-of-statement)
-      (while (looking-at "end ")
-	(forward-line -1)
-	(mds-ss-beginning-of-statement))
-      (let ((expr (mds-expr-at-point)))
-      (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
-				
-
-
+    (beginning-of-line)
+    (if (re-search-backward mds-re-ss-statement nil t)
+	(progn
+	  (goto-char (match-beginning 3))
+	  (let ((expr (mds-expr-at-point)))
+	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
+      (beep)
+      (message "No preceding statement."))))
+    
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
 If called interactively, EXPR is queried."

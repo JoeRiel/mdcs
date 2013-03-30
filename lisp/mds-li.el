@@ -270,7 +270,7 @@ Set cursor to ready."
     (if (= 1 mds-li-state)
 	(progn
 	  (beep)
-	  (message "No preceding state."))
+	  (message "No preceding statement."))
       (mds-li-goto-state (1- mds-li-state))
       (let ((expr (mds-expr-at-point)))
 	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
