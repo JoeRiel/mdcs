@@ -326,6 +326,7 @@ LABEL is the user id."
 (define-derived-mode mds-li-mode mds-ss-mode "source-mode"
   "Major mode for stepping through source code of a debugged Maple procedure."
   :group 'mds
+  :abbrev-table nil
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
   (if mds-truncate-lines-flag (toggle-truncate-lines 1)))

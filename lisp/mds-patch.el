@@ -117,7 +117,7 @@
 (define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
   "Major mode for live patching a Maple procedure."
   :group 'mds
-
+  :abbrev-table nil
   (let ((map mds-patch-mode-map)
 	(bindings
 	 '(([(control c) (control p)] . mds-patch-install))))
