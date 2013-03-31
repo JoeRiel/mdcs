@@ -277,12 +277,12 @@ are printed to the output buffer.  Return the new value."
   mds-track-input-flag)
 
 
-(defun mds-toggle-stop-trace-at-error ()
-  "Toggle the variable `mds-stop-trace-at-error-flag'.
+(defun mds-toggle-stop-trace-at-trapped-error ()
+  "Toggle the variable `mds-stop-trace-at-trapped-error-flag'.
 When true, tracing stops if an error is raised."
   (interactive)
   (message "stop tracing at error: %s"
-	   (if (setq mds-stop-trace-at-error-flag (not mds-stop-trace-at-error-flag))
+	   (if (setq mds-stop-trace-at-trapped-error-flag (not mds-stop-trace-at-trapped-error-flag))
 	       "enabled"
 	     "disabled")))
 

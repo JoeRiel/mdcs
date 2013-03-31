@@ -1109,7 +1109,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
-       ["Toggle mds-stop-trace-at-error-flag"   mds-toggle-stop-trace-at-error-flag t]
+       ["Toggle mds-stop-trace-at-trapped-error-flag"   mds-toggle-stop-trace-at-trapped-error-flag t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]
        )

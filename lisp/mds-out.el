@@ -25,7 +25,7 @@
   (defvar mds-ss-show-args-flag)
   (defvar mds-ss-state nil)
   (defvar mds-track-input-flag t)
-  (defvar mds-stop-trace-at-error-flag))
+  (defvar mds-stop-trace-at-trapped-error-flag))
 
 (declare-function mds-client-live-buf "mds-client")
 (declare-function mds-client-out-buf "mds-client")
@@ -294,7 +294,7 @@ Optional TAG identifies the message type."
 
 	     ((eq tag 'error)
 	      (mds-insert-and-font-lock msg 'mds-maple-error)
-	      (if (and mds-stop-trace-at-error-flag
+	      (if (and mds-stop-trace-at-trapped-error-flag
 		       (mds-client-get-trace mds-client))
 		  (mds-client-set-trace mds-client nil)))
 
