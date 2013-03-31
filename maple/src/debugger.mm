@@ -37,7 +37,7 @@ global showstat, showstop;
                                         incremented with each "indentation" level *)
         n := n - 1;
 
-        #{{{ handle go_back/here/enter_procname/match_predicate
+        #{{{ handle skipping
 
         if skip then
 
@@ -555,6 +555,7 @@ global showstat, showstop;
             #}}}
         else
             #{{{ expression
+
             try
                 Respond := true;
                 # Must be an expression to evaluate.
@@ -579,6 +580,7 @@ global showstat, showstop;
             catch:
                 err := lasterror;
             end try;
+
             #}}}
         fi;
 
