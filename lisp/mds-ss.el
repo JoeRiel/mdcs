@@ -586,14 +586,18 @@ Otherwise delete the dead showstat window."
   (mds-ss-eval-proc-statement "step" 'save))
 
 (defun mds-select-trace ()
-  "Select the tracing state."
+  "Select the tracing state.
+If tracing is enabled, use showstat rather than lineinfo buffer
+to display the code."
   (interactive)
   (let ((state (ido-completing-read
 		"select trace state: " '("none" "cont" "next" "into" "step" "_skip")
 		nil 'require-match)))
-  (mds-client-set-trace mds-client (if (string= state "none")
-				       nil
-				     state))))
+    (if (string= state "none")
+       (setq state nil)
+      (if (mds-client-use-lineinfo-p mds-client)
+	  (mds-wm-toggle-code-view)))
+    (mds-client-set-trace mds-client state)))
 
 ;;}}}
 ;;{{{ (*) Stop points
