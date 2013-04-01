@@ -585,28 +585,14 @@ Otherwise delete the dead showstat window."
   (interactive)
   (mds-ss-eval-proc-statement "step" 'save))
 
-(defun mds-cycle-trace ()
-  "Cycle through the tracing states:
-'nil', 'cont', 'next', 'into', and 'step'.
-If nil is selected, tracing does not occur.  Otherwise, when the
-debugger returns control to the server, the selected debugging
-command is immediately executed.
-
-To best use the results after tracing, turn off tracing
-mode (select nil), then reenter the debugger from the client.
-The hyperlinks in the output buffer are then active."
+(defun mds-select-trace ()
+  "Select the tracing state.  
+Five options are give, the default is 'disabled."
   (interactive)
-  (message (concat "tracing " (or
-			       (mds-client-set-trace
-				mds-client
-				(let ((state (mds-client-get-trace mds-client)))
-				  (cond
-				   ((null state)           "cont")
-				   ((string= state "cont") "next")
-				   ((string= state "next") "into")
-				   ((string= state "into") "step")
-				   ((string= state "step") nil))))
-			       "disabled"))))
+  (mds-client-set-trace mds-client
+			(ido-completing-read
+			 "select trace state: " '("disabled" "cont" "next" "into" "step")
+			 nil 'require-match)))
 
 ;;}}}
 ;;{{{ (*) Stop points
@@ -982,7 +968,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("R" . mds-stoperror)
 	   ("s" . mds-step)
 	   ("S" . mds-skip)
-	   ("t" . mds-cycle-trace)
+	   ("t" . mds-select-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
 	   ("v" . mds-wm-toggle-code-view)
@@ -1058,7 +1044,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Goto [query]"  mds-goto-procname :keys "C-u g"]
        ["Here"		mds-here t]
        "----"
-       ["Trace [cycle]" mds-cycle-trace t]
+       ["Select trace"	mds-select-trace t]
        "----"
        ["Quit"		mds-quit t]
        )
@@ -1144,7 +1130,7 @@ Execution
 \\[mds-step] (step) execute next statement at any level
 \\[mds-skip] resume skipping
 \\[mds-return] (return) continue executing until current procedure returns
-\\[mds-cycle-trace] cycle through trace modes
+\\[mds-select-trace] select trace mode
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
 
 Stop points

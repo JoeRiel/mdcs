@@ -679,13 +679,13 @@ Skip forward until the predicate assigned by the @code{skip_until}
 option to @code{mdc} is true.
 
 @kindex t
-@findex mds-trace
+@findex mds-select-trace
 @vindex mds-stop-trace-at-trapped-error-flag
 @cindex tracing
 @anchor{tracing}
-@item t (@command{mds-trace})
-Cycle through tracing modes.  The selected tracing mode, 
-@strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
+@item t (@command{mds-select-trace})
+Select the tracing mode.  The selected tracing mode, 
+@strong{cont}, @strong{next}, @strong{into}, @strong{step}, or @strong{disabled},
 determines where the debugger temporarily halts and what output 
 is displayed in the output buffer. The selected mode is equivalent 
 to continually executing the corresponding debugging command.
@@ -694,8 +694,8 @@ After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
 until the client exits or, if @code{mds-stop-trace-at-trapped-error-flag} is
 non-nil, an error is trapped.  At that point, the tracing mode may be
-manually disabled by pressing @kbd{t} until the @strong{disabled} mode
-is selected.  If Maple has exited, reissuing the original Maple
+manually disabled by selecting the @strong{disabled} mode.
+If Maple has exited, reissuing the original Maple
 command causes the debugger to recommence, at which time the
 hyperlinks in the output buffer become operational and permit quickly
 moving to places of interest.
