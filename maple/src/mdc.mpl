@@ -91,8 +91,7 @@
 ##  toolbar during a running computation.
 ##
 ##- The optional 'stopats' parameter specifies the procedures to
-##  instrument.  Using it is nearly equivalent to calling `\CMD` with
-##  the `stopat` option; this provides a convenient shortcut.
+##  instrument, it can be used in place of the `stopat` option.
 ##  See the `stopat` option for the usage.
 ##  The first procedure instrumented via the 'stopats' parameter
 ##  is returned.  That makes it convenient to instrument and call
