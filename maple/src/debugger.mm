@@ -82,10 +82,12 @@ global showstat, showstop;
                 pred := match_predicate[procName,statNumber](_passed[1..n]);
                 if pred <> false then
                     skip := false;
-                    if pred = true then
-                        debugger_printf(TAG_WARN, "skip predicate satisfied\n");
-                    else
-                        debugger_printf(TAG_WARN, "skip predicate satisfied: %Q\n", pred);
+                    if SkipIndicateMatch then
+                        if pred = true then
+                            debugger_printf(TAG_WARN, "skip predicate satisfied\n");
+                        else
+                            debugger_printf(TAG_WARN, "skip predicate satisfied: %Q\n", pred);
+                        end if;
                     end if;
                 end if;
                 if SkipCheckStack then

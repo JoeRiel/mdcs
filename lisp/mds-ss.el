@@ -174,12 +174,12 @@ otherwise call (maple) showstat to display the new procedure."
 	    (setq mds-ss-procname procname
 		  mds-ss-state    state
 		  mds-ss-statement statement))
-	
+
 	;; New procedure; send address and procname to the output buffer.
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
-	
+
 	(setq mds-ss-addr     addr
 	      mds-ss-procname procname
 	      mds-ss-state    state
@@ -277,13 +277,13 @@ Both go to the first match and do not check for additional matches."
 	  (setq	bols (cons (length str) bols)
 		line (match-string-no-properties 3)
 		str (concat str " " line)))
-	
+
 	;; NB: There is a bug in debugopts(callstack); the `statement'
 	;; it returns may have more than one space following a
 	;; semicolon.  The following replaces multiple spaces
 	;; following a semicolon with a single space.  It does not
 	;; test whether that occurs inside a string.
-	
+
 	(let* ((state-re (regexp-quote (replace-regexp-in-string ";  +" "; " statement)))
 	       (pos (string-match state-re str)))
 	  (if (null pos)
@@ -313,7 +313,7 @@ Otherwise, find the statement number from STATEMENT."
       (setq mds-ss-procname   procname
 	    mds-ss-statement  statement
 	    mds-ss-state      state)
-	
+
       ;; Update the dead buffer.
       (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr)))))
 
@@ -586,13 +586,14 @@ Otherwise delete the dead showstat window."
   (mds-ss-eval-proc-statement "step" 'save))
 
 (defun mds-select-trace ()
-  "Select the tracing state.  
-Five options are give, the default is 'disabled."
+  "Select the tracing state."
   (interactive)
-  (mds-client-set-trace mds-client
-			(ido-completing-read
-			 "select trace state: " '("disabled" "cont" "next" "into" "step")
-			 nil 'require-match)))
+  (let ((state (ido-completing-read
+		"select trace state: " '("none" "cont" "next" "into" "step" "_skip")
+		nil 'require-match)))
+  (mds-client-set-trace mds-client (if (string= state "none")
+				       nil
+				     state))))
 
 ;;}}}
 ;;{{{ (*) Stop points
@@ -734,7 +735,7 @@ multiple lines."
 	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
       (beep)
       (message "No preceding statement."))))
-    
+
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
 If called interactively, EXPR is queried."
@@ -1110,7 +1111,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Info for Mds mode"        mds-info t]
        ["Version"                  mds-version]
        )
-      
+
       )))
 
 ;;}}}

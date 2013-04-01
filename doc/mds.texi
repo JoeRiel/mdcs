@@ -685,10 +685,11 @@ option to @code{mdc} is true.
 @anchor{tracing}
 @item t (@command{mds-select-trace})
 Select the tracing mode.  The selected tracing mode, 
-@strong{cont}, @strong{next}, @strong{into}, @strong{step}, or @strong{disabled},
+@strong{none}, @strong{cont}, @strong{next}, @strong{into}, @strong{step}, or @strong{_skip},
 determines where the debugger temporarily halts and what output 
 is displayed in the output buffer. The selected mode is equivalent 
-to continually executing the corresponding debugging command.
+to continually executing the corresponding debugging command
+(the _skip command is equivalent to calling @command{mds-skip}).
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
