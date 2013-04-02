@@ -12,15 +12,14 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'hl-line)
-  (require 'maplev)
-  (require 'mds-client)
-  (require 'mds-custom)
-  (require 'mds-out)
-  (require 'mds-re)
-  (require 'mds-thing)
-  (require 'mds-wm))
+(require 'hl-line)
+(require 'maplev)
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-out)
+(require 'mds-re)
+(require 'mds-thing)
+(require 'mds-wm)
 
 ;;{{{ declarations
 
@@ -175,12 +174,12 @@ otherwise call (maple) showstat to display the new procedure."
 	    (setq mds-ss-procname procname
 		  mds-ss-state    state
 		  mds-ss-statement statement))
-	
+
 	;; New procedure; send address and procname to the output buffer.
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
-	
+
 	(setq mds-ss-addr     addr
 	      mds-ss-procname procname
 	      mds-ss-state    state
@@ -218,7 +217,7 @@ If not found, display a message."
       (forward-line)
       (setq point (point))
       ;; move to next line in procedure
-      (if (not (re-search-forward mds-ss-line-re nil 'move))
+      (if (not (re-search-forward mds-re-ss-line nil 'move))
 	  (setq done 'failure)
 	(setq state (match-string-no-properties 1)
 	      line  (match-string-no-properties 2)
@@ -234,7 +233,7 @@ If not found, display a message."
 		;; need to check more lines
 		(let ((pos 0))
 		  (while
-		      (when (re-search-forward mds-ss-line-re nil 'move)
+		      (when (re-search-forward mds-re-ss-line nil 'move)
 			(setq pos (+ pos len 1)
 			      line (match-string-no-properties 2)
 			      len (length line)
@@ -274,24 +273,24 @@ Both go to the first match and do not check for additional matches."
       ;; beginning of each line in bols.
 
       (let (str bols line)
-	(while (re-search-forward mds-ss-statement-re nil 'move)
+	(while (re-search-forward mds-re-ss-statement nil 'move)
 	  (setq	bols (cons (length str) bols)
 		line (match-string-no-properties 3)
 		str (concat str " " line)))
-	
+
 	;; NB: There is a bug in debugopts(callstack); the `statement'
 	;; it returns may have more than one space following a
 	;; semicolon.  The following replaces multiple spaces
 	;; following a semicolon with a single space.  It does not
 	;; test whether that occurs inside a string.
-	
+
 	(let* ((state-re (regexp-quote (replace-regexp-in-string ";  +" "; " statement)))
 	       (pos (string-match state-re str)))
 	  (if (null pos)
 	      (message "cannot find statement in procedure body")
 	    (setq bols (nreverse bols))
 	    (goto-char (point-min))
-	    (re-search-forward mds-ss-statement-re)
+	    (re-search-forward mds-re-ss-statement)
 	    (while (and bols
 			(>= pos (car bols)))
 	      (setq bols (cdr bols))
@@ -301,6 +300,7 @@ Both go to the first match and do not check for additional matches."
 	    ;; clear buffer-local `mds-ss-statement'
 	    (setq mds-ss-statement "")
 	    (mds-ss-get-state)))))))
+
 ;;}}}
 ;;{{{ (*) mds-ss-view-dead-proc
 
@@ -313,7 +313,7 @@ Otherwise, find the statement number from STATEMENT."
       (setq mds-ss-procname   procname
 	    mds-ss-statement  statement
 	    mds-ss-state      state)
-	
+
       ;; Update the dead buffer.
       (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s,'dead')" addr)))))
 
@@ -434,7 +434,7 @@ This is specialized to work with a few routines; needs to be generalized."
     (match-string-no-properties 1))
    ((looking-at " *return \\(.*\\);?$")
     (match-string-no-properties 1))
-   ((looking-at (concat " *for " mds--symbol-re " in \\(.*\\) \\(?:do\\|while\\)"))
+   ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
@@ -467,7 +467,7 @@ Otherwise raise error indicating Maple is not available."
   "Return the (hidden) address of the current procedure."
   (save-excursion
     (goto-char (point-min))
-    (if (looking-at mds--addr-procname-re)
+    (if (looking-at mds-re-addr-procname)
 	(match-string-no-properties 2))))
 
 (defun mds-ss-get-state ()
@@ -476,37 +476,6 @@ Otherwise raise error indicating Maple is not available."
     (end-of-line)
     (and (re-search-backward "^ *\\([1-9][0-9]*\\)\\([ *?]\\)" nil t)
        (match-string-no-properties 1))))
-
-(defun mds-ss--regexp-for-statement (keyword)
-  "Return regexp that matches KEYWORD.
-The regexp includes indentation, statement number and decoration,
-given by the length of the string in the previous match-group 1."
-  (concat "^"
-	  "[ 0-9*?]\\{"
-	  (number-to-string (length (match-string-no-properties 1)))
-	  "\\}"
-	  keyword
-	  " "
-	  ))
-
-(defun mds-ss-beginning-of-statement ()
-  "Move to beginning of statement at point and return statement number.
-For a multi-part statement (if/elif/else, try/catch), the
-beginning is the first keyword, but only when point is at one of the
-keywords."
-  (beginning-of-line)
-  (cond
-     ((looking-at "\\( *\\)el\\(if\\|se\\)\\>")
-      ;; at 'elif|else': move back to 'if' at same indent
-      (re-search-backward (mds-ss--regexp-for-statement "if")))
-     ((looking-at "\\( *\\)catch[ :]")
-      ;; at catch: move back to 'try' at same indent
-      (re-search-backward (mds-ss--regexp-for-statement "try")))
-     ((looking-at "\\( *\\)end \\([a-z]+\\)")
-      (re-search-backward (mds-ss--regexp-for-statement (match-string-no-properties 2)))))
-  (when (looking-at mds-ss-statement-re)
-    (goto-char (match-beginning 3))
-    (match-string-no-properties 1)))
 
 ;;}}}
 
@@ -616,32 +585,22 @@ Otherwise delete the dead showstat window."
   (interactive)
   (mds-ss-eval-proc-statement "step" 'save))
 
-(defun mds-cycle-trace ()
-  "Cycle through the tracing states:
-'nil', 'cont', 'next', 'into', and 'step'.
-If nil is selected, tracing does not occur.  Otherwise, when the
-debugger returns control to the server, the selected debugging
-command is immediately executed.
-
-To best use the results after tracing, turn off tracing
-mode (select nil), then reenter the debugger from the client.
-The hyperlinks in the output buffer are then active."
+(defun mds-select-trace ()
+  "Select the tracing state.
+If tracing is enabled, use showstat rather than lineinfo buffer
+to display the code."
   (interactive)
-  (message (concat "tracing " (or
-			       (mds-client-set-trace
-				mds-client
-				(let ((state (mds-client-get-trace mds-client)))
-				  (cond
-				   ((null state)           "cont")
-				   ((string= state "cont") "next")
-				   ((string= state "next") "into")
-				   ((string= state "into") "step")
-				   ((string= state "step") nil))))
-			       "disabled"))))
+  (let ((state (ido-completing-read
+		"select trace state: " '("none" "cont" "next" "into" "step" "_skip")
+		nil 'require-match)))
+    (if (string= state "none")
+       (setq state nil)
+      (if (mds-client-use-lineinfo-p mds-client)
+	  (mds-wm-toggle-code-view)))
+    (mds-client-set-trace mds-client state)))
 
 ;;}}}
 ;;{{{ (*) Stop points
-
 
 (defvar mds-ss-stoperror-history-list '("all" "traperror")
   "History list used by stoperror.")
@@ -769,19 +728,17 @@ multiple lines."
     (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
 
 (defun mds-eval-and-prettyprint-prev ()
-  "Move backward to previous statement and call `mds-eval-and-prettyprint'."
+  "Call `mds-eval-and-prettyprint' with point at the preceding statement."
   (interactive)
   (save-excursion
-    (let ((col (current-column)))
-      (forward-line -1)
-      (mds-ss-beginning-of-statement)
-      (while (looking-at "end ")
-	(forward-line -1)
-	(mds-ss-beginning-of-statement))
-      (let ((expr (mds-expr-at-point)))
-      (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
-				
-
+    (beginning-of-line)
+    (if (re-search-backward mds-re-ss-statement nil t)
+	(progn
+	  (goto-char (match-beginning 3))
+	  (let ((expr (mds-expr-at-point)))
+	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
+      (beep)
+      (message "No preceding statement."))))
 
 (defun mds-eval-and-display-expr (expr &optional suffix)
   "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
@@ -1016,7 +973,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("R" . mds-stoperror)
 	   ("s" . mds-step)
 	   ("S" . mds-skip)
-	   ("t" . mds-cycle-trace)
+	   ("t" . mds-select-trace)
 	   ("T" . mds-toggle-truncate-lines)
 	   ("u" . mds-unstopat)
 	   ("v" . mds-wm-toggle-code-view)
@@ -1092,7 +1049,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Goto [query]"  mds-goto-procname :keys "C-u g"]
        ["Here"		mds-here t]
        "----"
-       ["Trace [cycle]" mds-cycle-trace t]
+       ["Select trace"	mds-select-trace t]
        "----"
        ["Quit"		mds-quit t]
        )
@@ -1143,7 +1100,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
-       ["Toggle mds-stop-trace-at-error-flag"   mds-toggle-stop-trace-at-error-flag t]
+       ["Toggle mds-stop-trace-at-trapped-error-flag"   mds-toggle-stop-trace-at-trapped-error-flag t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
@@ -1158,7 +1115,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Info for Mds mode"        mds-info t]
        ["Version"                  mds-version]
        )
-      
+
       )))
 
 ;;}}}
@@ -1178,7 +1135,7 @@ Execution
 \\[mds-step] (step) execute next statement at any level
 \\[mds-skip] resume skipping
 \\[mds-return] (return) continue executing until current procedure returns
-\\[mds-cycle-trace] cycle through trace modes
+\\[mds-select-trace] select trace mode
 \\[mds-quit] (quit) terminate debugging, return to mds buffer
 
 Stop points
@@ -1232,6 +1189,7 @@ C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 \\[mds-ss-refresh] refresh procedure in the buffer
 "
   :group 'mds
+  :abbrev-table nil
 
   (setq mds-ss-procname ""
 	mds-ss-state ""

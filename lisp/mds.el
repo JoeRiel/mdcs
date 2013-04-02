@@ -145,7 +145,7 @@ Do not touch `mds-log-buffer'."
 PROC is a client process, MSG is the message from the client."
   (unless (eq msg "")
     (cond
-     ((string-match mds--client-attach-re msg)
+     ((string-match mds-re-client-attach msg)
       ;; A client has attached.
       (let ((conn (match-string 1 msg)))
 	(mds-writeto-log-proc proc (format "client has attached: %s" (substring msg 0 -2)))
@@ -277,12 +277,12 @@ are printed to the output buffer.  Return the new value."
   mds-track-input-flag)
 
 
-(defun mds-toggle-stop-trace-at-error ()
-  "Toggle the variable `mds-stop-trace-at-error-flag'.
+(defun mds-toggle-stop-trace-at-trapped-error ()
+  "Toggle the variable `mds-stop-trace-at-trapped-error-flag'.
 When true, tracing stops if an error is raised."
   (interactive)
   (message "stop tracing at error: %s"
-	   (if (setq mds-stop-trace-at-error-flag (not mds-stop-trace-at-error-flag))
+	   (if (setq mds-stop-trace-at-trapped-error-flag (not mds-stop-trace-at-trapped-error-flag))
 	       "enabled"
 	     "disabled")))
 

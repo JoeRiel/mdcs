@@ -32,8 +32,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'maplev))
+(require 'maplev)
 
 (defconst mds-edit-ss-mark-re "^ +[0-9]+[*!]?"
   "Regexp that matches the statement mark added by showstat.")

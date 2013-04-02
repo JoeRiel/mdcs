@@ -34,139 +34,167 @@
 
 (require 'rx)
 
-(defconst mds--addr-tag-re "<\\(-?[0-9]+\\)>"
+(defmacro mds-rx (&rest regexps)
+  "Macro that extends `rx'.  REGEXPS follows forms in `rx'.
+Taken from www.emacswiki.org/emacs/rx with correction at
+emacs.1067599.n5.nabble.com/rx-Adding-custom-sexps-to-work-with-td212025.html.
+
+The 'decor' tag matches the decoration following a statement
+number in a showstat buffer; the \"*\" matches a breakpoint, the
+\"?\" matches a stopat conditional\, the \"!\" matches the
+current position."
+  (let* ((add-ins (list
+		   `(decor   . ,(rx (opt (any ?\s ?* ??)) (opt ?!))) ; decoration in a showstat buffer
+		   `(integer . ,(rx (opt ?-) (+ digit)))
+		   `(posint  . ,(rx (any "1-9") (* digit)))
+		   `(nonnegint . ,(rx (+ digit)))
+		   ))
+	 (rx-constituents (append add-ins rx-constituents)))
+    (cond ((null regexps)
+	   (error "No regexp"))
+	  ((cdr regexps)
+	   (rx-to-string `(and ,@regexps) t))
+	  (t
+	   (rx-to-string (car regexps) t)))))
+
+(defconst mds-re-addr-tag
+  (mds-rx ?< (group integer) ?>)
   "Regexp that matches an address tag.
-The first group matches the address, the total match includes the
-delimiters.")
+The first group matches the address,
+the total matches includes the address with delimiters.")
 
-(defconst mds--simple-name-re  "[a-zA-Z_~][a-zA-Z0-9_]*"
-  "Regular expression for a simple name.")
+(defconst mds-re-simple-name
+  (rx (any "a-z" "A-Z" ?% ?_)
+      (* (any "a-z" "A-Z" digit ?_ ??))
+      (opt ?~))
+  "Regexp for a simple name.")
 
-(defconst mds--quoted-name-re  "`[^`\n\\\\]*\\(?:\\\\.[^`\n\\\\]*\\)*`"
-  "Regular expression for a Maple quoted name.
+(defconst mds-re-quoted-name
+  (rx ?`
+      (* (not (any ?` ?\n ?\\)))  ; normal*
+      (* (and ?\\ not-newline (* (not (any ?` ?\n ?\\)))))  ; (special normal*)*
+      ?`)
+  "Regexp for a Maple quoted name.
 It correctly handles escaped back-quotes in a name, but not doubled
 back-quotes.  It intentionally fails for the exceptional case where a
 name has a newline character.")
 
-(defconst mds--symbol-re (concat "\\(?:"
-				 mds--simple-name-re
-				 "\\|"
-				 mds--quoted-name-re
-				 "\\)")
-  "Regular expression for a Maple symbol.")
+(defconst mds-re-symbol
+  (concat "\\(?:"
+	  mds-re-simple-name
+	  "\\|"
+	  mds-re-quoted-name
+	  "\\)")
+  "Regexp for a Maple symbol.")
 
-(defconst mds--name-re
-  (concat mds--symbol-re                  ; base name
-	  "\\(?::-" mds--symbol-re "\\)*" ; optional module components
+(defconst mds-re-name
+  (concat mds-re-symbol                  ; base name
+	  "\\(?::-" mds-re-symbol "\\)*" ; optional module components
           "\\(?:\\[[^[]]*\\]\\)*"         ; optional indices
           "\\(?:()\\|([^*][^()]*)\\)*")   ; optional arguments (crude, no parens)
-  "Regular expression for Maple names.
+  "Regexp for Maple names.
 Unlike `maplev--name-re', no white-space is allowed between
 elements.")
 
-(defconst mds--addr-procname-re (concat "\\(" mds--addr-tag-re "\n\\)"
-					"\\(" mds--name-re "\\)"
-					"\\(?:[: ]? *\\)")
+(defconst mds-re-addr-procname
+  (concat "\\(" mds-re-addr-tag "\n\\)"
+	  "\\(" mds-re-name "\\)"
+	  "\\(?:[: ]? *\\)")
   "Regexp that matches an address tag and procedure name.
-The address, with delimiters, is stored in group 1, just the
-address is in group 2, and the procedure name is in group 3.")
+It has three groups:
+\(1) address, with delimiters,
+\(2) address,
+\(3) procedure name")
 
-(defconst mds--dbg-state-re
-  (concat mds--addr-tag-re "\n"
-	  "\\([^\n]+\\):\n"
-	  "\\s-*\\([1-9][0-9]*\\)[ *?]"
-	  "\\(.*\\)")
-  "Non-anchored regexp that matches the status output of the debugger.
-It has four groups:
-\(1) address of current procedure;
-\(2) name of current procedure;
-\(3) state number;
-\(4) statement.")
-  
-(defconst mds--debugger-status-re
-  (concat "^" mds--dbg-state-re)
-  "Anchored regexp that matches the status output of the debugger.
-It has four groups:
-\(1) address of current procedure;
-\(2) name of current procedure;
-\(3) state number;
-\(4) statement.")
+(defconst mds-re-line-info
+  (concat
+   (mds-rx line-start
+	   (group (+ (not (any ?\s))))	; filename [assume no space]
+	   ?\s
+	   (group nonnegint)		; line number
+	   ?\s
+	   (group nonnegint)		; char offset to beginning
+	   ?\s
+	   (group nonnegint)		; char offset to end
+	   (group (* ?\s nonnegint))	; states with breakpoints
+	   ?:)
+   mds-re-addr-tag                     ; address
+   (mds-rx ?\n
+	   (group (+ not-newline))	; procedure name
+	   ?: ?\n (* blank)
+	   (group posint)		; statement number
+	   decor
+	   (* blank)
+	   (group (* not-newline))))	; statement
+  "Regexp that matches the line-info output status output of the debugger.
+It has nine groups:
+\(1) filename of source,
+\(2) line number in source,
+\(3) character offset to beginning of statement,
+\(4) character offset to end of statement,
+\(5) states with breakpoints,
+\(6) address of current procedure,
+\(7) name of current procedure,
+\(8) state number,
+\(9) statement")
 
-(defconst mds--line-info-re
-  (concat "^\\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)\\(\\(?: [0-9]+\\)*\\):"
-	  mds--dbg-state-re)
-  "Anchored regexp that matches the line-info output of the debugger.
-It has the following groups:
-\(1) filename of source;
-\(2) line number in source;
-\(3) character offset to beginning of statement;
-\(4) character offset to end of statement;
-\(5) states with breakpoints;
-\(6) address of current procedure;
-\(7) name of current procedure;
-\(8) state number;
-\(9) statement.")
-	  
-
-(defconst mds-procname-assignment-re "^\\([^ \t\n]+\\) := *"
-  "Match an assignment to a procedure.
-The procname is flush left.  See diatribe in
-`mds-ss-where-procname-re'.")
-
-
-(defconst mds-start-tag-re "^<\\(.\\)>"
-  "Regular expression that matches start tag.
-The tag has format <tag-name>.  Group 0 matches the tag,
-group 1 matches tag-name.")
-
-(defconst mds--client-attach-re "^open from \\([^\n]+\\)\n$"
+(defconst mds-re-client-attach
+  (rx line-start
+      "open from "
+      (group (+ not-newline))
+      ?\n
+      line-end)
   "Regexp to match message when a client attaches.
 The first group identifies SOMETHING.")
 
-(defconst mds-end-of-msg-re "---EOM---")
-
-(defconst mds-ss-mark-re "^ +[0-9]+[*!]?"
-  "Regexp that matches the statement mark added by showstat.")
-
-
-(defconst mds-ss-statement-re "^\\(?:\\s-*\\([0-9]+\\)\\([ *?]?\\) +\\)\\(.*\\)"
+(defconst mds-re-ss-statement
+  (mds-rx line-start
+	  (* blank)
+	  (group posint)  ; statement number
+	  (group decor)   ; decorations
+	  (+ blank)
+	  (group (not space) (* not-newline))) ; statement
   "Regexp that matches the start of a line in a showstat buffer.
-The first group matches the statement number.
-The second group matches any decoration.
-The third group matches the Maple statement.")
+It has three groups:
+\(1) statement number,
+\(2) decoration,
+\(3) Maple statement")
 
-(defconst mds-ss-line-re
-  (rx line-start
-      (+ blank)
-      (opt (group (1+ digit))
-	   (opt (char ?* ??))
-	   (+ blank))
-      (group (not blank) (* not-newline))
-      line-end)
-  "Regex that matches a body line in the showstat output.
-The first group matches the statement number (may be nil).
-The second group matches the Maple statement.")
+(defconst mds-re-ss-line
+  (mds-rx line-start
+	  (* blank)
+	  (opt (group posint)  ; statement number
+	       decor           ; decorations
+	       (+ blank))
+	  (group (not space) (* not-newline)) ; statement
+	  line-end)
+  "Regexp that matches a body line in the showstat output.
+It has two groups:
+\(1) matches the statement number (may be nil),
+\(2) matches the Maple statement.")
 
-
-(defconst mds--statement-number-and-marks-re "^\\s-*[1-9][0-9]*[ *?]"
+(defconst mds-re-statement-number-and-marks
+  (mds-rx line-start
+	  (* blank)
+	  posint
+	  decor)
   "Regexp that matches the statement number and decoration in a showstat buffer.
-It is anchored to the left margin.")
-
+The regexp is anchored to the left margin.")
 
 (defun mds-activate-addr-procname (&optional button)
-  "If looking at an address-procname, hide the address and apply
-BUTTON to the procname.  If the procname is TopLevel, then just
+  "If looking at addr-procname, hide address and apply BUTTON to the procname.
+If the procname is TopLevel, then just
 change its face to `mds-inactive-link'.  Return a cons cell of
 the address and procname."
-  (if (looking-at mds--addr-procname-re)
-    (let ((addr (match-string-no-properties 2))
-	  (procname (match-string-no-properties 3)))
-      (put-text-property (match-beginning 1) (match-end 1) 'invisible t)
-      (if button
-	  (if (string= procname "TopLevel")
-	      (put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link)
-	    (make-text-button (match-beginning 3) (match-end 3) :type button)))
-      (cons addr procname))))
+  (if (looking-at mds-re-addr-procname)
+      (let ((addr (match-string-no-properties 2))
+	    (procname (match-string-no-properties 3)))
+	(put-text-property (match-beginning 1) (match-end 1) 'invisible t)
+	(if button
+	    (if (string= procname "TopLevel")
+		(put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link)
+	      (make-text-button (match-beginning 3) (match-end 3) :type button)))
+	(cons addr procname))))
 
 (provide 'mds-re)
 

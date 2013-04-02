@@ -6,12 +6,11 @@
 ;;; Commentary:
 ;; 
 
-(require 'sha1)
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-client))
+(require 'sha1)
+(require 'mds-client)
 (declare-function mds-client-set-id "mds-client")
 (declare-function mds-client-set-status "mds-client")
 

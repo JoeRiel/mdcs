@@ -40,13 +40,12 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'mds-re)
-  (require 'mds-ss)
-  (require 'mds-li)
-  (require 'mds-out)
-  (require 'mds-wm))
+(require 'mds-client)
+(require 'mds-re)
+(require 'mds-ss)
+(require 'mds-li)
+(require 'mds-out)
+(require 'mds-wm)
 
 
 ;; A queue structure consists of a single cons-cell,
@@ -145,7 +144,7 @@ TAG identifies the operation, MSG is the message."
 
 
      ((= tag (eval-when-compile mds-tag-state))
-      (unless (string-match mds--line-info-re msg)
+      (unless (string-match mds-re-line-info msg)
 	(error "Problem with format in LINE_INFO tag"))
       (let ((file (match-string 1 msg))
 	    (beg  (1+ (string-to-number (match-string 3 msg))))

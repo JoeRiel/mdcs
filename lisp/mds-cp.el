@@ -34,12 +34,10 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'wid-edit)
-  (require 'widget)
-  (require 'mds-wm))
-  
+(require 'mds-client)
+(require 'wid-edit)
+(require 'widget)
+(require 'mds-wm)
 
 ;;{{{ declarations
 
@@ -129,9 +127,8 @@ to using the key-binding in the active client's live showstat buffer."
 
 (define-derived-mode mds-cp-mode fundamental-mode "mds-cp-mode"
   "Major mode for the mds control panel."
-
   :group 'mds
-
+  :abbrev-table nil
   
   (erase-buffer)
 

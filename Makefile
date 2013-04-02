@@ -26,13 +26,13 @@ OS := $(shell uname -o)
 EMACS := emacs
 ifeq ($(OS),Cygwin)
   MAPLE := cmaple
-  INSTALL_INFO = install-info
+  INSTALL-INFO = install-info
 else
   MAPLE := maple
 ifeq ($(OS),GNU/Linux)
-  INSTALL_INFO = ginstall-info
+  INSTALL-INFO = ginstall-info
 else
-  INSTALL_INFO = install-info
+  INSTALL-INFO = install-info
 endif
 endif
 
@@ -50,30 +50,30 @@ TEXI2HTML := makeinfo --html --number-sections
 # {{{ Directories
 
 # where lisp files go
-LISP_BASE := $(HOME)/.emacs.d
-LISP_DIR := $(LISP_BASE)/maple
+LISP-BASE := $(HOME)/.emacs.d
+LISP-DIR := $(LISP-BASE)/maple
 
 # where info files go
-INFO_DIR := $(HOME)/share/info
+INFO-DIR := $(HOME)/share/info
 
 # Maple toolbox directory
-TOOLBOX_DIR := $(HOME)/maple/toolbox/emacs
+TOOLBOX-DIR := $(HOME)/maple/toolbox/emacs
 
 # where html files go.
 # there is no standard place for this.
-HTML_DIR := $(TOOLBOX_DIR)/doc
+HTML-DIR := $(TOOLBOX-DIR)/doc
 
 # where the maple archive and hdb go
-MAPLE_INSTALL_DIR := $(TOOLBOX_DIR)/lib
+MAPLE-INSTALL-DIR := $(TOOLBOX-DIR)/lib
 
-MAPLE_DATA_DIR := $(TOOLBOX_DIR)/data
+MAPLE-DATA-DIR := $(TOOLBOX-DIR)/data
 
 # Cypathify, as needed
 ifeq ($(OS),Cygwin)
- LISP_BASE := $(shell cygpath --mixed "$(LISP_BASE)")
- LISP_DIR  := $(shell cygpath --mixed "$(LISP_DIR)")
- INFO_DIR  := $(shell cygpath --mixed "$(INFO_DIR)")
- MAPLE_INSTALL_DIR := $(shell cygpath --mixed "$(MAPLE_INSTALL_DIR)")
+ LISP-BASE := $(shell cygpath --mixed "$(LISP-BASE)")
+ LISP-DIR  := $(shell cygpath --mixed "$(LISP-DIR)")
+ INFO-DIR  := $(shell cygpath --mixed "$(INFO-DIR)")
+ MAPLE-INSTALL-DIR := $(shell cygpath --mixed "$(MAPLE-INSTALL-DIR)")
 # MAPLE := $(shell cygpath --mixed "$(MAPLE)")
 endif
 
@@ -96,17 +96,20 @@ showerr = err="$$($1)" ; if [ "$$err" ]; then echo $(call warn,$$err); fi
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
 	  --eval "(push (expand-file-name \"./lisp\") load-path)" \
-	  --eval "(push \"$(LISP_DIR)\" load-path)"
+	  --eval "(push \"$(LISP-DIR)\" load-path)" \
+	  --eval "(push \"$(HOME)/.emacs.d/elisp\" load-path)" \
+	  --eval "(delete \"/usr/share/emacs/23.3/site-lisp/emacs-goodies-el\" load-path)"
+
 
 ELC = $(EMACS) --batch $(ELFLAGS) --funcall=batch-byte-compile
 
 ELS = mds-re mds-ss mds-out mds-patch mds-queue mds-wm mds-login mds-client mds-custom mds-thing mds-li mds
 
-LISP_FILES = $(ELS:%=lisp/%.el)
-ELC_FILES = $(LISP_FILES:.el=.elc)
+LISP-FILES = $(ELS:%=lisp/%.el)
+ELC-FILES = $(LISP-FILES:.el=.elc)
 
-byte-compile: $(call print-help,byte-compile,Byte compile $$(LISP_FILES))
-byte-compile: $(ELC_FILES)
+byte-compile: $(call print-help,byte-compile,Byte compile $$(LISP-FILES))
+byte-compile: $(ELC-FILES)
 
 %.elc : %.el
 	@$(RM) $@
@@ -115,9 +118,33 @@ byte-compile: $(ELC_FILES)
 
 clean-elisp: $(call print-help,clean-elisp,Remove byte-compiled files)
 clean-elisp:
-	$(RM) $(ELC_FILES)
+	$(RM) $(ELC-FILES)
 
-.PHONY: byte-compile clean-elisp
+lisp-install: $(call print-help,lisp-install,Install lisp in $(LISP-DIR))
+lisp-install: $(LISP-FILES) $(ELC-FILES)
+	@$(MKDIR) $(LISP-DIR)
+	$(CP) $+ $(LISP-DIR)
+
+# Install el files but not elc files; useful for checking old versions of emacs.
+el-install: $(call print-help,el-install,Install el files but not elc files)
+el-install: $(LISP-FILES)
+	$(MKDIR) $(LISP-DIR)
+	$(CP) $+ $(LISP-DIR)
+
+
+
+
+links-install: $(call print-help,links-install,Install links to the lisp files)
+links-install: $(LISP-FILES) $(ELC-FILES)
+	@$(MKDIR) $(LISP-DIR)
+	@ln -nfst $(LISP-DIR) $(realpath $(LISP-FILES))
+	@ln -nfst $(LISP-DIR) $(realpath $(ELC-FILES))
+
+links-uninstall: $(call print-help,links-uninstall,Remove links to the lisp files)
+links-uninstall:
+	$(RM) $(addprefix $(LISP-DIR)/,$(notdir $(LISP-FILES) $(ELC-FILES)))
+
+.PHONY: byte-compile clean-elisp links-install links-uninstall lisp-install
 
 # }}}
 # {{{ mla
@@ -126,9 +153,9 @@ help: $(call print-separator)
 
 mms = $(wildcard maple/src/*.mm)
 
-.PHONY: mla
+.PHONY: mla mla-install
 mla := $(maple-pkg).mla
-mla: $(call print-help,mla,Create Maple archive: $(mla))
+mla: $(call print-help,mla,	Create Maple archive: $(mla))
 mla: remove-preview $(mla)
 
 # Build mla. 
@@ -140,6 +167,12 @@ mla: remove-preview $(mla)
 	@smarch -c $@
 	@sload -Q -b . -I $$(pwd)/maple $<
 
+mla-install: $(call print-help,mla-install,Install mla into $(MAPLE-INSTALL-DIR))
+mla-install: $(mla)
+	@$(MKDIR) $(MAPLE-INSTALL-DIR)
+	@echo "Installing Maple archive $(mla) into $(MAPLE-INSTALL-DIR)/"
+	@$(call shellerr,$(CP) $+ $(MAPLE-INSTALL-DIR))
+
 # }}}
 
 # doc 
@@ -147,12 +180,12 @@ mla: remove-preview $(mla)
 
 help: $(call print-separator)
 
-.PHONY: doc info html h i p clean-info
+.PHONY: doc info html h i p info-clean info-install
 
-TEXI_FILES = doc/$(emacs-pkg).texi
-INFO_FILES = doc/$(emacs-pkg)
-HTML_FILES = doc/$(emacs-pkg).html
-PDF_FILES  = doc/$(emacs-pkg).pdf
+TEXI-FILES = doc/$(emacs-pkg).texi
+INFO-FILES = doc/$(emacs-pkg)
+HTML-FILES = doc/$(emacs-pkg).html
+PDF-FILES  = doc/$(emacs-pkg).pdf
 
 doc/$(emacs-pkg).pdf: doc/$(emacs-pkg).texi
 	(cd doc; $(TEXI2PDF) $(emacs-pkg).texi)
@@ -161,13 +194,13 @@ doc/$(emacs-pkg): doc/$(emacs-pkg).texi
 	@echo "Creating info file $@"
 	@$(call shellerr,cd doc; $(MAKEINFO) --no-split $(emacs-pkg).texi --output=$(emacs-pkg))
 
-doc: $(call print-help,doc,Create info$(comma) html$(comma) and pdf)
+doc: $(call print-help,doc,	Create info$(comma) html$(comma) and pdf)
 doc: info pdf html
-info: $(call print-help,info,Create info)
+info: $(call print-help,info,	Create info)
 info: doc/$(emacs-pkg)
-pdf: $(call print-help,pdf,Create pdf)
+pdf: $(call print-help,pdf,	Create pdf)
 pdf: doc/$(emacs-pkg).pdf
-html: $(call print-help,html,Create html documentation)
+html: $(call print-help,html,	Create html documentation)
 html: doc/$(emacs-pkg).html
 
 doc/$(emacs-pkg).html: doc/$(emacs-pkg).texi
@@ -175,23 +208,37 @@ doc/$(emacs-pkg).html: doc/$(emacs-pkg).texi
 	@(cd doc; $(TEXI2HTML) --no-split -o $(emacs-pkg).html $(emacs-pkg).texi)
 
 # preview html
-h: $(call print-help,h,Preview the html)
+h: $(call print-help,h,	Preview the html)
 h: doc/$(emacs-pkg).html
 	$(BROWSER) $^
 
 # preview info
-i: $(call print-help,i,Update and display info)
+i: $(call print-help,i,	Update and display info)
 i: doc/$(emacs-pkg)
 	@info $^
 
 
 # preview pdf
-p: $(call print-help,p,Update and display pdf)
+p: $(call print-help,p,	Update and display pdf)
 p: doc/$(emacs-pkg).pdf
 	evince $^
 
-clean-info:
-	$(RM) $(INFO_FILES) $(HTML_FILES) $(PDF_FILES)
+html-install: $(call print-help,html-install,Install html files in $(HTML-DIR) and update dir)
+html-install: $(HTML-FILES)
+	@echo "Installing html file(s) into $(HTML-DIR)/"
+	@$(MKDIR) $(HTML-DIR)
+	$(CP) $(HTML-FILES) $(HTML-DIR)
+
+info-install: $(call print-help,info-install,Install info files in $(INFO-DIR) and update dir)
+info-install: $(INFO-FILES)
+	@echo "Installing info file(s) into $(INFO-DIR)/ and updating $(INFO-DIR)/dir"
+	@$(MKDIR) $(INFO-DIR)
+	@$(CP) $(INFO-FILES) $(INFO-DIR)
+	@for file in $(INFO-FILES); \
+		do $(INSTALL-INFO) --dir-file=$(INFO-DIR)/dir $${file}; done
+
+info-clean:
+	$(RM) $(INFO-FILES) $(HTML-FILES) $(PDF-FILES)
 
 # }}}
 # {{{ hdb
@@ -204,8 +251,8 @@ remove-preview :
 	$(RM) maple/src/_preview_.mm
 
 hdb := $(maple-pkg).hdb
-hdb: $(call print-help,hdb,Create Maple help database)
-hdb: install-mla $(maple-pkg).hdb
+hdb: $(call print-help,hdb,	Create Maple help database)
+hdb: mla-install $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
@@ -213,7 +260,11 @@ $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
-
+hdb-install: $(call print-help,hdb-install,Install hdb in $(MAPLE-INSTALL-DIR))
+hdb-install: hdb
+	@$(MKDIR) $(MAPLE-INSTALL-DIR)
+	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
+	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
 # }}}
 
 # misc
@@ -265,86 +316,30 @@ test-extract:
 
 help: $(call print-separator)
 
-install-all := $(addprefix install-,hdb maple data)
+install-all := $(addsuffix -install,hdb maple data)
 
 .PHONY: install $(install-all) uninstall
 
-INSTALLED_EL_FILES  := $(addprefix $(LISP_DIR)/,$(notdir $(LISP_FILES)))
-INSTALLED_ELC_FILES := $(addprefix $(LISP_DIR)/,$(notdir $(ELC_FILES)))
+INSTALLED-EL-FILES  := $(addprefix $(LISP-DIR)/,$(notdir $(LISP-FILES)))
+INSTALLED-ELC-FILES := $(addprefix $(LISP-DIR)/,$(notdir $(ELC-FILES)))
 
 install-all: $(install-all)
 
 install: $(call print-help,install	,Install everything)
 install: $(install-all)
 
-install: $(addprefix install-,dev data hdb html info lisp maple)
+install: $(addsuffix -install,hdb html info lisp maple)
 
-install-data: $(call print-help,install-data,Install data)
-install-data: data/*.mpl
-	@echo "Installing data files into $(MAPLE_DATA_DIR)"
-	@$(MKDIR) $(MAPLE_DATA_DIR)
-	@$(CP) --target-directory=$(MAPLE_DATA_DIR) $+
+data-install: $(call print-help,data-install,Install data)
+data-install: data/*.mpl
+	@echo "Installing data files, $^, into $(MAPLE-DATA-DIR)"
+	@$(MKDIR) $(MAPLE-DATA-DIR)
+	@$(CP) --target-directory=$(MAPLE-DATA-DIR) $+
 
-install-dev: $(call print-help,install-dev,Install everything but hdb)
-install-dev: install-elc install-info install-maple
-
-# Install el files but not elc files; useful for checking old versions of emacs.
-install-el: $(call print-help,install-el,Install el files but not elc files)
-install-el: $(LISP_FILES)
-	$(MKDIR) $(LISP_DIR)
-	$(CP) $+ $(LISP_DIR)
-
-install-links: $(call print-help,install-links,Install links to the lisp files)
-install-links: $(LISP_FILES) $(ELC_FILES)
-	@$(MKDIR) $(LISP_DIR)
-	ln -nfst $(LISP_DIR) $(realpath $(LISP_FILES))
-	ln -nfst $(LISP_DIR) $(realpath $(ELC_FILES))
-
-
-install-elc: $(call print-help,install-elc,Install elc files and link *.el files)
-install-elc: $(ELC_FILES)
-	@echo "Installing elc files into $(LISP_DIR)"
-	@$(MKDIR) $(LISP_DIR)
-	@$(CP) $+ $(LISP_DIR)
-	@$(RM) $(INSTALLED_EL_FILES)
-
-install-hdb: $(call print-help,install-hdb,Install hdb in $(MAPLE_INSTALL_DIR))
-install-hdb: hdb
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple help data base $(hdb) into $(MAPLE_INSTALL_DIR)/"
-	@$(call shellerr,$(CP) $(hdb) $(MAPLE_INSTALL_DIR))
-
-install-html: $(call print-help,install-html,Install html files in $(HTML_DIR) and update dir)
-install-html: $(HTML_FILES)
-	@echo "Installing html file(s) into $(HTML_DIR)/"
-	@$(MKDIR) $(HTML_DIR)
-	$(CP) $(HTML_FILES) $(HTML_DIR)
-
-install-info: $(call print-help,install-info,Install info files in $(INFO_DIR) and update dir)
-install-info: $(INFO_FILES)
-	@echo "Installing info file(s) into $(INFO_DIR)/ and updating $(INFO_DIR)/dir"
-	@$(MKDIR) $(INFO_DIR)
-	@$(CP) $(INFO_FILES) $(INFO_DIR)
-	@for file in $(INFO_FILES); \
-		do $(INSTALL_INFO) --dir-file=$(INFO_DIR)/dir $${file}; done
-
-install-lisp: $(call print-help,install-lisp,Install lisp in $(LISP_DIR))
-install-lisp: $(LISP_FILES) $(ELC_FILES)
-	@echo "Installing lisp files into $(LISP_DIR)/"
-	@$(MKDIR) $(LISP_DIR)
-	@$(RM) $(INSTALLED_EL_FILES)
-	@$(CP) $+ $(LISP_DIR)
-
-install-mla: $(call print-help,install-mla,Install mla in $(MAPLE_INSTALL_DIR))
-install-mla: $(mla)
-	@$(MKDIR) $(MAPLE_INSTALL_DIR)
-	@echo "Installing Maple archive $(mla) into $(MAPLE_INSTALL_DIR)/"
-	@$(call shellerr,$(CP) $+ $(MAPLE_INSTALL_DIR))
-
-uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX_DIR))
+uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX-DIR))
 uninstall:
-	@rm -rf $(TOOLBOX_DIR)
-	@rm -f $(INSTALLED_EL_FILES) $(INSTALLED_ELC_FILES)
+	@rm -rf $(TOOLBOX-DIR)
+	@rm -f $(INSTALLED-EL-FILES) $(INSTALLED-ELC-FILES)
 
 # }}}
 # {{{ installer
@@ -361,9 +356,10 @@ installer: $(installer)
 $(installer): hdb mla info
 	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
 
-installer-zip: $(call print-help,installer-zip,Create Maple installer zip file)
+installer-zip := $(pkg)-ins-$(subst .,-,$(VERSION)).zip
+installer-zip: $(call print-help,installer-zip,Create Maple installer zip file: $(installer-zip))
 installer-zip: installer
-	zip $(pkg)-ins-$(subst .,-,$(VERSION)).zip $(installer) README-installer run-installer run-installer.bat
+	zip $(installer-zip) $(installer) README-installer run-installer run-installer.bat
 
 # }}}
 # {{{ zip
@@ -385,7 +381,7 @@ help: $(call print-separator)
 .PHONY: clean cleanall sweep
 
 clean: $(call print-help,clean	,Remove built files)
-clean: clean-info
+clean: info-clean
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mdoc/* maple/mhelp/* maple/mtest/* maple/doti/* maple/src/*.{mtest,tst,mw} *.fail
 	-$(RM) $(mla) $(hdb) 
 
@@ -395,7 +391,7 @@ sweep:
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) $(MAPLE_INSTALL_DIR)/$(mla) $(MAPLE_INSTALL_DIR)/$(hdb) $(installer)
+	-$(RM) $(MAPLE-INSTALL-DIR)/$(mla) $(MAPLE-INSTALL-DIR)/$(hdb) $(installer)
 
 # }}}
 

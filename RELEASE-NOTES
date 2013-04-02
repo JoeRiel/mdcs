@@ -1,4 +1,8 @@
 -*- org -*-
+* mdcs.2.2.0
+** Modify to include maplev 2.28
+** Add a skip trace feature.  Modify method for selecting a trace mode.
+** Improve documentation
 * mdcs.2.1.1
 ** Improve documentation (info)
 * mdcs.2.1.0
