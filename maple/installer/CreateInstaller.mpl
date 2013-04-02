@@ -181,17 +181,26 @@ end proc:
 
 CreateInstaller := proc()
 
-local installer, version;
+local file, elisp, elisp_map, installer, maplev_dir, maplev_lisp_dir, version;
 global InstallScript;
+uses FT = FileTools;
 
     # This is updated by bin/version
     version := "2.1.1";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
-    if FileTools:-Exists(installer) then
-        FileTools:-Remove(installer);
+    if FT:-Exists(installer) then
+        FT:-Remove(installer);
     end if;
+
+    maplev_dir := "/home/joe/emacs/maplev";
+    maplev_lisp_dir := FT:-AbsolutePath("lisp", maplev_dir);
+
+    elisp := FT:-ListDirectory(maplev_lisp_dir, 'returnonly' = "*.el");
+    elisp_map := seq(FT:-AbsolutePath(file, maplev_lisp_dir)
+                     = FT:-AbsolutePath(file, "lisp")
+                     , file = elisp);
 
     InstallerBuilder:-Build(
         "emacs"
@@ -224,25 +233,25 @@ global InstallScript;
                           , "data/Sample.mpl" = "data/Sample.mpl"
 
                           (* emacs stuff *)
-
-                          , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
-                          , "../maplev/lisp/button-lock.el" = "lisp/button-lock.el"
+                          , elisp_map
+                          , FT:-AbsolutePath("doc/maplev", maplev_dir) = "info/maplev"
+                          , FT:-AbsolutePath("doc/maplev.html", maplev_dir) = "doc/maplev.html"
 
                           , "doc/README-installer" = "README-installer"
                           , "doc/mds" = "info/mds"
                           , "doc/mds.html" = "doc/mds.html"
 
-                          , "../maplev/doc/maplev" = "info/maplev"
-                          , "../maplev/doc/maplev.html" = "doc/maplev.html"
-
                           , "maple/installer/config.mpl" = "_config.mpl"
 
                          ]
-        , ':-welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the Maple Debugger Client/Server, version %s.\n", version)
+        , ':-welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the "
+                                                "Maple Debugger Client/Server, version %s.\n"
+                                                , version)
                                         , "\n"
-                                        , "This installer unpacks the Maple archive and help database to a folder under the user's HOME directory.\n"
+                                        , ( "This installer unpacks the Maple archive "
+                                            "and help database to a folder under the user's HOME directory.\n"
+                                          )
                                       )
-
                         ]
         , ':-installation' = [NULL
                               , 'text' = ( "Installing the Lisp and Info files...\n"
