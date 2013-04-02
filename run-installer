@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.1.1
+VERSION=2.2.0
 # Modify per your setup.  If MAPLE is already defined, it uses the definition.
 MAPLE=${MAPLE:-/usr/local/share/maple/15/bin/maple}
 # The escaped backslashes are there to allow this work with the maple script.  
