@@ -37,13 +37,11 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'maplev)
-  (require 'mds-client)
-  (require 'mds-custom)
-  (require 'mds-re)
-  (require 'mds-ss)
-)
+(require 'maplev)
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-re)
+(require 'mds-ss)
 
 ;;{{{ Create patch buffer
 (defun mds-patch ()
@@ -85,7 +83,7 @@
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward mds--statement-number-and-marks-re nil t)
+    (while (re-search-forward mds-re-statement-number-and-marks nil t)
       (replace-match ""))))
 
 ;;}}}
@@ -119,7 +117,7 @@
 (define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
   "Major mode for live patching a Maple procedure."
   :group 'mds
-
+  :abbrev-table nil
   (let ((map mds-patch-mode-map)
 	(bindings
 	 '(([(control c) (control p)] . mds-patch-install))))

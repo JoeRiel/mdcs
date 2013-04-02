@@ -26,8 +26,10 @@
   :type 'boolean
   :group 'mds)
 
-(defcustom mds-stop-trace-at-error-flag t
-  "Non-nil means stop tracing when an error occurs."
+(defcustom mds-stop-trace-at-trapped-error-flag nil
+  "Non-nil means stop tracing when a trapped error occurs.
+This only has an effect if error trapping is also enabled.
+Use `mds-toggle-stop-trace-at-trapped-error' to toggle this variable."
   :type 'boolean
   :group 'mds)
 

@@ -34,14 +34,13 @@
 
 ;;{{{ Requirements
 
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-ss)
+(require 'mds-wm)
+(require 'maplev)
 (eval-when-compile
-  (require 'mds-client)
-  (require 'mds-custom)
-  (require 'mds-ss)
-  (require 'mds-wm)
-  (require 'maplev)
   (defvar mds-truncate-lines-flag))
-
 
 ;;}}}
 
@@ -270,7 +269,7 @@ Set cursor to ready."
     (if (= 1 mds-li-state)
 	(progn
 	  (beep)
-	  (message "No preceding state."))
+	  (message "No preceding statement."))
       (mds-li-goto-state (1- mds-li-state))
       (let ((expr (mds-expr-at-point)))
 	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
@@ -327,6 +326,7 @@ LABEL is the user id."
 (define-derived-mode mds-li-mode mds-ss-mode "source-mode"
   "Major mode for stepping through source code of a debugged Maple procedure."
   :group 'mds
+  :abbrev-table nil
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
   (if mds-truncate-lines-flag (toggle-truncate-lines 1)))

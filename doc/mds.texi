@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 2.1.1
+@set VERSION 2.2.0
 @set DATE June 2011
 
 @dircategory Emacs
@@ -110,7 +110,7 @@ Showstat Mode
 * Watchpoints::                 Setting and clearing watchpoints.
 * Evaluation::                  Evaluating expressions.
 * Miscellaneous::               Miscellaneous commands.
-* Monitoring::                  
+* Monitoring::                  Display selected expressions at each step.
 * Patching::                    Live patching Maple procedures.
 * Help::                        Getting help.
 
@@ -118,7 +118,7 @@ LineInfo Buffer
 
 * Accessing LineInfo::          Creating the line-info data.
 * LineInfo Mode::               Available commands.
-* LineInfo Caveats::            Bugs.
+* LineInfo Caveats::            Limitations.
 
 LineInfo Caveats
 
@@ -134,7 +134,7 @@ Output Buffer
 Debugging Tips
 
 * Set breakpoint in calling procedure::  Locating a bug.
-* Locate source of unexpected result::  Finding where expression originate.
+* Locate source of unexpected result::  Finding where an expression originates.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 
@@ -370,23 +370,19 @@ entering the procedure.  The default displays arguments.
 The command @command{mds-toggle-show-args} toggles this flag.
 @findex mds-toggle-show-args
 
-@vindex mds-stop-trace-at-error-flag
-@findex mds-toggle-stop-trace-at-error
-@item @code{mds-stop-trace-at-error-flag}
-A boolean value that, when non-nil, causes tracing
-to stop when an error occurs.  This is useful
-in that it prevents the debugger from exiting when
-an error occurs while tracing.
-@xref{tracing}.
-The default is to stop.
-The command @code{mds-toggle-stop-trace-at-error}
-toggles this flag.
-@findex mds-toggle-stop-trace-at-error
+@vindex mds-stop-trace-at-trapped-error-flag
+@findex mds-toggle-stop-trace-at-trapped-error
+@item @code{mds-stop-trace-at-trapped-error-flag}
+A boolean variable that, when non-nil, causes tracing to stop when an error
+is trapped.  This is only effective if error-trapping is enabled.  
+@xref{tracing}.  The default is nil.  
+The command @code{mds-toggle-stop-trace-at-trapped-error} toggles this flag.
+@findex mds-toggle-stop-trace-at-trapped-error
 
 @vindex mds-track-input-flag
 @findex mds-toggle-track-input
 @item @code{mds-track-input-flag}
-A boolean value that, when non-nil, causes the input line of
+A boolean variable that, when non-nil, causes the input line of
 the procedure being debugged to be echoed to the output buffer
 when the line is executed.  The default echos the line.
 The command @code{mds-toggle-track-input} toggles this flag.
@@ -394,7 +390,7 @@ The command @code{mds-toggle-track-input} toggles this flag.
 
 @vindex mds-truncate-lines-flag
 @item @code{mds-truncate-lines-flag}
-A boolean value that, when non-nil, causes lines in the showstat and 
+A boolean variable that, when non-nil, causes lines in the showstat and 
 output windows to be truncated at the right edge of the screen 
 rather than wrapping.  The default truncates lines.
 The command @command{mds-toggle-truncate-lines} toggles this flag.
@@ -402,7 +398,7 @@ The command @command{mds-toggle-truncate-lines} toggles this flag.
 
 @vindex mds-wait-until-ready-flag
 @item @code{mds-wait-until-ready-flag}
-A boolean value that, when non-nil, forces the debugger to wait until
+A boolean variable that, when non-nil, forces the debugger to wait until
 a prompt has been received to send the user's response.  Setting it
 to nil allows pipe-lining responses, but prevents a notification when
 the debugger has exited.  The default is to wait for a prompt.
@@ -411,7 +407,7 @@ This flag is toggled with the command @command{mds-toggle-wait-until-ready}.
 
 @vindex mds-wm-side-by-side
 @item @code{mds-wm-side-by-side}
-A boolean value that, when non-nil, causes the @b{live-showstat}
+A boolean variable that, when non-nil, causes the @b{live-showstat}
 and @b{output} windows to appear side-by-side when displayed
 in a single client view.  That is the default.  When nil
 the windows appear one above the other.
@@ -551,7 +547,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints.
 * Evaluation::                  Evaluating expressions.
 * Miscellaneous::               Miscellaneous commands.
-* Monitoring::                  
+* Monitoring::                  Display selected expressions at each step.
 * Patching::                    Live patching Maple procedures.
 * Help::                        Getting help.
 @end menu
@@ -683,23 +679,24 @@ Skip forward until the predicate assigned by the @code{skip_until}
 option to @code{mdc} is true.
 
 @kindex t
-@findex mds-trace
-@vindex mds-stop-trace-at-error-flag
+@findex mds-select-trace
+@vindex mds-stop-trace-at-trapped-error-flag
 @cindex tracing
 @anchor{tracing}
-@item t (@command{mds-trace})
-Cycle through tracing modes.  The selected tracing mode, 
-@strong{cont}, @strong{next}, @strong{into}, or @strong{step}, 
+@item t (@command{mds-select-trace})
+Select the tracing mode.  The selected tracing mode, 
+@strong{none}, @strong{cont}, @strong{next}, @strong{into}, @strong{step}, or @strong{_skip},
 determines where the debugger temporarily halts and what output 
 is displayed in the output buffer. The selected mode is equivalent 
-to continually executing the corresponding debugging command.
+to continually executing the corresponding debugging command
+(the _skip command is equivalent to calling @command{mds-skip}).
 
 After selecting a tracing mode, tracing begins with the next command
 that executes a statement.  Statements are then automatically executed
-until the client exits or, if @code{mds-stop-trace-at-error-flag} is
+until the client exits or, if @code{mds-stop-trace-at-trapped-error-flag} is
 non-nil, an error is trapped.  At that point, the tracing mode may be
-manually disabled by pressing @kbd{t} until the @strong{disabled} mode
-is selected.  If Maple has exited, reissuing the original Maple
+manually disabled by selecting the @strong{disabled} mode.
+If Maple has exited, reissuing the original Maple
 command causes the debugger to recommence, at which time the
 hyperlinks in the output buffer become operational and permit quickly
 moving to places of interest.
@@ -965,9 +962,12 @@ c = NULL
 
 @kindex ,
 @findex mds-eval-and-prettyprint-prev
-@item . (@command{mds-eval-and-prettyprint-prev})
-Works like @command{mds-eval-and-prettyprint} but uses expression at previous line
-(skipping useless lines).
+@item , (@command{mds-eval-and-prettyprint-prev})
+Works like @command{mds-eval-and-prettyprint} but uses expression at
+the previous statement, that is, with a statement-number one 
+less than the current statement.  
+This command is useful for pretty-printing the last computation, 
+but only when that is the result of previous statement.
 
 @end table
 
@@ -1133,13 +1133,13 @@ The line-info buffer displays the source file of the
 current Maple procedure during debugging.  An arrow in the
 left margin points to the current line in the procedure.
 
-This mode uses an undocumented, experimental feature of Maple 16.
+This mode uses an undocumented, experimental feature introduced in Maple 16.
 As such, there are a few limitations with using it.
 
 @menu
 * Accessing LineInfo::          Creating the line-info data.
 * LineInfo Mode::               Available commands.
-* LineInfo Caveats::            Bugs.
+* LineInfo Caveats::            Limitations.
 @end menu
 
 @node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
