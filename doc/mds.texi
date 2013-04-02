@@ -110,7 +110,7 @@ Showstat Mode
 * Watchpoints::                 Setting and clearing watchpoints.
 * Evaluation::                  Evaluating expressions.
 * Miscellaneous::               Miscellaneous commands.
-* Monitoring::                  
+* Monitoring::                  Display selected expressions at each step.
 * Patching::                    Live patching Maple procedures.
 * Help::                        Getting help.
 
@@ -118,7 +118,7 @@ LineInfo Buffer
 
 * Accessing LineInfo::          Creating the line-info data.
 * LineInfo Mode::               Available commands.
-* LineInfo Caveats::            Bugs.
+* LineInfo Caveats::            Limitations.
 
 LineInfo Caveats
 
@@ -134,7 +134,7 @@ Output Buffer
 Debugging Tips
 
 * Set breakpoint in calling procedure::  Locating a bug.
-* Locate source of unexpected result::  Finding where expression originate.
+* Locate source of unexpected result::  Finding where an expression originates.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 
@@ -547,7 +547,7 @@ They are grouped according to function.
 * Watchpoints::                 Setting and clearing watchpoints.
 * Evaluation::                  Evaluating expressions.
 * Miscellaneous::               Miscellaneous commands.
-* Monitoring::                  
+* Monitoring::                  Display selected expressions at each step.
 * Patching::                    Live patching Maple procedures.
 * Help::                        Getting help.
 @end menu
