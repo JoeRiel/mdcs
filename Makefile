@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.1.1
+VERSION := 2.2.0
 
 include help-system.mak
 
