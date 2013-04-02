@@ -962,9 +962,12 @@ c = NULL
 
 @kindex ,
 @findex mds-eval-and-prettyprint-prev
-@item . (@command{mds-eval-and-prettyprint-prev})
-Works like @command{mds-eval-and-prettyprint} but uses expression at previous line
-(skipping useless lines).
+@item , (@command{mds-eval-and-prettyprint-prev})
+Works like @command{mds-eval-and-prettyprint} but uses expression at
+the previous statement, that is, with a statement-number one 
+less than the current statement.  
+This command is useful for pretty-printing the last computation, 
+but only when that is the result of previous statement.
 
 @end table
 
