@@ -24,16 +24,11 @@ OS := $(shell uname -o)
 # command line.  
 
 EMACS := emacs
-ifeq ($(OS),Cygwin)
-  MAPLE := cmaple
-  INSTALL-INFO = install-info
-else
-  MAPLE := maple
+MAPLE := cmaple
 ifeq ($(OS),GNU/Linux)
   INSTALL-INFO = ginstall-info
 else
   INSTALL-INFO = install-info
-endif
 endif
 
 MINT := mint
@@ -252,7 +247,7 @@ remove-preview :
 
 hdb := $(maple-pkg).hdb
 hdb: $(call print-help,hdb,	Create Maple help database)
-hdb: mla-install $(maple-pkg).hdb
+hdb: mla-install data-install $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
@@ -266,7 +261,15 @@ hdb-install: hdb
 	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
 	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
 # }}}
+# {{{ data
 
+data-install: $(call print-help,data-install,Install data)
+data-install: data/*.mpl
+	@echo "Installing data files, $^, into $(MAPLE-DATA-DIR)"
+	@$(MKDIR) $(MAPLE-DATA-DIR)
+	@$(CP) --target-directory=$(MAPLE-DATA-DIR) $+
+
+# }}}
 # misc
 help: $(call print-separator)
 
@@ -330,12 +333,6 @@ install: $(install-all)
 
 install: $(addsuffix -install,hdb html info lisp maple)
 
-data-install: $(call print-help,data-install,Install data)
-data-install: data/*.mpl
-	@echo "Installing data files, $^, into $(MAPLE-DATA-DIR)"
-	@$(MKDIR) $(MAPLE-DATA-DIR)
-	@$(CP) --target-directory=$(MAPLE-DATA-DIR) $+
-
 uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX-DIR))
 uninstall:
 	@rm -rf $(TOOLBOX-DIR)
@@ -391,7 +388,7 @@ sweep:
 
 cleanall: $(call print-help,cleanall,Remove installed files and built files)
 cleanall: clean
-	-$(RM) $(MAPLE-INSTALL-DIR)/$(mla) $(MAPLE-INSTALL-DIR)/$(hdb) $(installer)
+	$(RM) -r $(TOOLBOX-DIR)/ $(installer)
 
 # }}}
 
