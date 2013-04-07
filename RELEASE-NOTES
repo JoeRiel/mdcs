@@ -1,4 +1,8 @@
 -*- org -*-
+
+* mdcs.2.2.1
+** Improve installer
+** Add minimal example .emacs file
 * mdcs.2.2.0
 ** Modify to include maplev 2.28
 ** Add a skip trace feature.  Modify method for selecting a trace mode.
