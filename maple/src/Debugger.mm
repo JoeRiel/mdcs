@@ -50,9 +50,9 @@ local _debugger
     , _showstat
     , _showstop
     , _print
-    , go_back := false
-    , go_back_proc
-    , go_back_state := 0
+    , go_back := false        # flag, true skips to go_back_proc : go_back_state
+    , go_back_proc            # name of procedure to go-back to.  Why not use the address?
+    , go_back_state := 0      # statement number to go-back to
     , here_cnt := 0
     , here_proc
     , here_state
@@ -137,6 +137,13 @@ $endif
 #}}}
 #{{{ Restore
 
+##PROCEDURE mdc[Debugger][Restore]
+##HALFLINE restore debugger procedures
+##DESCRIPTION
+##- Restore the debugger procedures
+##  ~debugger~, ~`debugger/printf`~, ~`debugger/readline`~
+##  ~showstat~, ~showstop~, ~stopat~, and ~where~.
+
     Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced = true then
@@ -148,6 +155,11 @@ $endif
 
 #}}}
 #{{{ RestoreBuiltins
+
+##PROCEDURE mdc[Debugger][RestoreBuiltins]
+##HALFLINE restore builtin procedures
+##DESCRIPTION
+##- Called by ~mdc:-ModuleUnload~, it restores the builtin procedures.
 
     RestoreBuiltins := proc()
     local pnam;
