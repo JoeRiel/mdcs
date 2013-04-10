@@ -51,10 +51,10 @@ local _debugger
     , _showstop
     , _print
     , go_back := false        # flag, true skips to go_back_proc : go_back_state
-    , go_back_proc            # name of procedure to go-back to.  Why not use the address?
+    , go_back_addr            # address of procedure to go-back to.
     , go_back_state := 0      # statement number to go-back to
     , here_cnt := 0
-    , here_proc
+    , here_addr
     , here_state
     , last_evalLevel
     , last_state
@@ -629,7 +629,7 @@ $endif
             end if;
             go_back := true;
             skip := true;
-            return [go_back_proc, go_back_state];
+            return [go_back_addr, go_back_state];
         end if;
     end proc;
 #}}}

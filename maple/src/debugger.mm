@@ -37,19 +37,20 @@ global showstat, showstop;
                                         incremented with each "indentation" level *)
         n := n - 1;
 
+        addr := addressof(procName);
+
         #{{{ handle skipping
 
         if skip then
-
             if go_back then
-                if procName = go_back_proc
+                if addr = go_back_addr
                 and statNumber = go_back_state then
                     go_back := false;
                     skip := false;
                     debugger_printf(TAG_CLEAR_MSG);
                 end if;
             elif here_cnt > 0 then
-                if here_proc = procName
+                if here_addr = addr
                 and here_state = statNumber then
                     if here_cnt > 1 then
                         here_cnt := here_cnt-1;
@@ -206,7 +207,6 @@ global showstat, showstop;
             module_flag := true;
         end if;
         if not skip then
-            addr := addressof(procName);
             state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
                 # WriteTagf(TAG_SAME);
@@ -458,7 +458,7 @@ global showstat, showstop;
             return 'debugopts'('setenv'=[line[2],line[3]])
         elif cmd = "_skip" then
             #{{{ _skip
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return line;
@@ -467,12 +467,12 @@ global showstat, showstop;
             #{{{ _here
             line := sscanf(original, "%s %d %d %d");
             here_cnt := line[2];
-            here_proc := pointto(line[3]);
+            here_addr := line[3];
             here_state := line[4];
             if here_state = statNumber then
                 here_cnt := here_cnt+1;
             end if;
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
@@ -482,7 +482,7 @@ global showstat, showstop;
 
             line := sscanf(original, "%s %s");
             enter_procname := line[2];
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
@@ -492,8 +492,7 @@ global showstat, showstop;
             #{{{ _goback_save
             line := sscanf(original, "%s %d %d");
             go_back_state := line[2];
-            # go_back_proc := procName;
-            go_back_proc := pointto(line[3]);
+            go_back_addr := line[3];
             return 'NULL'
             #}}}
         elif cmd = "_monitor" then
