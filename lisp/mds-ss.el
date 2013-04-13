@@ -111,8 +111,9 @@ code."
 
 (defun mds-ss-request (expr &optional unlimited)
   "Send the string EXPR to Maple and return the response, as a string.
-A newline is appended to EXPR before it is sent (why?).  EXPR should
-have no spaces."
+A newline is appended to EXPR before it is sent (why?).  EXPR
+should have no spaces.  If UNLMITED is non-nil, the complete
+response is returned, regardless its size."
   (let ((client mds-client)
 	result)
     (save-current-buffer
