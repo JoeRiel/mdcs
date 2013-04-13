@@ -1149,7 +1149,9 @@ As such, there are a few limitations with using it.
 The line-info buffer is active whenever line-info data is available for
 a procedure.  Line-info data is available when a Maple source file
 is read into Maple, either with the Maple @code{read} command, or by
-passing the file as input to tty Maple.
+passing the file as input to tty Maple.  Using an absolute path to the
+filename, or include files, may be necessary to permit access to the
+data while changing directories during code execution.  
 
 The line-info data stores the location of the source file relative to
 the current directory.  If the code being debugged changes current
