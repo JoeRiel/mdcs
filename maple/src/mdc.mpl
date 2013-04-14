@@ -580,6 +580,7 @@ local Connect
     , print_to_maple_flag
     , SkipCheckStack
     , SkipIndicateMatch
+    , unlimited_flag := false
     , Warnings
     ;
 #}}}
@@ -1074,7 +1075,9 @@ local msg,len,lenlen;
         msg := sprintf(_rest);
     end if;
     len := length(msg);
-    if tag <> TAG_SS_LIVE
+    if unlimited_flag then
+        unlimited_flag := false;
+    elif tag <> TAG_SS_LIVE
     and tag <> TAG_SS_DEAD
     and tag <> TAG_UNLIMITED
     and 0 < max_length

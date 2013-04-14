@@ -18,7 +18,7 @@ description
     `Not intended to be called directly.`;
 local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line
     , original, prompt, statLevel, state, pName, lNum, cond, cmd, err
-    , module_flag, pred, tag;
+    , module_flag, pred, statement, tag;
 global showstat, showstop;
 
     # Note: 21 appears to be the amount that kernelopts('level')
@@ -303,7 +303,7 @@ global showstat, showstop;
         fi;
         err := NULL;
 
-        #{{{ parse cmd (else is arbitrary expression)
+        #{{{ parse cmd
 
         if cmd = "cont" then
             return
@@ -539,60 +539,42 @@ global showstat, showstop;
             prompt := false;
             next;
             #}}}
-        elif cmd = "statement" then
-            #{{{ statement
-            # Must be an expression to evaluate globally.
-            original := original[SearchText("statement",original)+9..-1];
-            try
-                line := parse(original,'statement',parse_debugger);
-                # *** Avoid returning `line` unevaluated (due to LNED) by
-                # evaluating if line refers to a procedure. Note that the check
-                # for type procedure also evaluates line if it happens to be a
-                # TABLEREF, which can mess up MEMBER binding, so don't check
-                # for type procedure if it is a TABLEREF (i.e. type indexed).
-                if not line :: indexed and line :: procedure then
-                    return eval(line);
-                elif line = NULL then
-                    return 'NULL';
-                else
-                    return line;
-                fi;
-            catch:
-                err := lasterror;
-            end try
+        elif cmd = "_mds_unlimited" then
+            #{{{ _mds_unlimited
+            unlimited_flag := true;
+            line := original[16..];
+            original := line;
+            cmd := op(traperror(sscanf(line,"%s")));
             #}}}
+        end if;
+
+        if cmd = "statement" then
+            original := original[11..];
+            statement := ':-statement';
         else
-            #{{{ expression
+            statement := NULL;
+        end if;
 
-            try
-                Respond := true;
-                # Must be an expression to evaluate.
-                line := parse(original,parse_debugger);
-                # See *** comment in 'cmd = "statement"' case above.
-                if not line :: indexed and line :: procedure then
-                    return eval(line);
+        try
+            line := parse(original,statement,parse_debugger);
+            # *** Avoid returning `line` unevaluated (due to LNED) by
+            # evaluating if line refers to a procedure. Note that the check
+            # for type procedure also evaluates line if it happens to be a
+            # TABLEREF, which can mess up MEMBER binding, so don't check
+            # for type procedure if it is a TABLEREF (i.e. type indexed).
+            if not line :: indexed and line :: procedure then
+                return eval(line);
                 elif line = NULL then
-                    return 'NULL';
-                else
-                    return line;
-                fi;
-                # catch "invalid expression":
-                #     try
-                #         # this will generate a warning if saving
-                #         # locals.  But warning does not go to debugger
-                #         # output,  it shows up in tty stream.
-                #         parse(original,'statement',parse_debugger);
-                #     catch:
-                #         err := lasterror;
-                #     end try
-            catch:
-                err := lasterror;
-            end try;
-
-            #}}}
-        fi;
+                return 'NULL';
+            else
+                return line;
+            end if;
+        catch:
+            err := lasterror;
+        end try;
 
         #}}}
+
         #{{{ handle error
 
         if err = lasterror then
