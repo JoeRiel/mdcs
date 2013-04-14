@@ -155,7 +155,7 @@
 ##SUBSECTION Configuration Options
 ##-(lead="indent")
 ##  These options configure the debugger.
-##  They are *sticky*, meaning they remain
+##  Most are *sticky*, meaning they remain
 ##  in effect until changed by an explicit
 ##  use of the option.
 ##  The details section describes these options.
@@ -175,6 +175,7 @@
 ##- `launch_emacs` : enables auto-launch of Emacs
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
+##- `print_to_maple` : print each result to Maple
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
 ##- `skip_before` : assigns string used for skipping
@@ -248,6 +249,12 @@
 ##  Must match the value used by the server.
 ##  The default value is 10000; this option is sticky.
 ##
+##opt(print_to_maple,truefalse)
+##  If true, print the result of each debugged statement
+##  to the Maple session.  If the debugger is launched  from Standard Maple,
+##  the results are displayed prettyprinted in the worksheet.
+##  The default is false.
+##
 ##opt(quiet,truefalse)
 ##  When true, do not print the greeting/farewell from the server.
 ##  The default is false; this option is sticky.
@@ -255,7 +262,7 @@
 ##opt(reconnect,truefalse)
 ##  When true, reconnect to the debugger server.
 ##  This may be useful if the server had to be reset.
-##  The default is `false`.
+##  The default is false.
 ##
 ##opt(showoptions,truefalse)
 ##  When true, the **options** and **description** statements
@@ -570,6 +577,7 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
+    , print_to_maple_flag
     , SkipCheckStack
     , SkipIndicateMatch
     , Warnings
@@ -632,6 +640,7 @@ $include <src/PrintRtable.mm>
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                         , { print_to_maple :: truefalse := GetDefault(':-print_to_maple',false) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                          , { reconnect :: truefalse := false }
                          , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
@@ -687,7 +696,9 @@ $include <src/PrintRtable.mm>
         view_flag := view; # and not IsWorksheetInterface();
         max_length := maxlength;
 
-
+        #{{{ print_to_maple
+        print_to_maple_flag := print_to_maple;
+        #}}}
         #{{{ max_length
 
         if max_length > 0 then

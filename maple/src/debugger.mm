@@ -128,6 +128,11 @@ global showstat, showstop;
             tag := TAG_EVAL
         end if;
         for i from 1 to n do
+
+            if print_to_maple_flag then
+                print(_passed[i]);
+            end if;
+
             # Use addressof to prevent an object from overriding
             # equality.
             if addressof(_passed[i]) = addressof(lasterror) then
