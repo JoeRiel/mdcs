@@ -234,7 +234,7 @@ Set cursor to ready."
   (interactive)
   (message "set go-back point")
   (let ((addr-state-beg (mds-li-get-state-list (point))))
-    (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+    (mds-ss-eval-proc-statement (format "_mds_goback_save %s %s"
 					(nth 1 addr-state-beg)
 					(nth 0 addr-state-beg)))))
 
@@ -243,7 +243,7 @@ Set cursor to ready."
   (interactive "p")
   (message "Skipping to point...")
   (let ((addr-state-beg (mds-li-get-state-list (point))))
-    (mds-ss-eval-proc-statement (format "_here %d %s %s"
+    (mds-ss-eval-proc-statement (format "_mds_here %d %s %s"
 					cnt
 					(nth 0 addr-state-beg)
 					(nth 1 addr-state-beg)))))

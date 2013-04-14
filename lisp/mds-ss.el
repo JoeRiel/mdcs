@@ -535,13 +535,13 @@ exits."
 	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (message "Stop in procedure %s..." proc)
-    (mds-ss-eval-proc-statement (format "_enter %s" proc))))
+    (mds-ss-eval-proc-statement (format "_mds_enter %s" proc))))
 
 (defun mds-here (cnt)
   "Skip until the statement at point is reached CNT times."
   (interactive "p")
   (message "Skipping to point...")
-  (mds-ss-eval-proc-statement (format "_here %d %s %s"
+  (mds-ss-eval-proc-statement (format "_mds_here %d %s %s"
 				      cnt
 				      (mds-ss-get-embedded-addr)
 				      (mds-ss-get-state))))
@@ -579,7 +579,7 @@ Otherwise delete the dead showstat window."
   "Resume skipping."
   (interactive)
   (message "Skipping...")
-  (mds-ss-eval-proc-statement "_skip"))
+  (mds-ss-eval-proc-statement "_mds_skip"))
 
 (defun mds-step ()
   "Send the 'step' command to the debugger."
@@ -598,6 +598,8 @@ to display the code."
        (setq state nil)
       (if (mds-client-use-lineinfo-p mds-client)
 	  (mds-wm-toggle-code-view)))
+    (if (string= state "_skip")
+	(setq state "_mds_skip"))
     (mds-client-set-trace mds-client state)))
 
 ;;}}}
@@ -829,7 +831,7 @@ the number of activation levels to display."
 Monitoring provides a continuous display of specified Maple expressions.
 See `mds-monitor-define'."
   (interactive)
-  (mds-ss-eval-proc-statement "_monitor toggle"))
+  (mds-ss-eval-proc-statement "_mds_monitor toggle"))
 
 (defun mds-monitor-define (all)
   "Define a monitor expression for the current procedure.
@@ -848,7 +850,7 @@ See `mds-monitor-toggle'."
   (let ((expr (read-string (format "%smonitor expr: "
 				   (if all "[all] " ""))))
 	(addr (if all "0" (mds-client-get-addr mds-client))))
-    (mds-ss-eval-proc-statement (format "_monitor define %s %s" addr expr))))
+    (mds-ss-eval-proc-statement (format "_mds_monitor define %s %s" addr expr))))
 
 ;;}}}
 ;;{{{ (*) Short cuts
@@ -914,7 +916,7 @@ otherwise do so in the `mds-ss-buffer'."
   "Save statement at point as go-back point."
   (interactive)
   (message "set go-back point")
-  (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+  (mds-ss-eval-proc-statement (format "_mds_goback_save %s %s"
 				      (mds-ss-get-state)
 				      (mds-ss-get-embedded-addr))))
 

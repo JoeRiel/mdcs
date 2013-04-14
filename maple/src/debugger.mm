@@ -461,14 +461,14 @@ global showstat, showstop;
             return ['debugopts'('lastexception')]
         elif cmd = "setenv" then
             return 'debugopts'('setenv'=[line[2],line[3]])
-        elif cmd = "_skip" then
+        elif cmd = "_mds_skip" then
             #{{{ _skip
             go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return line;
             #}}}
-        elif cmd = "_here" then
+        elif cmd = "_mds_here" then
             #{{{ _here
             line := sscanf(original, "%s %d %d %d");
             here_cnt := line[2];
@@ -482,8 +482,8 @@ global showstat, showstop;
             skip := true;
             return 'NULL';
             #}}}
-        elif cmd = "_enter" then
-            #{{{ _enter
+        elif cmd = "_mds_enter" then
+            #{{{ _mds_enter
 
             line := sscanf(original, "%s %s");
             enter_procname := line[2];
@@ -493,15 +493,16 @@ global showstat, showstop;
             return 'NULL';
 
             #}}}
-        elif cmd = "_goback_save" then
+        elif cmd = "_mds_goback_save" then
             #{{{ _goback_save
             line := sscanf(original, "%s %d %d");
             go_back_state := line[2];
             go_back_addr := line[3];
             return 'NULL'
             #}}}
-        elif cmd = "_monitor" then
+        elif cmd = "_mds_monitor" then
             #{{{ _monitor
+
             line := sscanf(original, "%s %s %d %1000c");
             cmd := line[2];
             if cmd = "toggle" then
@@ -522,6 +523,7 @@ global showstat, showstop;
             else
                 return 'NULL';
             end if;
+
             #}}}
         elif cmd = "_mds_request" then
             #{{{ _mds_request
