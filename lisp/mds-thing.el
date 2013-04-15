@@ -4,16 +4,10 @@
 ;;; Commentary:
 ;; 
 
-(require 'thingatpt)
-
-;; (global-set-key [f11] 'mds-procname-at-point)
-
-;; (defun mds-procname-at-point ()
-;;   (interactive)
-;;   (let ((procname (thing-at-point 'procname)))
-;;     (message procname)))
 
 ;;; Code:
+
+(require 'thingatpt)
 
 (defun mds-thing-bounds-of-procname-at-point ()
   "Return the start and end points of the procedure name at point.

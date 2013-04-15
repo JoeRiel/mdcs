@@ -249,7 +249,6 @@ display the client windows, and get the focus."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert msg)))
-;;    (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
 

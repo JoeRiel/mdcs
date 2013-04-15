@@ -693,8 +693,6 @@ Query for global variable, using symbol at point as default."
   (let* ((cmd "stopwhenif")
 	 (var (mds--query-stop-var cmd "var" 'mds-ss-stopwhen-history-list))
 	 (val (read-string "value: ")))
-    ;;    (if (string= var "")
-    ;;	(error "stopwhenif requires a variable and a value")
     (mds-ss-eval-expr (format "%s(%s,%s)" cmd var val))))
 
 (defun mds-stopwhen-clear ()
