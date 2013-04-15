@@ -1103,7 +1103,6 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
        ["Toggle code view"              mds-wm-toggle-code-view t]
-       ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
        ["Toggle mds-stop-trace-at-trapped-error-flag"   mds-toggle-stop-trace-at-trapped-error-flag t]
@@ -1190,7 +1189,6 @@ Miscellaneous
 \\[mds-wm-toggle-code-view] toggle view of code between showstat and line-info
 \\[mds-toggle-truncate-lines] toggle whether to fold or truncate long lines
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
-\\[mds-toggle-show-args] toggle the displaying of arguments when entering a procedure
 \\[mds-patch] patch procedure in the buffer
 \\[mds-ss-refresh] refresh procedure in the buffer
 "
