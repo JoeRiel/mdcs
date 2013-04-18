@@ -263,7 +263,8 @@ Set cursor to ready."
 ;;{{{ (*) Evaluation
 
 (defun mds-li-eval-and-prettyprint-prev ()
-  "Call `mds-eval-and-prettyprint' with point at the preceding statement."
+  "Prettyprint expression at preceding statement.
+If called with prefix argument, allow return expression of unlimited size."
   (interactive)
   (save-excursion
     (if (= 1 mds-li-state)
@@ -272,7 +273,9 @@ Set cursor to ready."
 	  (message "No preceding statement."))
       (mds-li-goto-state (1- mds-li-state))
       (let ((expr (mds-expr-at-point)))
-	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
+	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
+			  'display
+			  current-prefix-arg)))))
 				
 
 ;;}}}
