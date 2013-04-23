@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs.2.3.0
+** Add print_to_maple option
+** Improve handling of 'here' and 'goback' features
+** Provide means to request unlimited data when evaling expressions
 * mdcs.2.2.1
 ** Improve installer
 ** Add minimal example .emacs file

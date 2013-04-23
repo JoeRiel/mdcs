@@ -928,6 +928,7 @@ the right-side is the value.
 Evaluate an expression in the current context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
+Use @kbd{C-u e} to return an expression of unlimited size.
 
 @kindex E
 @findex mds-eval-and-display-expr-global
@@ -935,6 +936,7 @@ The default expression is taken from the text at the cursor.
 Evaluate an expression in the global context.
 The expression is entered in the mini-buffer.  
 The default expression is taken from the text at the cursor.
+Use @kbd{C-u E} to return an expression of unlimited size.
 
 @kindex .
 @findex mds-eval-and-prettyprint
@@ -944,16 +946,16 @@ The pretty-printing depends on the type of the evaluated expression.
 The first line of the display (after the echoing of the expression)
 shows the type of the output, the remaining lines display the
 expression in an expanded form.
+Use @kbd{C-u .} to return an expression of unlimited size.
 
 For a list or set, each element is displayed on a separate line.
 For a record or table, each field/entry is displayed as an equation
 with the index/field on the left, the entry on the right.
 
-For example, the display of a record named @samp{SomeRecord} looks like
+For example, the display of a record may appear as
 
 @example
 @anchor{prettyprint}
-SomeRecord:
 (*record*)
 a = 23,
 b = 12,
@@ -967,7 +969,8 @@ Works like @command{mds-eval-and-prettyprint} but uses expression at
 the previous statement, that is, with a statement-number one 
 less than the current statement.  
 This command is useful for pretty-printing the last computation, 
-but only when that is the result of previous statement.
+but only when that is the result of the previous statement.
+Use @kbd{C-u .} to return an expression of unlimited size.
 
 @end table
 
@@ -1149,7 +1152,9 @@ As such, there are a few limitations with using it.
 The line-info buffer is active whenever line-info data is available for
 a procedure.  Line-info data is available when a Maple source file
 is read into Maple, either with the Maple @code{read} command, or by
-passing the file as input to tty Maple.
+passing the file as input to tty Maple.  Using an absolute path to the
+filename, or include files, may be necessary to permit access to the
+data while changing directories during code execution.  
 
 The line-info data stores the location of the source file relative to
 the current directory.  If the code being debugged changes current

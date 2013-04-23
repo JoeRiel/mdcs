@@ -86,10 +86,6 @@ the client."
       ;; without that, xfce doesn't switch frames
       (select-frame-set-input-focus (selected-frame)))
   (mds-wm-select-frame-set-input-focus mds-frame)
-  ;; (when mouse-autoselect-window
-  ;;   ;; without this, there are weird problems with window splits or selecting live-buf
-  ;;   ;; alas, with it the sleep-for screws-up the queue-filter.
-  ;;   (sleep-for 0.1)
   ;; Split the frame into a code window and an output window
   (let ((code-win (select-window (display-buffer (mds-client-code-buffer client))))
 	(out-buf  (mds-client-out-buf client)))
@@ -202,7 +198,6 @@ If BACKWARDS is non-nil, rotate backwards, otherwise rotate forwards."
 	     (g (car G)))
 	(and (> (length G) 1)
 	     ;; group is already displayed
-	     ;; (get-buffer-window (mds-client-live-buf client))
 	     ;; rotate list
 	     (setq G (reverse (cons g (reverse (cdr G))))))
 	;; display the live buffer.  Maybe the whole thing.
@@ -309,12 +304,9 @@ line-info buffer.  If the code window does not exist, create it."
 		    (mds-client-live-buf mds-client))))
     (unless (eq cur-buf new-buf)
       (unless li-flag
-	;;(mds-ss-refresh mds-client)
 	(mds-goto-current-state mds-client))
       (set-window-buffer (get-buffer-window cur-buf) new-buf))))
 
-
-;; (cancel-debug-on-entry 'mds-wm-select-code-window)
 (provide 'mds-wm)
 
 ;;; mds-wm.el ends here

@@ -325,7 +325,9 @@ local indexed2slashed
             end if;
         elif rest :: string then
             if StringTools:-Has(rest, "\n") then
+                local unlimited? := unlimited_flag;
                 Debugger:-Printf("(*String with newlines [chars: %d]: *)\n", length(rest));
+                unlimited_flag := unlimited?;
                 Debugger:-Printf("%s\n", rest);
                 return NULL;
             else
