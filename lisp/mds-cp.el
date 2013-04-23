@@ -1,4 +1,4 @@
-;;; mds-cp.el
+;;; mds-cp.el --- Methods for a control panel
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -32,18 +32,18 @@
 
 ;;; Code
 
-(eval-when-compile
-  (require 'mds-client)
-  (require 'wid-edit)
-  (require 'widget)
-  (require 'mds-wm))
-  
+;;; Code:
+
+(require 'mds-client)
+(require 'wid-edit)
+(require 'widget)
+(require 'mds-wm)
 
 ;;{{{ declarations
 
 ;; avoid compiler warnings
 
-(declare-function mds-client-out-buf "mds")
+(declare-function mds-client-out-buf "mds-client")
 (declare-function mds-ss-eval-proc-statement "mds-ss")
 (declare-function mds-ss-view-dead-proc "mds-ss")
 (declare-function mds-ss-modeline-hilite "mds-ss")
@@ -127,9 +127,8 @@ to using the key-binding in the active client's live showstat buffer."
 
 (define-derived-mode mds-cp-mode fundamental-mode "mds-cp-mode"
   "Major mode for the mds control panel."
-
   :group 'mds
-
+  :abbrev-table nil
   
   (erase-buffer)
 
@@ -200,6 +199,4 @@ to using the key-binding in the active client's live showstat buffer."
 
 (provide 'mds-cp)
 
-;; mds-cp.el ends here
-
-
+;;; mds-cp.el ends here

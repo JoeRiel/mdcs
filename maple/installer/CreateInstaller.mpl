@@ -1,4 +1,5 @@
 #{{{ InstallScript
+
 InstallScript :=  proc()
 local cmd
     , config
@@ -55,8 +56,16 @@ uses FT = FileTools, ST = StringTools;
     #{{{ Assign Defaults
 
     Emacs := "emacs";
+    # Use emacs to extract user-emacs-directory (typically ~/.emacs.d)
+    cmd := sprintf("%s --batch --no-init-file --no-site-file "
+                   "--eval \"(princ (file-truename user-emacs-directory))\""
+                   , Emacs);
+    result := ssystem(cmd);
+    if result[1] <> 0 then
+        error "problem executing '%1':\n%s", cmd, result[2];
+    end if;
+    LispDir := cat(result[2], "maple");
     MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "emacs", "lib");
-    LispDir := MakePath(kernelopts('homedir'), ".emacs.d", "maple");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
     UpdateDir := proc(dirfile::string, file::string)
@@ -65,7 +74,10 @@ uses FT = FileTools, ST = StringTools;
                        , dirfile
                        , file
                       );
-        ssystem(cmd);
+        result := ssystem(cmd);
+        if result[1] <> 0 then
+            error "problem executing '%1':/n%2", cmd, result[2];
+        end if;
     end proc;
 
     #}}}
@@ -113,11 +125,10 @@ uses FT = FileTools, ST = StringTools;
 
         cmd := sprintf("%s --batch --no-site-file --no-init-file "
                        "--eval \"(push \\\"%A\\\" load-path)\" "
-                       "--funcall=batch-byte-compile "
-                       "%{}s 2>&1"
+                       "--funcall=batch-byte-recompile-directory \"%A\""
                        , Emacs
                        , lispDir
-                       , < elfiles >
+                       , lispDir
                       );
         printf("%s\n", cmd);
         result := ssystem(cmd);
@@ -132,28 +143,28 @@ uses FT = FileTools, ST = StringTools;
                 "allow the code to run faster.  You can manually byte-compile the "
                 "files from inside Emacs using the command byte-recompile-directory. "
                 "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and "
-                "select the directory where the lisp files were installed."
+                "select the directory where the lisp files were installed: "
+                "%1"
+                , lispDir
                );
         error;
     end try;
 
     #}}}
     #{{{ Install info files
-    
+
     printf("\nInstalling info files...\n");
     Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
+
     #}}}
     #{{{ Update dir node
-    
+
     if platform = "unix" then
         printf("\nUpdating info dir node...\n");
         try
             for file in ["mds","maplev"] do
                 src := MakePath(tboxdir, "info", file);
-                result := UpdateDir(DirFile, src);
-                if result[1] <> 0 then
-                    error result[2];
-                end if;
+                UpdateDir(DirFile, src);
             end do;
         catch:
             WARNING("problem updating the dir node. "
@@ -172,68 +183,94 @@ uses FT = FileTools, ST = StringTools;
                 "is provided in the doc subdirectory of the installation."
                );
     end if;
+
     #}}}
     NULL;
+
 end proc:
 #}}}
 #{{{ CreateInstaller
 
 CreateInstaller := proc()
 
-local installer, version;
+local file, elisp, elisp_map, installer, maplev_dir, maplev_lisp_dir, version;
 global InstallScript;
+uses FT = FileTools;
 
     # This is updated by bin/version
-    version := "1.12.3";
+    version := "2.3.0";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
-    if FileTools:-Exists(installer) then
-        FileTools:-Remove(installer);
+    if FT:-Exists(installer) then
+        FT:-Remove(installer);
     end if;
+
+    maplev_dir := "/home/joe/emacs/maplev";
+    maplev_lisp_dir := FT:-AbsolutePath("lisp", maplev_dir);
+
+    elisp := sort(FT:-ListDirectory(maplev_lisp_dir, 'returnonly' = "*.el"));
+    elisp_map := ( NULL
+                   , seq(FT:-AbsolutePath(file, maplev_lisp_dir)
+                         = FT:-AbsolutePath(file, "lisp")
+                         , file = elisp
+                        )
+                   , seq(`=`(sprintf("lisp/%s",file)$2)
+                         , file = [NULL
+                                   #, "mds-cp.el"
+                                   , "mds-client.el"
+                                   , "mds-custom.el"
+                                   , "mds-li.el"
+                                   , "mds-login.el"
+                                   , "mds-out.el"
+                                   , "mds-patch.el"
+                                   , "mds-queue.el"
+                                   , "mds-re.el"
+                                   , "mds-ss.el"
+                                   , "mds-thing.el"
+                                   , "mds-wm.el"
+                                   , "mds.el"
+                                  ])
+                 );
+
+    manifest := [NULL
+                 , "mdc.mla" = "lib/mdc.mla"
+                 , "mdc.hdb" = "lib/mdc.hdb"
+                 , "../maplev/maplev.mla" = "lib/maplev.mla"
+
+                 (* data files *)
+                 , "data/Sample.mpl" = "data/Sample.mpl"
+
+                 (* emacs stuff *)
+                 , elisp_map
+                 , FT:-AbsolutePath("doc/maplev", maplev_dir) = "info/maplev"
+                 , FT:-AbsolutePath("doc/maplev.html", maplev_dir) = "doc/maplev.html"
+
+                 , ".emacs" = ".emacs"
+
+                 , "README-installer" = "README-installer"
+                 , "doc/mds" = "info/mds"
+                 , "doc/mds.html" = "doc/mds.html"
+
+                 , "maple/installer/config.mpl" = "_config.mpl"
+
+                ];
 
     InstallerBuilder:-Build(
         "emacs"
         , ':-target' = installer
         , ':-version' = version
         , ':-author' = "Joe Riel"
-        , ':-manifest' = [NULL
-                          , "mdc.mla" = "lib/mdc.mla"
-                          , "mdc.hdb" = "lib/mdc.hdb"
-                          , "../maplev/maplev.mla" = "lib/maplev.mla"
-
-                          , seq(`=`(sprintf("lisp/%s",file)$2)
-                                , file = [NULL
-                                          , "mds-client.el"
-                                          , "mds-cp.el"
-                                          , "mds-login.el"
-                                          , "mds-out.el"
-                                          , "mds-patch.el"
-                                          , "mds-re.el"
-                                          , "mds-ss.el"
-                                          , "mds-thing.el"
-                                          , "mds-wm.el"
-                                          , "mds.el"
-                                         ])
-
-                          , "../maplev/lisp/maplev.el" = "lisp/maplev.el"
-
-                          , "doc/README-installer" = "README-installer"
-                          , "doc/mds" = "info/mds"
-                          , "doc/mds.html" = "doc/mds.html"
-
-                          , "../maplev/doc/maplev" = "info/maplev"
-                          , "../maplev/doc/maplev.html" = "doc/maplev.html"
-
-                          , "maple/installer/config.mpl" = "_config.mpl"
-
-                         ]
-        , ':-welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the Maple Debugger Client/Server, version %s.\n", version)
+        , ':-welcome' = [ 'text' = cat( sprintf("Welcome to the installer for the "
+                                                "Maple Debugger Client/Server, version %s.\n"
+                                                , version)
                                         , "\n"
-                                        , "This installer unpacks the Maple archive and help database to a folder under the user's HOME directory.\n"
+                                        , ( "This installer unpacks the Maple archive "
+                                            "and help database to a folder under the user's HOME directory.\n"
+                                          )
                                       )
-
                         ]
+        , ':-manifest' = manifest
         , ':-installation' = [NULL
                               , 'text' = ( "Installing the Lisp and Info files...\n"
                                            "\n"
@@ -252,12 +289,17 @@ global InstallScript;
         , ':-finish' = [NULL
                         , 'text' = ("To finish the installation, see the README-installer file.\n\n"
                                     "For help with mdc, type ?mdc in Maple." )
-                        , 'script' = proc() help("mdc") end proc
+                        , 'script' = proc()
+                                         printf("\n"
+                                                "For help with the debugger client, type ?mdc in Maple.\n"
+                                                "For help with the debugger server, look at the mds node "
+                                                "in info.  An html version of the mds documentation "
+                                                "is available in $HOME/maple/toolbox/doc/mdc.html.\n"
+                                               );
+                                     end proc
                        ]
 
-
-        , ':-width' = 1000
-                           );
+        , ':-width' = 1000 );
 end proc:
 
 #}}}

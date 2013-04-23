@@ -1,7 +1,7 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##
 ##DEFINE CMD HelpMDS
-##PROCEDURE(help) \MOD[\CMD]
+##PROCEDURE(help) mdc[HelpMDS]
 ##HALFLINE display the html help page for the Maple Debugger Server
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2011

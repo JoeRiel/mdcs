@@ -1,6 +1,6 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD Format
-##MODULE \MOD[\SUBMOD]
+##MODULE mdc[Format]
 ##HALFLINE code used by the Emacs Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -24,7 +24,7 @@ local indexed2slashed
 #{{{ ArgsToEqs
 
 ##DEFINE PROC ArgsToEqs
-##PROCEDURE \MOD[\SUBMOD][\PROC]
+##PROCEDURE mdc[Format][ArgsToEqs]
 ##HALFLINE return equations defining the parameters of a procedure call
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -66,9 +66,9 @@ local indexed2slashed
 ##- A problem with passing a string is that parsing it does not necessarily
 ##  return the same procedure.
 ##
-##EXAMPLES
+##EXAMPLES(notest)
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
-##> macro(printargs=\MOD:-\SUBMOD:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
+##> macro(printargs=mdc:-Format:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
 ##> f(3);
 ##> f(3,4,keyword);
@@ -174,7 +174,7 @@ local indexed2slashed
 #{{{ prettyprint
 
 ##DEFINE PROC prettyprint
-##PROCEDURE \MOD[\SUBMOD][\PROC]
+##PROCEDURE mdc[Format][prettyprint]
 ##HALFLINE pretty print a Maple expression
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
@@ -281,8 +281,9 @@ local indexed2slashed
                         Debugger:-Printf("(*object*)\n");
                     end if;
                     opacity := kernelopts('opaquemodules'=false);
-                    rest:-ModulePrint;
-                    return ModulePrint(rest);
+                    if member(':-ModulePrint',rest) then
+                        return ModulePrint(rest);
+                    end if;
                 catch:
                     Debugger:-Printf("object(...)\n");
                 finally
@@ -308,7 +309,7 @@ local indexed2slashed
         elif rest :: procedure then
             if top then
                 if _rest :: name then
-                    Format:-showstat(convert(rest,string));
+                    Format:-showstat(convert(_rest,string));
                 else
                     # rest is an evaluated expression.  Assign to
                     # a the global name _fake_name, which is then
@@ -322,6 +323,17 @@ local indexed2slashed
                 # this can be improved.
                 return `proc() ... end proc`;
             end if;
+        elif rest :: string then
+            if StringTools:-Has(rest, "\n") then
+                local unlimited? := unlimited_flag;
+                Debugger:-Printf("(*String with newlines [chars: %d]: *)\n", length(rest));
+                unlimited_flag := unlimited?;
+                Debugger:-Printf("%s\n", rest);
+                return NULL;
+            else
+                return rest;
+            end if;
+
         elif rest = NULL then
             return "NULL";
         elif rest :: 'name = anything' then
@@ -343,7 +355,7 @@ local indexed2slashed
 #{{{ showstat
 
 ##DEFINE CMD showstat
-##PROCEDURE \MOD[\SUBMOD][\CMD]
+##PROCEDURE mdc[Format][showstat]
 ##HALFLINE display a procedure with statement numbers for debugging
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
@@ -367,13 +379,6 @@ local indexed2slashed
 ##  names of procedures that require the
 ##  use of ~kernelopts(opaquemodules=false)~
 ##  to access.
-##
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-showstat):
-##
-##
-## Try("1.0", FUNC("simplify"));
 
     showstat := proc(p :: string)
     local opacity,prc;
@@ -386,7 +391,7 @@ local indexed2slashed
             catch:
             end try;
             prc := sprintf("%A", debugopts('procdump' = prc));
-            WriteTagf('DBG_SHOW_INACTIVE', "%s", prc);
+            WriteTagf(TAG_SS_DEAD, "%s", prc);
         finally
             kernelopts('opaquemodules' = opacity);
         end try;
@@ -397,7 +402,7 @@ local indexed2slashed
 #{{{ indexed2slashed
 
 ##DEFINE PROC indexed2slashed
-##PROCEDURE \MOD[\SUBMOD][\PROC]
+##PROCEDURE mdc[Format][indexed2slashed]
 ##HALFLINE convert indexed name to a slashed name
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
@@ -446,7 +451,7 @@ local indexed2slashed
 #{{{ GoTry
 
 ##DEFINE PROC GoTry
-##PROCEDURE \MOD[\SUBMOD][\PROC]
+##PROCEDURE mdc[Format][GoTry]
 ##HALFLINE reassign Try to save tests for execution with the go command
 ##AUTHOR   Joe Riel
 ##DATE     May 2011

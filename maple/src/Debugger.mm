@@ -1,6 +1,5 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Debugger
-##MODULE \MOD[\SUBMOD]
+##MODULE mdc[Debugger]
 ##HALFLINE replacement functions for Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
@@ -16,28 +15,29 @@
 
 $define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
 
-$define DBG_EVAL1 DBG_EVAL
-$define DBG_EVAL2 DBG_EVAL
-$define DBG_EVAL3 DBG_EVAL
-$define DBG_EVAL4 DBG_EVAL
 $define LOGFILE "readline.log"
 
 Debugger := module()
 
 #{{{ declarations
 
-export GoBack
+export Enter
+    ,  GoBack
+    ,  Monitor
     ,  Printf
     ,  Replace
     ,  Reset
     ,  Restore
     ,  RestoreBuiltins
+    ,  SetQuiet
+    ,  SkipBefore
     ,  ShowError
     ,  ShowException
     ,  ShowstatAddr
     ,  Skip
     ,  stopat
     ,  unstopat
+    ,  GetName
     ;
 
 global DEBUGGER_PROCS;
@@ -49,20 +49,26 @@ local _debugger
     , enter_procname := NULL
     , _showstat
     , _showstop
-    , _where
     , _print
-    , go_back := false
-    , go_back_proc
-    , go_back_state := 0
+    , go_back := false        # flag, true skips to go_back_proc : go_back_state
+    , go_back_addr            # address of procedure to go-back to.
+    , go_back_state := 0      # statement number to go-back to
     , here_cnt := 0
-    , here_proc
+    , here_addr
     , here_state
     , last_evalLevel
     , last_state
+    , monitoring := false
+    , monitor_addr := 0
+    , monitor_expr
+    , monitor_result := false
     , orig_print
     , orig_stopat
-    , getname
+    , Quiet := false
+    , Respond := false
     , replaced
+    , skip_before := NULL
+    , skip_before_halt := true
 $ifdef LOG_READLINE
     , logpid
 $endif
@@ -131,6 +137,13 @@ $endif
 #}}}
 #{{{ Restore
 
+##PROCEDURE mdc[Debugger][Restore]
+##HALFLINE restore debugger procedures
+##DESCRIPTION
+##- Restore the debugger procedures
+##  ~debugger~, ~`debugger/printf`~, ~`debugger/readline`~
+##  ~showstat~, ~showstop~, ~stopat~, and ~where~.
+
     Restore := proc()
         # Dave H. suggests using 'forget'
         if replaced = true then
@@ -142,6 +155,11 @@ $endif
 
 #}}}
 #{{{ RestoreBuiltins
+
+##PROCEDURE mdc[Debugger][RestoreBuiltins]
+##HALFLINE restore builtin procedures
+##DESCRIPTION
+##- Called by ~mdc:-ModuleUnload~, it restores the builtin procedures.
 
     RestoreBuiltins := proc()
     local pnam;
@@ -158,13 +176,13 @@ $endif
 #{{{ Print and _printf
 
     Printf := proc()
-        debugger_printf('MDC_PRINTF', _rest);
+        debugger_printf(TAG_PRINTF, _rest);
     end proc;
 
     # currently not used
     _print := proc()
         orig_print(_passed);
-        debugger_printf('DBG_WARN', "print output does not display in debugger\n");
+        debugger_printf(TAG_WARN, "print output does not display in debugger\n");
     end proc;
 
 #}}}
@@ -174,9 +192,9 @@ $endif
     local err;
         err := debugopts('lasterror');
         if err = '`(none)`' then
-            debugger_printf('DBG_ERROR', "%a\n", err);
+            debugger_printf(TAG_ERROR, "%a\n", err);
         else
-            debugger_printf('DBG_ERROR', "%s\n", StringTools:-FormatMessage(err));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(err));
         end if;
     end proc;
 
@@ -187,9 +205,9 @@ $endif
     local except;
         except := debugopts('lastexception');
         if except = '`(none)`' then
-            debugger_printf('DBG_EXCEPTION', "%a\n", except);
+            debugger_printf(TAG_ERROR, "%a\n", except);
         else
-            debugger_printf('DBG_EXCEPTION', "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..]));
         end if;
     end proc;
 
@@ -199,11 +217,14 @@ $endif
 
 #{{{ debugger_printf
 
-    debugger_printf := proc( tag :: name )
+    debugger_printf := proc( tag :: string )
     local argList, rts;
     description `Used by debugger to produce output.`;
 
-        argList := [_rest];
+        argList := subsindets([_rest], `record`
+                              , proc(rec) 'Record'(exports(rec)) end proc
+                             );
+
         try
             # suppress large rtables
             rts := map(x->x=`debugger/describe_rtable`(x)
@@ -217,491 +238,52 @@ $endif
         return NULL;
     end proc:
 
+
 #}}}
 #{{{ debugger_readline
 
-# Used for user-input to the debugger. This lets us easily change the input
-# facilities to take advantage of special features of the Iris in future.
+##PROCEDURE mdc[Debugger][debugger_readline]
+##CALLINGSEQUENCE
+##- debugger_readline('prompt')
+##PARAMETERS
+##- 'prompt' : ::truefalse::; true means send a prompt to the server
+##RETURNS
+##- ::string::
+##DESCRIPTION
+##- Read and return the input from the server.
+##- If 'prompt' is true, send a prompt to the server before
+##  attempting to read input.
 
-    debugger_readline := proc()
+    debugger_readline := proc( prompt :: truefalse )
     local line,n;
     description `Used by debugger to obtain user-input.`;
         do
-            debugger_printf('DBG_PROMPT', ">");
+            if prompt then
+                debugger_printf(TAG_PROMPT);
+            end if;
             try
-                line := Read();
-                n := -1;
-                while line[n] = "\n" do
-                    n := n-1;
-                end do;
-                return line[..n];
-            catch "process %1 disconnected unexpectedly":
-                error sprintf("%s; use mdc(reconnect) to reconnect"
-                              , StringTools:-FormatMessage(lastexception[2..])
-                             );
+                line := Sockets:-Read(sid);
             catch:
-                debugger_printf('DBG_ERR'
+                debugger_printf(TAG_ERROR
                                 , "Error, %s\n"
                                 , StringTools:-FormatMessage(lastexception[2..])
                                );
             end try;
+            if line = false then
+                error "process %1 disconnected unexpectedly; use mdc(reconnect) to reconnect", sid;
+            end if;
+            # Remove trailing \n's.
+            n := -1;
+            while line[n] = "\n" do
+                n := n-1;
+            end do;
+            return line[..n];
         end do;
     end proc:
 
 #}}}
-#{{{ debugger
 
-# The debugger proper. This gets invoked after a call to the function debug()
-# is encountered.
-
-    _debugger := proc( )
-    option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
-    description
-        `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
-        `Not intended to be called directly.`;
-    local dbg_state, procName, statNumber, evalLevel, i, j, n, line, original, statLevel
-        , state, pName, lNum, cond, cmd, err, module_flag;
-    global showstat, showstop;
-
-        # Note: 21 appears to be the amount that kernelopts('level')
-        # increases when entering a procedure.
-
-        evalLevel := kernelopts('level') - 21;
-
-        n := _npassed;
-        if n > 0
-        and _passed[n] :: list
-        and nops(_passed[n]) > 0
-        and _passed[n][1] = 'DEBUGINFO' then
-            procName := _passed[n][2];   # name of procedure
-            statNumber := _passed[n][3]; # state number in procedure
-            statLevel := _passed[n][4];  # state level (a posint, starting at 1,
-                                         # incremented with each "indentation" level)
-            n := n - 1;
-
-            #{{{ handle go_back/here/enter_procname/match_predicate
-
-            if skip then
-
-                if go_back then
-                    if procName = go_back_proc
-                    and statNumber = go_back_state then
-                        go_back := false;
-                        skip := false;
-                    end if;
-                elif here_cnt > 0 then
-                    if here_proc = procName
-                    and here_state = statNumber then
-                        if here_cnt > 1 then
-                            here_cnt := here_cnt-1;
-                        else
-                            skip := false;
-                            here_cnt := 0;
-                        end if;
-                    end if;
-                elif enter_procname <> NULL then
-                    if statNumber = 1
-                    and SearchText(enter_procname
-                                   , sprintf("%a",procName)
-                                   #, -length(enter_procname)..-1
-                                  ) <> 0 then
-                        skip := false;
-                        enter_procname := NULL;
-                    end if;
-                else
-                    skip := not match_predicate[procName,statNumber](_passed[1..n]);
-                    if SkipCheckStack then
-                        if skip and evalLevel > last_evalLevel+5 then
-                            skip := not match_predicate(op([7,..], debugopts('callstack')));
-                        end if;
-                        last_evalLevel := evalLevel;
-                    end if;
-                end if;
-
-            end if;
-
-            #}}}
-        else
-            # Joe asks: Is this branch ever executed?
-            procName := 0;
-            statLevel := trunc(evalLevel / 5); # Approximately #
-        fi;
-
-        #{{{ remove indices in procName
-        # Added by Joe Riel.  Indices are used by some procedures,
-        # for example, map[3], but need to be removed.  Multiple
-        # indices are possible.
-        while procName :: 'And(indexed,Not(procedure))' do
-            procName := op(0,procName);
-        end do;
-        #}}}
-        #{{{ process args
-
-        if not skip then
-            for i from 1 to n do
-                # Use addressof to prevent an object from overriding
-                # equality.
-                if addressof(_passed[i]) = addressof(lasterror) then
-                    debugger_printf('MPL_ERR', "Error, %s\n"
-                                    , StringTools:-FormatMessage(lastexception[2..]))
-                elif _passed[i] :: list and nops(_passed[i]) >= 1 then
-                    if _passed[i][1] = 'DEBUGSTACK' then
-                        j := nops(_passed[i]) - 2;
-                        while j > 2 do
-                            if _passed[i][j+1] = `` then
-                                debugger_printf('DBG_STACK'
-                                                , "<%d>\n%a\n"
-                                                , addressof(_passed[i][j])
-                                                , _passed[i][j]
-                                               );
-                            else
-                                debugger_printf('DBG_WHERE'
-                                                , "<%d>\n%a: %s\n"
-                                                , addressof(_passed[i][j])
-                                                , _passed[i][j]
-                                                , _passed[i][j+1]
-                                               );
-                            fi;
-                            j := j - 3
-                        od
-                    elif _passed[i][1] = 'DEBUGERROR' then
-                        debugger_printf('DBG_ERR', "Error, %Q\n",op(_passed[i][2..-1]))
-                    elif _passed[i][1] = 'DEBUGWATCH' then
-                        if assigned(`debugger/watch_condition`[_passed[i][2]])
-                        and [`debugger/watch_condition`[_passed[i][2]]] <> [op(_passed[i][3..-1])]
-                        then
-                            return
-                        fi;
-                        debugger_printf('DBG_WATCHED_CONDS', "%a := %q\n",_passed[i][2],op(_passed[i][3..-1]))
-                    elif i < n then
-                        # list/set that is part of a continued sequence
-                        debugger_printf('DBG_EVAL1', "%a,\n",_passed[i])
-                    else
-                        # list/set
-                        debugger_printf('DBG_EVAL2', "%a\n",_passed[i])
-                    fi
-                elif i < n then
-                    # expr that is part of a continued sequence
-                    debugger_printf('DBG_EVAL3', "%a,\n",_passed[i])
-                else
-                    # expr
-                    debugger_printf('DBG_EVAL4', "%a\n",_passed[i])
-                fi
-            od;
-
-        end if;
-
-        #}}}
-
-        #{{{ print the debug status
-
-        if procName <> 0 then
-            if statNumber < 0 then
-                if not skip then
-                    # handle negative statement number (indicates multiple targets)
-                    debugger_printf('DBG_WARN', "Warning, statement number may be incorrect\n");
-                end if;
-                statNumber := -statNumber
-            end if;
-
-            dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
-            # Set module_flag true if next statement appears to
-            # evaluate a module, which causes a debugger error if one
-            # attempt to step into it.  The test is simple and uses
-            # builtins to keep this fast.
-            if SearchText("module ()", dbg_state) = 0 then
-                module_flag := false;
-            else
-                module_flag := true;
-            end if;
-            if not skip then
-                state := sprintf("<%d>\n%A", addressof(procName), dbg_state);
-                if state = last_state then
-                    WriteTagf('DBG_SAME_STATE');
-                else
-                    last_state := state;
-                    debugger_printf('DBG_STATE', "%s", state);
-                end if;
-            end if;
-        end if;
-
-        #}}}
-
-        #{{{ handle skip
-        # skip is true if 'skip_until' is in effect.
-        if skip then
-            if module_flag then
-                debugopts('steplevel'=evalLevel+6);
-            else
-                debugopts('steplevel'=999999999);
-            end if;
-            return NULL;
-        end if;
-        #}}}
-        #{{{ command loop
-
-        do
-            line := `debugger/readline`();
-            # If there's an assignment, make sure it is delimited by spaces.
-            i := SearchText(":=",line);
-            if i > 1 and SearchText(" := ",line) <> i-1 then
-                line := cat(line[1..i-1]," := ",line[i+2..-1])
-            fi;
-            original := line;
-            # Scan the line into tokens.
-            cmd := op(traperror(sscanf(line,"%s")));
-            line := traperror(sscanf(line,"%s %a %a %1000c"));
-            # Convert an assignment into a call to the assign function.
-            if line = "incorrect syntax in parse: %1 (near %-2 character of parsed string)"
-            and lastexception[3] = "`:=` unexpected" then
-                line := traperror(sscanf(original,"%a := %1000c"));
-                if line <> lasterror and nops(line) = 2 then
-                    if member(line[1],{anames('environment')}) then
-                        line := [cmd,sprintf("%a",line[1]),traperror(parse(line[2],parse_debugger))];
-                        cmd := "setenv"
-                    else
-                        original := sprintf("assign('%a',%a)",line[1]
-                                            , traperror(parse(line[2],parse_debugger)));
-                        cmd := "";
-                    fi
-                fi
-            fi;
-            err := NULL;
-
-            #{{{ parse cmd (else is arbitrary expression)
-
-            if cmd = "cont" then
-                return
-            elif cmd = "next" then
-                debugopts('steplevel'=evalLevel);
-                return
-            elif cmd = "step" and not module_flag then
-                debugopts('steplevel'=999999999);
-                return
-            elif cmd = "into" or cmd = "step" and module_flag then
-                debugopts('steplevel'=evalLevel+6);
-                return
-            elif cmd = "outfrom" then
-                debugopts('steplevel'=evalLevel-2);
-                return
-            elif cmd = "return" then
-                debugopts('steplevel'=evalLevel-statLevel*5);
-                return
-            elif cmd = "level" then
-                debugopts('steplevel' = Level);
-                return
-            elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-                # debugger_printf('DBG_STOP',"stopping\n");
-                # ssystem("sleep 1"); FIXME: may need to delay here.
-                debugopts('interrupt'=true)
-            elif cmd = "where" then
-                if nops(line) = 1 then
-                    return 'debugopts'('callstack')
-                else
-                    return 'debugopts'('callstack'=line[2])
-                fi
-            elif cmd = "showstack" then
-                n := debugopts('callstack');
-                n := [op(1,n),op(5..-1,n)];
-                n := subsop(seq(3*i=``,i=1..(nops(n)+1)/3),n);
-                # n := subsop(op(map(`=`,[seq(i*3,i=1..(nops(n)+1)/3)],``)),n);
-                return n;
-            elif cmd = "stopat" then
-                if nops(line) = 4 then
-                    try
-                        parse(line[4],parse_debugger);
-                        line := [line[1],line[2],line[3],err];
-                    catch:
-                        err := lasterror;
-                    end try;
-                fi;
-                if err <> lasterror then
-                    pName := procName;
-                    lNum := 1;
-                    cond := NULL;
-                    for i from 2 to nops(line) do
-                        if i <= nops(line) then
-                            if line[i] :: name then pName := line[i]
-                            elif line[i] ::  '{integer,list(integer)}' then
-                                lNum := line[i]
-                            else cond := line[i]
-                            fi
-                        fi
-                    od;
-                    if nops(line) > 1 then
-                        try
-                            for n in lNum do
-                                # Can't call stopat() procedure here because cond
-                                # will remain unevaluated (as the name 'cond').
-                                debugopts('stopat'=[pName,n,cond])
-                            od
-                        catch:
-                            err := lasterror
-                        end
-                    fi;
-                    if err <> lasterror then return []; (* stopat() *) fi
-                fi
-            elif cmd = "unstopat" then
-                pName := procName;
-                lNum := NULL;
-                for i from 2 to nops(line) do
-                    if line[i] :: name then pName := line[i]
-                    else lNum := line[i]
-                    fi
-                od;
-                try
-                    unstopat(pName,lNum);
-                catch:
-                    err := lasterror;
-                end try;
-                if err <> lasterror then return err fi
-            elif cmd = "showstat" or cmd = "list" then
-                if procName = 0 then
-                    debugger_printf('DBG_WARN',"Error, not currently in a procedure\n");
-                elif nops(line) = 1 and cmd = "list" then
-                    i := statNumber - 5;
-                    if i < 1 then i := 1 fi;
-                    try
-                        showstat['nonl'](procName,i..statNumber+1);
-                    catch:
-                        err := lasterror;
-                    end try;
-                else
-                    pName := procName;
-                    lNum := NULL;
-                    for i from 2 to nops(line) do
-                        if line[i] :: name then pName := line[i]
-                        else lNum := line[i]
-                        fi
-                    od;
-                    try
-                        showstat['nonl'](pName,lNum);
-                    catch:
-                        err := lasterror;
-                    end try;
-                fi
-            elif cmd = "showstop" then
-                try
-                    showstop['nonl']();
-                catch:
-                    err := lasterror;
-                end try;
-            elif cmd = "stopwhen" then
-                return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
-            elif cmd = "stopwhenif" then
-                return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
-            elif cmd = "unstopwhen" then
-                return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
-            elif cmd = "stoperror" then
-                try
-                    line := sscanf(original,"%s %1000c");
-                    return 'stoperror'(seq(line[i],i=2..nops(line)))
-                catch:
-                    err := lasterror;
-                end try;
-            elif cmd = "unstoperror" then
-                try
-                    line := sscanf(original,"%s %1000c");
-                    return 'unstoperror'(seq(line[i],i=2..nops(line)));
-                catch:
-                    err := lasterror;
-                end try;
-            elif cmd = "help" or cmd = "?" then
-                try
-                    help('debugger');
-                catch:
-                    err := lasterror;
-                end try;
-            elif cmd = "showerror" then
-                return ['debugopts'('lasterror')]
-            elif cmd = "showexception" then
-                return ['debugopts'('lastexception')]
-            elif cmd = "setenv" then
-                return 'debugopts'('setenv'=[line[2],line[3]])
-            elif cmd = "_skip" then
-                go_back_proc := procName;
-                go_back_state := statNumber;
-                skip := true;
-                return line;
-            elif cmd = "_here" then
-                line := sscanf(original, "%s %d %d %d");
-                here_cnt := line[2];
-                here_proc := pointto(line[3]);
-                here_state := line[4];
-                if here_state = statNumber then
-                    here_cnt := here_cnt+1;
-                end if;
-                go_back_proc := procName;
-                go_back_state := statNumber;
-                skip := true;
-                return original;
-            elif cmd = "_enter" then
-                line := sscanf(original, "%s %s");
-                enter_procname := line[2];
-                go_back_proc := procName;
-                go_back_state := statNumber;
-                skip := true;
-                return original;
-            elif cmd = "_goback_save" then
-                line := sscanf(original, "%s %d");
-                go_back_proc := procName;
-                go_back_state := line[2];
-                return sprintf("_goback_save %a %d", procName, go_back_state);
-            elif cmd = "statement" then
-                # Must be an expression to evaluate globally.
-                original := original[SearchText("statement",original)+9..-1];
-                try
-                    line := parse(original,'statement',parse_debugger);
-                    # *** Avoid returning `line` unevaluated (due to LNED) by
-                    # evaluating if line refers to a procedure. Note that the check
-                    # for type procedure also evaluates line if it happens to be a
-                    # TABLEREF, which can mess up MEMBER binding, so don't check
-                    # for type procedure if it is a TABLEREF (i.e. type indexed).
-                    if not line :: indexed and line :: procedure then
-                        return eval(line);
-                    elif line = NULL then
-                        return 'NULL';
-                    else
-                        return line;
-                    fi;
-                catch:
-                    err := lasterror;
-                end try
-            else
-                try
-                    # Must be an expression to evaluate.
-                    line := parse(original,parse_debugger);
-                    # See *** comment in 'cmd = "statement"' case above.
-                    if not line :: indexed and line :: procedure then
-                        return eval(line);
-                    elif line = NULL then
-                        return 'NULL';
-                    else
-                        return line;
-                    fi;
-                catch:
-                    err := lasterror;
-                end try;
-            fi;
-
-            #}}}
-            #{{{ handle error
-
-            if err = lasterror then
-                debugger_printf('DBG_PARSE_ERR', "Error, %s\n"
-                                , StringTools:-FormatMessage(lastexception[2..])
-                               );
-            fi;
-
-            #}}}
-
-        od;
-
-        #}}}
-
-    end proc:
-
-#}}}
+$include <src/debugger.mm>
 
 #{{{ showstat
 
@@ -720,12 +302,8 @@ $endif
                 res := debugopts('procdump'=[p,statnumoroverload,statnum])
             fi;
 
-            map[3](debugger_printf, 'DBG_SHOW_INACTIVE', "\n%s", [res]);
+            map[3](debugger_printf, TAG_SS_DEAD, "\n%s", [res]);
 
-            # nonl probably means "no newline"
-            if procname <> 'showstat[nonl]' then
-                debugger_printf('DBG_NULL', "\n" )
-            fi
         fi;
         NULL
     end proc:
@@ -775,8 +353,8 @@ $ifdef DONTUSE
                    );
 $endif
         WriteTagf(`if`(dead
-                       , 'DBG_SHOW_INACTIVE'
-                       , 'DBG_SHOW'
+                       , TAG_SS_DEAD
+                       , TAG_SS_LIVE
                       )
                   , "<%d>\n%A"
                   , addr
@@ -795,74 +373,51 @@ $endif
     global showstop;
 
         ls := stopat();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo breakpoints set.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo breakpoints set.\n")
         else
-            debugger_printf('DBG_INFO', "\nBreakpoints in:\n");
-            for i in ls do debugger_printf('DBG_INFO', "   %a\n",i) od
+            debugger_printf(TAG_INFO, "\nBreakpoints in:\n");
+            for i in ls do debugger_printf(TAG_INFO, "   %a\n",i) od
         fi;
         ls := stopwhen();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo variables being watched.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo variables being watched.\n")
         else
-            debugger_printf('DBG_INFO', "\nWatched variables:\n");
+            debugger_printf(TAG_INFO, "\nWatched variables:\n");
             for i in ls do
                 if i :: list then
-                    debugger_printf('DBG_INFO', "   %a in procedure %a\n",i[2],i[1])
+                    debugger_printf(TAG_INFO, "   %a in procedure %a\n",i[2],i[1])
                 elif assigned(`debugger/watch_condition`[i]) then
-                    val := sprintf('DBG_INFO', "%a",`debugger/watch_condition`[i]);
+                    val := sprintf(TAG_INFO, "%a",`debugger/watch_condition`[i]);
                     width := streamcall('INTERFACE_GET(screenwidth)');
                     width := `if`(width :: even, width/2, (width-1)/2);
                     if length(val) > width then
                         val := sprintf("%s ...", val[1..width])
                     fi;
-                    debugger_printf('DBG_INFO', "   %a = %s\n",i,val)
+                    debugger_printf(TAG_INFO, "   %a = %s\n",i,val)
                 else
-                    debugger_printf('DBG_INFO', "   %a\n",i)
+                    debugger_printf(TAG_INFO, "   %a\n",i)
                 fi
             od
         fi;
         ls := stoperror();
-        if nops(ls) = 0 then debugger_printf('DBG_INFO', "\nNo errors being watched.\n")
+        if nops(ls) = 0 then debugger_printf(TAG_INFO, "\nNo errors being watched.\n")
         else
-            debugger_printf('DBG_WATCHED_ERRS', "\nWatched errors:\n");
+            debugger_printf(TAG_WATCHED, "\nWatched errors:\n");
             if member('all',ls) then
                 if member('traperror',ls) then
-                    debugger_printf('DBG_INFO', "   All errors\n")
+                    debugger_printf(TAG_INFO, "   All errors\n")
                 else
-                    debugger_printf('DBG_INFO', "   All untrapped errors\n")
+                    debugger_printf(TAG_INFO, "   All untrapped errors\n")
                 fi
             else
                 if member('traperror',ls) then
-                    debugger_printf('DBG_INFO', "   All trapped errors\n")
+                    debugger_printf(TAG_INFO, "   All trapped errors\n")
                 fi;
                 for i in ls do
-                    if i <> 'traperror' then debugger_printf('DBG_INFO', "   %a\n",i) fi
+                    if i <> 'traperror' then debugger_printf(TAG_INFO, "   %a\n",i) fi
                 od
             fi
         fi;
-        if procname <> 'showstop[nonl]' then debugger_printf('DBG_INFO', "\n") fi;
-        NULL
-    end proc:
-
-#}}}
-#{{{ where
-
-    _where := proc( n::integer, $ )
-    local stack, i;
-    option `Copyright (c) 1996 Waterloo Maple Inc. All rights reserved.`;
-        if _npassed = 1 then
-            if n < 1 then debugopts('callstack'=-1) fi;	# To force an error.
-            stack := debugopts('callstack'=n+1)
-        else
-            stack := debugopts('callstack')
-        fi;
-        for i from nops(stack)-2 to 8 by -3 do
-            debugger_printf('DBG_STACK1', "%a: %s\n\t%a\n",stack[i],stack[i+1],stack[i-1])
-        od;
-        if stack[5] = 'TopLevel' then
-            debugger_printf('DBG_STACK2',"Currently at TopLevel.\n")
-        else
-            debugger_printf('DBG_STACK3',"Currently in %a.\n",stack[5])
-        fi;
+        if procname <> 'showstop[nonl]' then debugger_printf(TAG_INFO, "\n") fi;
         NULL
     end proc:
 
@@ -871,7 +426,7 @@ $endif
 #{{{ stopat
 
 ##DEFINE CMD stopat
-##PROCEDURE \MOD[\SUBMOD][\CMD]
+##PROCEDURE mdc[Debugger][stopat]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010
@@ -899,7 +454,7 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
-    local pnam,st;
+    local pnam,statenum;
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
             return orig_stopat();
@@ -907,7 +462,7 @@ $endif
         if p :: list then
             return procname(op(p));
         end if;
-        pnam := getname(p);
+        pnam := GetName(p);
         # debugbuiltins is a module local, which is a design flaw, but
         # avoiding it is tricky.  Passing it as a keyword parameter is
         # not possible because cond is optional yet declared as 'uneval'.
@@ -964,9 +519,9 @@ $endif
             return procname(pnam, _passed[2..]);
         end if;
 
-        st := `if`(_npassed=1,1,n);
-        if _npassed <= 2 then debugopts('stopat'=[pnam, st])
-        else                  debugopts('stopat'=[pnam, st, 'cond'])
+        statenum := `if`(_npassed=1,1,n);
+        if _npassed <= 2 then debugopts('stopat'=[pnam, statenum])
+        else                  debugopts('stopat'=[pnam, statenum, 'cond'])
         end if;
         return NULL;
     end proc:
@@ -982,7 +537,7 @@ $endif
         if p :: list then
             return procname(op(p));
         end if;
-        pnam := getname(p);
+        pnam := GetName(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
         else                  debugopts('stopat'=[pnam, -st, 'cond'])
@@ -996,9 +551,9 @@ $endif
 
 #}}}
 
-#{{{ getname
+#{{{ GetName
 
-    getname := proc(p :: {name,string}, $)
+    GetName := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
@@ -1035,6 +590,31 @@ $endif
 
 #}}}
 
+#{{{ SetQuiet
+
+    SetQuiet := proc( quiet :: truefalse
+                      , { toggle :: truefalse := false }
+                    )
+        if toggle then
+            Quiet := not Quiet;
+        else
+            Quiet := quiet;
+        end if;
+        NULL;
+    end proc;
+
+#}}}
+#{{{ Enter
+
+    Enter := proc(pname :: string := "")
+        enter_procname := `if`(pname = ""
+                               , NULL
+                               , pname
+                              );
+    end proc;
+
+#}}}
+
 #{{{ GoBack
 
     GoBack := proc({ clear :: truefalse := false }, $ )
@@ -1049,7 +629,7 @@ $endif
             end if;
             go_back := true;
             skip := true;
-            return [go_back_proc, go_back_state];
+            return [go_back_addr, go_back_state];
         end if;
     end proc;
 #}}}
@@ -1058,12 +638,20 @@ $endif
     Skip := proc( { clear :: truefalse := false }, $ )
         skip := not clear;
     end proc;
+#}}}
+
+#{{{ SkipBefore
+
+    SkipBefore := proc( target :: string )
+    local prev;
+        prev := skip_before;
+        skip_before := target;
+        skip_before_halt := true;
+        prev;
+    end proc;
 
 #}}}
 
-$undef DBG_EVAL1
-$undef DBG_EVAL2
-$undef DBG_EVAL3
-$undef DBG_EVAL4
+$include <src/Monitor.mm>
 
 end module;

@@ -1,5 +1,83 @@
 -*- org -*-
 
+* mdcs.2.3.0
+** Add print_to_maple option
+** Improve handling of 'here' and 'goback' features
+** Provide means to request unlimited data when evaling expressions
+* mdcs.2.2.1
+** Improve installer
+** Add minimal example .emacs file
+* mdcs.2.2.0
+** Modify to include maplev 2.28
+** Add a skip trace feature.  Modify method for selecting a trace mode.
+** Improve documentation
+* mdcs.2.1.1
+** Improve documentation (info)
+* mdcs.2.1.0
+** Improve LineInfo handling
+** Clean-up Grid stuff; eliminate usegrid option
+** Improve documentation
+** Fix tracing bug
+** Eliminate 'level' tracing option
+
+* mdcs.2.0.10
+** Convert returned stopats from a string to a name, if needed (allows handling locals).
+* mdcs.2.0.9
+** Modify help so ?mdc points to module.  Needed so that parent would work properly.
+** Return the first procedure in the stopats argument.  This is quite handy.
+* mdcs.2.0.8
+** Fix setting/clearing breakpoints in ss-dead buffer
+** Fix setting conditional breakpoints in lineinfo buffer
+** Build mdc.mla properly
+** Modify stopwarning so mdc does not appear in showstop list  
+* mdcs.2.0.7
+** Extend mds-query-on-exit-flag to work with client processes (not just server)
+** Fix bug which displayed wrong statement number in output buffer when using stopat with a statement
+** Remove an unnecessary call to mds-ss-update
+
+* mdcs.2.0.6
+** Add mds-query-on-exit-flag
+* mdcs.2.0.5
+** Change thisproc to procname to work with Maple 12 and 13.
+* mdcs.2.0.4
+** Modify LineInfo:-Get so it works with versions of Maple before 15
+* mdcs.2.0.3
+** Modify enter_procname to activate regardless if at statement 1
+** Add Debugger:-Enter procname (currently undocumented)
+* mdcs.2.0.2
+** Quick fix; forgot to distribute mds-queue.el
+* mdcs.2.0.1
+** New client/server communication protocol: eliminate matching tags
+* mdcs.1.14.1
+** Fixes to lineinfo
+   1. Fixed asynchronous timing issues
+   2. Fixed display of breakpoints
+   3. Fix mds-here
+   4. Fix monitor features
+   5. Fix eval-and-prettyprint-prev (,)
+** Added a Quiet mode, toggle with the Q-key.
+* mdcs.1.14
+** First release with line-info mode.
+* mdcs.1.13.6
+** Fix typo in skip_before description
+* mdcs.1.13.5
+** Add skip_before option
+** Rename SkipUntil to Skip
+* mdcs.1.13.4
+** Hide the mdc:-Format:-PrettyPrint function call
+** Linebreak when prettyprintings strings with newlines, and strip quotes
+** Another fix to Monitor help page
+* mdcs.1.13.3
+** forgot to update these notes
+* mdcs.1.13.2
+** Fix bug with mds-where (stack wouldn't display)
+** Improved help page for Monitor
+* mdcs.1.13.1
+** Add basic monitoring functionality.
+** Change local name of mdc main command from mdc:-mdc to mdc:-ModuleApply.
+   Modify mpldoc titles to correspond.
+** Improve goback functionality to be settable from dead-showstat buffer
+** Fix/improve SkipUntil example
 * mdcs.1.12.3
 ** Add mds-thing.el to manifest
 ** Add goback functionality

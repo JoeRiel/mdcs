@@ -1,4 +1,4 @@
-;;; mds-patch.el
+;;; mds-patch.el --- Apply a temporary patch to a procedure
 
 ;; Copyright (C) 2011 Joseph S. Riel, all rights reserved
 
@@ -35,12 +35,13 @@
 
 ;;}}}
 
-(eval-when-compile
-  (require 'maplev)
-  (require 'mds-client)
-  (require 'mds-re)
-  (require 'mds-ss)
-)
+;;; Code:
+
+(require 'maplev)
+(require 'mds-client)
+(require 'mds-custom)
+(require 'mds-re)
+(require 'mds-ss)
 
 ;;{{{ Create patch buffer
 (defun mds-patch ()
@@ -54,7 +55,7 @@
 
   ;; delete invisible address string
   (let ((ss-buf (current-buffer)) ; assume we are in a ss-buf
-	(ss-addr mds-ss-addr)
+	(ss-addr (mds-client-get-addr mds-client))
 	(client mds-client)
 	(point (point)))
     (set-buffer (get-buffer-create mds-ss-procname))
@@ -69,8 +70,8 @@
       ;; remove numbers and marks, change mode, indent
       (mds-patch-remove-numbers)
       (mds-patch-mode)
-      (setq mds-ss-addr ss-addr
-	    mds-client client)
+      (mds-client-set-addr client ss-addr)
+      (setq mds-client client)
       (maplev-indent-buffer)
       (toggle-truncate-lines 1))
     (switch-to-buffer-other-window (current-buffer))))
@@ -78,11 +79,11 @@
 ;;{{{ Cleanup buffer
 
 (defun mds-patch-remove-numbers ()
-  "Remove the statement numbers and debug marks from buffer."
+  "Remove the statement numbers and debug decoration from buffer."
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward mds--statement-number-and-marks-re nil t)
+    (while (re-search-forward mds-re-statement-number-and-marks nil t)
       (replace-match ""))))
 
 ;;}}}
@@ -97,7 +98,7 @@
 		(point) (point-max))))
       (mds-client-send mds-client
 		   (format "statement mdc:-InstallPatch(%s,%s)\n"
-			   mds-ss-addr str))
+			   (mds-client-get-addr mds-client) str))
       (message "Installed patch"))))
 ;;}}}
 
@@ -116,7 +117,7 @@
 (define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
   "Major mode for live patching a Maple procedure."
   :group 'mds
-
+  :abbrev-table nil
   (let ((map mds-patch-mode-map)
 	(bindings
 	 '(([(control c) (control p)] . mds-patch-install))))
@@ -129,3 +130,5 @@
 ;;}}}
 
 (provide 'mds-patch)
+
+;;; mds-patch.el ends here

@@ -1,4 +1,8 @@
 (require 'easymenu)
+(require 'mds-custom)
+
+(eval-when-compile
+  (defvar mds-max-number-clients))
 
 (defcustom mds-menu-beep t
   "If non-nil, then beep for various changes in a client's status."
