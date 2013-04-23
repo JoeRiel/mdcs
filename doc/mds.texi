@@ -923,6 +923,7 @@ The left-side of each equation is the formal parameter,
 the right-side is the value.
 
 @kindex e
+@kindex C-u e
 @findex mds-eval-and-display-expr
 @item e (@command{mds-eval-and-display-expr})
 Evaluate an expression in the current context.
@@ -931,6 +932,7 @@ The default expression is taken from the text at the cursor.
 Use @kbd{C-u e} to return an expression of unlimited size.
 
 @kindex E
+@kindex C-u E
 @findex mds-eval-and-display-expr-global
 @item E (@command{mds-eval-and-display-expr-global})
 Evaluate an expression in the global context.
@@ -939,6 +941,7 @@ The default expression is taken from the text at the cursor.
 Use @kbd{C-u E} to return an expression of unlimited size.
 
 @kindex .
+@kindex C-u .
 @findex mds-eval-and-prettyprint
 @item . (@command{mds-eval-and-prettyprint})
 Evaluate an expression and prettyprint the result.
@@ -963,6 +966,7 @@ c = NULL
 @end example
 
 @kindex ,
+@kindex C-u ,
 @findex mds-eval-and-prettyprint-prev
 @item , (@command{mds-eval-and-prettyprint-prev})
 Works like @command{mds-eval-and-prettyprint} but uses expression at
@@ -970,7 +974,7 @@ the previous statement, that is, with a statement-number one
 less than the current statement.  
 This command is useful for pretty-printing the last computation, 
 but only when that is the result of the previous statement.
-Use @kbd{C-u .} to return an expression of unlimited size.
+Use @kbd{C-u ,} to return an expression of unlimited size.
 
 @end table
 
