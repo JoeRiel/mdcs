@@ -768,7 +768,7 @@ The result is returned in the message area."
 (defun mds-args ()
   "Display the arguments of the current procedure."
   (interactive)
-  (mds-ss-eval-expr "args"))
+  (mds-ss-eval-expr "args" 'display))
 
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
