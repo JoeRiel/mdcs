@@ -932,7 +932,10 @@ otherwise do so in the `mds-ss-buffer'."
   (mds-ss-eval-expr
    (format "mdc:-Debugger:-SetQuiet(%s)"
 	   (if (mds-client-toggle-quiet-p mds-client)
-	       "true"
+	       (progn
+		 (message "suppress output")
+		 "true")
+	     (message "enable output")
 	     "false"))))
 
 ;;}}}
