@@ -768,7 +768,7 @@ The result is returned in the message area."
 (defun mds-args ()
   "Display the arguments of the current procedure."
   (interactive)
-  (mds-ss-eval-expr "args" 'display))
+  (mds-ss-eval-debug-code "args"))
 
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
@@ -787,7 +787,7 @@ The result is returned in the message area."
 Note that the string displayed in the echo area has the current
 procedure stripped from it."
   (interactive)
-  (mds-ss-eval-expr "showstack"))
+  (mds-ss-eval-debug-code "showstack"))
 
 (defun mds-showstop ()
   "Send the 'showstop' command to the debugger."
