@@ -6,11 +6,6 @@
 ;; Created:    Jan 2011
 ;; Keywords:   maple, debugger
 ;;
-;;; Commentary:
-
-
-;;; Code:
-
 ;;{{{ License
 
 ;; This program is free software; you can redistribute it and/or
@@ -33,6 +28,8 @@
 
 
 ;;}}}
+
+;;; Code
 
 ;;{{{ Lisp Requirements
 

@@ -5,11 +5,6 @@
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
 ;; Keywords:   maple, debugger
-;;
-;;; Commentary:
-
-;; This file contains the source for the Emacs Maple debugger server.
-;; It is a part of the Maple Debugger Client Server package.
 
 ;;{{{ License
 
@@ -31,6 +26,10 @@
 ;;}}}
 ;;{{{ Commentary
 
+;;; Commentary:
+
+;; This file contains source for the Emacs Maple debugger server.
+;; It is a part of the Maple Debugger Client Server package.
 
 ;;}}}
 ;;{{{ TODO
