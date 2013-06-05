@@ -1200,6 +1200,11 @@ Open the file associated with current procedure.
 
 @end table
 
+Because Maple only handles one-byte characters, 
+@code{mds-li-mode} disables multibyte-characters,
+so any that exist in the source are displayed as
+separate characters.
+
 @node LineInfo Caveats,  , LineInfo Mode, LineInfo Buffer
 @section LineInfo Caveats
 @cindex LineInfo Caveats

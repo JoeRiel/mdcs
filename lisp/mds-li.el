@@ -332,6 +332,7 @@ LABEL is the user id."
   :abbrev-table nil
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
+  (toggle-enable-multibyte-characters -1)
   (if mds-truncate-lines-flag (toggle-truncate-lines 1)))
 
 
