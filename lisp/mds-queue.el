@@ -156,6 +156,8 @@ TAG identifies the operation, MSG is the message."
 	    (li-buf (mds-client-li-buf client)))
 	(if (string= file "0")
 	    (mds-client-set-has-source client nil)
+	  ;; print new procname, with hidden address, in output buffer
+	  (mds-out-display out-buf (format "<%s>\n%s" addr procname) 'addr-procname)
 	  (mds-li-update li-buf file addr procname state beg
 			 (mapcar 'string-to-number (split-string breakpoints)))
 	  (mds-client-set-has-source client t))
