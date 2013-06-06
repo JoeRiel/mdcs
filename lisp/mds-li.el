@@ -118,7 +118,9 @@ Put point at BEG and move the current statement marker."
 		  breakpoints (cdr breakpoints))
 	    (goto-char (1+ brkpt))
 	    (mds-li-set-breakpoint (line-beginning-position))))
-	(setq mds-li-addr addr))
+	(setq mds-li-addr addr)
+	;; print new procname, with hidden address, in output buffer
+	(mds-out-display (mds-client-out-buf mds-client) (format "<%s>\n%s" addr procname) 'addr-procname))
       (unless (and same-file same-addr)
 	;; Update the mode-line
 	(mds-li-set-mode-line file
