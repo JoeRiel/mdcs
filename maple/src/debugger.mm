@@ -148,15 +148,16 @@ global showstat, showstop;
                         if _passed[i][j+1] = `` then
                             debugger_printf(TAG_STACK
                                             , "<%d>\n%a\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
+                                            , addressof(_passed[i][j]) # proc address of called procedure
+                                            , _passed[i][j]            # name of called procedure
                                            );
                         else
                             debugger_printf(TAG_STACK
-                                            , "<%d>\n%a: %s\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
-                                            , _passed[i][j+1]
+                                            , "<%d>\n%a: %s\n%a\n"
+                                            , addressof(_passed[i][j]) # proc address of called procedure
+                                            , _passed[i][j]            # name of called procedure
+                                            , _passed[i][j+1]          # current statement in proc
+                                            , _passed[i][j-1]          # list of arguments
                                            );
                         fi;
                         j := j - 3
@@ -238,6 +239,7 @@ global showstat, showstop;
     #}}}
 
     #{{{ handle skip/monitor
+
     # skip is true if 'skip_until' is in effect.
     if skip then
         if module_flag then
@@ -270,6 +272,7 @@ global showstat, showstop;
             end if;
         end if;
     end if;
+
     #}}}
     #{{{ command loop
 
@@ -326,7 +329,7 @@ global showstat, showstop;
             debugopts('interrupt'=true)
         elif cmd = "where" then
             if nops(line) = 1 then
-                return 'debugopts'('callstack')
+                return 'debugopts(callstack)'
             else
                 return 'debugopts'('callstack'=line[2])
             fi

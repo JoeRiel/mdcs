@@ -784,8 +784,8 @@ The result is returned in the message area."
 
 (defun mds-showstack ()
   "Send the 'showstack' command to the debugger.
-Note that the string displayed in the echo area has the current
-procedure stripped from it."
+Display the stack content in the output buffer.  Each entry
+consists of the hyperlinked name of the calling procedure."
   (interactive)
   (mds-ss-eval-debug-code "showstack"))
 
@@ -815,9 +815,14 @@ otherwise run through StringTools:-FormatMessage."
     (mds-ss-send-client "showexception\n")))
 
 (defun mds-where (&optional depth)
-  "Send the 'where' command to the debugger.
-The optional DEPTH parameter is a positive integer that specifies
-the number of activation levels to display."
+  "Send the 'where' command to the debugger.  
+Display the stack content in the output buffer.  Each entry
+consists of the hyperlinked name of the calling procedure,
+followed by the statement from the procedure that was called,
+followed by the list of arguments.  The optional DEPTH parameter
+is a positive integer that specifies the number of activation
+levels to display.  Use `mds-showstack' to see just the
+hyperlinks."
   (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d" depth)
