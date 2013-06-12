@@ -173,7 +173,7 @@ TAG identifies the operation, MSG is the message."
      ((= tag (eval-when-compile mds-tag-prompt))
       ;; Extract the state-number and pass it along
       (mds-out-display out-buf
-		       (buffer-local-value 'mds-ss-state live-buf)
+		       (mds-client-get-state client)
 		       'prompt)
 
       (mds-client-set-allow-input client 'unblock)
