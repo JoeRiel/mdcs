@@ -137,6 +137,7 @@ Debugging Tips
 * Locate source of unexpected result::  Finding where an expression originates.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
+* Recursive debugging::         Rerunning a procedure without exiting
 
 @end detailmenu
 @end menu
@@ -1373,6 +1374,15 @@ Use @command{mds-toggle-track-input} to toggle the variable.
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
 
+When @code{mds-where} (@kbd{K}) is executed from the showstat or
+lineinfo buffer, the stack, with arguments, is displayed in the output
+buffer.  To the left of the list of arguments is a right-pointing
+triangle.  Clicking it calls the associated procedure with the displayed
+arguments (the address to the actual argument is hidden in the buffer).  
+This provides a convenient method to rerun previously called procedures
+with the same arguments.  @xref{Recursive debugging}.
+
+
 @menu
 * Output buffer commands::      
 @end menu
@@ -1396,6 +1406,7 @@ does not change.
 * Locate source of unexpected result::  Finding where an expression originates.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
+* Recursive debugging::         Rerunning a procedure without exiting
 @end menu
 
 @node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
@@ -1465,7 +1476,7 @@ same name, use the Maple @command{assign} procedure; for example,
 evaluate @code{assign(:-x,x)} to assign the value of the local variable
 @code{x} to the global variable @code{:-x}.
 
-@node Save a local result,  , Assign a variable, Debugging Tips
+@node Save a local result, Recursive debugging, Assign a variable, Debugging Tips
 @section Save a local result
 @cindex Save a local result
 
@@ -1486,6 +1497,32 @@ E save x, "/tmp/x.mpl" @key{RET}
 @end example
 
 File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
+
+@node  Recursive debugging,  , Save a local result, Debugging Tips
+@section Recursive debugging
+@cindex Recursive debugging
+
+While debugging, one frequently wants to reexecute a procedure with the
+same arguments to inspect the action of the code.  If the current
+location is inside a recursive procedure, say after trapping an error,
+it might be difficult to reach the starting point, with the arguments
+of interest, by rerunning the original call from top-level.
+
+There is a simple way to do; it may not always work, but should if the
+procedure has no side effects, or at least none that effect the
+variables of interest.  To manually rerun the current procedure, set a
+breakpoint at the location of interest, then evaluate in the debugger (@kbd{e})
+the Maple expression @code{thisproc(args)}.
+
+An easier way to do this, one that allows reexecuting any procedure on
+the current call stack, is to execute @code{mds-where} (@kbd{K}), which
+prints the stack with arguments in the output buffer.  Click the
+hyperlinked name of the procedure of interest, that opens the procedure
+in the dead-showstat buffer.  Set a breakpoint at the appropriate line,
+then go back to the output buffer and click the right-pointing triangle
+to the left of the list of arguments to the procedure.  That causes
+Maple to evaluate the procedure with those arguments.  The debugger
+should then halt at the breakpoint.
 
 
 @node Key Index, Function Index, Debugging Tips, Top

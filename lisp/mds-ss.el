@@ -12,14 +12,15 @@
 
 ;;; Code:
 
-(require 'hl-line)
-(require 'maplev)
-(require 'mds-client)
-(require 'mds-custom)
-(require 'mds-out)
-(require 'mds-re)
-(require 'mds-thing)
-(require 'mds-wm)
+(eval-when-compile
+  (require 'hl-line)
+  (require 'maplev)
+  (require 'mds-client)
+  (require 'mds-custom)
+  (require 'mds-out)
+  (require 'mds-re)
+  (require 'mds-thing)
+  (require 'mds-wm))
 
 ;;{{{ declarations
 
@@ -338,7 +339,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 
       ;; Hide the address and assign the client addr
       (goto-char (point-min))
-      (let ((addr-procname (mds-activate-addr-procname)))
+      (let ((addr-procname (mds-out-activate-addr-procname)))
 	(setq mds-ss-addr (car addr-procname)
 	      mds-ss-procname (cdr addr-procname)))
 

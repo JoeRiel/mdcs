@@ -153,10 +153,11 @@ global showstat, showstop;
                                            );
                         else
                             debugger_printf(TAG_STACK
-                                            , "<%d>\n%a: %s\n%a\n"
+                                            , "<%d>\n%a: %s\n<<%d>>%a\n"
                                             , addressof(_passed[i][j]) # proc address of called procedure
                                             , _passed[i][j]            # name of called procedure
                                             , _passed[i][j+1]          # current statement in proc
+                                            , addressof(_passed[i][j-1][]) # address of args
                                             , _passed[i][j-1]          # list of arguments
                                            );
                         fi;
