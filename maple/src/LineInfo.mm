@@ -111,14 +111,18 @@ local ModuleLoad
 ##
 ##- An *address* entry associates the address of a procedure
 ##  with its source information.
-##  The entry consists of a packed record with two fields,
-##  'filenames' and 'positions':
+##  The entry consists of a packed record with three fields:
 ##
 ##-- 'filenames' : list of strings corresponding to the filenames
 ##  in which the procedure is defined.
 ##
+##-- 'delta' : non-negative integer equal to the difference between
+##  the number of statements in the lineinfo data and the number of
+##  statements in the interpreted procedure.  It is positive if local
+##  self-assignments are used.
+##
 ##-- 'positions' : four column Array, indexed from 0 to `n`,
-##  where `n` is the maximum statement number of the procedure.
+##  where `n` is the final statement number of the procedure.
 ##  Each row holds the data for one statement.
 ##  The 0 row holds the data for the entire procedure.
 ##  The columns contain the following data:
@@ -140,7 +144,7 @@ local ModuleLoad
     ;
 
 ##PROCEDURE mdc[LineInfo][ModuleLoad]
-##HALFLINE assign the module-local varible Info an empty table.
+##HALFLINE assign the module-local variable Info an empty table.
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 
@@ -199,6 +203,7 @@ local ModuleLoad
                  , statement :: nonnegint
                  , { ret_begin :: truefalse := false }
                )
+
     local i,datum,rec;
 
         rec := Info[addr];
@@ -211,7 +216,7 @@ local ModuleLoad
             return NULL;
         end if;
 
-        datum := rec:-positions[statement];
+        datum := rec:-positions[statement + rec:-delta];
 
         if ret_begin then
             datum[3];
@@ -285,8 +290,8 @@ local ModuleLoad
 ##                ));
 
     Store := proc( addr :: integer, info := Info )
-    local file, filenames, i, lineinfo, missing;
 
+    local file, filenames, i, lineinfo, missing, n, delta;
         try
             lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
         catch:
@@ -321,11 +326,15 @@ local ModuleLoad
                                                )
                                      , filenames);
 
+                    n := numelems(lineinfo)-1;
+                    delta := n - debugopts('statcount' = pointto(addr));
+
                     info[addr] := Record['packed'](':-filenames' = filenames
-                                                   , ':-positions' = Array(0..numelems(lineinfo)-1, 1..4
+                                                   , ':-positions' = Array(0..n, 1..4
                                                                            , lineinfo
                                                                            , 'datatype' = integer[4]
                                                                           )
+                                                   , ':-delta' = delta
                                                   );
 
                     # Append addr to the entry for each filename.
@@ -363,6 +372,15 @@ local ModuleLoad
 ##-- `offset` - ::nonnegint::; character offset of beginning of statement
 ##- ~"no candidates"~ - returned if there are no known source candidates
 ##  at position.
+##DESCRIPTION
+##- Return the statement data corresponding to a character position
+##  in a source file.
+##- If successful, three elements are returned,
+##-- the address of the procedure,
+##-- the statement number, and
+##-- the character offset, from beginning of the file,
+##  to the beginning of the statement.
+##
 ##ALGORITHM
 ##- Given 'filename',
 ##  get the list of possible procedures (addresses).
@@ -412,7 +430,7 @@ local ModuleLoad
                              , offset :: nonnegint
                            )
 
-    local addr, addrs, i,n,pos;
+    local addr, addrs, i, n, pos, rec, st;
 
         if Info[filename] = 0 then
             error "no lineinfo data exists for file '%1'", filename;
@@ -438,17 +456,18 @@ local ModuleLoad
         else
             addr := addrs[1];
         end if;
+        rec := Info[addr];
 
         # Search for line position.
         # Assign 'pos' the Array of position data for 'addr'
-        pos := Info[addr]:-positions;
+        pos := rec:-positions;
 
         # Get first statement on or following 'lineno'
         n := upperbound(pos,1);
         for i to n while pos[i,2] < lineno do end do;
+        st := i - rec:-delta;
         ASSERT(i<=n, "cannot find statement");
-        return (addr,i,pos[i,3]);
-
+        return (addr,st,pos[i,3]);
     end proc;
 
 ##PROCEDURE mdc[LineInfo][Breakpoints]

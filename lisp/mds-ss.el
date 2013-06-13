@@ -12,14 +12,15 @@
 
 ;;; Code:
 
-(require 'hl-line)
-(require 'maplev)
-(require 'mds-client)
-(require 'mds-custom)
-(require 'mds-out)
-(require 'mds-re)
-(require 'mds-thing)
-(require 'mds-wm)
+(eval-when-compile
+  (require 'hl-line)
+  (require 'maplev)
+  (require 'mds-client)
+  (require 'mds-custom)
+  (require 'mds-out)
+  (require 'mds-re)
+  (require 'mds-thing)
+  (require 'mds-wm))
 
 ;;{{{ declarations
 
@@ -84,14 +85,17 @@ Echo the command to the output buffer unless HIDE is non-nil."
     (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd))
   (mds-ss-send-client (concat cmd "\n")))
 
-(defun mds-ss-eval-expr (expr &optional display)
+(defun mds-ss-eval-expr (expr &optional display unlimited)
   "Send EXPR, with newline, to the Maple process.
 Non-nil DISPLAY means send EXPR to the output buffer.  This
 function is intended to be used for evaluating Maple
 expressions."
   (mds-ss-block-input)
-  (mds-out-append-input (mds-client-out-buf mds-client) (or display expr) 'mds-user-input)
-  (mds-ss-send-client (concat expr "\n")))
+  (if display
+      (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input))
+  (mds-ss-send-client (format "%s%s\n"
+			      (if unlimited "_mds_unlimited " "")
+			      expr)))
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
   "Send CMD, with appended newline, to the Maple process and to
@@ -111,15 +115,16 @@ code."
 
 (defun mds-ss-request (expr &optional unlimited)
   "Send the string EXPR to Maple and return the response, as a string.
-A newline is appended to EXPR before it is sent (why?).  EXPR should
-have no spaces."
+A newline is appended to EXPR before it is sent (why?).  EXPR
+should have no spaces.  If UNLIMITED is non-nil, the complete
+response is returned, regardless its size."
   (let ((client mds-client)
 	result)
     (save-current-buffer
 	(mds-client-set-result client nil)
-	(mds-client-send client (if unlimited
-				    (format "_mds_request %s unlimited\n" expr)
-				  (format "_mds_request %s\n" expr)))
+	(mds-client-send client (format "_mds_request %s%s\n"
+					expr
+					(if unlimited " unlimited" "")))
 	;; Loop until the result is returned.
 	(while (null result)
 	  (sleep-for 0.0001)
@@ -334,7 +339,7 @@ the buffer-local variables `mds-ss-state' and `mds-ss-statement'."
 
       ;; Hide the address and assign the client addr
       (goto-char (point-min))
-      (let ((addr-procname (mds-activate-addr-procname)))
+      (let ((addr-procname (mds-out-activate-addr-procname)))
 	(setq mds-ss-addr (car addr-procname)
 	      mds-ss-procname (cdr addr-procname)))
 
@@ -534,13 +539,13 @@ exits."
 	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (message "Stop in procedure %s..." proc)
-    (mds-ss-eval-proc-statement (format "_enter %s" proc))))
+    (mds-ss-eval-proc-statement (format "_mds_enter %s" proc))))
 
 (defun mds-here (cnt)
   "Skip until the statement at point is reached CNT times."
   (interactive "p")
   (message "Skipping to point...")
-  (mds-ss-eval-proc-statement (format "_here %d %s %s"
+  (mds-ss-eval-proc-statement (format "_mds_here %d %s %s"
 				      cnt
 				      (mds-ss-get-embedded-addr)
 				      (mds-ss-get-state))))
@@ -578,7 +583,7 @@ Otherwise delete the dead showstat window."
   "Resume skipping."
   (interactive)
   (message "Skipping...")
-  (mds-ss-eval-proc-statement "_skip"))
+  (mds-ss-eval-proc-statement "_mds_skip"))
 
 (defun mds-step ()
   "Send the 'step' command to the debugger."
@@ -597,6 +602,8 @@ to display the code."
        (setq state nil)
       (if (mds-client-use-lineinfo-p mds-client)
 	  (mds-wm-toggle-code-view)))
+    (if (string= state "_skip")
+	(setq state "_mds_skip"))
     (mds-client-set-trace mds-client state)))
 
 ;;}}}
@@ -687,8 +694,6 @@ Query for global variable, using symbol at point as default."
   (let* ((cmd "stopwhenif")
 	 (var (mds--query-stop-var cmd "var" 'mds-ss-stopwhen-history-list))
 	 (val (read-string "value: ")))
-    ;;    (if (string= var "")
-    ;;	(error "stopwhenif requires a variable and a value")
     (mds-ss-eval-expr (format "%s(%s,%s)" cmd var val))))
 
 (defun mds-stopwhen-clear ()
@@ -720,12 +725,13 @@ If the state does not have a breakpoint, print a message."
 (defun mds-eval-and-prettyprint ()
   "Query for an expression and pretty-print it in the output buffer.
 The default is taken from expression at point.  The Maple
-procedure mdc:-Format:-PrettyPrint is used to break the expression into
-multiple lines."
+procedure mdc:-Format:-PrettyPrint is used to break the
+expression into multiple lines.  If called with prefix argument,
+allow return expression of unlimited size."
   (interactive)
   (let ((expr (mds-expr-at-point-interactive
 	       "prettyprint: " "")))
-    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
+    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) 'display current-prefix-arg)))
 
 (defun mds-eval-and-prettyprint-prev ()
   "Call `mds-eval-and-prettyprint' with point at the preceding statement."
@@ -736,17 +742,17 @@ multiple lines."
 	(progn
 	  (goto-char (match-beginning 3))
 	  (let ((expr (mds-expr-at-point)))
-	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))
+	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) 'display current-prefix-arg)))
       (beep)
       (message "No preceding statement."))))
 
-(defun mds-eval-and-display-expr (expr &optional suffix)
-  "Evaluate a Maple expression, EXPR, display result and print optional SUFFIX.
-If called interactively, EXPR is queried."
+(defun mds-eval-and-display-expr (expr)
+  "Evaluate a Maple expression, EXPR, display result.  If called
+interactively, EXPR is queried.  If called with prefix argument,
+allow return expression of unlimited size."
   (interactive (list (mds-expr-at-point-interactive
 		      "eval: " "")))
-  (if current-prefix-arg (mds-out-clear))
-  (mds-ss-eval-expr expr))
+  (mds-ss-eval-expr expr 'display current-prefix-arg))
 
 
 (defun mds-eval-and-display-expr-global (expr)
@@ -755,8 +761,7 @@ If called interactively, EXPR is queried.
 The result is returned in the message area."
   (interactive (list (mds-expr-at-point-interactive
 		      "global eval: " "")))
-  (if current-prefix-arg (mds-out-clear))
-  (mds-eval-and-display-expr (concat "statement " expr)))
+  (mds-ss-eval-expr (concat "statement " expr) current-prefix-arg))
 
 ;;}}}
 ;;{{{ (*) Information
@@ -764,7 +769,7 @@ The result is returned in the message area."
 (defun mds-args ()
   "Display the arguments of the current procedure."
   (interactive)
-  (mds-ss-eval-expr "args"))
+  (mds-ss-eval-debug-code "args"))
 
 (defun mds-show-args-as-equations ()
   "Display the parameters and arguments of the current Maple procedure as equations."
@@ -780,10 +785,10 @@ The result is returned in the message area."
 
 (defun mds-showstack ()
   "Send the 'showstack' command to the debugger.
-Note that the string displayed in the echo area has the current
-procedure stripped from it."
+Display the stack content in the output buffer.  Each entry
+consists of the hyperlinked name of the calling procedure."
   (interactive)
-  (mds-ss-eval-expr "showstack"))
+  (mds-ss-eval-debug-code "showstack"))
 
 (defun mds-showstop ()
   "Send the 'showstop' command to the debugger."
@@ -811,9 +816,14 @@ otherwise run through StringTools:-FormatMessage."
     (mds-ss-send-client "showexception\n")))
 
 (defun mds-where (&optional depth)
-  "Send the 'where' command to the debugger.
-The optional DEPTH parameter is a positive integer that specifies
-the number of activation levels to display."
+  "Send the 'where' command to the debugger.  
+Display the stack content in the output buffer.  Each entry
+consists of the hyperlinked name of the calling procedure,
+followed by the statement from the procedure that was called,
+followed by the list of arguments.  The optional DEPTH parameter
+is a positive integer that specifies the number of activation
+levels to display.  Use `mds-showstack' to see just the
+hyperlinks."
   (interactive "P")
   (let ((cmd (if depth
 		 (format "where %d" depth)
@@ -828,7 +838,7 @@ the number of activation levels to display."
 Monitoring provides a continuous display of specified Maple expressions.
 See `mds-monitor-define'."
   (interactive)
-  (mds-ss-eval-proc-statement "_monitor toggle"))
+  (mds-ss-eval-proc-statement "_mds_monitor toggle"))
 
 (defun mds-monitor-define (all)
   "Define a monitor expression for the current procedure.
@@ -847,7 +857,7 @@ See `mds-monitor-toggle'."
   (let ((expr (read-string (format "%smonitor expr: "
 				   (if all "[all] " ""))))
 	(addr (if all "0" (mds-client-get-addr mds-client))))
-    (mds-ss-eval-proc-statement (format "_monitor define %s %s" addr expr))))
+    (mds-ss-eval-proc-statement (format "_mds_monitor define %s %s" addr expr))))
 
 ;;}}}
 ;;{{{ (*) Short cuts
@@ -913,7 +923,7 @@ otherwise do so in the `mds-ss-buffer'."
   "Save statement at point as go-back point."
   (interactive)
   (message "set go-back point")
-  (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+  (mds-ss-eval-proc-statement (format "_mds_goback_save %s %s"
 				      (mds-ss-get-state)
 				      (mds-ss-get-embedded-addr))))
 
@@ -928,7 +938,10 @@ otherwise do so in the `mds-ss-buffer'."
   (mds-ss-eval-expr
    (format "mdc:-Debugger:-SetQuiet(%s)"
 	   (if (mds-client-toggle-quiet-p mds-client)
-	       "true"
+	       (progn
+		 (message "suppress output")
+		 "true")
+	     (message "enable output")
 	     "false"))))
 
 ;;}}}
@@ -1097,7 +1110,6 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Patch procedure"               mds-patch t]
        ["Refresh procedure"             mds-ss-refresh t]
        ["Toggle code view"              mds-wm-toggle-code-view t]
-       ["Toggle display of arguments"   mds-toggle-show-args t]
        ["Toggle input tracking"         mds-toggle-track-input t]
        ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
        ["Toggle mds-stop-trace-at-trapped-error-flag"   mds-toggle-stop-trace-at-trapped-error-flag t]
@@ -1184,7 +1196,6 @@ Miscellaneous
 \\[mds-wm-toggle-code-view] toggle view of code between showstat and line-info
 \\[mds-toggle-truncate-lines] toggle whether to fold or truncate long lines
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
-\\[mds-toggle-show-args] toggle the displaying of arguments when entering a procedure
 \\[mds-patch] patch procedure in the buffer
 \\[mds-ss-refresh] refresh procedure in the buffer
 "

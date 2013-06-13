@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.2.1
+VERSION := 2.3.0
 
 include help-system.mak
 
@@ -132,8 +132,7 @@ el-install: $(LISP-FILES)
 links-install: $(call print-help,links-install,Install links to the lisp files)
 links-install: $(LISP-FILES) $(ELC-FILES)
 	@$(MKDIR) $(LISP-DIR)
-	@ln -nfst $(LISP-DIR) $(realpath $(LISP-FILES))
-	@ln -nfst $(LISP-DIR) $(realpath $(ELC-FILES))
+	@ln -nfst $(LISP-DIR) $(realpath $^)
 
 links-uninstall: $(call print-help,links-uninstall,Remove links to the lisp files)
 links-uninstall:

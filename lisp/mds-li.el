@@ -34,12 +34,13 @@
 
 ;;{{{ Requirements
 
-(require 'mds-client)
-(require 'mds-custom)
-(require 'mds-ss)
-(require 'mds-wm)
-(require 'maplev)
 (eval-when-compile
+  (require 'mds-client)
+  (require 'mds-custom)
+  (require 'mds-out)
+  (require 'mds-ss)
+  (require 'mds-wm)
+  (require 'maplev)
   (defvar mds-truncate-lines-flag))
 
 ;;}}}
@@ -118,7 +119,9 @@ Put point at BEG and move the current statement marker."
 		  breakpoints (cdr breakpoints))
 	    (goto-char (1+ brkpt))
 	    (mds-li-set-breakpoint (line-beginning-position))))
-	(setq mds-li-addr addr))
+	(setq mds-li-addr addr)
+	;; print new procname as hyperlink in output buffer
+	(mds-out-display (mds-client-out-buf mds-client) (format "<%s>\n%s" addr procname) 'addr-procname))
       (unless (and same-file same-addr)
 	;; Update the mode-line
 	(mds-li-set-mode-line file
@@ -234,7 +237,7 @@ Set cursor to ready."
   (interactive)
   (message "set go-back point")
   (let ((addr-state-beg (mds-li-get-state-list (point))))
-    (mds-ss-eval-proc-statement (format "_goback_save %s %s"
+    (mds-ss-eval-proc-statement (format "_mds_goback_save %s %s"
 					(nth 1 addr-state-beg)
 					(nth 0 addr-state-beg)))))
 
@@ -243,7 +246,7 @@ Set cursor to ready."
   (interactive "p")
   (message "Skipping to point...")
   (let ((addr-state-beg (mds-li-get-state-list (point))))
-    (mds-ss-eval-proc-statement (format "_here %d %s %s"
+    (mds-ss-eval-proc-statement (format "_mds_here %d %s %s"
 					cnt
 					(nth 0 addr-state-beg)
 					(nth 1 addr-state-beg)))))
@@ -263,7 +266,8 @@ Set cursor to ready."
 ;;{{{ (*) Evaluation
 
 (defun mds-li-eval-and-prettyprint-prev ()
-  "Call `mds-eval-and-prettyprint' with point at the preceding statement."
+  "Prettyprint expression at preceding statement.
+If called with prefix argument, allow return expression of unlimited size."
   (interactive)
   (save-excursion
     (if (= 1 mds-li-state)
@@ -272,7 +276,9 @@ Set cursor to ready."
 	  (message "No preceding statement."))
       (mds-li-goto-state (1- mds-li-state))
       (let ((expr (mds-expr-at-point)))
-	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) expr)))))
+	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
+			  'display
+			  current-prefix-arg)))))
 				
 
 ;;}}}
@@ -329,6 +335,7 @@ LABEL is the user id."
   :abbrev-table nil
   (setq mds-li-arrow-position (make-marker))
   (setq tab-width maplev-indent-level)
+  (toggle-enable-multibyte-characters -1)
   (if mds-truncate-lines-flag (toggle-truncate-lines 1)))
 
 

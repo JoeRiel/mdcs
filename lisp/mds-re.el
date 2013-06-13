@@ -181,20 +181,12 @@ It has two groups:
   "Regexp that matches the statement number and decoration in a showstat buffer.
 The regexp is anchored to the left margin.")
 
-(defun mds-activate-addr-procname (&optional button)
-  "If looking at addr-procname, hide address and apply BUTTON to the procname.
-If the procname is TopLevel, then just
-change its face to `mds-inactive-link'.  Return a cons cell of
-the address and procname."
-  (if (looking-at mds-re-addr-procname)
-      (let ((addr (match-string-no-properties 2))
-	    (procname (match-string-no-properties 3)))
-	(put-text-property (match-beginning 1) (match-end 1) 'invisible t)
-	(if button
-	    (if (string= procname "TopLevel")
-		(put-text-property (match-beginning 3) (match-end 3) 'font-lock-face 'mds-inactive-link)
-	      (make-text-button (match-beginning 3) (match-end 3) :type button)))
-	(cons addr procname))))
+
+(defconst mds-re-addr-args-tag
+  (mds-rx line-start "<<" (group integer) ">>")
+  "Regexp that matches the address tag for an argument sequence.
+The first group matches the address.")
+
 
 (provide 'mds-re)
 
