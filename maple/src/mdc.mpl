@@ -132,7 +132,7 @@
 ##  See "mdc[Monitor]" for a procedure to setup monitoring.
 ##ENDSUBSECTION
 ##
-##OPTIONS(collapsed)
+##OPTIONS
 ##
 ##SUBSECTION Instrumentation Options
 ##-(lead="indent")
@@ -155,7 +155,7 @@
 ##SUBSECTION Configuration Options
 ##-(lead="indent")
 ##  These options configure the debugger.
-##  They are *sticky*, meaning they remain
+##  Most are *sticky*, meaning they remain
 ##  in effect until changed by an explicit
 ##  use of the option.
 ##  The details section describes these options.
@@ -175,6 +175,7 @@
 ##- `launch_emacs` : enables auto-launch of Emacs
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
+##- `print_to_maple` : print each result to Maple
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
 ##- `skip_before` : assigns string used for skipping
@@ -185,10 +186,13 @@
 ##ENDSUBSECTION
 ##
 ##SUBSECTION Option Details
+##opt(debug,truefalse)
+##  True means launch the debugger immediately; it does so by calling
+##  "DEBUG".  This may be used inside a procedure.
+##  The default is false.
 ##opt(debug_builtins,truefalse)
-##  If true, the `stopat` option can be used to debug most built-in procedures.
-##  The built-in procedure is replaced with a wrapper
-##  procedure that calls the original procedure.
+##  True mans attempt to debug a built-in procedure
+##  by reassigning it with a wrappe that calls the original.
 ##  An error is raised if attempting to debug builtins used by the debugger.
 ##  The default value is false.
 ##
@@ -201,7 +205,7 @@
 ##  The default value is ~"emacs"~; this option is sticky.
 ##
 ##opt(exit,truefalse)
-##  If true, shutdown the TCP connection
+##  True means shutdown the TCP connection
 ##  and restore the original debugger procedures.
 ##  The default value is false.
 ##
@@ -215,7 +219,7 @@
 ##  The default value is _"localhost"_; this option is sticky.
 ##
 ##opt(ignoretester,truefalse)
-##  If true, then do nothing when called from the Maplesoft tester.
+##  True means do nothing when called from the Maplesoft tester.
 ##  This is intended for internal use.
 ##  The default value is true; this option is sticky.
 ##
@@ -231,8 +235,8 @@
 ##  The default label is the return value of _kernelopts('username')_.
 ##
 ##opt(launch_emacs,truefalse)
-##  If true and unable to connect to a Maple Debugger Server,
-##  then launch emacs and start a Maple Debugger Server.
+##  True means if unable to connect to a Maple Debugger Server,
+##  launch emacs and start a Maple Debugger Server.
 ##  See the `emacs` option.
 ##  The default value is false; this option is sticky.
 ##
@@ -248,17 +252,23 @@
 ##  Must match the value used by the server.
 ##  The default value is 10000; this option is sticky.
 ##
+##opt(print_to_maple,truefalse)
+##  True means print the result of each debugged statement
+##  to the Maple session.  If the debugger is launched from Standard Maple,
+##  the results are displayed prettyprinted in the worksheet.
+##  The default is false.
+##
 ##opt(quiet,truefalse)
-##  When true, do not print the greeting/farewell from the server.
+##  True means do not print the greeting/farewell from the server.
 ##  The default is false; this option is sticky.
 ##
 ##opt(reconnect,truefalse)
-##  When true, reconnect to the debugger server.
+##  True means reconnect to the debugger server.
 ##  This may be useful if the server had to be reset.
-##  The default is `false`.
+##  The default is false.
 ##
 ##opt(showoptions,truefalse)
-##  When true, the **options** and **description** statements
+##  True means the **options** and **description** statements
 ##  in procedures are displayed in the showstat listing.
 ##  *Because of a debug kernel deficiency, when this option
 ##  is in effect, the debugger may occasionally continue to
@@ -272,7 +282,7 @@
 ##  This is equivalent to calling "Skip" with option `before`.
 ##
 ##opt(skip_check_stack,truefalse)
-##  If true, when *skipping*, pass the arguments of the top procedure
+##  True means, when *skipping*, pass the arguments of the top procedure
 ##  on the stack to the predicate.  This is done in a separate call to
 ##  the predicate (in addition to the call that passes the result of
 ##  each statement).  Doing so is memory intensive, so this option
@@ -501,6 +511,7 @@
 ##- "Maple Debugger Client" : Help:mdc
 ##- "Maple initialization file" : Help:worksheet,reference,initialization
 ##- "regular expressions" : Help:Regular_Expressions
+##- "Skip" : Help:mdc,Skip
 ##
 ##SEEALSO
 ##- "mdc"
@@ -570,8 +581,10 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
+    , print_to_maple_flag
     , SkipCheckStack
     , SkipIndicateMatch
+    , unlimited_flag := false
     , Warnings
     ;
 #}}}
@@ -622,6 +635,7 @@ $include <src/PrintRtable.mm>
 #{{{ ModuleApply
 
     ModuleApply := proc( stopats :: seq({string,name,list})
+                         , { debug :: truefalse := false }
                          , { debug_builtins :: truefalse := debugbuiltins }
                          , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
                          , { exit :: truefalse := false }
@@ -632,6 +646,7 @@ $include <src/PrintRtable.mm>
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                         , { print_to_maple :: truefalse := GetDefault(':-print_to_maple',false) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                          , { reconnect :: truefalse := false }
                          , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
@@ -687,7 +702,9 @@ $include <src/PrintRtable.mm>
         view_flag := view; # and not IsWorksheetInterface();
         max_length := maxlength;
 
-
+        #{{{ print_to_maple
+        print_to_maple_flag := print_to_maple;
+        #}}}
         #{{{ max_length
 
         if max_length > 0 then
@@ -884,7 +901,9 @@ $include <src/PrintRtable.mm>
         #{{{ return first procedure
 
         if stopats = NULL then
-            return NULL;
+            if debug then
+                DEBUG();
+            end if;
         else
             stp := [stopats][1];
             if stp :: list then
@@ -1063,7 +1082,9 @@ local msg,len,lenlen;
         msg := sprintf(_rest);
     end if;
     len := length(msg);
-    if tag <> TAG_SS_LIVE
+    if unlimited_flag then
+        unlimited_flag := false;
+    elif tag <> TAG_SS_LIVE
     and tag <> TAG_SS_DEAD
     and tag <> TAG_UNLIMITED
     and 0 < max_length
@@ -1151,7 +1172,7 @@ end proc;
 
 #{{{ Version
 
-Version := "2.2.1";
+Version := "2.4.0";
 
 #}}}
 

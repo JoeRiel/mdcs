@@ -18,7 +18,7 @@ description
     `Not intended to be called directly.`;
 local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line
     , original, prompt, statLevel, state, pName, lNum, cond, cmd, err
-    , module_flag, pred, tag;
+    , module_flag, pred, statement, tag;
 global showstat, showstop;
 
     # Note: 21 appears to be the amount that kernelopts('level')
@@ -37,19 +37,20 @@ global showstat, showstop;
                                         incremented with each "indentation" level *)
         n := n - 1;
 
+        addr := addressof(procName);
+
         #{{{ handle skipping
 
         if skip then
-
             if go_back then
-                if procName = go_back_proc
+                if addr = go_back_addr
                 and statNumber = go_back_state then
                     go_back := false;
                     skip := false;
                     debugger_printf(TAG_CLEAR_MSG);
                 end if;
             elif here_cnt > 0 then
-                if here_proc = procName
+                if here_addr = addr
                 and here_state = statNumber then
                     if here_cnt > 1 then
                         here_cnt := here_cnt-1;
@@ -127,6 +128,11 @@ global showstat, showstop;
             tag := TAG_EVAL
         end if;
         for i from 1 to n do
+
+            if print_to_maple_flag then
+                print(_passed[i]);
+            end if;
+
             # Use addressof to prevent an object from overriding
             # equality.
             if addressof(_passed[i]) = addressof(lasterror) then
@@ -142,15 +148,17 @@ global showstat, showstop;
                         if _passed[i][j+1] = `` then
                             debugger_printf(TAG_STACK
                                             , "<%d>\n%a\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
+                                            , addressof(_passed[i][j]) # proc address of called procedure
+                                            , _passed[i][j]            # name of called procedure
                                            );
                         else
                             debugger_printf(TAG_STACK
-                                            , "<%d>\n%a: %s\n"
-                                            , addressof(_passed[i][j])
-                                            , _passed[i][j]
-                                            , _passed[i][j+1]
+                                            , "<%d>\n%a: %s\n<<%d>>%a\n"
+                                            , addressof(_passed[i][j]) # proc address of called procedure
+                                            , _passed[i][j]            # name of called procedure
+                                            , _passed[i][j+1]          # current statement in proc
+                                            , addressof(_passed[i][j-1][]) # address of args
+                                            , _passed[i][j-1]          # list of arguments
                                            );
                         fi;
                         j := j - 3
@@ -206,7 +214,6 @@ global showstat, showstop;
             module_flag := true;
         end if;
         if not skip then
-            addr := addressof(procName);
             state := sprintf("<%d>\n%A", addr, dbg_state);
             if state = last_state then
                 # WriteTagf(TAG_SAME);
@@ -233,6 +240,7 @@ global showstat, showstop;
     #}}}
 
     #{{{ handle skip/monitor
+
     # skip is true if 'skip_until' is in effect.
     if skip then
         if module_flag then
@@ -265,6 +273,7 @@ global showstat, showstop;
             end if;
         end if;
     end if;
+
     #}}}
     #{{{ command loop
 
@@ -298,7 +307,7 @@ global showstat, showstop;
         fi;
         err := NULL;
 
-        #{{{ parse cmd (else is arbitrary expression)
+        #{{{ parse cmd
 
         if cmd = "cont" then
             return
@@ -321,7 +330,7 @@ global showstat, showstop;
             debugopts('interrupt'=true)
         elif cmd = "where" then
             if nops(line) = 1 then
-                return 'debugopts'('callstack')
+                return 'debugopts(callstack)'
             else
                 return 'debugopts'('callstack'=line[2])
             fi
@@ -456,48 +465,48 @@ global showstat, showstop;
             return ['debugopts'('lastexception')]
         elif cmd = "setenv" then
             return 'debugopts'('setenv'=[line[2],line[3]])
-        elif cmd = "_skip" then
+        elif cmd = "_mds_skip" then
             #{{{ _skip
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return line;
             #}}}
-        elif cmd = "_here" then
+        elif cmd = "_mds_here" then
             #{{{ _here
             line := sscanf(original, "%s %d %d %d");
             here_cnt := line[2];
-            here_proc := pointto(line[3]);
+            here_addr := line[3];
             here_state := line[4];
             if here_state = statNumber then
                 here_cnt := here_cnt+1;
             end if;
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
             #}}}
-        elif cmd = "_enter" then
-            #{{{ _enter
+        elif cmd = "_mds_enter" then
+            #{{{ _mds_enter
 
             line := sscanf(original, "%s %s");
             enter_procname := line[2];
-            go_back_proc := procName;
+            go_back_addr := addr;
             go_back_state := statNumber;
             skip := true;
             return 'NULL';
 
             #}}}
-        elif cmd = "_goback_save" then
+        elif cmd = "_mds_goback_save" then
             #{{{ _goback_save
             line := sscanf(original, "%s %d %d");
             go_back_state := line[2];
-            # go_back_proc := procName;
-            go_back_proc := pointto(line[3]);
+            go_back_addr := line[3];
             return 'NULL'
             #}}}
-        elif cmd = "_monitor" then
+        elif cmd = "_mds_monitor" then
             #{{{ _monitor
+
             line := sscanf(original, "%s %s %d %1000c");
             cmd := line[2];
             if cmd = "toggle" then
@@ -518,6 +527,7 @@ global showstat, showstop;
             else
                 return 'NULL';
             end if;
+
             #}}}
         elif cmd = "_mds_request" then
             #{{{ _mds_request
@@ -533,60 +543,42 @@ global showstat, showstop;
             prompt := false;
             next;
             #}}}
-        elif cmd = "statement" then
-            #{{{ statement
-            # Must be an expression to evaluate globally.
-            original := original[SearchText("statement",original)+9..-1];
-            try
-                line := parse(original,'statement',parse_debugger);
-                # *** Avoid returning `line` unevaluated (due to LNED) by
-                # evaluating if line refers to a procedure. Note that the check
-                # for type procedure also evaluates line if it happens to be a
-                # TABLEREF, which can mess up MEMBER binding, so don't check
-                # for type procedure if it is a TABLEREF (i.e. type indexed).
-                if not line :: indexed and line :: procedure then
-                    return eval(line);
-                elif line = NULL then
-                    return 'NULL';
-                else
-                    return line;
-                fi;
-            catch:
-                err := lasterror;
-            end try
+        elif cmd = "_mds_unlimited" then
+            #{{{ _mds_unlimited
+            unlimited_flag := true;
+            line := original[16..];
+            original := line;
+            cmd := op(traperror(sscanf(line,"%s")));
             #}}}
+        end if;
+
+        if cmd = "statement" then
+            original := original[11..];
+            statement := ':-statement';
         else
-            #{{{ expression
+            statement := NULL;
+        end if;
 
-            try
-                Respond := true;
-                # Must be an expression to evaluate.
-                line := parse(original,parse_debugger);
-                # See *** comment in 'cmd = "statement"' case above.
-                if not line :: indexed and line :: procedure then
-                    return eval(line);
+        try
+            line := parse(original,statement,parse_debugger);
+            # *** Avoid returning `line` unevaluated (due to LNED) by
+            # evaluating if line refers to a procedure. Note that the check
+            # for type procedure also evaluates line if it happens to be a
+            # TABLEREF, which can mess up MEMBER binding, so don't check
+            # for type procedure if it is a TABLEREF (i.e. type indexed).
+            if not line :: indexed and line :: procedure then
+                return eval(line);
                 elif line = NULL then
-                    return 'NULL';
-                else
-                    return line;
-                fi;
-                # catch "invalid expression":
-                #     try
-                #         # this will generate a warning if saving
-                #         # locals.  But warning does not go to debugger
-                #         # output,  it shows up in tty stream.
-                #         parse(original,'statement',parse_debugger);
-                #     catch:
-                #         err := lasterror;
-                #     end try
-            catch:
-                err := lasterror;
-            end try;
-
-            #}}}
-        fi;
+                return 'NULL';
+            else
+                return line;
+            end if;
+        catch:
+            err := lasterror;
+        end try;
 
         #}}}
+
         #{{{ handle error
 
         if err = lasterror then

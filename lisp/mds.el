@@ -5,11 +5,6 @@
 ;; Author:     Joseph S. Riel <jriel@maplesoft.com>
 ;; Created:    Jan 2011
 ;; Keywords:   maple, debugger
-;;
-;;; Commentary:
-
-;; This file contains the source for the Emacs Maple debugger server.
-;; It is a part of the Maple Debugger Client Server package.
 
 ;;{{{ License
 
@@ -31,6 +26,10 @@
 ;;}}}
 ;;{{{ Commentary
 
+;;; Commentary:
+
+;; This file contains source for the Emacs Maple debugger server.
+;; It is a part of the Maple Debugger Client Server package.
 
 ;;}}}
 ;;{{{ TODO
@@ -74,7 +73,7 @@ Automatically assigned to nil if wmctrl is not available."
 
 ;;{{{ Constants
 
-(defconst mds-version "2.2.1" "Version number of mds.")
+(defconst mds-version "2.4.0" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -249,7 +248,6 @@ display the client windows, and get the focus."
   (with-current-buffer mds-log-buffer
     (goto-char (point-max))
     (insert msg)))
-;;    (set-window-point (get-buffer-window (current-buffer)) (point))))
 
 ;;}}}
 

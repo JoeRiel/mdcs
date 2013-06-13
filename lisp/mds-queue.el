@@ -173,7 +173,7 @@ TAG identifies the operation, MSG is the message."
      ((= tag (eval-when-compile mds-tag-prompt))
       ;; Extract the state-number and pass it along
       (mds-out-display out-buf
-		       (buffer-local-value 'mds-ss-state live-buf)
+		       (mds-client-get-state client)
 		       'prompt)
 
       (mds-client-set-allow-input client 'unblock)
@@ -201,13 +201,7 @@ TAG identifies the operation, MSG is the message."
       (mds-out-display out-buf msg 'stack))
 
      ((= tag (eval-when-compile mds-tag-monitor))
-      (mds-out-display out-buf msg 'monitor)
-
-      ;; (mds-out-display out-buf (mds-client-get-state client) 'prompt)
-      ;; (mds-goto-current-state client)
-      ;; (mds-client-set-allow-input client 'unblock)
-
-      )
+      (mds-out-display out-buf msg 'monitor))
      
      ((= tag (eval-when-compile mds-tag-warn))
       (mds-out-display out-buf msg 'warn))
