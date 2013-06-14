@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 2.4.0
+@set VERSION 2.4.1
 @set DATE June 2011
 
 @dircategory Emacs
@@ -748,7 +748,8 @@ procedure is not shown.  Each name is an active link.  Clicking on a link
 Where: display the calling stack. 
 The latest entry is shown last.
 For each entry in the stack,
-the name of the calling procedure and the current statement within it are shown,
+the name of the calling procedure
+and the current statement within it are shown,
 followed on the next line by the list of arguments passed to corresponding procedure.
 An optional prefix argument can be passed; it specifies the number of levels to display.
 For example @kbd{C-u 2 K} displays the topmost (most recent) two entries.
@@ -758,6 +759,11 @@ procedure in the @strong{showstat dead} buffer, at the calling line.
 Breakpoints can be set in the opened procedure.
 Use @command{M-x mds-goto-current-state} (@kbd{l})
 to return to the current procedure.
+
+A right-pointing triangle to the left of the argument list is an active button.
+Clicking it causes the associated procedure to be reevaluated with those arguments.
+This provides a convenient method to reexecute a procedure with the same arguments,
+while debugging.  @xref{Recursive debugging}.
 
 @kindex p
 @findex mds-showstop
@@ -1502,28 +1508,23 @@ File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 @section Recursive debugging
 @cindex Recursive debugging
 
-While debugging, one frequently wants to reexecute a procedure with the
-same arguments to inspect the action of the code.  If the current
-location is inside a recursive procedure, say after trapping an error,
-it might be difficult to reach the starting point, with the arguments
-of interest, by rerunning the original call from top-level.
+The Maple debugger provides the ability to recusively debug.  Evaluating
+an expression in the debugger that executes an instrumented procedure
+debugs that procedure.  When that procedure returns, debugging resumes
+at the point in the original procedure.
 
-There is a simple way to do; it may not always work, but should if the
-procedure has no side effects, or at least none that effect the
-variables of interest.  To manually rerun the current procedure, set a
-breakpoint at the location of interest, then evaluate in the debugger (@kbd{e})
-the Maple expression @code{thisproc(args)}.
+This feature allows you to reexecute a procedure with the same arguments
+while inside the debugger, just evaluate the expression @code{thisproc(args)}.
 
-An easier way to do this, one that allows reexecuting any procedure on
-the current call stack, is to execute @code{mds-where} (@kbd{K}), which
-prints the stack with arguments in the output buffer.  Click the
-hyperlinked name of the procedure of interest, that opens the procedure
-in the dead-showstat buffer.  Set a breakpoint at the appropriate line,
-then go back to the output buffer and click the right-pointing triangle
-to the left of the list of arguments to the procedure.  That causes
-Maple to evaluate the procedure with those arguments.  The debugger
-should then halt at the breakpoint.
-
+A convenient way to do this, 
+ one that allows reexecuting any procedure on the current call stack, 
+is to execute @code{mds-where} (@kbd{K}), 
+which prints the stack with arguments in the output buffer.  @xref{Status}.
+Clicking the right-pointing triangle adjacent to the list of arguments 
+calls the associated procedure with those arguments.  You may want to first 
+set a breakpoint in the procedure.  Do so by clicking its hyperlinked name
+to open it in the dead-showstat buffer, then set the breakpoint there.
+@xref{Breakpoints}.
 
 @node Key Index, Function Index, Debugging Tips, Top
 @unnumbered Key Index

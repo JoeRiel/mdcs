@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs-2.4.1
+** Fix bug in handling 'where' (args were for wrong procedure!)
+** Remove display of TopLevel call; it is redundant and requires special handling
+** Rewrite tip for recursive debugging
+** Document stack display in the Output buffer section
 * mdcs-2.4.0
 ** Fix statement numbers and procedure name in output buffer with lineinfo 
 ** Display and hyperlink arguments with mds-where (K). 

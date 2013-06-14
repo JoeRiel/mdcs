@@ -143,8 +143,8 @@ global showstat, showstop;
                 debugger_printf(TAG_ERROR, "Error, %s\n", last_exception);
             elif _passed[i] :: list and nops(_passed[i]) >= 1 then
                 if _passed[i][1] = 'DEBUGSTACK' then
-                    j := nops(_passed[i]) - 2;
-                    while j > 2 do
+                    j := nops(_passed[i]) - 5; # this skips the last three, which is always toplevel
+                    while j > 1 do
                         if _passed[i][j+1] = `` then
                             debugger_printf(TAG_STACK
                                             , "<%d>\n%a\n"
@@ -157,12 +157,12 @@ global showstat, showstop;
                                             , addressof(_passed[i][j]) # proc address of called procedure
                                             , _passed[i][j]            # name of called procedure
                                             , _passed[i][j+1]          # current statement in proc
-                                            , addressof(_passed[i][j-1][]) # address of args
-                                            , _passed[i][j-1]          # list of arguments
+                                            , addressof(_passed[i][j+2][]) # address of args
+                                            , _passed[i][j+2]          # list of arguments
                                            );
                         fi;
                         j := j - 3
-                    od
+                    end do;
                 elif _passed[i][1] = 'DEBUGERROR' then
                     debugger_printf(TAG_ERROR, "Error, %Q\n",op(_passed[i][2..-1]))
                 elif _passed[i][1] = 'DEBUGWATCH' then
