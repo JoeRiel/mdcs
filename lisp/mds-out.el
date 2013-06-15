@@ -243,7 +243,9 @@ Optional TAG identifies the message type."
 	      (delete-region (point) (line-end-position)))
 
 	     ((eq tag 'output)
-	      (insert msg))
+	      (if (bolp)
+		  (insert msg)
+		(insert "\n" msg)))
 
 	     ((eq tag 'monitor)
 	      (mds-insert-and-font-lock msg 'mds-monitor))
