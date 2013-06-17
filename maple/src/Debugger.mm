@@ -218,7 +218,7 @@ $endif
         if except = '`(none)`' then
             debugger_printf(TAG_ERROR, "%a\n", except);
         else
-            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..-1]));
         end if;
     end proc;
 
@@ -277,7 +277,7 @@ $endif
             catch:
                 debugger_printf(TAG_ERROR
                                 , "Error, %s\n"
-                                , StringTools:-FormatMessage(lastexception[2..])
+                                , StringTools:-FormatMessage(lastexception[2..-1])
                                );
             end try;
             if line = false then
@@ -288,7 +288,7 @@ $endif
             while line[n] = "\n" do
                 n := n-1;
             end do;
-            return line[..n];
+            return line[1..n];
         end do;
     end proc:
 
@@ -357,10 +357,10 @@ $ifdef DONTUSE
 
         # Split at first statement and insert opts and desc
         pos := StringTools:-Search("\n   1", pstr);
-        pstr := cat(pstr[..pos]
+        pstr := cat(pstr[1..pos]
                     , opts
                     , desc
-                    , pstr[pos+1..]
+                    , pstr[pos+1..-1]
                    );
 $endif
         WriteTagf(`if`(dead
@@ -528,7 +528,7 @@ $endif
             proc(f)
                 f := subs(_f = eval(f), proc() _f(_passed) end proc);
             end proc(pnam);
-            return procname(pnam, _passed[2..]);
+            return procname(pnam, _passed[2..-1]);
         end if;
 
         statenum := `if`(_npassed=1,1,n);
