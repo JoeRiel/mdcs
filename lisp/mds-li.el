@@ -277,7 +277,7 @@ If called with prefix argument, allow return expression of unlimited size."
       (mds-li-goto-state (1- mds-li-state))
       (let ((expr (mds-expr-at-point)))
 	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
-			  'display
+			  t
 			  current-prefix-arg)))))
 				
 
