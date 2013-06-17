@@ -280,7 +280,7 @@ global showstat, showstop;
     prompt := true;
 
     do
-        line := `debugger/readline`( prompt );
+        line := debugger_readline( prompt );
         # If there's an assignment, make sure it is delimited by spaces.
         i := SearchText(":=",line);
         if i > 1 and SearchText(" := ",line) <> i-1 then

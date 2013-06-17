@@ -13,7 +13,7 @@
 ##  indicate the purpose of each packet.  This simplifies the
 ##  parsing requirements of the server.
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
+$define DEBUGGER_PROCS debugger, showstat, showstop, where
 
 $define LOGFILE "readline.log"
 
@@ -102,16 +102,28 @@ $endif
 
 #{{{ Replace
 
+##PROCEDURE mdc[Debugger][Replace]
+##HALFLINE replace library debugger procedures
+##AUTHOR   Joe Riel
+##CALLINGSEQUENCE
+##- Replace()
+##DESCRIPTION
+##- Replace the library debugger procedures
+##  with custom procedures that communicate
+##  with the Emacs debugger server.
+##
+##- Assign the module-local variable `replaced` to true.
+##SEEALSO
+##- "Restore"
+
     Replace := proc()
         if replaced <> true then
             # Save these
             orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
             # Reassign library debugger procedures
-            unprotect('DEBUGGER_PROCS', :-stopat);
+            unprotect('DEBUGGER_PROCS', ':-stopat');
             :-debugger          := eval(_debugger);
-            `debugger/printf`   := eval(debugger_printf);
-            `debugger/readline` := eval(debugger_readline);
             :-showstat          := eval(_showstat);
             :-showstop          := eval(_showstop);
             :-stopat            := eval(stopat);
@@ -141,8 +153,7 @@ $endif
 ##HALFLINE restore debugger procedures
 ##DESCRIPTION
 ##- Restore the debugger procedures
-##  ~debugger~, ~`debugger/printf`~, ~`debugger/readline`~
-##  ~showstat~, ~showstop~, ~stopat~, and ~where~.
+##  ~debugger~, ~showstat~, ~showstop~, ~stopat~, and ~where~.
 
     Restore := proc()
         # Dave H. suggests using 'forget'
