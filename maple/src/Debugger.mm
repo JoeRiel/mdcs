@@ -300,7 +300,7 @@ $include <src/debugger.mm>
 
     _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
-    description `Displays a procedure with statement numbers and breakpoints.`;
+    description `Display a procedure with statement numbers and breakpoints.`;
     local res;
     global showstat;
         if _npassed = 0 then map(procname,stopat())
@@ -465,6 +465,7 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
+    description `Set a breakpoint in a procedure`;
     local pnam,statenum;
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
@@ -540,18 +541,34 @@ $endif
 #}}}
 #{{{ unstopat
 
+##PROCEDURE mds[Debugger][unstopat]
+##HALFLINE clear a breakpoint in a procedure
+##AUTHOR   Joe Riel
+##CALLINGSEQUENCE
+##- unstopat('p','n','cond')
+##PARAMETERS
+##- 'p'    : ::{name,string,list}::; procedure to modify
+##- 'n'    : (optional) ::posint::; statement number
+##- 'cond' : (optional) ::uneval::; condition
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- Clear a breakpoint in a procedure.
+##
+##-
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
                      , $ )
+    description `Clear a breakpoint in a procedure`;
     local pnam,st;
         if p :: list then
             return procname(op(p));
         end if;
         pnam := GetName(p);
         st := `if`(_npassed=1,1,n);
-        if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
-        else                  debugopts('stopat'=[pnam, -st, 'cond'])
+        if _npassed <= 2 then debugopts(':-stopat'=[pnam, -st])
+        else                  debugopts(':-stopat'=[pnam, -st, ':-cond'])
         end if;
         if assigned(debugged_builtins[pnam]) then
             proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
