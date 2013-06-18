@@ -290,7 +290,7 @@ tags:
 
 mint: $(call print-help,mint	,Check Maple syntax)
 mint:
-	@$(call showerr,$(MINT) -q -i2 -I $(HOME)/maple < maple/src/$(maple-pkg).mpl)
+	@$(call showerr,$(MINT) -q -i2 -I $(HOME)/emacs/mdcs/maple < maple/src/$(maple-pkg).mpl)
 
 # }}}
 # {{{ test
