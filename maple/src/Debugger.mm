@@ -554,8 +554,7 @@ $endif
 ##- `NULL`
 ##DESCRIPTION
 ##- Clear a breakpoint in a procedure.
-##
-##-
+
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
