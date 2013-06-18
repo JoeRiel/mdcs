@@ -440,11 +440,13 @@ This is specialized to work with a few routines; needs to be generalized."
     (format "evalb(%s)" (match-string-no-properties 1)))
    ((looking-at " *for \\([^ ]+\\)")
     (match-string-no-properties 1))
+   ;; return expression
    ((looking-at " *return \\(.*\\);?$")
     (match-string-no-properties 1))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
-   ((looking-at "\\(.*\\) :=")
+   ;; get lhs of an assignment
+   ((looking-at "\\([^:\n]+\\(?::[^=][^:\n]+\\)*\\):=")
     (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
