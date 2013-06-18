@@ -444,6 +444,8 @@ This is specialized to work with a few routines; needs to be generalized."
     (match-string-no-properties 1))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
+   ((looking-at "\\(.*\\) :=")
+    (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
 	  (goto-char (match-end 0)))
