@@ -243,7 +243,9 @@ Optional TAG identifies the message type."
 	      (delete-region (point) (line-end-position)))
 
 	     ((eq tag 'output)
-	      (insert msg))
+	      (if (bolp)
+		  (insert msg)
+		(insert "\n" msg)))
 
 	     ((eq tag 'monitor)
 	      (mds-insert-and-font-lock msg 'mds-monitor))
@@ -345,7 +347,8 @@ and insert a right-pointing triangle that calls the procedure."
 
 (defun mds-out-call-stack (button)
   "Check for the address of an argument tag at locate of BUTTON.
-If found, move backwards to the procedure address tag,
+BUTTON is inserted by `mds-out-buttonize-stack-args'.
+If address is found, move backwards to the procedure address tag,
 then call the procedure with the arguments."
   (goto-char (button-start button))
   (beginning-of-line)
@@ -356,7 +359,12 @@ then call the procedure with the arguments."
 	(mds-ss-eval-expr
 	 (format "pointto(%s)(pointto(%s))"
 		 (match-string-no-properties 1)
-		 args))))))
+		 args)
+	 (progn ; display f(>), where f is the procedure name
+	   (forward-line)
+	   (if (not (looking-at "\\([^ \n]+\\): "))
+	       ""
+	     (concat (match-string-no-properties 1) "(\x25b6)"))))))))
 
 (defun mds-out-activate-addr-procname (&optional button)
   "If looking at addr-procname, hide address and apply BUTTON to the procname.

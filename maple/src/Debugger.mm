@@ -13,7 +13,7 @@
 ##  indicate the purpose of each packet.  This simplifies the
 ##  parsing requirements of the server.
 
-$define DEBUGGER_PROCS debugger, `debugger/printf`, `debugger/readline`, showstat, showstop, where
+$define DEBUGGER_PROCS debugger, showstat, showstop, where
 
 $define LOGFILE "readline.log"
 
@@ -102,16 +102,28 @@ $endif
 
 #{{{ Replace
 
+##PROCEDURE mdc[Debugger][Replace]
+##HALFLINE replace library debugger procedures
+##AUTHOR   Joe Riel
+##CALLINGSEQUENCE
+##- Replace()
+##DESCRIPTION
+##- Replace the library debugger procedures
+##  with custom procedures that communicate
+##  with the Emacs debugger server.
+##
+##- Assign the module-local variable `replaced` to true.
+##SEEALSO
+##- "Restore"
+
     Replace := proc()
         if replaced <> true then
             # Save these
             orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
             # Reassign library debugger procedures
-            unprotect('DEBUGGER_PROCS', :-stopat);
+            unprotect('DEBUGGER_PROCS', ':-stopat');
             :-debugger          := eval(_debugger);
-            `debugger/printf`   := eval(debugger_printf);
-            `debugger/readline` := eval(debugger_readline);
             :-showstat          := eval(_showstat);
             :-showstop          := eval(_showstop);
             :-stopat            := eval(stopat);
@@ -141,8 +153,7 @@ $endif
 ##HALFLINE restore debugger procedures
 ##DESCRIPTION
 ##- Restore the debugger procedures
-##  ~debugger~, ~`debugger/printf`~, ~`debugger/readline`~
-##  ~showstat~, ~showstop~, ~stopat~, and ~where~.
+##  ~debugger~, ~showstat~, ~showstop~, ~stopat~, and ~where~.
 
     Restore := proc()
         # Dave H. suggests using 'forget'
@@ -207,7 +218,7 @@ $endif
         if except = '`(none)`' then
             debugger_printf(TAG_ERROR, "%a\n", except);
         else
-            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..]));
+            debugger_printf(TAG_ERROR, "%s\n", StringTools:-FormatMessage(except[2..-1]));
         end if;
     end proc;
 
@@ -266,7 +277,7 @@ $endif
             catch:
                 debugger_printf(TAG_ERROR
                                 , "Error, %s\n"
-                                , StringTools:-FormatMessage(lastexception[2..])
+                                , StringTools:-FormatMessage(lastexception[2..-1])
                                );
             end try;
             if line = false then
@@ -277,7 +288,7 @@ $endif
             while line[n] = "\n" do
                 n := n-1;
             end do;
-            return line[..n];
+            return line[1..n];
         end do;
     end proc:
 
@@ -289,7 +300,7 @@ $include <src/debugger.mm>
 
     _showstat := proc( p::{name,`::`}, statnumoroverload::{integer,range}, statnum::{integer,range}, $ )
     option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
-    description `Displays a procedure with statement numbers and breakpoints.`;
+    description `Display a procedure with statement numbers and breakpoints.`;
     local res;
     global showstat;
         if _npassed = 0 then map(procname,stopat())
@@ -346,10 +357,10 @@ $ifdef DONTUSE
 
         # Split at first statement and insert opts and desc
         pos := StringTools:-Search("\n   1", pstr);
-        pstr := cat(pstr[..pos]
+        pstr := cat(pstr[1..pos]
                     , opts
                     , desc
-                    , pstr[pos+1..]
+                    , pstr[pos+1..-1]
                    );
 $endif
         WriteTagf(`if`(dead
@@ -454,6 +465,7 @@ $endif
                    , n :: posint
                    , cond :: uneval
                    , $ )
+    description `Set a breakpoint in a procedure`;
     local pnam,statenum;
         if _npassed = 0 then
             # this isn't cheap.  May want to "improve".
@@ -516,7 +528,7 @@ $endif
             proc(f)
                 f := subs(_f = eval(f), proc() _f(_passed) end proc);
             end proc(pnam);
-            return procname(pnam, _passed[2..]);
+            return procname(pnam, _passed[2..-1]);
         end if;
 
         statenum := `if`(_npassed=1,1,n);
@@ -529,18 +541,34 @@ $endif
 #}}}
 #{{{ unstopat
 
+##PROCEDURE mds[Debugger][unstopat]
+##HALFLINE clear a breakpoint in a procedure
+##AUTHOR   Joe Riel
+##CALLINGSEQUENCE
+##- unstopat('p','n','cond')
+##PARAMETERS
+##- 'p'    : ::{name,string,list}::; procedure to modify
+##- 'n'    : (optional) ::posint::; statement number
+##- 'cond' : (optional) ::uneval::; condition
+##RETURNS
+##- `NULL`
+##DESCRIPTION
+##- Clear a breakpoint in a procedure.
+##
+##-
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
                      , $ )
+    description `Clear a breakpoint in a procedure`;
     local pnam,st;
         if p :: list then
             return procname(op(p));
         end if;
         pnam := GetName(p);
         st := `if`(_npassed=1,1,n);
-        if _npassed <= 2 then debugopts('stopat'=[pnam, -st])
-        else                  debugopts('stopat'=[pnam, -st, 'cond'])
+        if _npassed <= 2 then debugopts(':-stopat'=[pnam, -st])
+        else                  debugopts(':-stopat'=[pnam, -st, ':-cond'])
         end if;
         if assigned(debugged_builtins[pnam]) then
             proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);

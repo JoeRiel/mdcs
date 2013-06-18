@@ -49,8 +49,8 @@ local Salt;
         end if;
 
         salt := GetSalt(userid);
-        rand := challenge[..LENGTH];
-        encrypt := challenge[LENGTH+1..];
+        rand := challenge[1..LENGTH];
+        encrypt := challenge[LENGTH+1..-1];
 
         passkey := GeneratePassKey(salt, password);
         if encrypt <> SHA1(cat(rand,passkey)) then
@@ -61,7 +61,7 @@ local Salt;
 
     SHA1 := proc( msg :: string )
         # for now I'll just call a shell command
-        ssystem(sprintf("echo -n '%s' | sha1sum --text", msg))[2][..LENGTH];
+        ssystem(sprintf("echo -n '%s' | sha1sum --text", msg))[2][1..LENGTH];
     end proc;
 
 

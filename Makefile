@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.4.1
+VERSION := 2.4.2
 
 include help-system.mak
 
@@ -30,6 +30,9 @@ ifeq ($(OS),GNU/Linux)
 else
   INSTALL-INFO = install-info
 endif
+
+CUSTOM_LIB := $(MAPLE_ROOT)/internal/link
+STANDARD_LIB := $(MAPLE_ROOT)/internal/link 0
 
 MINT := mint
 
@@ -158,8 +161,10 @@ mla: remove-preview $(mla)
 %.mla: maple/src/%.mpl $(mms)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
+	@$(STANDARD_LIB)
 	@smarch -c $@
 	@sload -Q -b . -I $$(pwd)/maple $<
+	@$(CUSTOM_LIB)
 
 mla-install: $(call print-help,mla-install,Install mla into $(MAPLE-INSTALL-DIR))
 mla-install: $(mla)

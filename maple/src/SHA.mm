@@ -263,7 +263,7 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
         end do;
 
         # Do last chunk(s)
-        s := str[`bytes/chunk`*Nchunks+1..];
+        s := str[`bytes/chunk`*Nchunks+1..-1];
         rem_bits := 8*length(s);
         PartialFillArray(s,W);
 
@@ -331,7 +331,7 @@ $define ABCDE (irem(rotl(a,5) + f + e + k + W[i],2^32), a, rotl(b,30), c, d)
         # Convert remaining string to integer, then shift so
         # it is flush-left, which means shift it 4-r bytes.
         # Finally, add the 1-bit just to the right of it.
-        W[i] := StringToInteger(str[i*4+1..]) * 2^(8*(4-r)) + 2^(8*(4-r)-1);
+        W[i] := StringToInteger(str[i*4+1..-1]) * 2^(8*(4-r)) + 2^(8*(4-r)-1);
 
         # Clear the remaining rows, through row 15
         for i from i+1 to 15 do

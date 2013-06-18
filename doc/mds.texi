@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 2.4.1
+@set VERSION 2.4.2
 @set DATE June 2011
 
 @dircategory Emacs
@@ -1517,7 +1517,7 @@ This feature allows you to reexecute a procedure with the same arguments
 while inside the debugger, just evaluate the expression @code{thisproc(args)}.
 
 A convenient way to do this, 
- one that allows reexecuting any procedure on the current call stack, 
+one that allows reexecuting any procedure on the current call stack, 
 is to execute @code{mds-where} (@kbd{K}), 
 which prints the stack with arguments in the output buffer.  @xref{Status}.
 Clicking the right-pointing triangle adjacent to the list of arguments 
