@@ -963,7 +963,7 @@ Connect := proc(host :: string
                 , { verbose :: truefalse := false }
                 , $
                )
-local cmd,connected,line,sys;
+local cmd,connected,line;
 
     Debugger:-Reset();
     Disconnect(_options['quiet']);
@@ -975,7 +975,6 @@ local cmd,connected,line,sys;
             if emacs :: procedure then
                 emacs();
             else
-                sys := kernelopts('platform');
                 cmd := sprintf("%s", emacs);
                 try
                     system['launch'](cmd);
