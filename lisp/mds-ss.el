@@ -87,12 +87,15 @@ Echo the command to the output buffer unless HIDE is non-nil."
 
 (defun mds-ss-eval-expr (expr &optional display unlimited)
   "Send EXPR, with newline, to the Maple process.
-Non-nil DISPLAY means send EXPR to the output buffer.  This
-function is intended to be used for evaluating Maple
-expressions."
+Optional DISPLAY, if t, means send EXPR to the output buffer.  If
+not nil and not t, send DISPLAY (should be a string).  If nil,
+send nothing.  This function is intended to be used for
+evaluating Maple expressions."
   (mds-ss-block-input)
   (if display
-      (mds-out-append-input (mds-client-out-buf mds-client) expr 'mds-user-input))
+      (mds-out-append-input (mds-client-out-buf mds-client)
+			    (if (eq display t) expr display)
+			    'mds-user-input))
   (mds-ss-send-client (format "%s%s\n"
 			      (if unlimited "_mds_unlimited " "")
 			      expr)))
@@ -441,6 +444,8 @@ This is specialized to work with a few routines; needs to be generalized."
     (match-string-no-properties 1))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
+   ((looking-at "\\(.*\\) :=")
+    (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
 	  (goto-char (match-end 0)))
@@ -731,7 +736,7 @@ allow return expression of unlimited size."
   (interactive)
   (let ((expr (mds-expr-at-point-interactive
 	       "prettyprint: " "")))
-    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) 'display current-prefix-arg)))
+    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) t current-prefix-arg)))
 
 (defun mds-eval-and-prettyprint-prev ()
   "Call `mds-eval-and-prettyprint' with point at the preceding statement."
@@ -742,7 +747,7 @@ allow return expression of unlimited size."
 	(progn
 	  (goto-char (match-beginning 3))
 	  (let ((expr (mds-expr-at-point)))
-	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) 'display current-prefix-arg)))
+	    (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr) t current-prefix-arg)))
       (beep)
       (message "No preceding statement."))))
 
@@ -752,16 +757,15 @@ interactively, EXPR is queried.  If called with prefix argument,
 allow return expression of unlimited size."
   (interactive (list (mds-expr-at-point-interactive
 		      "eval: " "")))
-  (mds-ss-eval-expr expr 'display current-prefix-arg))
-
+  (mds-ss-eval-expr expr t current-prefix-arg))
 
 (defun mds-eval-and-display-expr-global (expr)
   "Evaluate a Maple expression, EXPR, in a global context.
-If called interactively, EXPR is queried.
-The result is returned in the message area."
+If called interactively, EXPR is queried.  If called with prefix
+argument, allow return expression of unlimited size."
   (interactive (list (mds-expr-at-point-interactive
 		      "global eval: " "")))
-  (mds-ss-eval-expr (concat "statement " expr) current-prefix-arg))
+  (mds-ss-eval-expr (concat "statement " expr) t current-prefix-arg))
 
 ;;}}}
 ;;{{{ (*) Information

@@ -966,13 +966,7 @@ Connect := proc(host :: string
 local cmd,connected,line,sys;
 
     Debugger:-Reset();
-
-    if sid <> -1 then
-        try
-            Sockets:-Close(sid);
-        catch:
-        end try;
-    end if;
+    Disconnect(_options['quiet']);
 
     try
         sid := Sockets:-Open(host, port);
@@ -1040,7 +1034,10 @@ Disconnect := proc( { quiet :: truefalse := false } )
         if not quiet then
             printf("goodbye\n");
         end if;
-        Sockets:-Close(sid);
+        try
+            Sockets:-Close(sid);
+        catch "argument does not refer to an open socket connection":
+        end try;
         sid := -1;
     end if;
 end proc;

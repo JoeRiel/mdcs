@@ -93,7 +93,7 @@ global showstat, showstop;
                 end if;
                 if SkipCheckStack then
                     if skip and evalLevel > last_evalLevel+5 then
-                        skip := not match_predicate(op([7,..], debugopts('callstack')));
+                        skip := not match_predicate(op([7,1..-1], debugopts('callstack')));
                     end if;
                     last_evalLevel := evalLevel;
                 end if;
@@ -136,7 +136,7 @@ global showstat, showstop;
             # Use addressof to prevent an object from overriding
             # equality.
             if addressof(_passed[i]) = addressof(lasterror) then
-                local last_exception := lastexception[2..];
+                local last_exception := lastexception[2..-1];
                 if last_exception :: indexed then
                     last_exception := "use showexception (x) or showerror (X)";
                 end if;
@@ -280,7 +280,7 @@ global showstat, showstop;
     prompt := true;
 
     do
-        line := `debugger/readline`( prompt );
+        line := debugger_readline( prompt );
         # If there's an assignment, make sure it is delimited by spaces.
         i := SearchText(":=",line);
         if i > 1 and SearchText(" := ",line) <> i-1 then
@@ -546,14 +546,14 @@ global showstat, showstop;
         elif cmd = "_mds_unlimited" then
             #{{{ _mds_unlimited
             unlimited_flag := true;
-            line := original[16..];
+            line := original[16..-1];
             original := line;
             cmd := op(traperror(sscanf(line,"%s")));
             #}}}
         end if;
 
         if cmd = "statement" then
-            original := original[11..];
+            original := original[11..-1];
             statement := ':-statement';
         else
             statement := NULL;
@@ -583,7 +583,7 @@ global showstat, showstop;
 
         if err = lasterror then
             debugger_printf(TAG_ERROR, "Error, %s\n"
-                            , StringTools:-FormatMessage(lastexception[2..])
+                            , StringTools:-FormatMessage(lastexception[2..-1])
                            );
         fi;
 

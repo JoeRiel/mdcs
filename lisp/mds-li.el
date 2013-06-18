@@ -270,15 +270,20 @@ Set cursor to ready."
 If called with prefix argument, allow return expression of unlimited size."
   (interactive)
   (save-excursion
-    (if (= 1 mds-li-state)
-	(progn
-	  (beep)
-	  (message "No preceding statement."))
-      (mds-li-goto-state (1- mds-li-state))
-      (let ((expr (mds-expr-at-point)))
+    (let ((state (1- mds-li-state))
+	  expr)
+      (while (and (> state 0)
+		  (progn
+		    (mds-li-goto-state state)
+		    (setq expr (mds-expr-at-point))
+		    (string= expr "error")))
+	(setq state (1- state)))
+      (if (> state 1)
 	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
-			  'display
-			  current-prefix-arg)))))
+			  t
+			  current-prefix-arg)
+	(beep)
+	(message "No preceding statement.")))))
 				
 
 ;;}}}

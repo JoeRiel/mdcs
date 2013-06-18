@@ -1,5 +1,11 @@
 -*- org -*-
 
+* mdcs-2.4.2
+** Fix bug where output was displayed on prompt-line
+** Display f(>) when re-executing a stack call
+** Prevent socket connection error while unloading
+** Add explicit begin/end terms to range specification to work with pre Maple12
+** Improve handling of prettyprint-prev: skip errors and grab assignments
 * mdcs-2.4.1
 ** Fix bug in handling 'where' (args were for wrong procedure!)
 ** Remove display of TopLevel call; it is redundant and requires special handling
