@@ -497,6 +497,17 @@ Otherwise raise error indicating Maple is not available."
 
 ;;{{{ (*) Execution
 
+(defun mds-call-stack (&optional depth)
+  "Execute the function at DEPTH on the call stack.
+If optional DEPTH is nil, use 1, the top of the stack."
+  (interactive "p")
+  (let ((depth (or depth 1)))
+    (if (< depth 1)
+	(error "stack depth must be positive")
+      (mds-ss-eval-expr (format "mdc:-Debugger:-CallStack(%d,debugopts('callstack'))" depth)
+			(format "callstack(%d)" depth)))))
+		    
+
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
   (interactive)
@@ -976,6 +987,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("H" . mds-info)
 	   ("i" . mds-into)
 	   ("I" . mds-stopwhenif)
+	   ("j" . mds-call-stack)
 	   ("k" . mds-showstack)
 	   ("K" . mds-where)
 	   ("l" . mds-goto-current-state)
@@ -1067,6 +1079,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Goto"		mds-goto-procname t]
        ["Goto [query]"  mds-goto-procname :keys "C-u g"]
        ["Here"		mds-here t]
+       ["Re-execute"    mds-call-stack t]
        "----"
        ["Select trace"	mds-select-trace t]
        "----"

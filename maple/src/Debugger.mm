@@ -21,7 +21,8 @@ Debugger := module()
 
 #{{{ declarations
 
-export Enter
+export CallStack
+    ,  Enter
     ,  GoBack
     ,  Monitor
     ,  Printf
@@ -95,6 +96,11 @@ $endif
         else
             parse_debugger := 'debugger';
         end if;
+        # Expand CallStack so that it will not appear on the stack
+        # when called during debugging.  Is this a general property of
+        # inlined procedures?  That is, do they appear once, then not
+        # again?
+        CallStack(1,[0$4]);
         NULL;
     end proc;
 
@@ -578,6 +584,14 @@ $endif
 
 #}}}
 
+#{{{ CallStack
+
+    CallStack := proc(depth::posint,stk::list)
+    option inline;
+        stk[1+3*(depth-1)+1](op(stk[1+3*(depth-1)+3]));
+    end proc;
+
+#}}}
 #{{{ GetName
 
     GetName := proc(p :: {name,string}, $)
