@@ -565,6 +565,7 @@ local Connect
     , PrintRtable   # module to "fix" `print/rtable`
     , WriteTagf
 
+    , indexed2slashed
     , printf  # local versions so that globals can be 'debugged'
     , sprintf
 
@@ -629,6 +630,7 @@ $include <src/Format.mm>
 $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
+$include <src/indexed2slashed.mm>
 $include <src/LineInfo.mm>
 $include <src/PrintRtable.mm>
 
