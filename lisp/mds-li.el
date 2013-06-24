@@ -278,10 +278,10 @@ If called with prefix argument, allow return expression of unlimited size."
 		    (setq expr (mds-expr-at-point))
 		    (string= expr "error")))
 	(setq state (1- state)))
-      (if (> state 1)
-	(mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
-			  t
-			  current-prefix-arg)
+      (if (> state 0)
+	  (mds-ss-eval-expr (format "mdc:-Format:-PrettyPrint(%s)" expr)
+			    t
+			    current-prefix-arg)
 	(beep)
 	(message "No preceding statement.")))))
 				
