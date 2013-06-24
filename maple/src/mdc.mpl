@@ -1129,6 +1129,14 @@ end proc;
 ##  posint), and `platform` and `pid` are the corresponding outputs of
 ##  "kernelopts".
 ##
+##OPTIONS
+##opt(pid,integer)
+##  The process identifier.  The default is ~kernelopts(pid)~.
+##opt(platform,string)
+##  The platform.  The default is ~kernelopts(platform)~.
+##opt(release,integer)
+##  The major Maple release
+##
 ##NOTES
 ##- The format will probably be expanded once this is in place.
 ##  Note that a different machine could generate the same ID.
@@ -1150,19 +1158,30 @@ end proc;
 ## Try[TE]("10.3", FUNC("\n"), msg);
 
 
-CreateID := proc(label :: string,$)
+CreateID := proc(label :: string
+                 , { platform :: string := kernelopts(':-platform') }
+                 , { pid :: integer := kernelopts(':-pid') }
+                 , { release :: integer := "DEFAULT" }
+                 , $
+                )
 local ver;
     if length(label) = 0 then
         error "label cannot be empty";
     elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
         error "invalid characters in label '%1'", label;
     end if;
-    ver := kernelopts('version');
-    ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-    return sprintf(":%s:%s:%s:%d:"
+    if release = "DEFAULT" then
+        ver := kernelopts('version');
+        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
+        ver := parse(ver);
+    else
+        ver := release;
+    end if;
+    return sprintf(":%s:%d:%s:%d:"
                    , label
                    , ver
-                   , kernelopts('platform,pid')
+                   , platform
+                   , pid
                   );
 end proc;
 
