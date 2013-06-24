@@ -89,7 +89,18 @@ showerr = err="$$($1)" ; if [ "$$err" ]; then echo $(call warn,$$err); fi
 
 # }}}
 
+# {{{ build
+
+.PHONY: build
+
+build: $(call print-help,build,	byte-compile and install mla)
+build: byte-compile mla-install
+
+# }}}
+
 # {{{ emacs
+
+help: $(call print-separator)
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
@@ -297,7 +308,7 @@ mint:
 
 .PHONY: test test-extract test-run
 
-TESTER := tester -maple "smaple -B -I $(dir $(PWD))"
+TESTER := tester -maple "smaple -B -I $(dir $(PWD)/maple/include/)"
 
 test: $(call print-help,test	,Extract and run test suite)
 test-extract: $(call print-help,test-extract,Extract test suite)
