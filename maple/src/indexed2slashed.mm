@@ -17,8 +17,8 @@
 ##
 ##- If a name is not indexed it is returned as is.
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-indexed2slashed);
+## $include <test_macros.mi>
+## AssignFUNC(indexed2slashed);
 ## $define NE testnoerror
 ### mdc(FUNC):
 ## Try("1.0", FUNC(a), a);

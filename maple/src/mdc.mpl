@@ -1141,16 +1141,15 @@ end proc;
 ##- The format will probably be expanded once this is in place.
 ##  Note that a different machine could generate the same ID.
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-CreateID):
-## VerifyTools:-AddVerification(
-##      label=proc(s1,s2) evalb( s1 = sprintf("%s%d:",s2,kernelopts('pid')) )
-##   end proc):
+## $include <test_macros.mi>
+## AssignFUNC(CreateID):
 ## macro(LA='verify,label', NLA='verify,Not(label)', TE=testerror);
-## Try[LA]("1.1", FUNC("label"), ":label:16:unix:");
-## Try[LA]("1.2", FUNC("abc12"), ":abc12:16:unix:");
-## Try[LA]("1.3", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:");
-## Try[NLA]("2.1", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:0");
+### mdc(FUNC):
+## opts := (release=17, pid=1):
+## Try("1.1", FUNC("label",opts), ":label:17:unix:1:");
+## Try("1.2", FUNC("abc12",opts), ":abc12:17:unix:1:");
+## Try("1.3", FUNC("abc-1_2_",opts), ":abc-1_2_:17:unix:1:");
+## Try("2.1", FUNC("abc-1_2_",opts), ":abc-1_2_:17:unix:1:");
 ## Try[TE]("10.0", FUNC(""), "label cannot be empty");
 ## msg := "invalid characters in label":
 ## Try[TE]("10.1", FUNC("+"), msg);
@@ -1636,8 +1635,8 @@ end proc;
 ##- "stopat"
 ##
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Count):
+## $include <test_macros.mi>
+## AssignFUNC(Count):
 ## macro(AS='verify,as_set');
 ##
 ## Try("1.0", [FUNC(),FUNC(),FUNC(1)], [1,2,1]):

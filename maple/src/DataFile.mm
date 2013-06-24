@@ -19,8 +19,8 @@
 ##SEEALSO
 ##- "kernelopts"
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-DataFile):
+## $include <test_macros.mi>
+## AssignFUNC(DataFile):
 ##
 ## Try("1", FUNC(), "/home/joe/maple/toolbox/emacs/data/");
 ## Try("1", FUNC("Sample.mpl"), "/home/joe/maple/toolbox/emacs/data/Sample.mpl");

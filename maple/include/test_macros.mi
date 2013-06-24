@@ -1,0 +1,8 @@
+# Macros for assigning local procedures to global names;
+# these are intended to be used in the TEST section only.
+# They temporarily make opaquemodules=false to permit
+# the assignment.
+
+$define AssignFUNC(P) kernelopts('opaquemodules'=false): FUNC := mdc:-P: kernelopts('opaquemodules'=true);
+$define AssignLocalProc(f,P) kernelopts('opaquemodules'=false): f := mdc:-P: kernelopts('opaquemodules'=true);
+macro(NE=testnoerror, TE=testerror):

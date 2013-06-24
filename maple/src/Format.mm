@@ -77,8 +77,8 @@ local prettyprint
 ##> g();
 ##
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-ArgsToEqs):
+## $include <test_macros.mi>
+## AssignFUNC(Format:-ArgsToEqs):
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.1.0", proc(x,y) end, 'assign' = "proc1_1");
@@ -212,8 +212,8 @@ local prettyprint
 ##NOTES
 ##- Need to provide a means to indicate the type.
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-prettyprint):
+## $include <test_macros.mi>
+## AssignFUNC(Format:-prettyprint):
 ## kernelopts(opaquemodules=false):
 ## mdc:-Debugger:-Printf := printf:
 ## mdc:-Format:-showstat := (x->x):

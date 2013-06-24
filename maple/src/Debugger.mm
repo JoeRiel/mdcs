@@ -586,13 +586,62 @@ $endif
 
 #{{{ CallStack
 
-    CallStack := proc(depth::posint,stk::list)
+##PROCEDURE mdc[Debugger][CallStack]
+##HALFLINE re-execute a procedure on the call stack
+##AUTHOR   Joe Riel
+##DATE     Jun 2013
+##CALLINGSEQUENCE
+##- CallStack('depth','stk')
+##
+##PARAMETERS
+##- 'depth' : ::posint::; depth of stack
+##- 'stk'   : ::list::; stack contents
+##
+##DESCRIPTION
+##- Re-execute a procedure on the call stack.
+##
+##- The 'depth' parameter is the depth at which to look.
+##  1 is the top of the stack.  When 'depth' is 2, for example,
+##  the second procedure on the stack is re-executed
+##  with its original arguments.
+##
+##- The 'stk' parameter is a list equal to
+##  the output of ~debugopts('callstack')~.
+##TEST
+## $include <test_macros.mi>
+## AssignFUNC(Debugger:-CallStack);
+### mdc(FUNC):
+## Try("1.0", FUNC(1,[DEBUG, f,`f(x)`,[x]]), f(x));
+
+    CallStack := proc(depth::posint, stk::list)
     option inline;
         stk[1+3*(depth-1)+1](op(stk[1+3*(depth-1)+3]));
     end proc;
 
+
 #}}}
 #{{{ GetName
+
+##PROCEDURE mdc[Debugger][GetName]
+##HALFLINE return the name of a procedure
+##CALLINGSEQUENCE
+##- GetName('p')
+##PARAMETERS
+##- 'p' : ::{name,string}::; procedure name
+##
+##RETURNS
+##- ::name::
+##DESCRIPTION
+##- Return the name of a procedure.
+##TEST
+## $include <test_macros.mi>
+## AssignFUNC(Debugger:-GetName):
+## mdc(FUNC):
+##
+## Try("1.1", FUNC(convert[symbol]), `convert/symbol`);
+## Try("1.2", FUNC("convert[symbol]"), `convert/symbol`);
+## Try("1.3", FUNC(`convert/symbol`), `convert/symbol`);
+## Try("1.4", FUNC("`convert/symbol`"), `convert/symbol`);
 
     GetName := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
