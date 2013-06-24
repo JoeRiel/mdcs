@@ -609,6 +609,7 @@ $endif
                 end if;
             elif p :: string then
                 pn := parse(p);
+                return GetName(pn);
             else
                 pn := p;
             end if;
