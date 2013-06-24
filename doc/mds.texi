@@ -587,7 +587,12 @@ An optional numeric argument is the depth at which to call,
 so @kbd{C-u 3 j} calls the third function on the call stack.
 This provides a convenient method to rerun the current procedure
 with the same arguments, without exiting the debugger.
-@xref{mds-where}.
+
+If the current procedure has a breakpoint at the current statement,
+executing this command appears to do nothing because execution halts at
+the same statement.  Use @command{mds-where} to see a second call 
+to the current procedure on the top of the call-stack. @xref{mds-where}.
+
 
 @kindex c
 @findex mds-cont
@@ -1391,7 +1396,7 @@ Use @command{mds-toggle-track-input} to toggle the variable.
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
 
-When @code{mds-where} (@kbd{K}) is executed from the showstat or
+When @code{mds-where} (@kbd{K}), @ref{mds-where}, is executed from the showstat or
 lineinfo buffer, the stack, with arguments, is displayed in the output
 buffer.  To the left of the list of arguments is a right-pointing
 triangle.  Clicking it calls the associated procedure with the displayed
