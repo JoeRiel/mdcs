@@ -187,7 +187,7 @@ otherwise call (maple) showstat to display the new procedure."
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
-
+	;; Update buffer-local variables
 	(setq mds-ss-addr     addr
 	      mds-ss-procname procname
 	      mds-ss-state    state
@@ -897,6 +897,14 @@ See `mds-monitor-toggle'."
   (interactive)
   (unless client (setq client mds-client))
   (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
+
+(defun mds-ss-goto-current-state (client)
+    "Move point to current statement in live-showstat buffer of CLIENT.
+Set cursor to ready."
+    (mds-wm-select-code-window client)
+    (mds-ss-move-state mds-ss-state)
+    (setq cursor-type mds-cursor-ready))
+    
 
 (defun mds-goto-current-state (&optional client)
   "Move cursor to the current state in the code buffer for CLIENT."
