@@ -60,16 +60,18 @@
 
 ;;{{{ Variables
 
-(defvar mds-li-addr ""            "Address of the current procedure.")
-(defvar mds-li-arrow-position nil "Marker for current-line.")
-(defvar mds-li-beg nil            "Character position of current position.")
-(defvar mds-li-file-name ""       "Name of the current source-file.")
-(defvar mds-li-state 0            "Current state (posint).")
+(defvar mds-li-addr ""            "Address of the current procedure in the lineinfo buffer.")
+(defvar mds-li-arrow-position nil "Marker for current statement in lineinfo buffer.")
+(defvar mds-li-beg nil            "Character position of beginning of current statement in lineinfo buffer.")
+(defvar mds-li-depth ""           "String corresponding to current stack depth.")
+(defvar mds-li-file-name ""       "Name of the current source-file in lineinfo buffer.")
+(defvar mds-li-state 0            "Current state (posint) in lineinfo buffer.")
 
 (mapc #'make-variable-buffer-local
       '(mds-li-addr
 	mds-li-arrow-position
 	mds-li-beg
+	mds-li-depth
 	mds-li-file-name
 	mds-li-state))
 
@@ -91,7 +93,7 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file addr procname state beg breakpoints)
+(defun mds-li-update (buffer file addr procname state beg breakpoints depth)
   "Update source BUFFER with source-file FILE.
 ADDR is the address of PROCNAME.
 PROCNAME is the procedure name.
@@ -99,14 +101,17 @@ STATE is  the current state (a string corresponding to an integer).
 BEG is the character position of the beginning of the statement in FILE.
 BREAKPOINTS is a list of the position of the beginning of lines
 that have breakpoints.
+DEPTH is the current stack depth.
 
 Put point at BEG and move the current statement marker."
   (with-current-buffer buffer
     (let ((same-file (string= file mds-li-file-name))
 	  (same-addr (string= addr mds-li-addr))
+	  (same-depth (string= depth mds-li-depth))
 	  buffer-read-only)
+      (setq mds-li-depth depth)
       (unless same-file
-	;; insert the new file and update buffer-local variable
+	;; insert the new file and update buffer-local variable mds-li-file-name
 	(delete-region (point-min) (point-max))
 	(mds-li-remove-breakpoint (point-min))
 	(insert-file-contents file)
@@ -114,7 +119,7 @@ Put point at BEG and move the current statement marker."
 	(maplev-set-tab-width file)
 	(setq mds-li-file-name file))
       (unless same-addr
-	;; insert breakpoints and update buffer-local variable
+	;; insert breakpoints and update buffer-local variable mds-li-addr
 	(let (brkpt)
 	  (while breakpoints
 	    (setq brkpt (car breakpoints)
@@ -124,11 +129,14 @@ Put point at BEG and move the current statement marker."
 	(setq mds-li-addr addr)
 	;; print new procname as hyperlink in output buffer
 	(mds-out-display (mds-client-out-buf mds-client) (format "<%s>\n%s" addr procname) 'addr-procname))
-      (unless (and same-file same-addr)
+      (unless (and same-file same-addr same-depth)
 	;; Update the mode-line
 	(mds-li-set-mode-line file
 			      procname
+			      depth
 			      (car (mds-client-id mds-client)))))
+    ;; Move point to the beginning of the current statement
+    ;; and update the buffer-local variables mds-li-state, mds-li-beg, and mds-li-arrow-position.
     (setq mds-li-state (string-to-number state))
     (goto-char beg)
     (set-marker mds-li-arrow-position (line-beginning-position))
@@ -294,7 +302,7 @@ If called with prefix argument, allow return expression of unlimited size."
 
 ;;{{{ mode-line
 
-(defun mds-li-set-mode-line (file procname &optional label)
+(defun mds-li-set-mode-line (file procname depth &optional label)
   "Set the mode-line of the mds-li buffer.
 FILE is the name of the source file, PROCNAME is the current procedure,
 LABEL is the user id."
@@ -303,7 +311,7 @@ LABEL is the user id."
 	 mode-line-buffer-identification
 	 (and label (concat "   " (propertize (format "[%s]" label) 'face 'bold)))
 	 "   "
-	 (propertize (format "[%s: %s]" procname file) 'face 'bold)
+	 (propertize (format "[%s] %s: %s" depth procname file) 'face 'bold)
 	 "-%-")))
 
 ;;}}}

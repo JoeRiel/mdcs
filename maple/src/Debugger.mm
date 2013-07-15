@@ -57,6 +57,7 @@ local _debugger
     , here_cnt := 0
     , here_addr
     , here_state
+    , last_depth
     , last_evalLevel
     , last_state
     , monitoring := false
@@ -149,6 +150,7 @@ $endif
 #{{{ Reset
 
     Reset := proc()
+        last_depth := 1;
         last_state := NULL;
     end proc;
 
