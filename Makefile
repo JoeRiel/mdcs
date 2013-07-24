@@ -31,8 +31,8 @@ else
   INSTALL-INFO = install-info
 endif
 
-CUSTOM_LIB := $(MAPLE_ROOT)/internal/link
-STANDARD_LIB := $(MAPLE_ROOT)/internal/link 0
+LINEINFO := $(MAPLE_ROOT)/internal/link li
+STANDARD := $(MAPLE_ROOT)/internal/link mp
 
 MINT := mint
 
@@ -172,10 +172,10 @@ mla: remove-preview $(mla)
 %.mla: maple/src/%.mpl $(mms)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@$(STANDARD_LIB)
-	@smarch -c $@
-	@sload -Q -b . -I $$(pwd)/maple $<
-	@$(CUSTOM_LIB)
+	$(STANDARD)
+	smarch -c $@
+	sload -Q -b . -I $$(pwd)/maple $<
+	$(LINEINFO)
 
 mla-install: $(call print-help,mla-install,Install mla into $(MAPLE-INSTALL-DIR))
 mla-install: $(mla)
