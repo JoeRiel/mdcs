@@ -62,9 +62,11 @@ uses FT = FileTools, ST = StringTools;
                    , Emacs);
     result := ssystem(cmd);
     if result[1] <> 0 then
-        error "problem executing '%1':\n%s", cmd, result[2];
+        WARNING("problem executing '%1':\n%s", cmd, result[2]);
+        LispDir := MakePath(kernelopts('homedir'),"/.emacs.d/maple");
+    else
+        LispDir := cat(result[2], "maple");
     end if;
-    LispDir := cat(result[2], "maple");
     MapleLib := MakePath(kernelopts('homedir'), "maple", "toolbox", "emacs", "lib");
     InfoDir := MakePath(kernelopts('homedir'), "share", "info");
     DirFile := MakePath(InfoDir, "dir");
@@ -193,7 +195,7 @@ end proc:
 
 CreateInstaller := proc()
 
-local file, elisp, elisp_map, installer, maplev_dir, maplev_lisp_dir, version;
+local file, elisp, elisp_map, installer, manifest, maplev_dir, maplev_lisp_dir, version;
 global InstallScript;
 uses FT = FileTools;
 
