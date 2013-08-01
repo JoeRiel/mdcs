@@ -366,7 +366,8 @@ installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
 $(installer): hdb mla info
-	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
+	#	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
+	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
 installer-zip := $(pkg)-ins-$(subst .,-,$(VERSION)).zip
 installer-zip: $(call print-help,installer-zip,Create Maple installer zip file: $(installer-zip))
