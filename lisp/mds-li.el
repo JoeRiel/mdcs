@@ -110,6 +110,8 @@ Put point at BEG and move the current statement marker."
 	(delete-region (point-min) (point-max))
 	(mds-li-remove-breakpoint (point-min))
 	(insert-file-contents file)
+	;; set the tab-width
+	(maplev-set-tab-width file)
 	(setq mds-li-file-name file))
       (unless same-addr
 	;; insert breakpoints and update buffer-local variable
