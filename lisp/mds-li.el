@@ -305,7 +305,7 @@ If called with prefix argument, allow return expression of unlimited size."
 (defun mds-li-set-mode-line (file procname depth &optional label)
   "Set the mode-line of the mds-li buffer.
 FILE is the name of the source file, PROCNAME is the current procedure,
-LABEL is the user id."
+DEPTH is the stack-depth, and LABEL is the user-id."
   (setq mode-line-format
 	(list
 	 mode-line-buffer-identification
