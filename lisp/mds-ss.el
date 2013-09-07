@@ -441,8 +441,15 @@ This is specialized to work with a few routines; needs to be generalized."
    ((looking-at " *for \\([^ ]+\\)")
     (match-string-no-properties 1))
    ;; return expression
-   ((looking-at " *return \\(.*\\);?$")
-    (match-string-no-properties 1))
+   ((looking-at " *return\\> *\\(\\s(?\\)\\(.*\\)")
+    (if (not (string= (match-string-no-properties 1) ""))
+	;; matched an opening parenthesis (of some variety)
+	(buffer-substring-no-properties
+	 (1- (match-end 1))
+	 (save-excursion
+	   (forward-list)
+	   (point)))
+      (match-string-no-properties 2)))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
    ;; get lhs of an assignment
