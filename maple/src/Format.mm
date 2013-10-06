@@ -229,7 +229,7 @@ local prettyprint
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, fld, i, ix, n, typ, opacity, rest;
+    local eqs, ex, fld, i, ix, j, m, n, typ, opacity, rest;
     global _fake_name;
 
         if nargs > 2 then
@@ -342,6 +342,14 @@ local prettyprint
                 n := op(1,rest);
                 Debugger:-Printf("(*Vector: %d*)\n", n);
                 return seq(rest[i], i=1..n);
+            else
+                return rest;
+            end if;
+        elif rest :: Matrix then
+            if top then
+                (m,n) := op(1,rest);
+                Debugger:-Printf("(*Matrixr %d x %d*)\n", m,n);
+                return seq([seq(rest[i,j], j=1..n)], i=1..m);
             else
                 return rest;
             end if;
