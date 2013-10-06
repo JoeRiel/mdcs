@@ -25,6 +25,8 @@ OS := $(shell uname -o)
 
 EMACS := emacs
 MAPLE := cmaple
+MAPLE18 := maple
+
 ifeq ($(OS),GNU/Linux)
   INSTALL-INFO = ginstall-info
 else
@@ -261,7 +263,7 @@ remove-preview :
 	$(RM) maple/src/_preview_.mm
 
 hdb := $(maple-pkg).hdb
-hdb: $(call print-help,hdb,	Create Maple help database)
+hdb: $(call print-help,hdb,	Create Maple help database (.hdb))
 hdb: mla-install data-install $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
@@ -270,14 +272,32 @@ $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
-hdb-install: $(call print-help,hdb-install,Install hdb in $(MAPLE-INSTALL-DIR))
+hdb-install: $(call print-help,hdb-install,Install $(hdb) in $(MAPLE-INSTALL-DIR))
 hdb-install: hdb
 	@$(MKDIR) $(MAPLE-INSTALL-DIR)
 	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
 	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
+
+hlp := $(maple-pkg).help
+hlp: $(call print-help,hlp,	Create Maple help database (.help))
+hlp: mla-install data-install $(maple-pkg).help
+
+$(maple-pkg).help : maple/src/$(maple-pkg).mpl $(mms)
+	@echo "Creating Maple help database"
+	@$(RM) $@ maple/src/_preview_.mm
+	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
+	@$(MAPLE18) -q help/create.mpl
+
+hlp-install: $(call print-help,hlp-install,Install $(hlp) in $(MAPLE-INSTALL-DIR))
+hlp-install: hlp
+	@$(MKDIR) $(MAPLE-INSTALL-DIR)
+	@echo "Installing Maple help data base $(hlp) into $(MAPLE-INSTALL-DIR)/"
+	@$(call shellerr,$(CP) $(hlp) $(MAPLE-INSTALL-DIR))
+
 # }}}
 # {{{ data
 
+help: $(call print-separator)
 data-install: $(call print-help,data-install,Install data)
 data-install: data/*.mpl
 	@echo "Installing data files, $^, into $(MAPLE-DATA-DIR)"

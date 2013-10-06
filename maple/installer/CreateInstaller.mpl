@@ -97,7 +97,7 @@ uses FT = FileTools, ST = StringTools;
         srcdir := MakePath(tboxdir,"lib");
         if MapleLib <> srcdir then
             printf("\nInstalling Maple files...\n");
-            Install(srcdir, MapleLib, ["mdc.mla", "mdc.hdb"]);
+            Install(srcdir, MapleLib, ["mdc.mla", "mdc.hdb", "mdc.help"]);
         end if;
     end if;
     #}}}
@@ -238,6 +238,7 @@ uses FT = FileTools;
     manifest := [NULL
                  , "mdc.mla" = "lib/mdc.mla"
                  , "mdc.hdb" = "lib/mdc.hdb"
+                 , "mdc.help" = "lib/mdc.help"
                  , "../maplev/maplev.mla" = "lib/maplev.mla"
 
                  (* data files *)
