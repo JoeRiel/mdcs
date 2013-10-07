@@ -25,7 +25,6 @@ OS := $(shell uname -o)
 
 EMACS := emacs
 MAPLE := cmaple
-MAPLE18 := maple
 
 ifeq ($(OS),GNU/Linux)
   INSTALL-INFO = ginstall-info
@@ -257,14 +256,14 @@ info-clean:
 
 help: $(call print-separator)
 
-.PHONY: hdb remove-preview
+.PHONY: hdb hlp remove-preview
 
 remove-preview :
 	$(RM) maple/src/_preview_.mm
 
 hdb := $(maple-pkg).hdb
-hdb: $(call print-help,hdb,	Create Maple help database (.hdb))
-hdb: mla-install data-install $(maple-pkg).hdb
+hdb: $(call print-help,hdb,	Create Maple help database: $(hdb))
+hdb: mla-install data-install remove-preview $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
@@ -279,8 +278,8 @@ hdb-install: hdb
 	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
 
 hlp := $(maple-pkg).help
-hlp: $(call print-help,hlp,	Create Maple help database (.help))
-hlp: mla-install data-install $(maple-pkg).help
+hlp: $(call print-help,hlp,	Create Maple help database: $(hlp))
+hlp: mla-install data-install remove-preview $(maple-pkg).help
 
 $(maple-pkg).help : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
