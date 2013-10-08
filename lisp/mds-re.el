@@ -116,6 +116,8 @@ It has three groups:
 	   (group nonnegint)		; char offset to beginning
 	   ?\s
 	   (group nonnegint)		; char offset to end
+	   ?\s
+	   (group nonnegint)            ; stack depth
 	   (group (* ?\s nonnegint))	; states with breakpoints
 	   ?:)
    mds-re-addr-tag                     ; address
@@ -132,11 +134,12 @@ It has nine groups:
 \(2) line number in source,
 \(3) character offset to beginning of statement,
 \(4) character offset to end of statement,
-\(5) states with breakpoints,
-\(6) address of current procedure,
-\(7) name of current procedure,
-\(8) state number,
-\(9) statement")
+\(5) stack depth
+\(6) states with breakpoints,
+\(7) address of current procedure,
+\(8) name of current procedure,
+\(9) state number,
+\(10) statement")
 
 (defconst mds-re-client-attach
   (rx line-start

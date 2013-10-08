@@ -187,7 +187,7 @@ otherwise call (maple) showstat to display the new procedure."
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
-
+	;; Update buffer-local variables
 	(setq mds-ss-addr     addr
 	      mds-ss-procname procname
 	      mds-ss-state    state
@@ -441,8 +441,15 @@ This is specialized to work with a few routines; needs to be generalized."
    ((looking-at " *for \\([^ ]+\\)")
     (match-string-no-properties 1))
    ;; return expression
-   ((looking-at " *return \\(.*\\);?$")
-    (match-string-no-properties 1))
+   ((looking-at " *return\\> *\\(\\s(?\\)\\(.*\\)")
+    (if (not (string= (match-string-no-properties 1) ""))
+	;; matched an opening parenthesis (of some variety)
+	(buffer-substring-no-properties
+	 (1- (match-end 1))
+	 (save-excursion
+	   (forward-list)
+	   (point)))
+      (match-string-no-properties 2)))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
    ;; get lhs of an assignment
@@ -897,6 +904,14 @@ See `mds-monitor-toggle'."
   (interactive)
   (unless client (setq client mds-client))
   (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
+
+(defun mds-ss-goto-current-state (client)
+    "Move point to current statement in live-showstat buffer of CLIENT.
+Set cursor to ready."
+    (mds-wm-select-code-window client)
+    (mds-ss-move-state mds-ss-state)
+    (setq cursor-type mds-cursor-ready))
+    
 
 (defun mds-goto-current-state (&optional client)
   "Move cursor to the current state in the code buffer for CLIENT."

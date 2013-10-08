@@ -16,7 +16,7 @@ option `Copyright (c) 1994 by Waterloo Maple Inc. All rights reserved.`;
 description
     `Invoked by Maple when a breakpoint or watchpoint is encountered.`,
     `Not intended to be called directly.`;
-local addr, dbg_state, procName, statNumber, evalLevel, i, j, n, line
+local addr, dbg_state, depth, procName, statNumber, evalLevel, i, j, n, line
     , original, prompt, statLevel, state, pName, lNum, cond, cmd, err
     , module_flag, pred, statement, tag;
 global showstat, showstop;
@@ -215,20 +215,24 @@ global showstat, showstop;
         end if;
         if not skip then
             state := sprintf("<%d>\n%A", addr, dbg_state);
-            if state = last_state then
+            depth := iquo(numelems(debugopts(':-callstack'))-7,3);
+            if state = last_state and depth = last_depth then
                 # WriteTagf(TAG_SAME);
             else
                 last_state := state;
+                last_depth := depth;
                 local src_pos := LineInfo:-Get(addr, statNumber);
                 if src_pos = NULL
                 or src_pos[1] = 0
                 or src_pos[2] = -1 then
-                    debugger_printf(TAG_STATE, "0 0 0 0:%s"
+                    debugger_printf(TAG_STATE, "0 0 0 %d 0:%s"
+                                    , depth
                                     , state
                                    );
                 else
-                    debugger_printf(TAG_STATE, "%s %d %d %d%s:%s"
-                                    , src_pos
+                    debugger_printf(TAG_STATE, "%s %d %d %d %d%s:%s"
+                                    , src_pos # filename, lineno, charbeg, charend
+                                    , depth
                                     , LineInfo:-Breakpoints(addr)
                                     , state
                                    );
@@ -332,7 +336,9 @@ global showstat, showstop;
             if nops(line) = 1 then
                 return 'debugopts(callstack)'
             else
-                return 'debugopts'('callstack'=line[2])
+                # this form is not documented in ?debugopts.
+                # line[2] should be an integer.
+                return 'debugopts'('callstack'=line[2]);
             fi
         elif cmd = "showstack" then
             n := debugopts('callstack');
