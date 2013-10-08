@@ -3,5 +3,5 @@
 (let ((pkg-root "/home/joe/emacs/mdcs/"))
   (setq maplev-include-path `(,(concat pkg-root "maple/include/") ,(concat pkg-root "maple/"))
 	mpldoc-tester-options (format "-maple=\"smaple -B -A2 -I %s\""
-				      (car maplev-include-path))
-	compile-command  (format "(cd %s; make build)" pkg-root)))
+				      (car maplev-include-path)))
+  (set (make-local-variable 'compile-command)  (format "(cd %s; make build)" pkg-root)))
