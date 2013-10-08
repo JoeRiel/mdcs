@@ -187,7 +187,7 @@ otherwise call (maple) showstat to display the new procedure."
 	(mds-out-display (mds-client-out-buf mds-client)
 			 (format "<%s>\n%s" addr procname)
 			 'addr-procname)
-
+	;; Update buffer-local variables
 	(setq mds-ss-addr     addr
 	      mds-ss-procname procname
 	      mds-ss-state    state
@@ -440,11 +440,20 @@ This is specialized to work with a few routines; needs to be generalized."
     (format "evalb(%s)" (match-string-no-properties 1)))
    ((looking-at " *for \\([^ ]+\\)")
     (match-string-no-properties 1))
-   ((looking-at " *return \\(.*\\);?$")
-    (match-string-no-properties 1))
+   ;; return expression
+   ((looking-at " *return\\> *\\(\\s(?\\)\\(.*\\)")
+    (if (not (string= (match-string-no-properties 1) ""))
+	;; matched an opening parenthesis (of some variety)
+	(buffer-substring-no-properties
+	 (1- (match-end 1))
+	 (save-excursion
+	   (forward-list)
+	   (point)))
+      (match-string-no-properties 2)))
    ((looking-at (concat " *for " mds-re-symbol " in \\(.*\\) \\(?:do\\|while\\)"))
     (match-string-no-properties 1))
-   ((looking-at "\\(.*\\) :=")
+   ;; get lhs of an assignment
+   ((looking-at "\\([^:\n]+\\(?::[^=][^:\n]+\\)*\\):=")
     (match-string-no-properties 1))
    (t (if (looking-at "\\s-+")
 	  ;; move forward through empty space
@@ -494,6 +503,17 @@ Otherwise raise error indicating Maple is not available."
 ;; Define the interactive commands bound to keys
 
 ;;{{{ (*) Execution
+
+(defun mds-call-stack (&optional depth)
+  "Execute the function at DEPTH on the call stack.
+If optional DEPTH is nil, use 1, the top of the stack."
+  (interactive "p")
+  (let ((depth (or depth 1)))
+    (if (< depth 1)
+	(error "stack depth must be positive")
+      (mds-ss-eval-expr (format "mdc:-Debugger:-CallStack(%d,debugopts('callstack'))" depth)
+			(format "callstack(%d)" depth)))))
+		    
 
 (defun mds-cont ()
   "Send the 'cont' (continue) command to the debugger."
@@ -885,6 +905,14 @@ See `mds-monitor-toggle'."
   (unless client (setq client mds-client))
   (mds-ss-send-client (format "mdc:-Debugger:-ShowstatAddr(%s)" (mds-client-get-addr client))))
 
+(defun mds-ss-goto-current-state (client)
+    "Move point to current statement in live-showstat buffer of CLIENT.
+Set cursor to ready."
+    (mds-wm-select-code-window client)
+    (mds-ss-move-state mds-ss-state)
+    (setq cursor-type mds-cursor-ready))
+    
+
 (defun mds-goto-current-state (&optional client)
   "Move cursor to the current state in the code buffer for CLIENT."
   (interactive)
@@ -974,6 +1002,7 @@ otherwise do so in the `mds-ss-buffer'."
 	   ("H" . mds-info)
 	   ("i" . mds-into)
 	   ("I" . mds-stopwhenif)
+	   ("j" . mds-call-stack)
 	   ("k" . mds-showstack)
 	   ("K" . mds-where)
 	   ("l" . mds-goto-current-state)
@@ -1065,6 +1094,7 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Goto"		mds-goto-procname t]
        ["Goto [query]"  mds-goto-procname :keys "C-u g"]
        ["Here"		mds-here t]
+       ["Re-execute"    mds-call-stack t]
        "----"
        ["Select trace"	mds-select-trace t]
        "----"

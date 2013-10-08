@@ -72,7 +72,7 @@
 ##
 ##
 ##TEST
-## $include <AssignFunc.mi>
+## $include <test_macros.mi>
 ## macro(NE=testnoerror):
 ### mdc(mdc:-LineInfo:-Store, mdc:-LineInfo:-Get);
 ##
@@ -179,9 +179,9 @@ local ModuleLoad
 ##  the statement.
 ##  The default is false.
 ##TEST
-## $include <AssignFunc.mi>
+## $include <test_macros.mi>
 ## $include <lineinfo.mpl>
-## AssignFUNC(mdc:-LineInfo:-Get):
+## AssignFUNC(LineInfo:-Get):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
@@ -193,7 +193,7 @@ local ModuleLoad
 ## Try[NE]("1.0.1", proc() save f, "f.mpl"; read "f.mpl" end());
 ## Try[NE]("1.0.2", addressof(f), 'assign'="af"):
 ## Try[NE]("1.0.4", Store(af, myinfo));
-## Try[NE]("1.0.5", cat("/home/joe/tmp/mpldoc/f.mpl"), 'assign' = "f_mpl");
+## Try[NE]("1.0.5", cat(currentdir(),"/f.mpl"), 'assign' = "f_mpl");
 ## Try("1.1.0", FUNC(af, 0, myinfo), f_mpl, 1,  5, 66);
 ## Try("1.1.1", FUNC(af, 1, myinfo), f_mpl, 1, 22, 47);
 ## Try("1.1.2", FUNC(af, 2, myinfo), f_mpl, 1, 37, 38);
@@ -249,9 +249,9 @@ local ModuleLoad
 ##- See "Info" for a description of the table structure.
 ##
 ##TEST
-## $include <AssignFunc.mi>
+## $include <test_macros.mi>
 ## $include <lineinfo.mpl>
-## AssignFUNC(mdc:-LineInfo:-Store):
+## AssignFUNC(LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
 ##       ,RE='(verify,record(Or(truefalse,Array)))'
@@ -272,7 +272,8 @@ local ModuleLoad
 ##                                                      ,[1,1,40,42]
 ##                                                      ,[1,1,50,59]
 ##                                                     ]
-##                                                   , 'datatype' = integer[4]))));
+##                                                   , 'datatype' = integer[4]))
+##                            , 'delta' = 0 ));
 ## Try[TA]("1.6", eval(myinfo)
 ##         , table('sparse'
 ##                 , [ af = Record['packed']('filenames' = [f_mpl]
@@ -284,7 +285,8 @@ local ModuleLoad
 ##                                                                     ,[1,1,40,42]
 ##                                                                     ,[1,1,50,59]
 ##                                                                    ]
-##                                                                  , 'datatype' = integer[4]))
+##                                                                  , 'datatype' = integer[4])
+##                                          , 'delta' = 0)
 ##                            , f_mpl = af
 ##                   ]
 ##                ));
@@ -405,9 +407,9 @@ local ModuleLoad
 ##  procedure/statement.
 ##
 ##TEST
-## $include <AssignFunc.mi>
+## $include <test_macros.mi>
 ## $include "/home/joe/emacs/mdcs/maple/include/lineinfo.mpl"
-## AssignFUNC(mdc:-LineInfo:-LookupStatement):
+## AssignFUNC(LineInfo:-LookupStatement):
 ## AssignLocal(Store,mdc:-LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
@@ -495,9 +497,9 @@ local ModuleLoad
 ##  procedure has breakpoints at offsets 12 and 24, the
 ##  string returned is ~" 12 24"~.
 ##TEST
-## $include <AssignFunc.mi>
+## $include <test_macros.mi>
 ## $include <lineinfo.mpl>
-## AssignFUNC(mdc:-LineInfo:-Breakpoints):
+## AssignFUNC(LineInfo:-Breakpoints):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'

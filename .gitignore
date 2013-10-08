@@ -36,3 +36,4 @@ readline.log
 /bin/byte-compile
 /bin/emacs
 /demo/mdcs-debugger-demo.mw
+/mdc.help
