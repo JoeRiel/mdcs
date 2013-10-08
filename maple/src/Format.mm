@@ -14,8 +14,7 @@ export ArgsToEqs
     ,  Try
     ;
 
-local indexed2slashed
-    , prettyprint
+local prettyprint
     , T
     ;
 
@@ -78,8 +77,8 @@ local indexed2slashed
 ##> g();
 ##
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-ArgsToEqs):
+## $include <test_macros.mi>
+## AssignFUNC(Format:-ArgsToEqs):
 ## $define NE testnoerror
 ##
 ## Try[NE]("1.1.0", proc(x,y) end, 'assign' = "proc1_1");
@@ -213,8 +212,8 @@ local indexed2slashed
 ##NOTES
 ##- Need to provide a means to indicate the type.
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-prettyprint):
+## $include <test_macros.mi>
+## AssignFUNC(Format:-prettyprint):
 ## kernelopts(opaquemodules=false):
 ## mdc:-Debugger:-Printf := printf:
 ## mdc:-Format:-showstat := (x->x):
@@ -230,7 +229,7 @@ local indexed2slashed
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, fld, i, ix, n, typ, opacity, rest;
+    local eqs, ex, fld, i, ix, j, m, n, typ, opacity, rest;
     global _fake_name;
 
         if nargs > 2 then
@@ -346,6 +345,14 @@ local indexed2slashed
             else
                 return rest;
             end if;
+        elif rest :: Matrix then
+            if top then
+                (m,n) := op(1,rest);
+                Debugger:-Printf("(*Matrixr %d x %d*)\n", m,n);
+                return seq([seq(rest[i,j], j=1..n)], i=1..m);
+            else
+                return rest;
+            end if;
         else
             return rest;
         end if;
@@ -396,54 +403,6 @@ local indexed2slashed
             kernelopts('opaquemodules' = opacity);
         end try;
         return NULL;
-    end proc;
-
-#}}}
-#{{{ indexed2slashed
-
-##DEFINE PROC indexed2slashed
-##PROCEDURE mdc[Format][indexed2slashed]
-##HALFLINE convert indexed name to a slashed name
-##AUTHOR   Joe Riel
-##DATE     May 2010
-##CALLINGSEQUENCE
-##- \PROC('nm')
-##PARAMETERS
-##- 'nm' : ::name::; name to convert
-##RETURNS
-##- ::symbol::
-##DESCRIPTION
-##- The `\PROC` procedure
-##  converts an indexed name to a slashed name.
-##  For example, ~base[index]~ is converted to
-##  ~`base/index`~.
-##
-##- If a name is not indexed it is returned as is.
-##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Format:-indexed2slashed);
-## $define NE testnoerror
-## #stopat(FUNC):
-## Try("1.0", FUNC(a), a);
-## Try("1.1", FUNC(a[1]), `a/1`);
-## Try("1.2", FUNC(a[1][2]), `a/1/2`);
-##
-## Try("3.1", FUNC(`a+b`[1][2]), `a+b/1/2`);
-##
-## $define TE testerror
-## err := "cannot convert":
-## Try[TE]("10.1", FUNC(a[]), err);
-## Try[TE]("10.2", FUNC(a[1,2]), err);
-
-    indexed2slashed := proc(nm :: name, $)
-        if nm :: indexed then
-            if nops(nm) <> 1 then
-                error "cannot convert";
-            end if;
-            return nprintf("%A/%A", procname(op(0,nm)), op(1,nm));
-        else
-            return nm;
-        end if;
     end proc;
 
 #}}}

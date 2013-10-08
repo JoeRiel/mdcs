@@ -565,6 +565,7 @@ local Connect
     , PrintRtable   # module to "fix" `print/rtable`
     , WriteTagf
 
+    , indexed2slashed
     , printf  # local versions so that globals can be 'debugged'
     , sprintf
 
@@ -629,6 +630,7 @@ $include <src/Format.mm>
 $include <src/Grid.mm>
 $include <src/HelpMDS.mm>
 $include <src/InstallPatch.mm>
+$include <src/indexed2slashed.mm>
 $include <src/LineInfo.mm>
 $include <src/PrintRtable.mm>
 
@@ -963,7 +965,7 @@ Connect := proc(host :: string
                 , { verbose :: truefalse := false }
                 , $
                )
-local cmd,connected,line,sys;
+local cmd,connected,line;
 
     Debugger:-Reset();
     Disconnect(_options['quiet']);
@@ -975,7 +977,6 @@ local cmd,connected,line,sys;
             if emacs :: procedure then
                 emacs();
             else
-                sys := kernelopts('platform');
                 cmd := sprintf("%s", emacs);
                 try
                     system['launch'](cmd);
@@ -1128,20 +1129,27 @@ end proc;
 ##  posint), and `platform` and `pid` are the corresponding outputs of
 ##  "kernelopts".
 ##
+##OPTIONS
+##opt(pid,integer)
+##  The process identifier.  The default is ~kernelopts(pid)~.
+##opt(platform,string)
+##  The platform.  The default is ~kernelopts(platform)~.
+##opt(release,integer)
+##  The major Maple release
+##
 ##NOTES
 ##- The format will probably be expanded once this is in place.
 ##  Note that a different machine could generate the same ID.
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-CreateID):
-## VerifyTools:-AddVerification(
-##      label=proc(s1,s2) evalb( s1 = sprintf("%s%d:",s2,kernelopts('pid')) )
-##   end proc):
+## $include <test_macros.mi>
+## AssignFUNC(CreateID):
 ## macro(LA='verify,label', NLA='verify,Not(label)', TE=testerror);
-## Try[LA]("1.1", FUNC("label"), ":label:16:unix:");
-## Try[LA]("1.2", FUNC("abc12"), ":abc12:16:unix:");
-## Try[LA]("1.3", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:");
-## Try[NLA]("2.1", FUNC("abc-1_2_"), ":abc-1_2_:16:unix:0");
+### mdc(FUNC):
+## opts := (release=17, pid=1):
+## Try("1.1", FUNC("label",opts), ":label:17:unix:1:");
+## Try("1.2", FUNC("abc12",opts), ":abc12:17:unix:1:");
+## Try("1.3", FUNC("abc-1_2_",opts), ":abc-1_2_:17:unix:1:");
+## Try("2.1", FUNC("abc-1_2_",opts), ":abc-1_2_:17:unix:1:");
 ## Try[TE]("10.0", FUNC(""), "label cannot be empty");
 ## msg := "invalid characters in label":
 ## Try[TE]("10.1", FUNC("+"), msg);
@@ -1149,19 +1157,30 @@ end proc;
 ## Try[TE]("10.3", FUNC("\n"), msg);
 
 
-CreateID := proc(label :: string,$)
+CreateID := proc(label :: string
+                 , { platform :: string := kernelopts(':-platform') }
+                 , { pid :: integer := kernelopts(':-pid') }
+                 , { release :: integer := "DEFAULT" }
+                 , $
+                )
 local ver;
     if length(label) = 0 then
         error "label cannot be empty";
     elif not StringTools:-RegMatch("^[][A-Za-z0-9_-]+$", label) then
         error "invalid characters in label '%1'", label;
     end if;
-    ver := kernelopts('version');
-    ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-    return sprintf(":%s:%s:%s:%d:"
+    if release = "DEFAULT" then
+        ver := kernelopts('version');
+        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
+        ver := parse(ver);
+    else
+        ver := release;
+    end if;
+    return sprintf(":%s:%d:%s:%d:"
                    , label
                    , ver
-                   , kernelopts('platform,pid')
+                   , platform
+                   , pid
                   );
 end proc;
 
@@ -1616,8 +1635,8 @@ end proc;
 ##- "stopat"
 ##
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-Count):
+## $include <test_macros.mi>
+## AssignFUNC(Count):
 ## macro(AS='verify,as_set');
 ##
 ## Try("1.0", [FUNC(),FUNC(),FUNC(1)], [1,2,1]):

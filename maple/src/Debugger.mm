@@ -21,7 +21,8 @@ Debugger := module()
 
 #{{{ declarations
 
-export Enter
+export CallStack
+    ,  Enter
     ,  GoBack
     ,  Monitor
     ,  Printf
@@ -56,6 +57,7 @@ local _debugger
     , here_cnt := 0
     , here_addr
     , here_state
+    , last_depth
     , last_evalLevel
     , last_state
     , monitoring := false
@@ -95,6 +97,11 @@ $endif
         else
             parse_debugger := 'debugger';
         end if;
+        # Expand CallStack so that it will not appear on the stack
+        # when called during debugging.  Is this a general property of
+        # inlined procedures?  That is, do they appear once, then not
+        # again?
+        CallStack(1,[0$4]);
         NULL;
     end proc;
 
@@ -143,6 +150,7 @@ $endif
 #{{{ Reset
 
     Reset := proc()
+        last_depth := 1;
         last_state := NULL;
     end proc;
 
@@ -554,8 +562,7 @@ $endif
 ##- `NULL`
 ##DESCRIPTION
 ##- Clear a breakpoint in a procedure.
-##
-##-
+
     unstopat := proc(p :: {name,string,list}
                      , n :: posint
                      , cond :: uneval
@@ -579,7 +586,64 @@ $endif
 
 #}}}
 
+#{{{ CallStack
+
+##PROCEDURE mdc[Debugger][CallStack]
+##HALFLINE re-execute a procedure on the call stack
+##AUTHOR   Joe Riel
+##DATE     Jun 2013
+##CALLINGSEQUENCE
+##- CallStack('depth','stk')
+##
+##PARAMETERS
+##- 'depth' : ::posint::; depth of stack
+##- 'stk'   : ::list::; stack contents
+##
+##DESCRIPTION
+##- Re-execute a procedure on the call stack.
+##
+##- The 'depth' parameter is the depth at which to look.
+##  1 is the top of the stack.  When 'depth' is 2, for example,
+##  the second procedure on the stack is re-executed
+##  with its original arguments.
+##
+##- The 'stk' parameter is a list equal to
+##  the output of ~debugopts('callstack')~.
+##TEST
+## $include <test_macros.mi>
+## AssignFUNC(Debugger:-CallStack);
+### mdc(FUNC):
+## Try("1.0", FUNC(1,[DEBUG, f,`f(x)`,[x]]), f(x));
+
+    CallStack := proc(depth::posint, stk::list)
+    option inline;
+        stk[1+3*(depth-1)+1](op(stk[1+3*(depth-1)+3]));
+    end proc;
+
+
+#}}}
 #{{{ GetName
+
+##PROCEDURE mdc[Debugger][GetName]
+##HALFLINE return the name of a procedure
+##CALLINGSEQUENCE
+##- GetName('p')
+##PARAMETERS
+##- 'p' : ::{name,string}::; procedure name
+##
+##RETURNS
+##- ::name::
+##DESCRIPTION
+##- Return the name of a procedure.
+##TEST
+## $include <test_macros.mi>
+## AssignFUNC(Debugger:-GetName):
+## mdc(FUNC):
+##
+## Try("1.1", FUNC(convert[symbol]), `convert/symbol`);
+## Try("1.2", FUNC("convert[symbol]"), `convert/symbol`);
+## Try("1.3", FUNC(`convert/symbol`), `convert/symbol`);
+## Try("1.4", FUNC("`convert/symbol`"), `convert/symbol`);
 
     GetName := proc(p :: {name,string}, $)
     local opacity, pn, pnm;
@@ -596,6 +660,7 @@ $endif
                 end if;
             elif p :: string then
                 pn := parse(p);
+                return GetName(pn);
             else
                 pn := p;
             end if;

@@ -25,14 +25,15 @@ OS := $(shell uname -o)
 
 EMACS := emacs
 MAPLE := cmaple
+
 ifeq ($(OS),GNU/Linux)
   INSTALL-INFO = ginstall-info
 else
   INSTALL-INFO = install-info
 endif
 
-CUSTOM_LIB := $(MAPLE_ROOT)/internal/link
-STANDARD_LIB := $(MAPLE_ROOT)/internal/link 0
+LINEINFO := $(MAPLE_ROOT)/internal/link li
+STANDARD := $(MAPLE_ROOT)/internal/link mp
 
 MINT := mint
 
@@ -89,7 +90,18 @@ showerr = err="$$($1)" ; if [ "$$err" ]; then echo $(call warn,$$err); fi
 
 # }}}
 
+# {{{ build
+
+.PHONY: build
+
+build: $(call print-help,build,	byte-compile and install mla)
+build: byte-compile mla-install
+
+# }}}
+
 # {{{ emacs
+
+help: $(call print-separator)
 
 ELFLAGS	= --no-site-file \
 	  --no-init-file \
@@ -161,10 +173,10 @@ mla: remove-preview $(mla)
 %.mla: maple/src/%.mpl $(mms)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	@$(STANDARD_LIB)
-	@smarch -c $@
-	@sload -Q -b . -I $$(pwd)/maple $<
-	@$(CUSTOM_LIB)
+	$(STANDARD)
+	smarch -c $@
+	sload -Q -b . -I $$(pwd)/maple $<
+	$(LINEINFO)
 
 mla-install: $(call print-help,mla-install,Install mla into $(MAPLE-INSTALL-DIR))
 mla-install: $(mla)
@@ -244,14 +256,14 @@ info-clean:
 
 help: $(call print-separator)
 
-.PHONY: hdb remove-preview
+.PHONY: hdb hlp remove-preview
 
 remove-preview :
 	$(RM) maple/src/_preview_.mm
 
 hdb := $(maple-pkg).hdb
-hdb: $(call print-help,hdb,	Create Maple help database)
-hdb: mla-install data-install $(maple-pkg).hdb
+hdb: $(call print-help,hdb,	Create Maple help database: $(hdb))
+hdb: mla-install data-install remove-preview $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
@@ -259,14 +271,32 @@ $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
 	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
-hdb-install: $(call print-help,hdb-install,Install hdb in $(MAPLE-INSTALL-DIR))
+hdb-install: $(call print-help,hdb-install,Install $(hdb) in $(MAPLE-INSTALL-DIR))
 hdb-install: hdb
 	@$(MKDIR) $(MAPLE-INSTALL-DIR)
 	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
 	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
+
+hlp := $(maple-pkg).help
+hlp: $(call print-help,hlp,	Create Maple help database: $(hlp))
+hlp: mla-install data-install remove-preview $(maple-pkg).help
+
+$(maple-pkg).help : maple/src/$(maple-pkg).mpl $(mms)
+	@echo "Creating Maple help database"
+	@$(RM) $@ maple/src/_preview_.mm
+	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
+	@mhelp $@
+
+hlp-install: $(call print-help,hlp-install,Install $(hlp) in $(MAPLE-INSTALL-DIR))
+hlp-install: hlp
+	@$(MKDIR) $(MAPLE-INSTALL-DIR)
+	@echo "Installing Maple help data base $(hlp) into $(MAPLE-INSTALL-DIR)/"
+	@$(call shellerr,$(CP) $(hlp) $(MAPLE-INSTALL-DIR))
+
 # }}}
 # {{{ data
 
+help: $(call print-separator)
 data-install: $(call print-help,data-install,Install data)
 data-install: data/*.mpl
 	@echo "Installing data files, $^, into $(MAPLE-DATA-DIR)"
@@ -290,14 +320,14 @@ tags:
 
 mint: $(call print-help,mint	,Check Maple syntax)
 mint:
-	@$(call showerr,$(MINT) -q -i2 -I $(HOME)/maple < maple/src/$(maple-pkg).mpl)
+	@$(call showerr,$(MINT) -q -i2 -I $(HOME)/emacs/mdcs/maple < maple/src/$(maple-pkg).mpl)
 
 # }}}
 # {{{ test
 
 .PHONY: test test-extract test-run
 
-TESTER := tester -maple "smaple -B -I $(dir $(PWD))"
+TESTER := tester -maple "smaple -B -I $(dir $(PWD)/maple/include/)"
 
 test: $(call print-help,test	,Extract and run test suite)
 test-extract: $(call print-help,test-extract,Extract test suite)
@@ -355,7 +385,8 @@ installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
 $(installer): hdb mla info
-	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
+	#	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
+	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
 installer-zip := $(pkg)-ins-$(subst .,-,$(VERSION)).zip
 installer-zip: $(call print-help,installer-zip,Create Maple installer zip file: $(installer-zip))

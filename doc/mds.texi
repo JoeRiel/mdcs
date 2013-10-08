@@ -419,6 +419,14 @@ Specifies the fractional size of the showstat-live window to the full frame size
 Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
 If nil, the window is set to half the frame size.
 
+@findex maplev-get-tab-width-function
+@vindex tab-width
+@item @code{maplev-get-tab-width-function}
+This function, which is also used by @code{maplev-mode},
+is called, if assigned, each time a source file is read
+into the line-info buffer.  It is called with the name of the file;
+the function should return the desired setting for @code{tab-width}.
+
 @end table
 
 
@@ -578,6 +586,21 @@ the variables @code{mds-cursor-waiting} and @code{mds-cursor-ready}.
 The following table describes each of the execution commands.
 
 @table @asis
+
+@kindex j
+@findex mds-call-stack
+@item j (@command{mds-call-stack})
+Call the function and arguments on top of the call stack.
+An optional numeric argument is the depth at which to call,
+so @kbd{C-u 3 j} calls the third function on the call stack.
+This provides a convenient method to rerun the current procedure
+with the same arguments, without exiting the debugger.
+
+If the current procedure has a breakpoint at the current statement,
+executing this command appears to do nothing because execution halts at
+the same statement.  Use @command{mds-where} to see a second call 
+to the current procedure on the top of the call-stack. @xref{mds-where}.
+
 
 @kindex c
 @findex mds-cont
@@ -742,6 +765,7 @@ Only the names of the procedures are shown.  The name of the current
 procedure is not shown.  Each name is an active link.  Clicking on a link
 (mouse-1) opens the procedure in the @strong{showstat dead} buffer.
 
+@anchor{mds-where}
 @kindex K
 @findex mds-where
 @item K (@command{mds-where})
@@ -1380,7 +1404,7 @@ Use @command{mds-toggle-track-input} to toggle the variable.
 Right-clicking (mouse-3) in the output buffer displays, in the showstat-dead
 buffer, the procedure at the appropriate statement that generated that output.
 
-When @code{mds-where} (@kbd{K}) is executed from the showstat or
+When @code{mds-where} (@kbd{K}), @ref{mds-where}, is executed from the showstat or
 lineinfo buffer, the stack, with arguments, is displayed in the output
 buffer.  To the left of the list of arguments is a right-pointing
 triangle.  Clicking it calls the associated procedure with the displayed

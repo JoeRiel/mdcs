@@ -27,8 +27,8 @@
 ##  to use it.
 ##
 ##TEST
-## $include <AssignFunc.mi>
-## AssignFUNC(mdc:-InstallPatch);
+## $include <test_macros.mi>
+## AssignFUNC(InstallPatch);
 ## macro(NE=testnoerror):
 ##
 ## Try[NE]("1.0", proc() "hello, world"; end proc, 'assign'="P");
