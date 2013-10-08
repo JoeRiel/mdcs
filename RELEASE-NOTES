@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs-2.4.3
+** Display stack-depth when in line-info mode
+** Format a Matrix when 'prettyprinting'
+** Add mdc.help (for use with Maple 18)
+** Improve mds-expr-at-point to handle opening bracket in return statement
 * mdcs-2.4.2
 ** Fix bug where output was displayed on prompt-line
 ** Display f(>) when re-executing a stack call
