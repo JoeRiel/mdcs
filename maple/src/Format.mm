@@ -348,7 +348,7 @@ local prettyprint
         elif rest :: Matrix then
             if top then
                 (m,n) := op(1,rest);
-                Debugger:-Printf("(*Matrixr %d x %d*)\n", m,n);
+                Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
                 return seq([seq(rest[i,j], j=1..n)], i=1..m);
             else
                 return rest;
