@@ -269,7 +269,7 @@ local prettyprint
             if top then
                 return Debugger:-Printf("(*record*)\n"), eqs;
             else
-                return 'record'(eqs);
+                return 'Record'(eqs);
             end if;
 
         elif rest :: `module` then
