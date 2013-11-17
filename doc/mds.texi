@@ -75,9 +75,11 @@ Indices
 * Function Index::              Functions mentioned in the manual.
 * Variable Index::              Variables mentioned in the manual.
 * Concept Index::               Concepts and features.
+* Program Index::               External programs.
 
 License
 
+* Program Index::               
 * GNU Free Documentation License::  Copying this manual.
 
 @detailmenu
@@ -138,6 +140,7 @@ Debugging Tips
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 * Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
 
 @end detailmenu
 @end menu
@@ -1437,6 +1440,7 @@ does not change.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 * Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
 @end menu
 
 @node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
@@ -1528,7 +1532,7 @@ E save x, "/tmp/x.mpl" @key{RET}
 
 File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 
-@node  Recursive debugging,  , Save a local result, Debugging Tips
+@node  Recursive debugging, Multiple clients, Save a local result, Debugging Tips
 @section Recursive debugging
 @cindex Recursive debugging
 
@@ -1550,6 +1554,29 @@ set a breakpoint in the procedure.  Do so by clicking its hyperlinked name
 to open it in the dead-showstat buffer, then set the breakpoint there.
 @xref{Breakpoints}.
 
+@node  Multiple clients,  , Recursive debugging, Debugging Tips
+@section Multiple clients
+@cindex Multiple clients
+
+@findex mds-wm-cycle-clients
+The @code{mds-wm-cycle-clients} command cycles through the clients.
+Use it to inspect and debug each client individually.
+
+@findex mds-wm-display-all
+The @code{mds-wm-display-all} command displays all clients in one frame.
+This is useful for comparing the action of the same code run on 
+different machines, or different versions of the same code.
+
+@pindex ssh
+To debug Maple on a remote machine, while running Emacs and MDS on a
+local machine, use the @command{ssh} remote forwarding option,
+@option{-R}, to forward the TCP port used by MDS (the default is 10000).
+For example
+
+@verbatim
+  ssh -R 10000 localhost:10000 ...
+@end verbatim
+
 @node Key Index, Function Index, Debugging Tips, Top
 @unnumbered Key Index
 @printindex ky
@@ -1562,11 +1589,15 @@ to open it in the dead-showstat buffer, then set the breakpoint there.
 @unnumbered Variable Index
 @printindex vr
 
-@node Concept Index, GNU Free Documentation License, Variable Index, Top
+@node Concept Index, Program Index, Variable Index, Top
 @unnumbered Concept Index
 @printindex cp
 
-@node GNU Free Documentation License,  , Concept Index, Top
+@node Program Index, GNU Free Documentation License, Concept Index, Top
+@unnumbered Program Index
+@printindex pg
+
+@node GNU Free Documentation License,  , Program Index, Top
 @appendix GNU Free Documentation License
 @include fdl.texi
 
