@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.4.3
+VERSION := 2.4.4
 
 include help-system.mak
 
@@ -194,21 +194,21 @@ help: $(call print-separator)
 .PHONY: doc info html h i p info-clean info-install
 
 TEXI-FILES = doc/$(emacs-pkg).texi
-INFO-FILES = doc/$(emacs-pkg)
+INFO-FILES = doc/$(emacs-pkg).info
 HTML-FILES = doc/$(emacs-pkg).html
 PDF-FILES  = doc/$(emacs-pkg).pdf
 
 doc/$(emacs-pkg).pdf: doc/$(emacs-pkg).texi
 	(cd doc; $(TEXI2PDF) $(emacs-pkg).texi)
 
-doc/$(emacs-pkg): doc/$(emacs-pkg).texi
+doc/$(emacs-pkg).info: doc/$(emacs-pkg).texi
 	@echo "Creating info file $@"
-	@$(call shellerr,cd doc; $(MAKEINFO) --no-split $(emacs-pkg).texi --output=$(emacs-pkg))
+	@$(call shellerr,cd doc; $(MAKEINFO) --no-split $(emacs-pkg).texi --output=$(emacs-pkg).info)
 
 doc: $(call print-help,doc,	Create info$(comma) html$(comma) and pdf)
 doc: info pdf html
 info: $(call print-help,info,	Create info)
-info: doc/$(emacs-pkg)
+info: doc/$(emacs-pkg).info
 pdf: $(call print-help,pdf,	Create pdf)
 pdf: doc/$(emacs-pkg).pdf
 html: $(call print-help,html,	Create html documentation)
@@ -225,7 +225,7 @@ h: doc/$(emacs-pkg).html
 
 # preview info
 i: $(call print-help,i,	Update and display info)
-i: doc/$(emacs-pkg)
+i: doc/$(emacs-pkg).info
 	@info $^
 
 
@@ -267,9 +267,10 @@ hdb: mla-install data-install remove-preview $(maple-pkg).hdb
 
 $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
-	@$(RM) $@ maple/src/_preview_.mm
-	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
-	@shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
+	$(RM) $@ maple/src/_preview_.mm
+	$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
+	shelp create -h $@
+	shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 hdb-install: $(call print-help,hdb-install,Install $(hdb) in $(MAPLE-INSTALL-DIR))
 hdb-install: hdb

@@ -156,7 +156,7 @@ uses FT = FileTools, ST = StringTools;
     #{{{ Install info files
 
     printf("\nInstalling info files...\n");
-    Install(MakePath(tboxdir, "info"), InfoDir, ["mds","maplev"]);
+    Install(MakePath(tboxdir, "info"), InfoDir, ["mds.info","maplev.info"]);
 
     #}}}
     #{{{ Update dir node
@@ -164,7 +164,7 @@ uses FT = FileTools, ST = StringTools;
     if platform = "unix" then
         printf("\nUpdating info dir node...\n");
         try
-            for file in ["mds","maplev"] do
+            for file in ["mds.info","maplev.info"] do
                 src := MakePath(tboxdir, "info", file);
                 UpdateDir(DirFile, src);
             end do;
@@ -200,7 +200,7 @@ global InstallScript;
 uses FT = FileTools;
 
     # This is updated by bin/version
-    version := "2.4.3";
+    version := "2.4.4";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
@@ -246,13 +246,13 @@ uses FT = FileTools;
 
                  (* emacs stuff *)
                  , elisp_map
-                 , FT:-AbsolutePath("doc/maplev", maplev_dir) = "info/maplev"
+                 , FT:-AbsolutePath("doc/maplev.info", maplev_dir) = "info/maplev.info"
                  , FT:-AbsolutePath("doc/maplev.html", maplev_dir) = "doc/maplev.html"
 
                  , ".emacs" = ".emacs"
 
                  , "README-installer" = "README-installer"
-                 , "doc/mds" = "info/mds"
+                 , "doc/mds.info" = "info/mds.info"
                  , "doc/mds.html" = "doc/mds.html"
 
                  , "maple/installer/config.mpl" = "_config.mpl"

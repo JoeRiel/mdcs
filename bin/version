@@ -85,7 +85,7 @@ file="README"
 sed $sed_opt "/^VERSION /$sed_cmd" "$file"
 
 # Update README-installer
-file="doc/README-installer"
+file="README-installer"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/^VERSION /$sed_cmd" "$file"
 
