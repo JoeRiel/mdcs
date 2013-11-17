@@ -77,7 +77,7 @@ export CodeString
 ##- Launch Grid with two nodes.
 ##  This initiates two independent debugging sessions
 ##  on the Maple Debugger Server.
-##  In Emacs, issue the command ~mds-wm-cycle-groups~
+##  In Emacs, issue the command ~mds-wm-display-all~
 ##  to display both debugging sessions.
 ##>(noexecute) Grid:-Launch(Code,numnodes=2);
 ##SEEALSO
@@ -134,7 +134,7 @@ export CodeString
 ##- Instrument `hello` for debugging with `mdc` in Grid.
 ##> Hello := mdc:-Grid:-Procedure(hello, stopat=hello);
 ##- Launch Grid and start the debugger.
-##  In Emacs, issue the command ~mds-wm-cycle-groups~
+##  In Emacs, issue the command ~mds-wm-display-all~
 ##  to display both debugging sessions.
 ##> Grid:-Launch(Hello, "Maple Debugger", numnodes=2);
 ##SEEALSO
