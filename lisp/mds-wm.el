@@ -142,8 +142,14 @@ with n being the number of clients."
 	  (setq n (1- n)
 		clients (cdr clients))))))
 
+(defun mds-wm-display-all ()
+  "Display all clients."
+  (interactive)
+  (mds-wm-display-group (mapcar #'cdr mds-clients)))
+
 (defun mds-wm-group-clients (clients)
-  "Group CLIENTS, an assoc-list of clients, with a common base name."
+  "Group CLIENTS, an assoc-list of clients, with a common base name.
+Return a list of lists of grouped clients."
   (let ((alist '())
 	id base client)
     (while clients
@@ -153,14 +159,17 @@ with n being the number of clients."
 	(setq base (match-string 1 id))
 	(let ((entry (assoc base alist)))
 	  (if entry
+	      ;; add the client to an existing key in alist
 	      (setcdr entry (cons client (cdr entry)))
+	    ;; add a key and the current client to alist
 	    (setq alist (cons (cons base (list client)) alist)))))
       (setq clients (cdr clients)))
+    ;; convert the assoc list alist to a list of lists of grouped clients
     (mapcar #'cdr alist)))
 
 (defun mds-wm-group-update (clients)
   "Group CLIENTS and assign the list to `mds-wm-grouped-clients'."
-  (setq mds-wm-grouped-clients (mds-wm-group-clients mds-clients)))
+  (setq mds-wm-grouped-clients (mds-wm-group-clients clients)))
 
 ;;}}}
 ;;{{{ mds-wm-cycle-clients

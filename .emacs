@@ -20,7 +20,7 @@
 ;; that cycle the available debugger clients/groups. 
 
 ; (global-set-key [f12] 'mds-wm-cycle-clients)
-; (global-set-key [C-f12] 'mds-wm-cycle-groups)
+; (global-set-key [C-f12] 'mds-wm-display-all)
 
 ;; Start the debugger server
 (mds)

@@ -75,6 +75,7 @@ Indices
 * Function Index::              Functions mentioned in the manual.
 * Variable Index::              Variables mentioned in the manual.
 * Concept Index::               Concepts and features.
+* Program Index::               External programs.
 
 License
 
@@ -138,6 +139,8 @@ Debugging Tips
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 * Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
+* Remote debugging::            
 
 @end detailmenu
 @end menu
@@ -350,6 +353,7 @@ indication that debugging has either begun or ended.
 
 @vindex mds-port
 @item @code{mds-port}
+@anchor{mds-port}
 An integer that is the TCP port number used for communication.
 The default is 10000.
 
@@ -1191,13 +1195,6 @@ passing the file as input to tty Maple.  Using an absolute path to the
 filename, or include files, may be necessary to permit access to the
 data while changing directories during code execution.  
 
-The line-info data stores the location of the source file relative to
-the current directory.  If the code being debugged changes current
-directory, the line-info source file may become inaccessible, in which
-case the debugger switches to the showstat buffer (interpreted
-code-view).  To avoid this, use an absolute path to the source file.
-
-
 @node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
 @section LineInfo Mode
 @cindex LineInfo Mode
@@ -1267,11 +1264,11 @@ $define IF(x) if x<0 then 1 else 2 end if     # this is not
 @subsection for-less do-loops
 @cindex for-less do-loops
 
-A @strong{for}-less @strong{do}-loop does not store the data for the @strong{do}
-statement.  This causes the debugger to automatically switch to the
-showstat buffer when the current statement is the @strong{do} statement.
-The debugger switches back to the lineinfo buffer when the @strong{do}
-statement is no longer active.
+A @strong{for}-less @strong{do}-loop does not store the lineinfo-data
+for the @strong{do} statement.  This causes the debugger to
+automatically switch to the showstat buffer when the current statement
+is the @strong{do} statement.  The debugger switches back to the
+lineinfo buffer when the @strong{do} statement is no longer active.
 
 For an example, see the following code.  When the cursor reaches the
 marked statement, the debugger switches to the showstat buffer.  If an
@@ -1314,7 +1311,7 @@ local V;
 end proc;
 @end example
 
-@noindent do this.
+@noindent do this:
 
 @example
 f := proc(M :: Matrix, X :: Vector)
@@ -1327,7 +1324,7 @@ end proc;
 @node Declaration Self-Assignment,  , use statement, LineInfo Caveats
 @subsection Declaration Self-Assignment
 
-Maple 16 has an undocumented feature such that if, in a local
+Maple 16 introduced an undocumented feature such that if, in a local
 declaration, a variable is assigned to itself, the assignment is removed
 from the interpreted procedure (the declaration of the variable
 remains).  The purpose of this is prevent a mint warning of an unused
@@ -1437,6 +1434,8 @@ does not change.
 * Assign a variable::           Returning intermediate results to Maple.
 * Save a local result::         Saving intermediate results to a file.
 * Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
+* Remote debugging::            Debugging on a remote machine
 @end menu
 
 @node Set breakpoint in calling procedure, Locate source of unexpected result, Debugging Tips, Debugging Tips
@@ -1528,14 +1527,14 @@ E save x, "/tmp/x.mpl" @key{RET}
 
 File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 
-@node  Recursive debugging,  , Save a local result, Debugging Tips
+@node  Recursive debugging, Multiple clients, Save a local result, Debugging Tips
 @section Recursive debugging
 @cindex Recursive debugging
 
-The Maple debugger provides the ability to recusively debug.  Evaluating
-an expression in the debugger that executes an instrumented procedure
-debugs that procedure.  When that procedure returns, debugging resumes
-at the point in the original procedure.
+MDS can recusively debug.  Evaluating an expression in the debugger that
+executes an instrumented procedure debugs that procedure.  When that
+procedure returns, debugging resumes at the point in the original
+procedure.
 
 This feature allows you to reexecute a procedure with the same arguments
 while inside the debugger, just evaluate the expression @code{thisproc(args)}.
@@ -1550,6 +1549,47 @@ set a breakpoint in the procedure.  Do so by clicking its hyperlinked name
 to open it in the dead-showstat buffer, then set the breakpoint there.
 @xref{Breakpoints}.
 
+@node  Multiple clients, Remote debugging, Recursive debugging, Debugging Tips
+@section Multiple clients
+@cindex Multiple clients
+
+MDS can handle multiple debugger clients concurrently.
+This is useful for comparing the action of the same code run on 
+different machines, or different versions of the same code.
+
+@findex mds-wm-cycle-clients
+The @code{mds-wm-cycle-clients} command cycles through the clients.
+Use it to inspect and debug each client individually.
+
+@findex mds-wm-display-all
+The @code{mds-wm-display-all} command displays all clients in one frame.
+
+@node  Remote debugging,  , Multiple clients, Debugging Tips
+@section Remote debugging
+@cindex Remote debugging
+@pindex ssh
+
+To debug Maple on a remote machine, while running Emacs and MDS on a
+local machine, use the remote forwarding option, @option{-R},
+of @command{ssh} to forward the TCP port used by MDS when connecting to the machine.
+The default TCP port is 10000, see @ref{mds-port}.
+For example
+
+@example
+ ssh -R 10000 localhost:10000 joe@@gauss
+@end example
+
+If you frequently debug on the same remote machine,
+consider adding a suitable entry to the ssh configuration file.
+For example,
+
+@example
+Host gauss
+User joe
+RemoteForward 10000 localhost:10000
+@end example
+
+
 @node Key Index, Function Index, Debugging Tips, Top
 @unnumbered Key Index
 @printindex ky
@@ -1562,11 +1602,15 @@ to open it in the dead-showstat buffer, then set the breakpoint there.
 @unnumbered Variable Index
 @printindex vr
 
-@node Concept Index, GNU Free Documentation License, Variable Index, Top
+@node Concept Index, Program Index, Variable Index, Top
 @unnumbered Concept Index
 @printindex cp
 
-@node GNU Free Documentation License,  , Concept Index, Top
+@node Program Index, GNU Free Documentation License, Concept Index, Top
+@unnumbered Program Index
+@printindex pg
+
+@node GNU Free Documentation License,  , Program Index, Top
 @appendix GNU Free Documentation License
 @include fdl.texi
 
