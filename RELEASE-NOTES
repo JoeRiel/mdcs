@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-2.4.4
+** Add mds-wm-display-all command, for displaying all clients
+** Update info pages to describe new command, and add some debug tips
 * mdcs-2.4.3
 ** Display stack-depth when in line-info mode
 ** Format a Matrix when 'prettyprinting'
