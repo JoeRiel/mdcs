@@ -349,7 +349,10 @@ local prettyprint
             if top then
                 (m,n) := op(1,rest);
                 Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
-                return seq([seq(rest[i,j], j=1..n)], i=1..m);
+                return seq([seq(`if`(rest[i,j]=NULL
+                                     , 'NULL'
+                                     , rest[i,j]
+                                    ), j=1..n)], i=1..m);
             else
                 return rest;
             end if;
