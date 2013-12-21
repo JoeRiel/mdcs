@@ -302,7 +302,7 @@ $endif
 
 #}}}
 
-$include <src/debugger.mm>
+$include <src/_debugger.mm>
 
 #{{{ showstat
 
