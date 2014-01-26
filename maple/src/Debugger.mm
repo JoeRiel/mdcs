@@ -469,7 +469,7 @@ $endif
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
 
-    stopat := proc(p :: {name,string,list}
+    stopat := proc(p :: {name,string,list,`module`}
                    , n :: posint
                    , cond :: uneval
                    , $ )
@@ -645,7 +645,7 @@ $endif
 ## Try("1.3", FUNC(`convert/symbol`), `convert/symbol`);
 ## Try("1.4", FUNC("`convert/symbol`"), `convert/symbol`);
 
-    GetName := proc(p :: {name,string}, $)
+    GetName := proc(p :: {name,string,`module`}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);
