@@ -286,7 +286,7 @@ $(maple-pkg).help : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
 	@$(RM) $@ maple/src/_preview_.mm
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
-	@mhelp $@
+	@mhelp $(maple-pkg)
 
 hlp-install: $(call print-help,hlp-install,Install $(hlp) in $(MAPLE-INSTALL-DIR))
 hlp-install: hlp
