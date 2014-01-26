@@ -49,24 +49,27 @@
 ##  opened with the command "HelpMDS".
 ##
 ##SUBSECTION Exports
-##- "mdc[Grid]" : submodule for debugging "Grid" processes.
-##- "mdc[Count]" : implements a counter
-##- "mdc[ModuleApply]" : main export
-##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
-##- "mdc[Monitor]" : set/query monitor expressions
-##- "mdc[Skip]" : set skip options
-##- "mdc[Sleep]" : utility routine for sleeping
+##SHOWINDEX(table="mdc[Exports]")
 ##ENDSUBSECTION
 ##
 ##SEEALSO
 ##- "mdc[ModuleApply]"
 ##- "debugger"
 ##- "Grid"
+##XREFMAP
+##- "Grid"        : Help:mdc,Grid
+##- "Count"       : Help:mdc,Count
+##- "ModuleApply" : Help:mdc,ModuleApply
+##- "HelpMDS"     : Help:mdc,HelpMDS
+##- "Monitor"     : Help:mdc,Monitor
+##- "Skip"        : Help:mdc,Skip
+##- "Sleep"       : Help:mdc,Sleep
 ##ENDMPLDOC
 
 
 ##PROCEDURE(help) mdc[ModuleApply]
 ##HALFLINE Maple Debugger Client
+##INDEXPAGE mdc[Exports],ModuleApply,Maple Debugger Client
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -1197,6 +1200,7 @@ Version := "2.4.4";
 ##DEFINE CMD Sleep
 ##PROCEDURE(help) mdc[Sleep]
 ##HALFLINE pause execution of the engine
+##INDEXPAGE mdc[Exports],Sleep,pause execution of the engine
 ##AUTHOR   Joe Riel
 ##DATE     Aug 2011
 ##CALLINGSEQUENCE
@@ -1243,6 +1247,7 @@ end proc;
 ##DEFINE CMD Skip
 ##PROCEDURE(help) mdc[Skip]
 ##HALFLINE assign the skip predicate
+##INDEXPAGE mdc[Exports],Skip,assign the skip predicate
 ##AUTHOR   Joe Riel
 ##DATE     Jan 2012
 ##CALLINGSEQUENCE
@@ -1571,6 +1576,7 @@ end proc;
 ##DEFINE CMD Count
 ##PROCEDURE(help) mdc[Count]
 ##HALFLINE increment a counter
+##INDEXPAGE mdc[Exports],Count,increment a counter
 ##AUTHOR   Joe Riel
 ##DATE     Sep 2011
 ##CALLINGSEQUENCE
