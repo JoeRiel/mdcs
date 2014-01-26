@@ -1189,11 +1189,47 @@ As such, there are a few limitations with using it.
 @cindex Accessing LineInfo
 
 The line-info buffer is active whenever line-info data is available for
-a procedure.  Line-info data is available when a Maple source file
-is read into Maple, either with the Maple @code{read} command, or by
+a procedure.  Line-info data is available when a Maple source file is
+read into Maple, either with the Maple @code{read} command, or by
 passing the file as input to tty Maple.  Using an absolute path to the
-filename, or include files, may be necessary to permit access to the
-data while changing directories during code execution.  
+filename may be necessary to permit access to the data while changing
+directories during code execution.  If @code{$include} directives are used,
+the include path, specified on the command line, should be an absolute path.
+
+For example, consider a Maple source located at @file{maple/src/main.mpl}
+relative to the current directory.  Assume it contains the following
+include directive:
+
+@example
+$include <maple/src/somefile.mpl>
+@end example
+
+The shell command to load this with tty maple might be the following:
+
+@example
+maple -I $PWD $PWD/maple/src/main.mpl
+@end example
+
+The use of @code{$PWD} ensures that the include path and the main file
+are given absolute paths.  
+
+An alternative way to specify the path to the
+main file is to use the undocumented @code{$file} preprocessor directive
+as the first line in the source file.  For example, the first line of
+@file{maple/src/main.mpl} might be
+
+@example
+$file "/home/joe/maple/Block/maple/src/main.mpl"
+@end example
+
+To validate the lineinfo data for a procedure, say @code{foo}, execute
+the following Maple command:
+
+@example
+debugopts(lineinfo = foo);
+@end example
+
+
 
 @node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
 @section LineInfo Mode
