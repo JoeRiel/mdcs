@@ -145,7 +145,7 @@ TAG identifies the operation, MSG is the message."
 
      ((= tag (eval-when-compile mds-tag-state))
       (unless (string-match mds-re-line-info msg)
-	(error "Problem with format in LINE_INFO tag"))
+	(error "Problem with format in LINE_INFO tag: %s" msg))
       (let ((file (match-string 1 msg))
 	    (beg  (1+ (string-to-number (match-string 3 msg))))
 	    (depth       (match-string 5 msg))
