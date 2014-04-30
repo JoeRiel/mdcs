@@ -82,7 +82,7 @@ communicate with the process.  Data is sent to the queue via
       ;; can be properly changed.
       (set-buffer buffer)
       (goto-char (point-max))
-      (insert string)
+      (insert (string-as-unibyte string))
       (while (with-current-buffer buffer
 	       (when (< 2 (point-max))
 		 ;; Assign tag, which identifies the message type,
@@ -100,7 +100,7 @@ communicate with the process.  Data is sent to the queue via
 		       ;; read it, delete the tag and message, and
 		       ;; pass it to `mds-queue-dispatch-tags'.
 		       ;; Loop to check for more.
-		       (let ((msg (buffer-substring beg end)))
+		       (let ((msg (buffer-substring-no-properties beg end)))
 			 (delete-region (point-min) end)
 			 (mds-queue-dispatch-tags (mds-queue-proc queue) tag msg))
 		       t)))))))))
