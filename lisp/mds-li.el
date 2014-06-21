@@ -273,6 +273,20 @@ Set cursor to ready."
     (beep)
     (message "No line-info source associated with current procedure.")))
 
+(defun mds-li-quit ()
+ "Quit the debugger and open the file associated with current procedure."
+  (interactive)
+  (if (mds-client-has-source-p mds-client)
+      (with-current-buffer (mds-client-li-buf mds-client)
+	(when mds-li-file-name
+	  (let ((point (point)))
+	    (find-file mds-li-file-name)
+	    (goto-char point))))
+    (beep)
+    (message "No line-info source associated with current procedure."))
+  (mds-quit))
+
+
 ;;{{{ (*) Evaluation
 
 (defun mds-li-eval-and-prettyprint-prev ()
@@ -333,7 +347,7 @@ DEPTH is the stack-depth, and LABEL is the user-id."
 	   ("I" . mds-stopwhenif)
 	   ("l" . mds-goto-current-state)
 	   ("L" . mds-ss-refresh)
-	   ("q" . mds-quit)
+	   ("q" . mds-li-quit)
 	   ("u" . mds-li-unstopat)
 	   ("," . mds-li-eval-and-prettyprint-prev)
 	   )))
