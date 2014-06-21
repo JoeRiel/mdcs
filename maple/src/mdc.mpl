@@ -105,6 +105,9 @@
 ##  `\CMD`.  These, as well as configuration options, are described in
 ##  the *Options* section.
 ##
+##- If called with no arguments, "DEBUG" is executed,
+##  which stops execution before the next statement is executed.
+##
 ##
 ##SUBSECTION Skipping
 ##desc_skipping
@@ -798,11 +801,13 @@ $include <src/PrintRtable.mm>
 
         #}}}
         #{{{ unstopat
+
         if unstopat :: set then
             map(Debugger:-unstopat, unstopat);
         elif unstopat <> "" then
             Debugger:-unstopat(unstopat);
         end if;
+
         #}}}
         #{{{ stoperror
         if stoperror = true then
@@ -906,7 +911,7 @@ $include <src/PrintRtable.mm>
         #{{{ return first procedure
 
         if stopats = NULL then
-            if debug then
+            if debug or nargs = 0 then
                 DEBUG();
             end if;
         else
