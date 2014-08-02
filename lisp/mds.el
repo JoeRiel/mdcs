@@ -48,10 +48,10 @@
 (require 'mds-patch)   ; live patching
 (require 'mds-queue)   ; handle the queue and dispatch tags
 (require 'mds-re)      ; regular expressions
-(require 'mds-ss)      ; showstat buffers
+(require 'mds-ss)      ; showstat buffers (ss interface)
 (require 'mds-thing)
 (require 'mds-wm)      ; window manager
-(require 'mds-li)      ; lineinfo buffer
+(require 'mds-li)      ; lineinfo buffer (li interface)
 
 ;;}}}
 
@@ -73,7 +73,7 @@ Automatically assigned to nil if wmctrl is not available."
 
 ;;{{{ Constants
 
-(defconst mds-version "2.4.4" "Version number of mds.")
+(defconst mds-version "2.4.5" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 

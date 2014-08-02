@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 2.4.4
+@set VERSION 2.4.5
 @set DATE June 2011
 
 @dircategory Emacs
@@ -890,7 +890,7 @@ Maple distinguishes two types of watchpoints: @emph{global} and @emph{local}.
 Global watchpoints apply to global variables, local watchpoints to local variables.
 
 @strong{Nota Bene:}
-The Maple debugger has a bug; it does not properly handle watchpoints
+The Maple debugger does not properly handle watchpoints
 for variables that are local to a module, or to a procedure of a module.
 Attempting to set a local watchpoint on such a variable returns the error
 
@@ -898,8 +898,8 @@ Attempting to set a local watchpoint on such a variable returns the error
 Error, global name or [proc name, local name] expected
 @end example
 
-As a workaround, set a global watchpoint on a module-local variable.
-Note that a global watchpoint must be reset each time the procedure is debugged.
+As a workaround, set a global watchpoint on a module-local variable;
+it must be reset each time the procedure is debugged.
 
 @table @asis
 
@@ -913,8 +913,20 @@ Use @kbd{C-u W} to clear a conditional watchpoint.
 @kindex p
 @findex mds-showstop
 @item p (@command{mds-showstop})
-Showstop: display a list of all procedures containing breakpoints, all
+showstop: display a list of all procedures containing breakpoints, all
 watchpoints, and all error watchpoints.
+
+@kindex R
+@kindex C-u R
+@findex mds-stoperror
+@item R (@command{mds-stoperror})
+stoperror: Set a watchpoint on an error message.
+The error message is entered separately in the mini-buffer.
+The special name @samp{all} sets a watchpoint on any error.
+The special name @samp{traperror} sets a watchpoint on any trapped error.
+Use @samp{traperror["message"]} to set a watchpoint on a particular trapped error message.
+Use @kbd{C-u R} to clear a watchpoint on an error message.
+
 
 @kindex w
 @kindex C-u w
@@ -1189,11 +1201,47 @@ As such, there are a few limitations with using it.
 @cindex Accessing LineInfo
 
 The line-info buffer is active whenever line-info data is available for
-a procedure.  Line-info data is available when a Maple source file
-is read into Maple, either with the Maple @code{read} command, or by
+a procedure.  Line-info data is available when a Maple source file is
+read into Maple, either with the Maple @code{read} command, or by
 passing the file as input to tty Maple.  Using an absolute path to the
-filename, or include files, may be necessary to permit access to the
-data while changing directories during code execution.  
+filename may be necessary to permit access to the data while changing
+directories during code execution.  If @code{$include} directives are used,
+the include path, specified on the command line, should be an absolute path.
+
+For example, consider a Maple source located at @file{maple/src/main.mpl}
+relative to the current directory.  Assume it contains the following
+include directive:
+
+@example
+$include <maple/src/somefile.mpl>
+@end example
+
+The shell command to load this with tty maple might be the following:
+
+@example
+maple -I $PWD $PWD/maple/src/main.mpl
+@end example
+
+The use of @code{$PWD} ensures that the include path and the main file
+are given absolute paths.  
+
+An alternative way to specify the path to the
+main file is to use the undocumented @code{$file} preprocessor directive
+as the first line in the source file.  For example, the first line of
+@file{maple/src/main.mpl} might be
+
+@example
+$file "/home/joe/maple/Block/maple/src/main.mpl"
+@end example
+
+To validate the lineinfo data for a procedure, say @code{foo}, execute
+the following Maple command:
+
+@example
+debugopts(lineinfo = foo);
+@end example
+
+
 
 @node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
 @section LineInfo Mode

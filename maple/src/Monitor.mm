@@ -2,6 +2,7 @@
 ##DEFINE CMD Monitor
 ##PROCEDURE(help) mdc[Monitor]
 ##HALFLINE set and query a monitor expression
+##INDEXPAGE mdc[Exports],Monitor,set and query a monitor expression
 ##AUTHOR   Joe Riel
 ##DATE     Mar 2012
 ##CALLINGSEQUENCE
