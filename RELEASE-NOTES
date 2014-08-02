@@ -1,5 +1,10 @@
 -*- org -*-
 
+* mdcs-2.4.5
+** Handle UTF8 characters during debugging
+** Add mds-li-quit procedure, which quits debugger and opens source at point
+** Interpet mdc() as a call to DEBUG()
+** Add sticky option print_inert_record to mdc
 * mdcs-2.4.4
 ** Add mds-wm-display-all command, for displaying all clients
 ** Update info pages to describe new command, and add some debug tips

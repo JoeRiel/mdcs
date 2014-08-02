@@ -48,10 +48,10 @@
 (require 'mds-patch)   ; live patching
 (require 'mds-queue)   ; handle the queue and dispatch tags
 (require 'mds-re)      ; regular expressions
-(require 'mds-ss)      ; showstat buffers
+(require 'mds-ss)      ; showstat buffers (ss interface)
 (require 'mds-thing)
 (require 'mds-wm)      ; window manager
-(require 'mds-li)      ; lineinfo buffer
+(require 'mds-li)      ; lineinfo buffer (li interface)
 
 ;;}}}
 

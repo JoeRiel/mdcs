@@ -276,12 +276,19 @@ local prettyprint
             # type/object won't work for some older maples.
             if attributes(rest)='object' then
                 try
-                    if top then
-                        Debugger:-Printf("(*object*)\n");
-                    end if;
                     opacity := kernelopts('opaquemodules'=false);
                     if member(':-ModulePrint',rest) then
                         return ModulePrint(rest);
+                    end if;
+                    if top then
+                        eqs := seq(`if`(assigned(rest[fld])
+                                        , fld = thisproc(false, rest[fld])
+                                        , fld
+                                       )
+                                   , fld = [exports(rest)]);
+                        return Debugger:-Printf("(*object*)\n"), eqs;
+                    else
+                        return Debugger:-Printf("(*object*)\n");
                     end if;
                 catch:
                     Debugger:-Printf("object(...)\n");
@@ -349,7 +356,10 @@ local prettyprint
             if top then
                 (m,n) := op(1,rest);
                 Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
-                return seq([seq(rest[i,j], j=1..n)], i=1..m);
+                return seq([seq(`if`(rest[i,j]=NULL
+                                     , 'NULL'
+                                     , rest[i,j]
+                                    ), j=1..n)], i=1..m);
             else
                 return rest;
             end if;

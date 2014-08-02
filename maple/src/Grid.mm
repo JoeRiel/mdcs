@@ -1,6 +1,7 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE(help) mdc[Grid]
 ##HALFLINE submodule for debugging Grid-based procedures
+##INDEXPAGE mdc[Exports],Grid,submodule for debugging Grid-based procedures
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##DESCRIPTION
@@ -10,9 +11,7 @@
 ##  Client*.
 ##
 ##- The exports are
-##
-##-- "mdc[Grid][CodeString]" : instrument a block of code
-##-- "mdc[Grid][Procedure]" : instrument a procedure
+##SHOWINDEX(table="mdc[Grid][Exports]")
 ##
 ##SEEALSO
 ##- "Grid"
@@ -26,6 +25,7 @@ export CodeString
 
 ##PROCEDURE(help) mdc[Grid][CodeString]
 ##HALFLINE instrument a block of code for use with Grid and mdc
+##INDEXPAGE mdc[Grid][Exports],CodeString,instrument a block of code for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -99,6 +99,7 @@ export CodeString
 
 ##PROCEDURE(help) mdc[Grid][Procedure]
 ##HALFLINE instrument a procedure for use with Grid and mdc
+##INDEXPAGE mdc[Grid][Exports],Procedure,instrument a procedure for use with Grid and mdc
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE

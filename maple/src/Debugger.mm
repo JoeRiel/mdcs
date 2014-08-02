@@ -237,22 +237,35 @@ $endif
 #{{{ debugger_printf
 
     debugger_printf := proc( tag :: string )
-    local argList, rts;
+    local rest, rts;
     description `Used by debugger to produce output.`;
 
-        argList := subsindets([_rest], `record`
-                              , proc(rec) 'Record'(exports(rec)) end proc
-                             );
+        rest := [_rest];
+        if PrintInertRecord and hastype(rest,'record') then
+            # The conditional helps avoid a bug in subsindets
+            # when rest contains an ASSIGN dag.
+
+            # Convert a record to an inert form with only the exports
+            # as field names.  The motivation, I believe, is that
+            # otherwise the length detector in WriteTagf fails with
+            # some large, recursive records (say MapleSim flattener
+            # output).  See notes for
+            # beb14a25968a465db37a6a6df6b168bcc266407c.
+
+            rest := subsindets(rest, `record`
+                               , proc(rec) 'Record'(exports(rec)) end proc
+                              );
+        end if;
 
         try
             # suppress large rtables
             rts := map(x->x=`debugger/describe_rtable`(x)
-                       , indets(argList,'debugger_large_rtable')
+                       , indets(rest,'debugger_large_rtable')
                       );
-            if rts <> {} then argList := subs(rts,argList) end if;
+            if rts <> {} then rest := subs(rts,rest) end if;
         catch:
         end try;
-        WriteTagf(tag, op(argList));
+        WriteTagf(tag, op(rest));
 
         return NULL;
     end proc:
@@ -302,7 +315,7 @@ $endif
 
 #}}}
 
-$include <src/debugger.mm>
+$include <src/_debugger.mm>
 
 #{{{ showstat
 
@@ -469,7 +482,7 @@ $endif
 ##   _kernelopts('opaquemodules'=false)_.
 ##-- If 'p' is a list then _\CMD(op(p))_ is returned.
 
-    stopat := proc(p :: {name,string,list}
+    stopat := proc(p :: {name,string,list,`module`}
                    , n :: posint
                    , cond :: uneval
                    , $ )
@@ -645,7 +658,7 @@ $endif
 ## Try("1.3", FUNC(`convert/symbol`), `convert/symbol`);
 ## Try("1.4", FUNC("`convert/symbol`"), `convert/symbol`);
 
-    GetName := proc(p :: {name,string}, $)
+    GetName := proc(p :: {name,string,`module`}, $)
     local opacity, pn, pnm;
         try
             opacity := kernelopts('opaquemodules'=false);

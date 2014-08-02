@@ -49,24 +49,27 @@
 ##  opened with the command "HelpMDS".
 ##
 ##SUBSECTION Exports
-##- "mdc[Grid]" : submodule for debugging "Grid" processes.
-##- "mdc[Count]" : implements a counter
-##- "mdc[ModuleApply]" : main export
-##- "mdc[HelpMDS]" : display help page for debugger server (Windows only)
-##- "mdc[Monitor]" : set/query monitor expressions
-##- "mdc[Skip]" : set skip options
-##- "mdc[Sleep]" : utility routine for sleeping
+##SHOWINDEX(table="mdc[Exports]")
 ##ENDSUBSECTION
 ##
 ##SEEALSO
 ##- "mdc[ModuleApply]"
 ##- "debugger"
 ##- "Grid"
+##XREFMAP
+##- "Grid"        : Help:mdc,Grid
+##- "Count"       : Help:mdc,Count
+##- "ModuleApply" : Help:mdc,ModuleApply
+##- "HelpMDS"     : Help:mdc,HelpMDS
+##- "Monitor"     : Help:mdc,Monitor
+##- "Skip"        : Help:mdc,Skip
+##- "Sleep"       : Help:mdc,Sleep
 ##ENDMPLDOC
 
 
 ##PROCEDURE(help) mdc[ModuleApply]
 ##HALFLINE Maple Debugger Client
+##INDEXPAGE mdc[Exports],ModuleApply,Maple Debugger Client
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
@@ -101,6 +104,9 @@
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
 ##  `\CMD`.  These, as well as configuration options, are described in
 ##  the *Options* section.
+##
+##- If called with no arguments, "DEBUG" is executed,
+##  which stops execution before the next statement is executed.
 ##
 ##
 ##SUBSECTION Skipping
@@ -175,6 +181,7 @@
 ##- `launch_emacs` : enables auto-launch of Emacs
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
+##- `print_inert_record` : prints records as inert structures; useful with very large records
 ##- `print_to_maple` : print each result to Maple
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
@@ -251,6 +258,12 @@
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
 ##  The default value is 10000; this option is sticky.
+##
+##opt(print_inert_record,truefalse)
+##  True means print a record as an inert structure,
+##  showing only the field names.  This is useful to
+##  avoid crashes with very large records.
+##  The default is false; this option is sticky.
 ##
 ##opt(print_to_maple,truefalse)
 ##  True means print the result of each debugged statement
@@ -582,6 +595,7 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
+    , PrintInertRecord
     , print_to_maple_flag
     , SkipCheckStack
     , SkipIndicateMatch
@@ -636,7 +650,7 @@ $include <src/PrintRtable.mm>
 
 #{{{ ModuleApply
 
-    ModuleApply := proc( stopats :: seq({string,name,list})
+    ModuleApply := proc( stopats :: seq({string,name,list,`module`})
                          , { debug :: truefalse := false }
                          , { debug_builtins :: truefalse := debugbuiltins }
                          , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }
@@ -648,6 +662,7 @@ $include <src/PrintRtable.mm>
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                         , { print_inert_record :: truefalse := PrintInertRecord }
                          , { print_to_maple :: truefalse := GetDefault(':-print_to_maple',false) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                          , { reconnect :: truefalse := false }
@@ -696,6 +711,7 @@ $include <src/PrintRtable.mm>
 
         #}}}
 
+        PrintInertRecord := print_inert_record;
         debugbuiltins := debug_builtins;
         Quiet := quiet;
         SkipCheckStack := skip_check_stack;
@@ -795,11 +811,13 @@ $include <src/PrintRtable.mm>
 
         #}}}
         #{{{ unstopat
+
         if unstopat :: set then
             map(Debugger:-unstopat, unstopat);
         elif unstopat <> "" then
             Debugger:-unstopat(unstopat);
         end if;
+
         #}}}
         #{{{ stoperror
         if stoperror = true then
@@ -903,7 +921,7 @@ $include <src/PrintRtable.mm>
         #{{{ return first procedure
 
         if stopats = NULL then
-            if debug then
+            if debug or nargs = 0 then
                 DEBUG();
             end if;
         else
@@ -923,6 +941,7 @@ $include <src/PrintRtable.mm>
 #{{{ ModuleLoad
 
 ModuleLoad := proc()
+    PrintInertRecord := GetDefault(':-print_inert_record', false);
     debugbuiltins := GetDefault(':-debug_builtins', false);
     SkipCheckStack := GetDefault(':-skip_check_stack', false);
     SkipIndicateMatch := GetDefault(':-skip_indicate_match', true);
@@ -1197,6 +1216,7 @@ Version := "2.4.4";
 ##DEFINE CMD Sleep
 ##PROCEDURE(help) mdc[Sleep]
 ##HALFLINE pause execution of the engine
+##INDEXPAGE mdc[Exports],Sleep,pause execution of the engine
 ##AUTHOR   Joe Riel
 ##DATE     Aug 2011
 ##CALLINGSEQUENCE
@@ -1243,6 +1263,7 @@ end proc;
 ##DEFINE CMD Skip
 ##PROCEDURE(help) mdc[Skip]
 ##HALFLINE assign the skip predicate
+##INDEXPAGE mdc[Exports],Skip,assign the skip predicate
 ##AUTHOR   Joe Riel
 ##DATE     Jan 2012
 ##CALLINGSEQUENCE
@@ -1571,6 +1592,7 @@ end proc;
 ##DEFINE CMD Count
 ##PROCEDURE(help) mdc[Count]
 ##HALFLINE increment a counter
+##INDEXPAGE mdc[Exports],Count,increment a counter
 ##AUTHOR   Joe Riel
 ##DATE     Sep 2011
 ##CALLINGSEQUENCE
