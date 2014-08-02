@@ -241,7 +241,7 @@ $endif
     description `Used by debugger to produce output.`;
 
         rest := [_rest];
-        if hastype(rest,'record') then
+        if PrintInertRecord and hastype(rest,'record') then
             # The conditional helps avoid a bug in subsindets
             # when rest contains an ASSIGN dag.
 

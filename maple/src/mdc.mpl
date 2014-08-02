@@ -181,6 +181,7 @@
 ##- `launch_emacs` : enables auto-launch of Emacs
 ##- `maxlength` : maximum string length sent to server
 ##- `port` : TCP port number
+##- `print_inert_record` : prints records as inert structures; useful with very large records
 ##- `print_to_maple` : print each result to Maple
 ##- `quiet` : suppress greeting from server
 ##- `reconnect` : reconnect to the debugger server
@@ -257,6 +258,12 @@
 ##  Assigns the TCP port used for communication.
 ##  Must match the value used by the server.
 ##  The default value is 10000; this option is sticky.
+##
+##opt(print_inert_record,truefalse)
+##  True means print a record as an inert structure,
+##  showing only the field names.  This is useful to
+##  avoid crashes with very large records.
+##  The default is false; this option is sticky.
 ##
 ##opt(print_to_maple,truefalse)
 ##  True means print the result of each debugged statement
@@ -588,6 +595,7 @@ local Connect
     , sid := -1
     , view_flag
     , show_options_flag
+    , PrintInertRecord
     , print_to_maple_flag
     , SkipCheckStack
     , SkipIndicateMatch
@@ -654,6 +662,7 @@ $include <src/PrintRtable.mm>
                          , { launch_emacs :: truefalse := GetDefault(':-launch_emacs',false) }
                          , { maxlength :: nonnegint := GetDefault(':-maxlength',10\000) }
                          , { port :: posint := GetDefault(':-port',MDS_DEFAULT_PORT) }
+                         , { print_inert_record :: truefalse := PrintInertRecord }
                          , { print_to_maple :: truefalse := GetDefault(':-print_to_maple',false) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                          , { reconnect :: truefalse := false }
@@ -702,6 +711,7 @@ $include <src/PrintRtable.mm>
 
         #}}}
 
+        PrintInertRecord := print_inert_record;
         debugbuiltins := debug_builtins;
         Quiet := quiet;
         SkipCheckStack := skip_check_stack;
@@ -931,6 +941,7 @@ $include <src/PrintRtable.mm>
 #{{{ ModuleLoad
 
 ModuleLoad := proc()
+    PrintInertRecord := GetDefault(':-print_inert_record', false);
     debugbuiltins := GetDefault(':-debug_builtins', false);
     SkipCheckStack := GetDefault(':-skip_check_stack', false);
     SkipIndicateMatch := GetDefault(':-skip_indicate_match', true);
