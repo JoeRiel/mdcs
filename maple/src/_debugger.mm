@@ -1,3 +1,6 @@
+#LINK mdc.mpl
+#LINK Debugger.mm
+
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD Debugger
 ##DEFINE PROC _debugger
@@ -40,6 +43,8 @@ global showstat, showstop;
         addr := addressof(procName);
 
         #{{{ handle skipping
+
+        # skip is a module-local; it's value is retained between calls.
 
         if skip then
             if go_back then

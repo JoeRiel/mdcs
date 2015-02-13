@@ -31,6 +31,7 @@ uses FT = FileTools, ST = StringTools;
     tboxdir := MakePath(pdir, ToolboxInstaller:-Data:-Get("toolbox_name"));
     #}}}
     #{{{ Assign Install procedure
+
     Install := proc(srcdir, dstdir, files :: list, { clear :: truefalse := false } )
     local content, file, src, dst;
     uses FT=FileTools;
@@ -52,6 +53,7 @@ uses FT = FileTools, ST = StringTools;
             FT:-Copy(src,dst,'force'=true);
         end do;
     end proc;
+
     #}}}
     #{{{ Assign Defaults
 
