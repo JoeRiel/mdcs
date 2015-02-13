@@ -127,6 +127,7 @@ LineInfo Caveats
 * for-less do-loops::           A glitch with while loops.
 * use statement::               Use @code{uses}.
 * Declaration Self-Assignment::  Restrict this undocumented feature.
+* False Conditional::           Avoid @code{if false then}
 
 Output Buffer
 
@@ -140,7 +141,7 @@ Debugging Tips
 * Save a local result::         Saving intermediate results to a file.
 * Recursive debugging::         Rerunning a procedure without exiting
 * Multiple clients::            Debugging multiple clients
-* Remote debugging::            
+* Remote debugging::            Debugging on a remote machine
 
 @end detailmenu
 @end menu
@@ -1292,6 +1293,7 @@ There are a few known bugs with the line-info feature.
 * for-less do-loops::           A glitch with while loops.
 * use statement::               Use @code{uses}.
 * Declaration Self-Assignment::  Restrict this undocumented feature.
+* False Conditional::           Avoid @code{if false then}
 @end menu
 
 @node  Preprocessor macros, for-less do-loops, LineInfo Caveats, LineInfo Caveats
@@ -1369,7 +1371,7 @@ uses LA = LinearAlgebra;
 end proc;
 @end example
 
-@node Declaration Self-Assignment,  , use statement, LineInfo Caveats
+@node Declaration Self-Assignment, False Conditional, use statement, LineInfo Caveats
 @subsection Declaration Self-Assignment
 
 Maple 16 introduced an undocumented feature such that if, in a local
@@ -1415,6 +1417,19 @@ end proc;
 The line-info data for such a procedure is incorrect.  The debugger
 automatically corrects for this, provided all self-assignments
 occur before any normal assignments.
+
+
+@node False Conditional,  , Declaration Self-Assignment, LineInfo Caveats
+@subsection False Conditional
+
+While hacking code, it is occasionally useful to disable an @strong{if} statement
+by making its condition always false.  Doing this by replacing the condition
+with @code{false} causes the Maple simplifier to remove the condition.
+Because this happens after the line-info data is generated, the resulting
+line-info data is corrupted.  Instead, replace the condition with an expression
+that evaluates false, such as @code{0=1}.
+
+
 
 @node Output Buffer, Debugging Tips, LineInfo Buffer, Top
 @chapter Output Buffer
