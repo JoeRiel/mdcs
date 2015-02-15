@@ -1041,6 +1041,13 @@ This is frequently needed after patching a procedure
 MDS does not automatically redraw a procedure upon entry,
 that happens only if the name of the procedure has changed.
 
+@kindex Q
+@findex mds-toggle-quiet
+@item Q (@command{mds-toggle-quiet})
+Toggle the display of the output of executed statements.
+The evaluation commands continue to work, but the automatic
+display does not.
+
 @kindex T
 @findex mds-toggle-truncate-lines
 @item T (@command{mds-toggle-truncate-lines})
@@ -1472,6 +1479,9 @@ arguments (the address to the actual argument is hidden in the buffer).
 This provides a convenient method to rerun previously called procedures
 with the same arguments.  @xref{Recursive debugging}.
 
+@findex mds-toggle-quiet
+The @code{mds-toggle-quiet} (@kbd{Q}) command, executed from the showstat or lineinfo buffer,
+toggles the display of the output of statements executed during debugging.
 
 @menu
 * Output buffer commands::      

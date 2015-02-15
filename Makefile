@@ -37,6 +37,8 @@ STANDARD := $(MAPLE_ROOT)/internal/link mp
 
 MINT := mint
 
+SHELP := MAPLE_ROOT=${MAPLE_SANDBOX}/Maple17 ${MAPLE_SANDBOX}/Maple17/bin/shelp 
+
 CP := cp --archive
 BROWSER := x-www-browser
 MAKEINFO := makeinfo
@@ -269,8 +271,8 @@ $(maple-pkg).hdb : maple/src/$(maple-pkg).mpl $(mms)
 	@echo "Creating Maple help database"
 	$(RM) $@ maple/src/_preview_.mm
 	$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
-	shelp create -h $@
-	shelp mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
+	$(SHELP) create -h $@
+	$(SHELP) mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
 
 hdb-install: $(call print-help,hdb-install,Install $(hdb) in $(MAPLE-INSTALL-DIR))
 hdb-install: hdb
@@ -385,7 +387,7 @@ installer := $(pkg)-installer-$(VERSION).mla
 installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
-$(installer): hdb mla info
+$(installer): hdb hlp mla info
 	#	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
 	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
