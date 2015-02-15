@@ -387,7 +387,7 @@ installer := $(pkg)-installer-$(VERSION).mla
 installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
-$(installer): hdb mla info
+$(installer): hdb hlp mla info
 	#	@$(call shellerr, $(MAPLE) -q maple/installer/CreateInstaller.mpl)
 	$(MAPLE) -q maple/installer/CreateInstaller.mpl
 
