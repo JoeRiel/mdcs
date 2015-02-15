@@ -147,6 +147,7 @@ Miscellaneous
 C clear the debugger output buffer
 h display help page for the Maple debugger
 H display info page for mds
+Q toggle quiet mode (do not display output of statements)
 T toggle-truncate-lines (C-u for output buffer)
 ? display a Maple help page
 M-? display a Maple procedure
