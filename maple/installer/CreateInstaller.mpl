@@ -129,8 +129,10 @@ uses FT = FileTools, ST = StringTools;
 
         cmd := sprintf("%s --batch --no-site-file --no-init-file "
                        "--eval \"(push \\\"%A\\\" load-path)\" "
-                       "--funcall=batch-byte-recompile-directory \"%A\""
+                       "--funcall=batch-byte-compile %A/button-lock.el %A/maplev*.el %A/mds*.el"
                        , Emacs
+                       , lispDir
+                       , lispDir
                        , lispDir
                        , lispDir
                       );
@@ -144,12 +146,7 @@ uses FT = FileTools, ST = StringTools;
     catch:
         WARNING("the lisp files were not automatically byte-compiled. "
                 "Byte-compiling is not a requirement, but will "
-                "allow the code to run faster.  You can manually byte-compile the "
-                "files from inside Emacs using the command byte-recompile-directory. "
-                "Launch Emacs, then type C-u 0 M-x byte-recompile-directory and "
-                "select the directory where the lisp files were installed: "
-                "%1"
-                , lispDir
+                "allow the code to run faster."
                );
         error;
     end try;
