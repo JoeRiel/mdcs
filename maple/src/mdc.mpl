@@ -650,7 +650,7 @@ $include <src/PrintRtable.mm>
 
 #{{{ ModuleApply
 
-    ModuleApply := proc( stopats :: seq({string,name,list,`module`})
+    ModuleApply := proc( stopats :: seq({string,name,list,`module`,procedure})
                          , { debug :: truefalse := false }
                          , { debug_builtins :: truefalse := debugbuiltins }
                          , { emacs :: {string,procedure} := GetDefault(':-emacs', "emacs") }

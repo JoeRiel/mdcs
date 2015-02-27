@@ -1,3 +1,6 @@
+#LINK mdc.mpl
+#LINK Debugger.mm
+
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##DEFINE SUBMOD Debugger
 ##DEFINE PROC _debugger
@@ -40,6 +43,8 @@ global showstat, showstop;
         addr := addressof(procName);
 
         #{{{ handle skipping
+
+        # skip is a module-local; it's value is retained between calls.
 
         if skip then
             if go_back then
@@ -120,7 +125,7 @@ global showstat, showstop;
     #}}}
     #{{{ send result to server
 
-    if not skip and ( Quiet implies Respond ) then
+    if not skip and (Quiet implies Respond ) then
         Respond := false;
         if monitor_result then
             tag := TAG_MONITOR
@@ -285,6 +290,12 @@ global showstat, showstop;
 
     do
         line := debugger_readline( prompt );
+        if line[1] = "!" then
+            Respond := true;
+            line := line[2..];
+        else
+            Respond := false;
+        end if;
         # If there's an assignment, make sure it is delimited by spaces.
         i := SearchText(":=",line);
         if i > 1 and SearchText(" := ",line) <> i-1 then
