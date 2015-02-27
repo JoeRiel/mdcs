@@ -83,7 +83,7 @@ Echo the command to the output buffer unless HIDE is non-nil."
   (mds-ss-block-input)
   (unless hide
     (mds-out-append-input (mds-client-out-buf mds-client) cmd 'mds-debugger-cmd))
-  (mds-ss-send-client (concat cmd "\n")))
+  (mds-ss-send-client (concat "!" cmd "\n")))
 
 (defun mds-ss-eval-expr (expr &optional display unlimited)
   "Send EXPR, with newline, to the Maple process.
@@ -96,7 +96,7 @@ evaluating Maple expressions."
       (mds-out-append-input (mds-client-out-buf mds-client)
 			    (if (eq display t) expr display)
 			    'mds-user-input))
-  (mds-ss-send-client (format "%s%s\n"
+  (mds-ss-send-client (format "!%s%s\n"
 			      (if unlimited "_mds_unlimited " "")
 			      expr)))
 
@@ -1145,8 +1145,9 @@ to work, `face-remapping-alist' must be buffer-local."
        ["Refresh procedure"             mds-ss-refresh t]
        ["Toggle code view"              mds-wm-toggle-code-view t]
        ["Toggle input tracking"         mds-toggle-track-input t]
-       ["Toggle mds-wait-until-ready-flag"   mds-toggle-wait-until-ready t]
-       ["Toggle mds-stop-trace-at-trapped-error-flag"   mds-toggle-stop-trace-at-trapped-error-flag t]
+       ["Toggle mds-wait-until-ready-flag" mds-toggle-wait-until-ready t]
+       ["Toggle output of executed statements" mds-toggle-quiet t]
+       ["Toggle mds-stop-trace-at-trapped-error-flag" mds-toggle-stop-trace-at-trapped-error-flag t]
        ["Toggle truncate lines"         mds-toggle-truncate-lines t]
        ["Write output buffer"           mds-out-write-buffer t]
        )
@@ -1228,6 +1229,7 @@ Miscellaneous
 \\[maplev-help-at-point] display a Maple help page
 \\[maplev-proc-at-point] display a Maple procedure
 \\[mds-wm-toggle-code-view] toggle view of code between showstat and line-info
+\\[mds-toggle-quiet] toggle display of output of executed statements
 \\[mds-toggle-truncate-lines] toggle whether to fold or truncate long lines
 C-u \\[mds-toggle-truncate-lines] toggle truncation in debugger output buffer
 \\[mds-patch] patch procedure in the buffer

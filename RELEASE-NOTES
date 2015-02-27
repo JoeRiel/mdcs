@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-2.4.6
+** Improve handling of quiet mode, which is toggled in debugger with Q (handle manual queries)
+** Allow immediate procs as arguments to mdc
 * mdcs-2.4.5
 ** Handle UTF8 characters during debugging
 ** Add mds-li-quit procedure, which quits debugger and opens source at point

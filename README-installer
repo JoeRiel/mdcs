@@ -1,4 +1,4 @@
-VERSION 2.4.5
+VERSION 2.4.6
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -147,6 +147,7 @@ Miscellaneous
 C clear the debugger output buffer
 h display help page for the Maple debugger
 H display info page for mds
+Q toggle quiet mode (do not display output of statements)
 T toggle-truncate-lines (C-u for output buffer)
 ? display a Maple help page
 M-? display a Maple procedure

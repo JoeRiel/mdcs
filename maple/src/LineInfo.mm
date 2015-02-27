@@ -239,7 +239,7 @@ local ModuleLoad
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- Store the *lineinfo* data of a procedure into the module local
+##- Store the *lineinfo* data of a procedure into the module-local
 ##  table `Info`.  If the procedure has no lineinfo data, store `NULL`.
 ##
 ##- The 'addr' parameter is the address of the procedure.  It is used
