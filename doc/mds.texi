@@ -126,8 +126,8 @@ LineInfo Caveats
 * Preprocessor macros::         Avoid multi-statement macros.
 * for-less do-loops::           A glitch with while loops.
 * use statement::               Use @code{uses}.
-* Declaration Self-Assignment::  Restrict this undocumented feature.
-* False Conditional::           Avoid @code{if false then}
+* Declaration Self-Assignment:: Restrict this undocumented feature.
+* True or False Conditional::   Avoid @code{if true then}
 
 Output Buffer
 
@@ -1300,7 +1300,7 @@ There are a few known bugs with the line-info feature.
 * for-less do-loops::           A glitch with while loops.
 * use statement::               Use @code{uses}.
 * Declaration Self-Assignment::  Restrict this undocumented feature.
-* False Conditional::           Avoid @code{if false then}
+* True or False Conditional::   Avoid @code{if true then}
 @end menu
 
 @node  Preprocessor macros, for-less do-loops, LineInfo Caveats, LineInfo Caveats
@@ -1378,7 +1378,7 @@ uses LA = LinearAlgebra;
 end proc;
 @end example
 
-@node Declaration Self-Assignment, False Conditional, use statement, LineInfo Caveats
+@node Declaration Self-Assignment, True or False Conditional, use statement, LineInfo Caveats
 @subsection Declaration Self-Assignment
 
 Maple 16 introduced an undocumented feature such that if, in a local
@@ -1426,15 +1426,15 @@ automatically corrects for this, provided all self-assignments
 occur before any normal assignments.
 
 
-@node False Conditional,  , Declaration Self-Assignment, LineInfo Caveats
-@subsection False Conditional
+@node True or False Conditional,  , Declaration Self-Assignment, LineInfo Caveats
+@subsection True or False Conditional
 
-While hacking code, it is occasionally useful to disable an @strong{if} statement
-by making its condition always false.  Doing this by replacing the condition
-with @code{false} causes the Maple simplifier to remove the condition.
+While developing code, it is occasionally useful to enable or disable an @strong{if} statement
+by making its condition always true or false.  Doing this by replacing the condition
+with @code{true} or @code{false} causes the Maple simplifier to remove the condition.
 Because this happens after the line-info data is generated, the resulting
 line-info data is corrupted.  Instead, replace the condition with an expression
-that evaluates false, such as @code{0=1}.
+that evaluates true or false, such as @code{0=0} or @code{0=1}.
 
 
 
