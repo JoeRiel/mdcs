@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-2.4.8
+** update README-installer and sample .emacs file
 * mdcs-2.4.7
 ** rewrite installer: make it debuggable, improve operation on Windows
 * mdcs-2.4.6
