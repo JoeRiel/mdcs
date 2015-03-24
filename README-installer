@@ -48,7 +48,8 @@ INSTALLATION
    subdirectory $HOME/maple/toolbox/emacs.
 
 6. CUSTOMIZATION
-   By default, the installer uses the following locations
+   By default, the installer uses the following locations for the installed files
+
    Lisp files:
      $HOME/.emacs.d/maple
    Info files:
@@ -59,22 +60,29 @@ INSTALLATION
    To modify these defaults, stop the installation after it unpacks
    the files, rename _config.mpl (located at $HOME/maple/toolbox/emacs)
    to config.mpl, and edit it appropriately for your system.
+   While doing so, assign the variable Emacs to the executable 
+   for your installed emacs
 
-7. Create/modify your Emacs initialization (normally located at $HOME/.emacs). 
-   To determine what Emacs considers your initialization file,
-   check the Emacs user-init-file variable.  To do that, type C-h v user-init-file.
-   C-h means hold down the Control key and press the h key.
-   A minimal .emacs file, suitable for running mds, is available
-   at $HOME/maple/toolbox/emacs/.emac.
+7. CREATE/MODIFY .emacs FILE
+   Create/modify your Emacs initialization (normally located at
+   $HOME/.emacs).  To determine what Emacs considers your
+   initialization file, check the Emacs user-init-file variable.  To
+   do that, type C-h v user-init-file.  C-h means hold down the
+   Control key and press the h key.  A minimal .emacs file, suitable
+   for running mds, is available at $HOME/maple/toolbox/emacs/.emacs.
+   If you have no .emacs file, then just copy the minimal file 
+   to the location determined from Emacs.
 
-8. On non-Unix machines, the lisp files are not automatically
+8. BYTE-COMPILE
+   On non-Unix machines, the lisp files are not automatically
    byte-compiled.  Byte-compiling is not a requirement, but will
    allow the code to run faster.  You can manually byte-compile the
    files from inside Emacs using the command byte-recompile-directory.
    Launch Emacs, then type C-u 0 M-x byte-recompile-directory and
    select the directory where the lisp files were installed.
 
-9. On non-Unix machines, the dir file, used by Emacs help system to
+9. UPDATE dir FILE
+   On non-Unix machines, the dir file, used by Emacs help system to
    provide a menu of help topics, is not automatically updated.  You
    can do so manually.  If you cannot figure out how to do so, an html
    version of the documentation for mds (the Emacs-based Maple Debugger
