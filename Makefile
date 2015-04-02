@@ -408,6 +408,11 @@ zip-installer: $(call print-help,zip-installer,Create zipfile of installer)
 zip-installer: $(dist)
 	zip $(zip) $+
 
+zip-src := $(pkg)-$(VERSION)-src.zip
+zip-src: $(call print-help,zip-src,	Create zipfile of source)
+zip-src:
+	git archive HEAD --output=$(zip-src)
+
 # }}}
 # {{{ clean
 
