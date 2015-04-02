@@ -683,14 +683,13 @@ $endif
             # name on the lhs of the assignment in the string.
             pnm := eval(pn);
             while assigned(pnm[':-ModuleApply']) do
-                eval(pnm:-ModuleApply);
-                pnm := pnm:-ModuleApply;
+                pnm := eval(pnm:-ModuleApply);
             end do;
         finally
             kernelopts('opaquemodules'=opacity);
         end try;
 
-        return pnm;
+        return pn;
 
     end proc;
 
