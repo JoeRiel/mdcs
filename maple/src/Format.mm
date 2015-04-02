@@ -1,5 +1,4 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Format
 ##MODULE mdc[Format]
 ##HALFLINE code used by the Emacs Maple debugger
 ##AUTHOR   Joe Riel
@@ -20,9 +19,6 @@ local prettyprint
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
 
-#{{{ ArgsToEqs
-
-##DEFINE PROC ArgsToEqs
 ##PROCEDURE mdc[Format][ArgsToEqs]
 ##HALFLINE return equations defining the parameters of a procedure call
 ##AUTHOR   Joe Riel
@@ -169,10 +165,6 @@ local prettyprint
 
     end proc;
 
-#}}}
-#{{{ prettyprint
-
-##DEFINE PROC prettyprint
 ##PROCEDURE mdc[Format][prettyprint]
 ##HALFLINE pretty print a Maple expression
 ##AUTHOR   Joe Riel
@@ -383,19 +375,18 @@ local prettyprint
 #}}}
 #{{{ showstat
 
-##DEFINE CMD showstat
 ##PROCEDURE mdc[Format][showstat]
 ##HALFLINE display a procedure with statement numbers for debugging
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
 ##CALLINGSEQUENCE
-##- \CMD('p')
+##- showstat('p')
 ##PARAMETERS
 ##- 'p' : ::string::; string corresponding to procedure name
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command
+##- The `showstat` command
 ##  formats a procedure with statement numbers
 ##  and sends the string to the server.
 ##
@@ -427,11 +418,6 @@ local prettyprint
         return NULL;
     end proc;
 
-#}}}
-
-#{{{ GoTry
-
-##DEFINE PROC GoTry
 ##PROCEDURE mdc[Format][GoTry]
 ##HALFLINE reassign Try to save tests for execution with the go command
 ##AUTHOR   Joe Riel
@@ -490,7 +476,8 @@ local prettyprint
         return NULL;
     end proc;
 
-#}}}
+
+##
 
 end module:
 

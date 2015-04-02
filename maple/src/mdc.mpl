@@ -4,15 +4,13 @@
 
 #{{{ mpldoc
 
-##DEFINE MOD mdc
-##DEFINE CMD mdc
 ##PACKAGE(help) mdc
 ##TITLE mdc
 ##HALFLINE Overview of the Maple Debugger Client package
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##DESCRIPTION
-##- The `\MOD` package implements a *Maple Debugger Client*,
+##- The `mdc` package implements a *Maple Debugger Client*,
 ##  which is half of a *Maple Debugger Client/Server* pair.
 ##  This client/server architecture provides several
 ##  significant benefits:
@@ -30,12 +28,12 @@
 ##  synchronously stepping through separate processes in a "Grid"
 ##  application.
 ##
-##- The `\MOD` module is an appliable module
+##- The `mdc` module is an appliable module
 ##  that launches the Maple Debugger Client.
 ##  See "mdc[ModuleApply]" for details.
 ##
 ##- The submodule "mdc[Grid]" provides several exports
-##  for using the "Grid" package with `\MOD`.
+##  for using the "Grid" package with `mdc`.
 ##
 ##- The user interface of the *Maple Debugger Server*,
 ##  which controls the debugger, is described in its
@@ -73,14 +71,14 @@
 ##AUTHOR   Joe Riel
 ##DATE     Jun 2011
 ##CALLINGSEQUENCE
-##- \CMD('stopats', 'opts')
+##- mdc('stopats', 'opts')
 ##PARAMETERS
 ##- 'stopats' : (optional) ::seq({string,name,list})::; procedures to instrument
-##param_opts(\CMD)
+##param_opts(mdc)
 ##RETURNS
 ##- first procedure in 'stopats'
 ##DESCRIPTION
-##- The `\CMD` command is an appliable module that
+##- The `mdc` command is an appliable module that
 ##  launches the "Maple Debugger Client".
 ##  For package details, see "mdc".
 ##  If the client successfully connects to a *Maple Debugger Server*,
@@ -102,7 +100,7 @@
 ##
 ##- The target procedures can also be instrumented by passing the
 ##  `stopat`, `stoperror`, `stopwhen`, and `stopwhenif` options to
-##  `\CMD`.  These, as well as configuration options, are described in
+##  `mdc`.  These, as well as configuration options, are described in
 ##  the *Options* section.
 ##
 ##- If called with no arguments, "DEBUG" is executed,
@@ -1213,18 +1211,17 @@ Version := "2.4.8";
 
 #{{{ Sleep
 
-##DEFINE CMD Sleep
 ##PROCEDURE(help) mdc[Sleep]
 ##HALFLINE pause execution of the engine
 ##INDEXPAGE mdc[Exports],Sleep,pause execution of the engine
 ##AUTHOR   Joe Riel
 ##DATE     Aug 2011
 ##CALLINGSEQUENCE
-##- \CMD('t')
+##- Sleep('t')
 ##PARAMETERS
 ##- 't' : ::nonnegint::; number of seconds to sleep
 ##DESCRIPTION
-##- The `\CMD` command pauses the execution of the Maple engine
+##- The `Sleep` command pauses the execution of the Maple engine
 ##  a specified length of time.  While paused, it does not use CPU
 ##  resources.
 ##
@@ -1260,28 +1257,27 @@ end proc;
 #}}}
 #{{{ Skip
 
-##DEFINE CMD Skip
 ##PROCEDURE(help) mdc[Skip]
 ##HALFLINE assign the skip predicate
 ##INDEXPAGE mdc[Exports],Skip,assign the skip predicate
 ##AUTHOR   Joe Riel
 ##DATE     Jan 2012
 ##CALLINGSEQUENCE
-##- \CMD('ex','opts')
+##- Skip('ex','opts')
 ##PARAMETERS
 ##- 'ex' : (optional) ::anything::
-##param_opts(\CMD)
+##param_opts(Skip)
 ##RETURNS
 ##- `procedure`
 ##DESCRIPTION
 ##desc_skipping
 ##
-##- The `\CMD` command
+##- The `Skip` command
 ##  assigns the predicate used when skipping.
 ##  This is equivalent to using the `skip_until` option to `mdc`.
 ##
 ##- The newly assigned predicate is returned.
-##  If \CMD is called with no arguments,
+##  If Skip is called with no arguments,
 ##  the current predicate is returned.
 ##
 ##- If the 'ex' parameter is a procedure (but not a name),
@@ -1345,7 +1341,7 @@ end proc;
 ##  Determine the exact point
 ##  where _x^2_ is computed when symbolically integrating _x_
 ##  with respect to _x_.
-##-(nolead) Call \CMD with parameter _x^2_, that assigns the desired skip predicate.
+##-(nolead) Call Skip with parameter _x^2_, that assigns the desired skip predicate.
 ##> mdc:-Skip(x^2):
 ##-(nolead) Instrument "int" for debugging.
 ##> mdc(int):
@@ -1589,19 +1585,18 @@ end proc;
 #}}}
 #{{{ Count
 
-##DEFINE CMD Count
 ##PROCEDURE(help) mdc[Count]
 ##HALFLINE increment a counter
 ##INDEXPAGE mdc[Exports],Count,increment a counter
 ##AUTHOR   Joe Riel
 ##DATE     Sep 2011
 ##CALLINGSEQUENCE
-##- \CMD('indx1','indx2',...,'opts')
+##- Count('indx1','indx2',...,'opts')
 ##PARAMETERS
 ##- 'indxk' : (optional) arguments used to identify counter
-##param_opts(\CMD)
+##param_opts(Count)
 ##DESCRIPTION
-##- The `\CMD` command increments a counter and returns the result.
+##- The `Count` command increments a counter and returns the result.
 ##  It is intended to be used with the conditional form of the
 ##  `stopat` option to `mdc` to stop the debugger inside a
 ##  procedure after a specified number of calls.
@@ -1613,7 +1608,7 @@ end proc;
 ##
 ##- The counter incremented is local to the `mdc` module.  Different
 ##  counters can be specified by passing arbitrary arguments
-##  ('indices') to \CMD.
+##  ('indices') to Count.
 ##
 ##OPTIONS
 ##opt(reset,truefalse)

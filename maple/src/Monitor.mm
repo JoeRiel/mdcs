@@ -1,19 +1,18 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE CMD Monitor
 ##PROCEDURE(help) mdc[Monitor]
 ##HALFLINE set and query a monitor expression
 ##INDEXPAGE mdc[Exports],Monitor,set and query a monitor expression
 ##AUTHOR   Joe Riel
 ##DATE     Mar 2012
 ##CALLINGSEQUENCE
-##- \CMD('prc', 'str' )
+##- Monitor('prc', 'str' )
 ##PARAMETERS
 ##- 'prc'  : ::name:: or ::string::; identifies a procedure
 ##- 'str' : (optional) ::string::; monitor expression
 ##RETURNS
 ##- ::string:: or `NULL`
 ##DESCRIPTION
-##- The `\CMD` command
+##- The `Monitor` command
 ##  sets and queries a *monitor expression* for a procedure.
 ##  When monitoring is enabled, and the procedure is current
 ##  in the debugger, the expression is evaluated after each statement
@@ -101,7 +100,7 @@
 ##ENDSUBSECTION
 ##SUBSECTION Conditional Monitors
 ##- The "`if`" function may be used to create a monitor expression
-##  that is displayed only when a condition is met.  Note that `\CMD`
+##  that is displayed only when a condition is met.  Note that `Monitor`
 ##  returns the previously assigned string.
 ##
 ##> Monitor( M:-f, "`if`(3 < i, 'i'=i, NULL)" );
