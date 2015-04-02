@@ -229,7 +229,7 @@ local prettyprint
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, fld, i, ix, j, m, n, typ, opacity, rest;
+    local dims, eqs, ex, fld, i, ix, j, m, n, numdims, typ, opacity, rest;
     global _fake_name;
 
         if nargs > 2 then
@@ -344,22 +344,34 @@ local prettyprint
             return "NULL";
         elif rest :: 'name = anything' then
             return lhs(rest) = procname(false,rhs(rest));
-        elif rest :: Vector then
-            if top then
+        elif top then
+            if rest :: Vector then
                 n := op(1,rest);
                 Debugger:-Printf("(*Vector: %d*)\n", n);
                 return seq(rest[i], i=1..n);
-            else
-                return rest;
-            end if;
-        elif rest :: Matrix then
-            if top then
+            elif rest :: Matrix then
                 (m,n) := op(1,rest);
                 Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
                 return seq([seq(`if`(rest[i,j]=NULL
                                      , 'NULL'
                                      , rest[i,j]
                                     ), j=1..n)], i=1..m);
+            elif rest :: Array then
+                numdims := ArrayNumDims(rest);
+                if numdims = 1 then
+                    dims := ArrayDims(rest);
+                    Debugger:-Printf("(*Array: %a*)\n", dims);
+                    return seq(rest[i], i = dims);
+                elif numdims = 2 then
+                    dims := ArrayDims(rest);
+                    Debugger:-Printf("(*Array: %q*)\n", dims);
+                    return seq([seq(`if`(rest[i,j]=NULL
+                                         , 'NULL'
+                                         , rest[i,j]
+                                        ), j=dims[2])], i=dims[1]);
+                else
+                    return rest;
+                end if;
             else
                 return rest;
             end if;
