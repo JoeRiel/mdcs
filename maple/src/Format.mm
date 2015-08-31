@@ -257,7 +257,7 @@ local prettyprint
                             , fld = procname(false, rest[fld])
                             , fld
                            )
-                       , fld in [exports(rest)]);
+                       , fld in sort([exports(rest)]));
             if top then
                 return Debugger:-Printf("(*record*)\n"), eqs;
             else
