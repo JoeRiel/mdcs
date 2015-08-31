@@ -1205,7 +1205,7 @@ end proc;
 
 #{{{ Version
 
-Version := "2.4.8";
+Version := "2.4.9";
 
 #}}}
 
