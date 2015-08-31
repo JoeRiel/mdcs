@@ -9,6 +9,10 @@ for displaying and controlling the code that is being debugged.
 The client side is a Maple package that, when invoked,
 replaces the Maple library debugger.
 
+In addition to allowing debugging multiple Maple sessions
+concurrently, it also permits stepping through the actual
+source code.
+
 REQUIREMENTS
 ------------
 * GNU Emacs 23.1+ (earlier versions may work)
