@@ -1,11 +1,10 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE CMD DataFile
 ##MODULE mdc[DataFile]
 ##HALFLINE return the path to a data file provided with the toolbox
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
-##- \CMD('filename')
+##- DataFile('filename')
 ##PARAMETERS
 ##- 'filename' : ::string::; basename and extension of file
 ##RETURNS

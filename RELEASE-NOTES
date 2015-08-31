@@ -1,5 +1,8 @@
 -*- org -*-
 
+* mdcs-2.4.9
+** sort fields/exports when formatting a module
+** clean up mpldoc
 * mdcs-2.4.8
 ** update README-installer and sample .emacs file
 * mdcs-2.4.7

@@ -1,18 +1,17 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE CMD InstallPatch
 ##PROCEDURE mdc[InstallPatch]
 ##HALFLINE install a patched procedure
 ##AUTHOR   Joe Riel
 ##DATE     Oct 2011
 ##CALLINGSEQUENCE
-##- \CMD('addr','prc')
+##- InstallPatch('addr','prc')
 ##PARAMETERS
 ##- 'addr' : ::integer::; Maple address of procedure to replace
 ##- 'prc'  : ::procedure::; new procedure
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command replaces a procedure.
+##- The `InstallPatch` command replaces a procedure.
 ##  This command is used by the Maple debugger server (mds) and
 ##  is not intended to be directly called by users.
 ##

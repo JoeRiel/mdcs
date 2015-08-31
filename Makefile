@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.4.8
+VERSION := 2.4.9
 
 include help-system.mak
 
@@ -407,6 +407,11 @@ dist := $(installer) $(hdb) RELEASE-NOTES README
 zip-installer: $(call print-help,zip-installer,Create zipfile of installer)
 zip-installer: $(dist)
 	zip $(zip) $+
+
+zip-src := $(pkg)-$(VERSION)-src.zip
+zip-src: $(call print-help,zip-src,	Create zipfile of source)
+zip-src:
+	git archive HEAD --output=$(zip-src)
 
 # }}}
 # {{{ clean

@@ -1,15 +1,14 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##
-##DEFINE CMD HelpMDS
 ##PROCEDURE(help) mdc[HelpMDS]
 ##HALFLINE display the html help page for the Maple Debugger Server
 ##INDEXPAGE mdc[Exports],HelpMDS,display the html help page for the Maple Debugger Server
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2011
 ##CALLINGSEQUENCE
-##- \MOD:-\CMD\(\)
+##- mds:-HelpMDS\(\)
 ##DESCRIPTION
-##- The `\CMD` displays the html version of the help page
+##- The `HelpMDS` command displays the html version of the help page
 ##  for the Maple Debugger Server (MDS).
 ##  **This command only works on Windows machines.**
 ##
@@ -21,7 +20,7 @@
 ##  version of the help page.
 ##
 ##- The html file is located in the **doc** subdirectory
-##  of the `\MOD` installation.  This command opens that
+##  of the `mdc` installation.  This command opens that
 ##  file in the default system browser.
 ##
 ##EXAMPLES(notest,noexecute)

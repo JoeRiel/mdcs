@@ -4,7 +4,7 @@
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##DESCRIPTION
-##- The `\MOD` module exports two methods, "Replace" and "Restore",
+##- The `Debugger` submodule exports two methods, "Replace" and "Restore",
 ##  that replace and restore, respectively, the (thankfully) global
 ##  procedures that are the library side of the Maple debugger.
 ##
@@ -457,13 +457,12 @@ $endif
 
 #{{{ stopat
 
-##DEFINE CMD stopat
 ##PROCEDURE mdc[Debugger][stopat]
 ##HALFLINE a fast method to instrument a procedure
 ##AUTHOR   Erik Postma
 ##DATE     May 2010
 ##CALLINGSEQUENCE
-##- \CMD('p', 'n', 'cond')
+##- stopat('p', 'n', 'cond')
 ##PARAMETERS
 ##- 'p'    : ::{name,string,list}::; procedure to instrument
 ##- 'n'    : (optional) ::posint::; statement number
@@ -471,7 +470,7 @@ $endif
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command
+##- The `stopat` command
 ##  is a fast version of  ":-stopat", with a few modifications.
 ##  It sets a breakpoint at a statement number of a procedure.
 ##
@@ -480,7 +479,7 @@ $endif
 ##-- If 'p' is a string it is parsed.
 ##  This provides a means to enter a module local procedure without assigning
 ##   _kernelopts('opaquemodules'=false)_.
-##-- If 'p' is a list then _\CMD(op(p))_ is returned.
+##-- If 'p' is a list then _stopat(op(p))_ is returned.
 
     stopat := proc(p :: {name,string,list,`module`}
                    , n :: posint

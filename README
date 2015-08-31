@@ -1,4 +1,4 @@
-VERSION 2.4.8
+VERSION 2.4.9
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
@@ -8,6 +8,10 @@ The server side is an Emacs package with several major modes
 for displaying and controlling the code that is being debugged.
 The client side is a Maple package that, when invoked,
 replaces the Maple library debugger.
+
+In addition to allowing debugging multiple Maple sessions
+concurrently, it also permits stepping through the actual
+source code.
 
 REQUIREMENTS
 ------------
