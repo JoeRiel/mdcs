@@ -1,5 +1,4 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Format
 ##MODULE mdc[Format]
 ##HALFLINE code used by the Emacs Maple debugger
 ##AUTHOR   Joe Riel
@@ -20,9 +19,6 @@ local prettyprint
 
     PrettyPrint := proc() prettyprint(true, _passed) end proc:
 
-#{{{ ArgsToEqs
-
-##DEFINE PROC ArgsToEqs
 ##PROCEDURE mdc[Format][ArgsToEqs]
 ##HALFLINE return equations defining the parameters of a procedure call
 ##AUTHOR   Joe Riel
@@ -169,10 +165,6 @@ local prettyprint
 
     end proc;
 
-#}}}
-#{{{ prettyprint
-
-##DEFINE PROC prettyprint
 ##PROCEDURE mdc[Format][prettyprint]
 ##HALFLINE pretty print a Maple expression
 ##AUTHOR   Joe Riel
@@ -229,7 +221,7 @@ local prettyprint
 
 
     prettyprint := proc(top :: truefalse := true)
-    local eqs, ex, fld, i, ix, j, m, n, typ, opacity, rest;
+    local dims, eqs, ex, fld, i, ix, j, m, n, numdims, typ, opacity, rest;
     global _fake_name;
 
         if nargs > 2 then
@@ -265,7 +257,7 @@ local prettyprint
                             , fld = procname(false, rest[fld])
                             , fld
                            )
-                       , fld in [exports(rest)]);
+                       , fld in sort([exports(rest)]));
             if top then
                 return Debugger:-Printf("(*record*)\n"), eqs;
             else
@@ -344,22 +336,34 @@ local prettyprint
             return "NULL";
         elif rest :: 'name = anything' then
             return lhs(rest) = procname(false,rhs(rest));
-        elif rest :: Vector then
-            if top then
+        elif top then
+            if rest :: Vector then
                 n := op(1,rest);
                 Debugger:-Printf("(*Vector: %d*)\n", n);
                 return seq(rest[i], i=1..n);
-            else
-                return rest;
-            end if;
-        elif rest :: Matrix then
-            if top then
+            elif rest :: Matrix then
                 (m,n) := op(1,rest);
                 Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
                 return seq([seq(`if`(rest[i,j]=NULL
                                      , 'NULL'
                                      , rest[i,j]
                                     ), j=1..n)], i=1..m);
+            elif rest :: Array then
+                numdims := ArrayNumDims(rest);
+                if numdims = 1 then
+                    dims := ArrayDims(rest);
+                    Debugger:-Printf("(*Array: %a*)\n", dims);
+                    return seq(rest[i], i = dims);
+                elif numdims = 2 then
+                    dims := ArrayDims(rest);
+                    Debugger:-Printf("(*Array: %q*)\n", dims);
+                    return seq([seq(`if`(rest[i,j]=NULL
+                                         , 'NULL'
+                                         , rest[i,j]
+                                        ), j=dims[2])], i=dims[1]);
+                else
+                    return rest;
+                end if;
             else
                 return rest;
             end if;
@@ -371,19 +375,18 @@ local prettyprint
 #}}}
 #{{{ showstat
 
-##DEFINE CMD showstat
 ##PROCEDURE mdc[Format][showstat]
 ##HALFLINE display a procedure with statement numbers for debugging
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
 ##CALLINGSEQUENCE
-##- \CMD('p')
+##- showstat('p')
 ##PARAMETERS
 ##- 'p' : ::string::; string corresponding to procedure name
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\CMD` command
+##- The `showstat` command
 ##  formats a procedure with statement numbers
 ##  and sends the string to the server.
 ##
@@ -415,11 +418,6 @@ local prettyprint
         return NULL;
     end proc;
 
-#}}}
-
-#{{{ GoTry
-
-##DEFINE PROC GoTry
 ##PROCEDURE mdc[Format][GoTry]
 ##HALFLINE reassign Try to save tests for execution with the go command
 ##AUTHOR   Joe Riel
@@ -478,7 +476,8 @@ local prettyprint
         return NULL;
     end proc;
 
-#}}}
+
+##
 
 end module:
 

@@ -2,7 +2,6 @@
 #LINK Debugger.mm
 
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE SUBMOD Debugger
 ##DEFINE PROC _debugger
 ##PROCEDURE mdc[Debugger][_debugger]
 ##HALFLINE replacement for the Maple debugger
