@@ -34,7 +34,7 @@
 
 ;;{{{ Requirements
 
-(eval-when-compile
+(eval-and-compile
   (require 'mds-client)
   (require 'mds-custom)
   (require 'mds-out)

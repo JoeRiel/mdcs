@@ -12,7 +12,7 @@
 
 ;;; Code:
 
-(eval-when-compile
+(eval-and-compile
   (require 'hl-line)
   (require 'maplev)
   (require 'mds-client)
