@@ -8,9 +8,8 @@ Description
 
 This package provides the client and server for a Maple Debugger
 Client/Server architecture, an enhancement to the existing Maple
-debugger.  Maple is computer algebra system sold by
+debugger.  Maple is a computer algebra system sold by
 [Maplesoft](http://www.maplesoft.com/).
-
 
 The server side is an Emacs package with several major modes
 for displaying and controlling the code that is being debugged.
@@ -37,7 +36,10 @@ The user interface to the debugger, which is provided by MDS, has
 the following features:
 
 * The procedure being debugged is displayed in a buffer with
-  font-locking to highlight syntactic elements.
+  font-locking to highlight syntactic elements.  If lineinfo
+  data is available for the procedure, the source file itself
+  is used, otherwise an interpreted version of the procedure
+  is displayed.
 
 * Executing the code advances an _overlay-arrow_ that points to the
   next statement to be executed.
@@ -83,9 +85,9 @@ Installation
 Copy the files to locations appropriate on your system.
 Here is where I put the various files:
 
-    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb
+    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb mdc.help
     $HOME/.emacs.d/mds             :  lisp/mds*.el
-    $HOME/share/info               :  doc/mds (do not include the "doc/")
+    $HOME/share/info               :  doc/mds.info (do not include the "doc/")
 
 Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot
@@ -100,7 +102,6 @@ Configuration
 -------------
 Modify your .emacs file.  I have the following
 
-    (push "/home/joe/.emacs.d/mds" load-path)
     (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
     (global-set-key [f12] 'mds-wm-cycle-clients)
     (global-set-key [C-f12] 'mds-wm-display-all)
@@ -122,7 +123,7 @@ the Maple Debugger Client (mdc), by typing ?mdc.
 
 For those in hurry, to debug the **int** command, do
 
-    > mdc(stopat=int): # you can use regular stopat as well.
+    > mdc(int):
     > int(x,x);
 
 If you then go to Emacs, you should see an mds-showstat
@@ -130,5 +131,4 @@ and mds-output buffer displayed.
 
 In the mds-showstat buffer, type C-h m to get a summary of
 the available keystrokes.
-
 
