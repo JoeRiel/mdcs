@@ -33,7 +33,7 @@
 
 ;;{{{ Lisp Requirements
 
-(eval-when-compile
+(eval-and-compile
   (require 'maplev))
 
 ;;}}}

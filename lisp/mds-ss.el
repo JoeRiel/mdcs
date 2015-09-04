@@ -12,7 +12,7 @@
 
 ;;; Code:
 
-(eval-when-compile
+(eval-and-compile
   (require 'hl-line)
   (require 'maplev)
   (require 'mds-client)
@@ -557,10 +557,10 @@ exits."
 	    (and
 	     ;; check for reserved words, builtins, etc
 	     (let ((release (mds-client-get-maple-release mds-client)))
-	       (or (member proc (cdr (assoc release maplev--reserved-words-alist)))
-		   (member proc (cdr (assoc release maplev--builtin-functions-alist)))
-		   (member proc maplev--special-words)
-		   (member proc maplev--initial-variables)))
+	       (or (member proc maplev-reserved-words)
+		   (member proc maplev-builtin-functions)
+		   (member proc maplev-special-words)
+		   (member proc maplev-initial-variables)))
 	     (or (beep) t)))
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (message "Stop in procedure %s..." proc)
@@ -1169,7 +1169,7 @@ to work, `face-remapping-alist' must be buffer-local."
 
 ;;{{{ ss-mode
 
-(define-derived-mode mds-ss-mode maplev-proc-mode "showstat-mode"
+(define-derived-mode mds-ss-mode maplev-view-mode "showstat-mode"
   "Major mode for stepping through a debugged Maple procedure.
 
 Execution
