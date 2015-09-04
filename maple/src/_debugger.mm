@@ -2,13 +2,12 @@
 #LINK Debugger.mm
 
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE PROC _debugger
 ##PROCEDURE mdc[Debugger][_debugger]
 ##HALFLINE replacement for the Maple debugger
 ##AUTHOR   Joe Riel
 ##DATE     Apr 2012
 ##CALLINGSEQUENCE
-##- \PROC()
+##- _debugger()
 
 # The debugger proper. This gets invoked after a call to the function debug()
 # is encountered.

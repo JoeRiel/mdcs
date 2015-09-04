@@ -33,7 +33,7 @@ local prettyprint
 ##RETURNS
 ##- ::exprseq(equation)::; equations mapping parameters to values
 ##DESCRIPTION
-##- The `\PROC` procedure
+##- The `ArgsToEqs` procedure
 ##  returns an expression sequence
 ##  of equations mapping the parameters of a procedure
 ##  to their assigned values.
@@ -63,7 +63,7 @@ local prettyprint
 ##
 ##EXAMPLES(notest)
 ##- Assign a macro that mimics the elisp function "mdb-show-args-as-equations".
-##> macro(printargs=mdc:-Format:-\PROC(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
+##> macro(printargs=mdc:-Format:-ArgsToEqs(thisproc, [seq([_params[_k]], _k=1.._nparams)],[_rest],[_options])):
 ##> f := proc(pos, optpos:=1, { keyword :: truefalse := false }) printargs; end proc:
 ##> f(3);
 ##> f(3,4,keyword);
@@ -170,13 +170,13 @@ local prettyprint
 ##AUTHOR   Joe Riel
 ##DATE     Dec 2009
 ##CALLINGSEQUENCE
-##- \PROC('top', ... )
+##- prettyprint('top', ... )
 ##PARAMETERS
 ##- 'top' : ::truefalse::
 ##RETURNS
 ##- ::exprseq::
 ##DESCRIPTION
-##- The `\PROC` procedure
+##- The `prettyprint` procedure
 ##  returns an expression sequence that better displays
 ##  a Maple expression in the debugger.   It works
 ##  by splitting an expression into an expression
@@ -184,7 +184,7 @@ local prettyprint
 ##  separate lines in the debugger output buffer.
 ##
 ##- The optional 'top' parameter is 'true' only
-##  if this `\PROC` was called directly by Emacs.
+##  if `prettyprint` was called directly by Emacs.
 ##
 ##- A sequence of expressions are handled separately, in order.
 ##
@@ -423,14 +423,14 @@ local prettyprint
 ##AUTHOR   Joe Riel
 ##DATE     May 2011
 ##CALLINGSEQUENCE
-##- \PROC('dbg')
+##- GoTry('dbg')
 ##PARAMETERS
 ##PARAMETERS
 ##- 'dbg' : (optional) keyword parameter 'debug'
 ##RETURNS
 ##- `NULL`
 ##DESCRIPTION
-##- The `\PROC` procedure
+##- The `GoTry` procedure
 ##  is intended to be used with the "TestTools" package
 ##  in the idiosyncratic manner of the author.
 ##
@@ -441,7 +441,7 @@ local prettyprint
 ##  arguments runs that test.
 ##
 ##- If the optional keyword 'debug', or equation 'debug=true',
-##  is passed to `\PROC`, then the global procedure named
+##  is passed to `GoTry`, then the global procedure named
 ##  `FUNC` is debugged.
 
     T := table();
