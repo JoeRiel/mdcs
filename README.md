@@ -78,7 +78,7 @@ Requirements
 ------------
 * [GNU Emacs](https://www.gnu.org/software/emacs/) 23.1+ (earlier versions may work)
 * [maplev-mode](https://github.com/JoeRiel/maplev) 2.33+ (Emacs mode for developing Maple code)
-* [Maple](www.maplesoft.com) 14+ (earlier versions should work)
+* [Maple](https://www.maplesoft.com) 14+ (earlier versions should work)
 
 Installation
 ------------
