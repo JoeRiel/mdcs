@@ -1,5 +1,9 @@
 -*- org -*-
 
+* mdcs-2.5.0
+** Tweak lisp to byte-compile wit no warnings
+** Remove unused stuff
+** Improve READM.md
 * mdcs-2.4.9
 ** sort fields/exports when formatting a module
 ** clean up mpldoc
