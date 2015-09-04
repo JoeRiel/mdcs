@@ -1,11 +1,10 @@
 ##INCLUDE ../include/mpldoc_macros.mpi
-##DEFINE PROC indexed2slashed
 ##PROCEDURE mdc[indexed2slashed]
 ##HALFLINE convert indexed name to a slashed name
 ##AUTHOR   Joe Riel
 ##DATE     May 2010
 ##CALLINGSEQUENCE
-##- \PROC('nm')
+##- indexed2slashed('nm')
 ##PARAMETERS
 ##- 'nm' : ::name::; name to convert
 ##RETURNS

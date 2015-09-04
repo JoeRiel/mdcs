@@ -7,7 +7,7 @@ maple-pkg := mdc
 emacs-pkg := mds
 SHELL := /bin/bash
 
-VERSION := 2.4.9
+VERSION := 2.5.0
 
 include help-system.mak
 
@@ -356,7 +356,7 @@ test-extract:
 
 help: $(call print-separator)
 
-install-all := $(addsuffix -install,hdb maple data)
+install-all := $(addsuffix -install,hdb hlp maple data)
 
 .PHONY: install $(install-all) uninstall
 

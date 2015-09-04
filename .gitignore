@@ -1,7 +1,8 @@
 *~
 /doc/*
 !/doc/*.texi
-!/doc/*.xml
+!/doc/*.html
+!/doc/*.info
 /doc/fdl.texi
 TAGS
 
