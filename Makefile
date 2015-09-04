@@ -356,7 +356,7 @@ test-extract:
 
 help: $(call print-separator)
 
-install-all := $(addsuffix -install,hdb maple data)
+install-all := $(addsuffix -install,hdb hlp maple data)
 
 .PHONY: install $(install-all) uninstall
 
