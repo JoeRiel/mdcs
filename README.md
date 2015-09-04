@@ -77,7 +77,7 @@ the following features:
 Requirements
 ------------
 * GNU Emacs 23.1+ (earlier versions may work)
-* maplev-mode (Emacs mode for developing Maple code)
+* [maplev-mode](https://github.com/JoeRiel/maplev) 2.33+ (Emacs mode for developing Maple code)
 * Maple 14+ (earlier versions should work)
 
 Installation
