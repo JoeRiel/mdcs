@@ -86,30 +86,23 @@ Copy the files to locations appropriate on your system.
 Here is where I put the various files:
 
     $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb mdc.help
-    $HOME/.emacs.d/mds             :  lisp/mds*.el
+    $HOME/.emacs.d/maple           :  lisp/mds*.el
     $HOME/share/info               :  doc/mds.info (do not include the "doc/")
 
 Under the doc subdirectory is an html format of the mds manual.  It
 may be useful if you do not have Emacs or info installed and so cannot
 read the info file (mds).
 
-The provided install file can be used to do the copying,
-just be sure to check that it does what you want.  Run
+On a Linux system you might be able to install everything with
 
-    ./install
+    make install
 
 Configuration
 -------------
 Modify your .emacs file.  I have the following
 
+	(add-to-list 'load-path (concat user-emacs-directory "maple"))
     (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
-    (global-set-key [f12] 'mds-wm-cycle-clients)
-    (global-set-key [C-f12] 'mds-wm-display-all)
-
-The binding to f12 cycles through the connected clients.
-The binding to C-f12 displays all clients.
-
-Restarting the server disconnects any clients.
 
 Usage
 -----
@@ -126,9 +119,9 @@ For those in hurry, to debug the **int** command, do
     > mdc(int):
     > int(x,x);
 
-If you then go to Emacs, you should see an mds-showstat
-and mds-output buffer displayed.
+If you then go to Emacs, you should see an `mds-showstat`
+and `mds-output` buffer displayed.
 
-In the mds-showstat buffer, type C-h m to get a summary of
+In the `mds-showstat` buffer, type C-h m to get a summary of
 the available keystrokes.
 
