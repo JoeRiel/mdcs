@@ -73,6 +73,15 @@ the following features:
   in-place.  This permits testing changes without access to the full
   source code.
 
+Following is a screen shot of the debugger interface.
+
+* The left pane displays the source file.
+  The marker in the left margin indicates the current statement.
+* The top right pane contains output from previously executed statements
+  and a query of the current stack.
+* The bottom left pane shows interpreted code for one of the calls on the stack.
+
+![screen shot](images/mds-example.png?raw=true "Screen Shot")
 
 Requirements
 ------------
