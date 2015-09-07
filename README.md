@@ -1,7 +1,18 @@
+<--*- markdown -*-->
 MDCS: Maple Debugger Client/Server
 ==================================
 
 **Version 2.5.0**
+
+Table of Contents
+-----------------
+
+* [Description](#description)
+* [Screenshot](#screenshot)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
 
 Description
 -----------
@@ -73,6 +84,8 @@ the following features:
   in-place.  This permits testing changes without access to the full
   source code.
 
+Screenshot
+----------
 Following is a screen shot of the debugger interface.
 
 * The left pane displays the source file.
