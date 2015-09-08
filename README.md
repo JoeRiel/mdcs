@@ -1,4 +1,4 @@
-<--*- markdown -*-->
+<!--*- markdown -*-->
 MDCS: Maple Debugger Client/Server
 ==================================
 
