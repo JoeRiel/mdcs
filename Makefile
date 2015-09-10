@@ -32,8 +32,10 @@ else
   INSTALL-INFO = install-info
 endif
 
-LINEINFO := $(MAPLE_ROOT)/internal/link li
-STANDARD := $(MAPLE_ROOT)/internal/link mp
+ifeq ($(DEBFULLNAME),Joseph S. Riel)
+  LINEINFO := $(MAPLE_ROOT)/internal/link li
+  STANDARD := $(MAPLE_ROOT)/internal/link mp
+endif
 
 MINT := mint
 
