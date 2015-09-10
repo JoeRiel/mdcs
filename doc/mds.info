@@ -1153,7 +1153,7 @@ might do
    This is interpreted by Maple as
 
      f := proc(X)
-     local x;
+     local x; # the assignment is removed
          seq(x, x = X);
      end proc;
 
@@ -2155,22 +2155,22 @@ Node: for-less do-loops42009
 Ref: do-loop42787
 Node: use statement42872
 Node: Declaration Self-Assignment43495
-Node: True or False Conditional44514
-Node: Output Buffer45148
-Node: Output buffer commands46961
-Node: Debugging Tips47244
-Node: Set breakpoint in calling procedure47852
-Node: Locate source of unexpected result48829
-Node: Assign a variable49738
-Node: Save a local result50662
-Node: Recursive debugging51441
-Node: Multiple clients52509
-Node: Remote debugging53044
-Node: Key Index53697
-Node: Function Index57847
-Node: Variable Index62583
-Node: Concept Index63827
-Node: Program Index67466
-Node: GNU Free Documentation License67701
+Node: True or False Conditional44542
+Node: Output Buffer45176
+Node: Output buffer commands46989
+Node: Debugging Tips47272
+Node: Set breakpoint in calling procedure47880
+Node: Locate source of unexpected result48857
+Node: Assign a variable49766
+Node: Save a local result50690
+Node: Recursive debugging51469
+Node: Multiple clients52537
+Node: Remote debugging53072
+Node: Key Index53725
+Node: Function Index57875
+Node: Variable Index62611
+Node: Concept Index63855
+Node: Program Index67494
+Node: GNU Free Documentation License67729
 
 End Tag Table
