@@ -1,0 +1,2176 @@
+This is mds.info, produced by makeinfo version 4.13 from mds.texi.
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* mds: (mds).      Maple Debugger Server
+END-INFO-DIR-ENTRY
+
+   MDS is an Emacs package that implements a Maple Debugger Server.  It
+is part of the Maple Debugger Client/Server Architecture.  Maple is a
+computer algebra system from Waterloo Maple Inc.
+
+   This manual is for MDS version 2.5.0.
+
+   Copyright (C) 2011, Joseph S. Riel
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with no Front-Cover texts,
+     and with no Back-Cover Texts.  A copy of the license is included
+     in the section entitled "GNU Free Documentation License."
+
+
+File: mds.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
+
+Maple Debugger Server Manual
+****************************
+
+MDS is an Emacs package that implements a Maple Debugger Server.  It is
+part of the Maple Debugger Client/Server Architecture.  Maple is a
+computer algebra system from Waterloo Maple Inc.
+
+   This manual is for MDS version 2.5.0.
+
+   Copyright (C) 2011, Joseph S. Riel
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with no Front-Cover texts,
+     and with no Back-Cover Texts.  A copy of the license is included
+     in the section entitled "GNU Free Documentation License."
+
+* Menu:
+
+* Introduction::                Installing and configuring.
+* Launching MDS::               Starting and stopping the server.
+* Showstat Buffer::             Stepping through interpreted code.
+* LineInfo Buffer::             Stepping through source code.
+* Output Buffer::               Maple output.
+* Debugging Tips::              Tips and technique.
+
+Indices
+
+* Key Index::                   Key bindings and where they are described.
+* Function Index::              Functions mentioned in the manual.
+* Variable Index::              Variables mentioned in the manual.
+* Concept Index::               Concepts and features.
+* Program Index::               External programs.
+
+License
+
+* GNU Free Documentation License::  Copying this manual.
+
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
+* Feedback::                    Bug reports, ideas, etc.
+
+Configuration
+
+* Emacs::                       Configuring `.emacs'.
+
+Showstat Buffer
+
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
+
+Showstat Mode
+
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
+* Monitoring::                  Display selected expressions at each step.
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
+
+LineInfo Buffer
+
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Limitations.
+
+LineInfo Caveats
+
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use `uses'.
+* Declaration Self-Assignment:: Restrict this undocumented feature.
+* True or False Conditional::   Avoid `if true then'
+
+Output Buffer
+
+* Output buffer commands::
+
+Debugging Tips
+
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where an expression originates.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
+* Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
+* Remote debugging::            Debugging on a remote machine
+
+
+File: mds.info,  Node: Introduction,  Next: Launching MDS,  Prev: Top,  Up: Top
+
+1 Introduction
+**************
+
+* Menu:
+
+* Summary::                     Summary of what MDS does.
+* Requirements::                What is needed to run MDS.
+* Installation::                How to install MDS.
+* Configuration::               How to configure MDS.
+* Customization::               Customize MDS variables.
+* Feedback::                    Bug reports, ideas, etc.
+
+
+File: mds.info,  Node: Summary,  Next: Requirements,  Prev: Introduction,  Up: Introduction
+
+1.1 Summary
+===========
+
+MDS is an Emacs package that implements a _Maple Debugger Server_.  It
+is part of the _Maple Debugger Client/Server_ architecture.  This
+manual describes the installation, configuration, and usage of the
+server.  For help with the client, see the Maple help pages for
+`mdc'.(1)
+
+   The client/server architecture provides several benefits:
+
+   * A common, full-featured, debugger interface that can be used
+     whether running Maple from the GUI, the command-line, or from a
+     script.
+
+   * Remote debugging--the client (Maple) can be run on one machine, the
+     server on another. Communication is via standard TCP.
+
+   * Concurrent debugging--multiple Maple processes can be debugged
+     simultaneously. This permits interactively comparing the actions of
+     different versions of code, or comparing code run on machines with
+     different operating systems. It also permits independently or
+     synchronously stepping through separate processes in a Grid
+     application.
+
+   The user interface to the debugger, which is provided by MDS, has
+the following features.
+
+   * The procedure being debugged is displayed in a buffer with
+     font-locking to highlight syntactic elements.
+
+   * Executing the code advances an _overlay-arrow_ that points to the
+     next statement to be executed.
+
+   * The output of executed statements and evaluated expressions are
+     displayed in a separate window.  These are printed in 1-D format
+     so that they can be saved and reused as Maple input.
+
+   * As lines of code are executed, they are echoed in the output
+     window; *note Output Buffer::.  The result provides a visual trace
+     of all the code that has been executed.  Clicking in the output
+     window opens a third window that displays the procedure and
+     statement that generated the selected output.
+
+   * Expressions can be directly evaluated and displayed in a nice
+     format.  For example, a record can be displayed as a vertical list
+     of equations with field name on the left and the entry on the
+     right.
+
+   * The common debugging commands, *next*, *into*, *step*, etc., are
+     bound to keystrokes (`n', `i', `s', etc.).  *Note Execution::.
+
+   * Breakpoints can be set or cleared directly in the buffer.
+
+   * A trace mode permits rapidly tracing through instrumented
+     procedures.  That, coupled with the ability to jump from the
+     output to the corresponding statement in the code, facilitates
+     debugging.  *Note tracing::.
+
+   * Debugged procedures can be _live-patched_, that is, modified
+     in-place.  This permits testing changes without access to the full
+     source code.  *Note Patching::.
+
+   ---------- Footnotes ----------
+
+   (1) In Maple, type `?mdc'
+
+
+File: mds.info,  Node: Requirements,  Next: Installation,  Prev: Summary,  Up: Introduction
+
+1.2 Requirements
+================
+
+GNU Emacs 23.1+
+     MDS should work with earlier versions of Emacs but has not been
+     tested.
+
+Maple 14+
+     MDS should work with earlier versions of Maple but has not been
+     tested.  Some features, such as the line-info buffer, see *note
+     LineInfo Buffer::, are only available on Maple 16+.
+
+MapleV mode
+     An Emacs mode for developing Maple source code.  If you use Maple
+     with Emacs, you definitely want to have this, regardless whether
+     you use MDS.  The latest version is available at
+     `https://github.com/JoeRiel/maplev'.  Debian and Ubuntu provide a
+     version with the `emacs-goodies-el' package, but it is dated.
+
+
+File: mds.info,  Node: Installation,  Next: Configuration,  Prev: Requirements,  Up: Introduction
+
+1.3 Installation
+================
+
+Directions for installing MDS are in a text file included with the
+distribution, named either `README' or `README-installer'.
+
+
+File: mds.info,  Node: Configuration,  Next: Customization,  Prev: Installation,  Up: Introduction
+
+1.4 Configuration
+=================
+
+This section describes how to configure your system to run MDS.
+
+* Menu:
+
+* Emacs::                       Configuring `.emacs'.
+
+
+File: mds.info,  Node: Emacs,  Prev: Configuration,  Up: Configuration
+
+1.4.1 Emacs
+-----------
+
+To permit `M-x mds' to start (and restart) MDS, add the following
+lines, appropriately modified, to your `.emacs' file:
+
+     ;; add ~/.emacs.d/maple to Emacs load-path
+     (setq load-path (cons (format "%s/.emacs.d/maple" (getenv "HOME")) load-path))
+     (autoload 'maplev-mode "maplev" "Maple editing mode" t)
+     (autoload 'mds "mds" "Restart the Maple Debugger Server" t)
+
+   Consider binding global keys to the commands
+`mds-windows-cycle-clients' and `mds-windows-cycle-groups'.
+
+   The former is for cycling through the list of all clients, the latter
+for cycling through groups of clients.  Groups are formed from clients
+with labels that share a common basename. This is used with the
+`mdc[Grid]'(1) commands in the Maple client.  For example, to bind these
+commands to the <f12> and <CTRL>-<f12> keystrokes, do
+
+     (global-set-key [f12] 'mds-windows-cycle-clients)
+     (global-set-key [C-f12] 'mds-windows-cycle-groups)
+
+   If you use MDS frequently, you may want to start the server in your
+`.emacs' file.  Do this by adding the command
+
+     (mds) ; launch Maple Debugger Server
+
+   ---------- Footnotes ----------
+
+   (1) Type `?mdc[Grid]' in Maple for more information.
+
+
+File: mds.info,  Node: Customization,  Next: Feedback,  Prev: Configuration,  Up: Introduction
+
+1.5 Customization
+=================
+
+MDS has a number of variables that can be customized.  To access them
+load MDS (`M-x mds') then run `M-x customize-group' and enter `mds' or
+`mds-faces'.
+
+   The most useful customizations are the following:
+
+`mds-get-focus-function'
+     A function that calls the window manager to transfer focus to
+     Emacs.  This is called when a Maple client begins debugging.  The
+     default is nil unless the command `wmctrl' is available, then it
+     is set to `mds-windows-get-focus-wmctrl'.  The nil value means
+     that focus will not automatically be transferred to Emacs.
+
+     Note that transfer of focus may only occur when the debugger is
+     _first_ entered.  Upon exiting and reentering the debugger, this
+     function is not called, though it should be.  That is due to a
+     limitation of the Maple debugger kernel; it does not provide an
+     indication that debugging has either begun or ended.
+
+`mds-port'
+     An integer that is the TCP port number used for communication.
+     The default is 10000.
+
+`mds-keep-dead-clients'
+     A boolean variable that when non-nil prevents the buffers
+     associated with a client from being removed when the client
+     disconnects.  Setting this to non-nil can be useful when tracing a
+     command that causes the Maple kernel to disconnect.  *Note
+     tracing::.  The default value is nil.
+
+`mds-show-args-flag'
+     A boolean variable that when non-nil causes the arguments to a
+     procedure to be automatically displayed when first entering the
+     procedure.  The default displays arguments.  The command
+     `mds-toggle-show-args' toggles this flag.  
+
+`mds-stop-trace-at-trapped-error-flag'
+     A boolean variable that, when non-nil, causes tracing to stop when
+     an error is trapped.  This is only effective if error-trapping is
+     enabled.  *Note tracing::.  The default is nil.  The command
+     `mds-toggle-stop-trace-at-trapped-error' toggles this flag.  
+
+`mds-track-input-flag'
+     A boolean variable that, when non-nil, causes the input line of
+     the procedure being debugged to be echoed to the output buffer
+     when the line is executed.  The default echos the line.  The
+     command `mds-toggle-track-input' toggles this flag.  
+
+`mds-truncate-lines-flag'
+     A boolean variable that, when non-nil, causes lines in the
+     showstat and output windows to be truncated at the right edge of
+     the screen rather than wrapping.  The default truncates lines.
+     The command `mds-toggle-truncate-lines' toggles this flag.  
+
+`mds-wait-until-ready-flag'
+     A boolean variable that, when non-nil, forces the debugger to wait
+     until a prompt has been received to send the user's response.
+     Setting it to nil allows pipe-lining responses, but prevents a
+     notification when the debugger has exited.  The default is to wait
+     for a prompt.  This flag is toggled with the command
+     `mds-toggle-wait-until-ready'.  
+
+`mds-wm-side-by-side'
+     A boolean variable that, when non-nil, causes the live-showstat
+     and output windows to appear side-by-side when displayed in a
+     single client view.  That is the default.  When nil the windows
+     appear one above the other.
+
+`mds-wm-ss-fractional-size'
+     Specifies the fractional size of the showstat-live window to the
+     full frame size.  Width is used when `mds-wm-side-by-side' is
+     non-nil, otherwise height is used.  If nil, the window is set to
+     half the frame size.
+
+`maplev-get-tab-width-function'
+     This function, which is also used by `maplev-mode', is called, if
+     assigned, each time a source file is read into the line-info
+     buffer.  It is called with the name of the file; the function
+     should return the desired setting for `tab-width'.
+
+
+
+File: mds.info,  Node: Feedback,  Prev: Customization,  Up: Introduction
+
+1.6 Feedback
+============
+
+If you find problems with MDS, or if you have questions, comments, or
+ideas, please mail them to Joe Riel, <jriel@maplesoft.com>.
+
+   For bug reports, please provide as much information as possible,
+including the version information of Emacs (`C-h v emacs-version'),
+MDS, (`M-x mds-version'), and Maple (`version()').
+
+
+File: mds.info,  Node: Launching MDS,  Next: Showstat Buffer,  Prev: Introduction,  Up: Top
+
+2 Launching MDS
+***************
+
+The `M-x mds' command starts the Maple Debugger Server.  If the server
+is already running, it is restarted, which disconnects all clients.
+
+   When a client connects, two buffers are opened, the showstat buffer
+(*note Showstat Buffer::), which displays the current procedure, and
+the debugger output buffer, which displays Maple output during
+debugging.
+
+   To stop the server, use `M-x mds-stop'.
+
+
+File: mds.info,  Node: Showstat Buffer,  Next: LineInfo Buffer,  Prev: Launching MDS,  Up: Top
+
+3 Showstat Buffer
+*****************
+
+Each client has two showstat buffers, named *showstat live* and
+*showstat dead*, that are used to display Maple procedures in _showstat
+format_, that is, with the statements numbered.  Both use
+`mds-showstat-mode', though some commands are handled differently.
+
+* Menu:
+
+* Live Showstat Buffer::        Stepping through interpreted code.
+* Dead Showstat Buffer::        Viewing other procedures.
+* Showstat Mode::               Debugger commands.
+
+
+File: mds.info,  Node: Live Showstat Buffer,  Next: Dead Showstat Buffer,  Prev: Showstat Buffer,  Up: Showstat Buffer
+
+3.1 Live Showstat Buffer
+========================
+
+The live showstat buffer becomes active when an instrumented Maple
+procedure activates a breakpoint or watchpoint.  The buffer displays
+the output of the Maple `showstat' command, that is, the current
+procedure being debugged.  Maple statements are numbered and Maple
+keywords and syntactic elements are highlighted.  The Maple statement
+to be executed next is indicated by an _overlay-arrow_ in the left
+margin.  Breakpoints are marked by asterisks to the right of the
+statement numbers.
+
+   The following figure shows a typical display.  The overlay-arrow
+`=>' is at the first statement of the procedure, which is also marked
+with an asterisk indicating that there is a breakpoint here.
+
+     fibonacci := proc(i::integer)
+     => 1*  if i < 1 then
+        2     0
+            elif i = 1 then
+        3     1
+            else
+        4     procname(i-2)+procname(i-1)
+            end if
+     end proc
+
+
+File: mds.info,  Node: Dead Showstat Buffer,  Next: Showstat Mode,  Prev: Live Showstat Buffer,  Up: Showstat Buffer
+
+3.2 Dead Showstat Buffer
+========================
+
+The dead showstat buffer looks the same as the live buffer.  It is used
+for displaying inactive procedures.  It is normally not displayed until
+a request is made to display an inactive procedure.
+
+   Currently typing execution keys in the dead showstat buffer function
+the same as if typed in the live buffer to advance.  This will most
+likely be changed.
+
+
+File: mds.info,  Node: Showstat Mode,  Prev: Dead Showstat Buffer,  Up: Showstat Buffer
+
+3.3 Showstat Mode
+=================
+
+`mds-showstat-mode' binds keys to the common debugging commands.  It
+also provides commands that are not available in the Maple debugger.
+The following sections describe these bindings and commands.  They are
+grouped according to function.
+
+* Menu:
+
+* Execution::                   Executing procedure statements.
+* Status::                      Determining debugger status.
+* Breakpoints::                 Setting and clearing breakpoints.
+* Watchpoints::                 Setting and clearing watchpoints.
+* Evaluation::                  Evaluating expressions.
+* Miscellaneous::               Miscellaneous commands.
+* Monitoring::                  Display selected expressions at each step.
+* Patching::                    Live patching Maple procedures.
+* Help::                        Getting help.
+
+
+File: mds.info,  Node: Execution,  Next: Status,  Prev: Showstat Mode,  Up: Showstat Mode
+
+3.3.1 Execution
+---------------
+
+MDS supports all the Maple debugger commands for executing the
+statements of a procedure and includes some commands that are not part
+of the standard debugger.  These commands are bound to single
+keystrokes in the Showstat buffer.  Output from these commands is
+written to the _debugger output buffer_; *note Output Buffer::.
+
+   When any of these commands are executed, the cursor moves forward
+one character and, if the flavor of Emacs supports it, the cursor
+changes to a hollow box.  This indicates that it is waiting for Maple
+to respond (for most commands this change is too short to be
+noticeable).  When Maple responds the cursor moves to the next
+statement to be executed and the cursor returns to a filled box.
+
+   The cursor types can be customized via the variables
+`mds-cursor-waiting' and `mds-cursor-ready'.  
+
+   The following table describes each of the execution commands.
+
+j (`mds-call-stack')
+     Call the function and arguments on top of the call stack.  An
+     optional numeric argument is the depth at which to call, so `C-u 3
+     j' calls the third function on the call stack.  This provides a
+     convenient method to rerun the current procedure with the same
+     arguments, without exiting the debugger.
+
+     If the current procedure has a breakpoint at the current statement,
+     executing this command appears to do nothing because execution
+     halts at the same statement.  Use `mds-where' to see a second call
+     to the current procedure on the top of the call-stack. *Note
+     mds-where::.
+
+c (`mds-cont')
+     Continue: run until the next breakpoint or watchpoint, or until
+     the program terminates.
+
+g (`mds-goto-procname')
+     Goto a procedure, that is, skip until the selected procedure is
+     active.  The name of the procedure is surmised from the code at
+     point; if no function call if found, the name is queried in the
+     minibuffer.  If called with an argument, `C-u g', the procedure
+     name is queried in the minibuffer, the default is taken from the
+     code at point.  This feature is built on the skipping mechanism;
+     it does not use breakpoints.  It relies on string-matching to
+     determine whether the selected procedure has been entered, so can
+     sometimes give surprising results.
+
+     This command saves a *goback* point at the statement where it was
+     called; *note mds-goback-save::.
+
+h (`mds-here')
+     Execute code until the statement at which the command was executed
+     is reached.  This is similar to setting a breakpoint at the
+     statement, then continuing, however, it uses the skipping mechanism
+     rather than breakpoints.  If passed an optional numeric prefix,
+     e.g., `C-u 5 h', then skipping continues until the statement has
+     been reached that many times.
+
+     If executed at a location without a statement number, say, at an
+     `else', the preceding statement number is used as the target.
+
+     It can be called from the dead showstat buffer (*note Dead
+     Showstat Buffer::); execution skips to the statement in the
+     corresponding procedure.
+
+     This command saves a *goback* point at the statement where it was
+     called; *note mds-goback-save::.
+
+i (`mds-into')
+     Into: halfway between `next' (`n') and `step' (`s').  Executes the
+     next statement.  Execution stops before the following statement
+     within the current function, regardless of whether it is at the
+     current nesting level or in the body of a control structure.
+     Execution does not stop in a called function.
+
+n (`mds-next')
+     Next: execute the next statement.  If the statement is a control
+     structure (for example, `if' or `for'), it is executed in its
+     entirety before execution stops again. Likewise, if the statement
+     contains function calls, these are executed in their entirety.
+     After executing the statement, control returns to the Debugger as
+     though a breakpoint had been set.
+
+o (`mds-outfrom')
+     Outfrom: execute until the current statement sequence has
+     finished, or until a breakpoint or watchpoint is encountered. If
+     this command is executed while stopped in a loop, execution
+     continues until just before the first statement to be executed
+     after the closing `end do'.  Note that if the same breakpoint that
+     caused execution to stop in the loop is encountered again in a
+     subsequent iteration of the loop, execution will stop again. If
+     this command is executed while stopped in the body of an `if'
+     statement, execution continues until just before the first
+     statement to be executed after the closing `end if'.
+
+q (`mds-quit')
+     Quit: terminate debugging.
+
+r (`mds-return')
+     Return: execute statements until the first statement to be executed
+     after the currently executing procedure returns.
+
+s (`mds-step')
+     Step: execute the next statement at any level.  Execution stops
+     before the following statement, regardless of whether it is at the
+     current nesting level, in the body of a control structure (for
+     example, `if'), or in a called function.
+
+S (`mds-skip')
+     Skip forward until the predicate assigned by the `skip_until'
+     option to `mdc' is true.
+
+t (`mds-select-trace')
+     Select the tracing mode.  The selected tracing mode, *none*,
+     *cont*, *next*, *into*, *step*, or *_skip*, determines where the
+     debugger temporarily halts and what output is displayed in the
+     output buffer. The selected mode is equivalent to continually
+     executing the corresponding debugging command (the _skip command
+     is equivalent to calling `mds-skip').
+
+     After selecting a tracing mode, tracing begins with the next
+     command that executes a statement.  Statements are then
+     automatically executed until the client exits or, if
+     `mds-stop-trace-at-trapped-error-flag' is non-nil, an error is
+     trapped.  At that point, the tracing mode may be manually disabled
+     by selecting the *disabled* mode.  If Maple has exited, reissuing
+     the original Maple command causes the debugger to recommence, at
+     which time the hyperlinks in the output buffer become operational
+     and permit quickly moving to places of interest.
+
+<SPACE> (`mds-send-last-command')
+     Re-execute the last command that executed a program statement.
+     The saved commands are `cont', `into', `next', `outfrom', `return',
+     `step', and `return'.
+
+C-c C-c (`mds-kill-maple')
+     Kill the maple process.  This can be used to stop a runaway Maple
+     computation (say an infinite loop).  *This currently is not
+     implemented.*
+
+
+
+File: mds.info,  Node: Status,  Next: Breakpoints,  Prev: Execution,  Up: Showstat Mode
+
+3.3.2 Status
+------------
+
+MDS supports the following debugger commands for querying the status of
+the debugger.
+
+k (`mds-showstack')
+     Showstack: display an abbreviated form of the calling stack.  Only
+     the names of the procedures are shown.  The name of the current
+     procedure is not shown.  Each name is an active link.  Clicking on
+     a link (mouse-1) opens the procedure in the *showstat dead* buffer.
+
+K (`mds-where')
+     Where: display the calling stack.  The latest entry is shown last.
+     For each entry in the stack, the name of the calling procedure and
+     the current statement within it are shown, followed on the next
+     line by the list of arguments passed to corresponding procedure.
+     An optional prefix argument can be passed; it specifies the number
+     of levels to display.  For example `C-u 2 K' displays the topmost
+     (most recent) two entries.
+
+     The procedure names are active links.  Clicking on a link opens the
+     procedure in the *showstat dead* buffer, at the calling line.
+     Breakpoints can be set in the opened procedure.  Use `M-x
+     mds-goto-current-state' (`l') to return to the current procedure.
+
+     A right-pointing triangle to the left of the argument list is an
+     active button.  Clicking it causes the associated procedure to be
+     reevaluated with those arguments.  This provides a convenient
+     method to reexecute a procedure with the same arguments, while
+     debugging.  *Note Recursive debugging::.
+
+p (`mds-showstop')
+     Showstop: display a list of all procedures containing breakpoints,
+     all watchpoints, and all error watchpoints.
+
+x (`mds-showexception')
+     Showexception: display the value of `lastexception'.  The output
+     is formatted; to see the raw exception, use `C-u x'.
+
+X (`mds-showerror')
+     Showerror: display the value of `lasterror'.  The output is
+     formatted; to see the raw exception, use `C-u X'.
+
+
+
+File: mds.info,  Node: Breakpoints,  Next: Watchpoints,  Prev: Status,  Up: Showstat Mode
+
+3.3.3 Breakpoints
+-----------------
+
+MDS can set and clear breakpoints, watchpoints, and error watchpoints.
+Breakpoints can be set and cleared as is done in the Maple debugger,
+that is, by evaluating the expression `stopat <statement-number>',
+however, the more convenient way is to move the cursor to the statement
+and type `b' or `u', respectively.  A statement with a breakpoint has
+an asterisk to the right of the statement number; *note the fibonacci
+listing: fibonacci.
+
+b (`mds-breakpoint')
+     Stopat:  Set a breakpoint at the start of the statement at the
+     cursor.  An asterisk appears to the right of the statement number.
+     The debugger is halted each time it reaches the statement.
+
+B (`mds-breakpoint-cond')
+     Stopat-cond:  Set a conditional breakpoint at the start of the
+     statement at the cursor.  The condition is entered in the
+     mini-buffer.  It must be a Maple boolean expression.  A question
+     mark appears to the right of the statement number.  The debugger
+     is halted each time it reaches the statement and the condition
+     evaluates to true.
+
+G (`mds-goback-save')
+     Save the statement at point as a *goback* point.  You may return
+     to a goback point, after exiting the debugger, by executing
+     `mdc(goback)' in the Maple client and then entering the debugger
+     by executing the debugged Maple command.
+
+     If `mds-goback-save' is executed in the dead showstat buffer,
+     *note Dead Showstat Buffer::, the goback point is set in the
+     corresponding procedure.
+
+     The goback point is overwritten when `mds-goto-procname', *note
+     mds-goto-procname::, or `mds-here', *note mds-here::, are called
+     because they also save the goback point, to permit recovery.
+
+p (`mds-showstop')
+     Showstop: display a list of all procedures containing breakpoints,
+     all watchpoints, and all error watchpoints.  Conditional
+     breakpoints are not included.
+
+u (`mds-unstopat')
+     Unstopat: Clear a breakpoint at the start of the statement at the
+     cursor.
+
+
+
+File: mds.info,  Node: Watchpoints,  Next: Evaluation,  Prev: Breakpoints,  Up: Showstat Mode
+
+3.3.4 Watchpoints
+-----------------
+
+A _watchpoint_ set on a variable causes the debugger to stop
+immediately following a statement that assigns a value to that variable.
+A _conditional watchpoint_ is a watchpoint with an associated value;
+the watchpoint is tripped when the variable is assigned that value.
+
+   Maple distinguishes two types of watchpoints: _global_ and _local_.
+Global watchpoints apply to global variables, local watchpoints to
+local variables.
+
+   *Nota Bene:* The Maple debugger does not properly handle watchpoints
+for variables that are local to a module, or to a procedure of a module.
+Attempting to set a local watchpoint on such a variable returns the
+error
+
+     Error, global name or [proc name, local name] expected
+
+   As a workaround, set a global watchpoint on a module-local variable;
+it must be reset each time the procedure is debugged.
+
+I (`mds-stopwhenif')
+     stopwhenif:  Set a conditional watchpoint on the specified global
+     variable.  The variable name and conditional value are entered
+     separately in the mini-buffer.  Use `C-u W' to clear a conditional
+     watchpoint.
+
+p (`mds-showstop')
+     showstop: display a list of all procedures containing breakpoints,
+     all watchpoints, and all error watchpoints.
+
+R (`mds-stoperror')
+     stoperror: Set a watchpoint on an error message.  The error
+     message is entered separately in the mini-buffer.  The special
+     name `all' sets a watchpoint on any error.  The special name
+     `traperror' sets a watchpoint on any trapped error.  Use
+     `traperror["message"]' to set a watchpoint on a particular trapped
+     error message.  Use `C-u R' to clear a watchpoint on an error
+     message.
+
+w (`mds-stopwhen-local')
+     stopwhen: Set a local watchpoint.  The variable name is entered in
+     the mini-buffer.  Use `C-u w' to clear a local watchpoint.
+
+W (`mds-stopwhen-global')
+     stopwhen: Set a global watchpoint.  The variable name is entered
+     in the mini-buffer.  Use `C-u W' to clear a global watchpoint.
+
+
+
+File: mds.info,  Node: Evaluation,  Next: Miscellaneous,  Prev: Watchpoints,  Up: Showstat Mode
+
+3.3.5 Evaluation
+----------------
+
+MDS can evaluate expressions using the current context of Maple.
+
+a (`mds-args')
+     Display the arguments of the current procedure as a vertical list
+     of values.
+
+A (`mds-show-args-as-equations')
+     Display the arguments of the current procedure as a vertical list
+     of equations.  The left-side of each equation is the formal
+     parameter, the right-side is the value.
+
+e (`mds-eval-and-display-expr')
+     Evaluate an expression in the current context.  The expression is
+     entered in the mini-buffer.  The default expression is taken from
+     the text at the cursor.  Use `C-u e' to return an expression of
+     unlimited size.
+
+E (`mds-eval-and-display-expr-global')
+     Evaluate an expression in the global context.  The expression is
+     entered in the mini-buffer.  The default expression is taken from
+     the text at the cursor.  Use `C-u E' to return an expression of
+     unlimited size.
+
+. (`mds-eval-and-prettyprint')
+     Evaluate an expression and prettyprint the result.  The
+     pretty-printing depends on the type of the evaluated expression.
+     The first line of the display (after the echoing of the expression)
+     shows the type of the output, the remaining lines display the
+     expression in an expanded form.  Use `C-u .' to return an
+     expression of unlimited size.
+
+     For a list or set, each element is displayed on a separate line.
+     For a record or table, each field/entry is displayed as an equation
+     with the index/field on the left, the entry on the right.
+
+     For example, the display of a record may appear as
+
+          (*record*)
+          a = 23,
+          b = 12,
+          c = NULL
+
+, (`mds-eval-and-prettyprint-prev')
+     Works like `mds-eval-and-prettyprint' but uses expression at the
+     previous statement, that is, with a statement-number one less than
+     the current statement.  This command is useful for pretty-printing
+     the last computation, but only when that is the result of the
+     previous statement.  Use `C-u ,' to return an expression of
+     unlimited size.
+
+
+
+File: mds.info,  Node: Miscellaneous,  Next: Monitoring,  Prev: Evaluation,  Up: Showstat Mode
+
+3.3.6 Miscellaneous
+-------------------
+
+L (`mds-ss-refresh')
+     Refresh the procedure.  This is frequently needed after patching a
+     procedure (*note Patching::).  MDS does not automatically redraw a
+     procedure upon entry, that happens only if the name of the
+     procedure has changed.
+
+Q (`mds-toggle-quiet')
+     Toggle the display of the output of executed statements.  The
+     evaluation commands continue to work, but the automatic display
+     does not.
+
+T (`mds-toggle-truncate-lines')
+     Toggle the truncating/wrapping of long lines.  With prefix
+     argument (`C-u T') do so in the _debugger output buffer_.
+
+
+
+File: mds.info,  Node: Monitoring,  Next: Patching,  Prev: Miscellaneous,  Up: Showstat Mode
+
+3.3.7 Monitoring
+----------------
+
+Arbitrary Maple expressions can be monitored.  The expressions are
+evaluated at each step and the results displayed in the _debugger
+output buffer_.  A global monitor expression can be assigned for all
+procedures; each procedure can also have its own monitor expression.
+Both types of expressions are displayed.  The expressions are evaluated
+in the context of the procedure.
+
+m (`mds-monitor-toggle')
+     Toggle the monitoring operation.
+
+M (`mds-monitor-define')
+     Define a monitor expression for the current procedure.  With
+     prefix argument (`C-u M') the monitor expression applies to all
+     procedure.  Both types of monitor expressions can coexist.  The
+     expression is queried in the minibuffer.
+
+
+
+File: mds.info,  Node: Patching,  Next: Help,  Prev: Monitoring,  Up: Showstat Mode
+
+3.3.8 Patching
+--------------
+
+MDS can temporarily modify the procedure it is debugging.  This is an
+experimental feature--its operation is subject to change.  The
+following commands are currently assigned.
+
+P (`mds-patch')
+     Patch a procedure.  This is executed from the live showstat buffer.
+     It opens a buffer that contains a copy of the current procedure.
+     The name of the buffer is that of the procedure.  The buffer has
+     major-mode `mds-patch-mode', which is a derivative of
+     `maplev-mode'.  *note (maplev)Top::.  Edit this buffer as desired
+     then execute `mds-patch-install' to install the patch.
+
+`C-c C-p' (`mds-patch-install')
+     Install the patch in the patch buffer.  This is executed from the
+     patch buffer.
+
+
+   The following steps explain how to patch a procedure.
+
+  1. Stop the debugger in the procedure to be patched.  
+
+  2. Execute `mds-patch' (`P').  This opens a buffer that contains a
+     copy of the procedure.
+
+  3. Edit the procedure.  
+
+  4. Execute `mds-patch-install' (`C-c C-p', or use the *Install* entry
+     in the *Patch* menu).
+
+  5. Return to the Maple debugger showstat buffer.
+
+  6. Quit the debugger (`q').
+
+  7. Rerun the Maple code.
+
+   You will usually have to re-instrument the procedure so that the
+debugger stops inside it.
+
+   If the patched procedure is local to a module, or accesses local
+variables/procedures of a module, it may be necessary to execute, in
+Maple, `kernelopts(opaquemodules=false)' to permit the patched
+procedure to operate properly.
+
+   The patched procedure remains in effect until Maple is restarted.
+
+   In addition to temporarily modifying the normal execution of a
+procedure, patching is also useful for enhancing debugging.  For
+example, you may insert a print statement to display an internal
+expression.  Inserting an explicit `DEBUG()' statement inside a custom
+conditional to initiate debugging when particular conditions are met is
+another common use.
+
+
+File: mds.info,  Node: Help,  Prev: Patching,  Up: Showstat Mode
+
+3.3.9 Help
+----------
+
+The MDS showstat-mode has several ways for obtaining help.
+
+C-h m
+     Display the help for this mode.
+
+H (`mds-info')
+     Open the `info' document for MDS mode (this document).
+
+C-? (`maplev-help-at-point')
+     Display a Maple help page.  The topic is entered in the
+     mini-buffer, with the default the word under the cursor.
+
+M-? (`maplev-proc-at-point')
+     Display a Maple procedure.  The procedure name is entered in the
+     mini-buffer, with the default the word under then cursor.
+
+
+
+File: mds.info,  Node: LineInfo Buffer,  Next: Output Buffer,  Prev: Showstat Buffer,  Up: Top
+
+4 LineInfo Buffer
+*****************
+
+The line-info buffer displays the source file of the current Maple
+procedure during debugging.  An arrow in the left margin points to the
+current line in the procedure.
+
+   This mode uses an undocumented, experimental feature introduced in
+Maple 16.  As such, there are a few limitations with using it.
+
+* Menu:
+
+* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Mode::               Available commands.
+* LineInfo Caveats::            Limitations.
+
+
+File: mds.info,  Node: Accessing LineInfo,  Next: LineInfo Mode,  Prev: LineInfo Buffer,  Up: LineInfo Buffer
+
+4.1 Accessing LineInfo
+======================
+
+The line-info buffer is active whenever line-info data is available for
+a procedure.  Line-info data is available when a Maple source file is
+read into Maple, either with the Maple `read' command, or by passing
+the file as input to tty Maple.  Using an absolute path to the filename
+may be necessary to permit access to the data while changing
+directories during code execution.  If `$include' directives are used,
+the include path, specified on the command line, should be an absolute
+path.
+
+   For example, consider a Maple source located at `maple/src/main.mpl'
+relative to the current directory.  Assume it contains the following
+include directive:
+
+     $include <maple/src/somefile.mpl>
+
+   The shell command to load this with tty maple might be the following:
+
+     maple -I $PWD $PWD/maple/src/main.mpl
+
+   The use of `$PWD' ensures that the include path and the main file
+are given absolute paths.
+
+   An alternative way to specify the path to the main file is to use
+the undocumented `$file' preprocessor directive as the first line in
+the source file.  For example, the first line of `maple/src/main.mpl'
+might be
+
+     $file "/home/joe/maple/Block/maple/src/main.mpl"
+
+   To validate the lineinfo data for a procedure, say `foo', execute
+the following Maple command:
+
+     debugopts(lineinfo = foo);
+
+
+File: mds.info,  Node: LineInfo Mode,  Next: LineInfo Caveats,  Prev: Accessing LineInfo,  Up: LineInfo Buffer
+
+4.2 LineInfo Mode
+=================
+
+The line-info buffer has the major mode `mds-li-mode', which binds the
+same keys as `mds-showstat-mode' to equivalent commands; see *note
+Showstat Mode::.  In addition, it provides the following commands:
+
+v (`mds-wm-toggle-code-view')
+     Toggle the code-view between the interpreted-code (showstat-live
+     buffer) and source-code (line-info buffer).  This command (and
+     key) can be used in the showstat-live buffer to return to the
+     line-info buffer.
+
+     Toggling is useful to verify that source-code has been interpreted
+     properly.  There are a few constructs that currently are not
+     handled by the line-info feature; *note LineInfo Caveats::.
+
+G (`mds-li-open-source-at-point')
+     Open the file associated with current procedure.
+
+
+   Because Maple only handles one-byte characters, `mds-li-mode'
+disables multibyte-characters, so any that exist in the source are
+displayed as separate characters.
+
+
+File: mds.info,  Node: LineInfo Caveats,  Prev: LineInfo Mode,  Up: LineInfo Buffer
+
+4.3 LineInfo Caveats
+====================
+
+There are a few known bugs with the line-info feature.
+
+* Menu:
+
+* Preprocessor macros::         Avoid multi-statement macros.
+* for-less do-loops::           A glitch with while loops.
+* use statement::               Use `uses'.
+* Declaration Self-Assignment::  Restrict this undocumented feature.
+* True or False Conditional::   Avoid `if true then'
+
+
+File: mds.info,  Node: Preprocessor macros,  Next: for-less do-loops,  Prev: LineInfo Caveats,  Up: LineInfo Caveats
+
+4.3.1 Preprocessor macros
+-------------------------
+
+Preprocessor macro definitions that expand to more than one Maple
+statement are not handled properly.  Avoid these when writing Maple
+source code.  For example,
+
+     $define CB  "cbSignalStrength"                # this is okay
+     $define IF(x) if x<0 then 1 else 2 end if     # this is not
+
+
+File: mds.info,  Node: for-less do-loops,  Next: use statement,  Prev: Preprocessor macros,  Up: LineInfo Caveats
+
+4.3.2 for-less do-loops
+-----------------------
+
+A *for*-less *do*-loop does not store the lineinfo-data for the *do*
+statement.  This causes the debugger to automatically switch to the
+showstat buffer when the current statement is the *do* statement.  The
+debugger switches back to the lineinfo buffer when the *do* statement
+is no longer active.
+
+   For an example, see the following code.  When the cursor reaches the
+marked statement, the debugger switches to the showstat buffer.  If an
+*into* debugger command is then executed, the assignment statement,
+`x[i] := i+1', becomes the active statement and the debugger switches
+back to the line-info buffer.
+
+         i := 1;
+     =>  while i < 5 do
+             x[i] := i+1;
+         end do;
+
+
+File: mds.info,  Node: use statement,  Next: Declaration Self-Assignment,  Prev: for-less do-loops,  Up: LineInfo Caveats
+
+4.3.3 use statement
+-------------------
+
+The line-info data generated for a procedure with a *use*-statement is
+incorrect.  Use the *uses* statement instead.
+
+   For example, instead of
+
+     f := proc(M :: Matrix, X :: Vector)
+     local V;
+         use LA = LinearAlgebra in
+             V := LA:-LinearSolve(A,X);
+         end use;
+     end proc;
+
+do this:
+
+     f := proc(M :: Matrix, X :: Vector)
+     local V;
+     uses LA = LinearAlgebra;
+         V := LA:-LinearSolve(A,X);
+     end proc;
+
+
+File: mds.info,  Node: Declaration Self-Assignment,  Next: True or False Conditional,  Prev: use statement,  Up: LineInfo Caveats
+
+4.3.4 Declaration Self-Assignment
+---------------------------------
+
+Maple 16 introduced an undocumented feature such that if, in a local
+declaration, a variable is assigned to itself, the assignment is removed
+from the interpreted procedure (the declaration of the variable
+remains).  The purpose of this is prevent a mint warning of an unused
+variable if the variable is not assigned in the procedure body; this
+frequently happens with an index to a `seq' call.  For example, one
+might do
+
+     f := proc(X)
+     local x := x; # dummy assignment to avoid mint nag
+         seq(x, x = X);
+     end proc;
+
+   This is interpreted by Maple as
+
+     f := proc(X)
+     local x;
+         seq(x, x = X);
+     end proc;
+
+   The line-info data for such a procedure is incorrect.  The debugger
+automatically corrects for this, provided all self-assignments occur
+before any normal assignments.
+
+
+File: mds.info,  Node: True or False Conditional,  Prev: Declaration Self-Assignment,  Up: LineInfo Caveats
+
+4.3.5 True or False Conditional
+-------------------------------
+
+While developing code, it is occasionally useful to enable or disable
+an *if* statement by making its condition always true or false.  Doing
+this by replacing the condition with `true' or `false' causes the Maple
+simplifier to remove the condition.  Because this happens after the
+line-info data is generated, the resulting line-info data is corrupted.
+Instead, replace the condition with an expression that evaluates true
+or false, such as `0=0' or `0=1'.
+
+
+File: mds.info,  Node: Output Buffer,  Next: Debugging Tips,  Prev: LineInfo Buffer,  Up: Top
+
+5 Output Buffer
+***************
+
+The output buffer displays Maple output during debugging.  It also echos
+the user input, and optionally, the input statements executed.
+
+   The following is representative of the output buffer content
+
+     fibonacci
+     (*1*) into    if i < 1
+     32
+     (*2*)
+
+   The line "fibonacci" is the name of the procedure that is being
+debugged.  Whenever a procedure is entered, the name of it is printed
+in the output buffer.  The name is hyperlinked; clicking on it
+(mouse-1) displays the procedure in the showstat dead buffer.
+
+   Debugger commands that evaluate program code are echoed in the
+buffer.  If the `mds-track-input-flag' variable is non-nil, the
+corresponding statement is printed after the debugger command.  This
+provides a visual trace of the commands executed.  Use
+`mds-toggle-track-input' to toggle the variable.
+
+   Right-clicking (mouse-3) in the output buffer displays, in the
+showstat-dead buffer, the procedure at the appropriate statement that
+generated that output.
+
+   When `mds-where' (`K'), *note mds-where::, is executed from the
+showstat or lineinfo buffer, the stack, with arguments, is displayed in
+the output buffer.  To the left of the list of arguments is a
+right-pointing triangle.  Clicking it calls the associated procedure
+with the displayed arguments (the address to the actual argument is
+hidden in the buffer).  This provides a convenient method to rerun
+previously called procedures with the same arguments.  *Note Recursive
+debugging::.
+
+   The `mds-toggle-quiet' (`Q') command, executed from the showstat or
+lineinfo buffer, toggles the display of the output of statements
+executed during debugging.
+
+* Menu:
+
+* Output buffer commands::
+
+
+File: mds.info,  Node: Output buffer commands,  Prev: Output Buffer,  Up: Output Buffer
+
+5.1 Output buffer commands
+==========================
+
+The `mds-out-write-buffer' command writes the output buffer to a
+specified file.  Unlike `write-file', the buffer name does not change.
+
+
+File: mds.info,  Node: Debugging Tips,  Next: Key Index,  Prev: Output Buffer,  Up: Top
+
+6 Debugging Tips
+****************
+
+* Menu:
+
+* Set breakpoint in calling procedure::  Locating a bug.
+* Locate source of unexpected result::  Finding where an expression originates.
+* Assign a variable::           Returning intermediate results to Maple.
+* Save a local result::         Saving intermediate results to a file.
+* Recursive debugging::         Rerunning a procedure without exiting
+* Multiple clients::            Debugging multiple clients
+* Remote debugging::            Debugging on a remote machine
+
+
+File: mds.info,  Node: Set breakpoint in calling procedure,  Next: Locate source of unexpected result,  Prev: Debugging Tips,  Up: Debugging Tips
+
+6.1 Set breakpoint in calling procedure
+=======================================
+
+After using `stoperror' to stop the debugger at the location of an
+error, you realize that the real problem lies in an "upstream"
+procedure.  To debug it, you want to set a breakpoint in that procedure.
+
+  1. Use the `mds-where' command (`K') to display the stack contents in
+     the output buffer.
+
+  2. Click on the relevant calling procedure.  The procedure is
+     displayed in the showstat-dead buffer
+
+  3. In the showstat-dead buffer, set a breakpoint at an appropriate
+     statement in the calling procedure.  Do this by putting the cursor
+     on the appropriate statement and executing `mds-breakpoint' (`b').
+
+  4. Quit the debugger (`q') and re-execute the code in Maple.  The
+     debugger will halt in the procedure of interest.
+
+
+
+File: mds.info,  Node: Locate source of unexpected result,  Next: Assign a variable,  Prev: Set breakpoint in calling procedure,  Up: Debugging Tips
+
+6.2 Locate source of unexpected result
+======================================
+
+A computation gives the wrong result, but it is not apparent which
+procedure, or what line of code, is the culprit.  There are a couple
+ways to handle this.
+
+   One possibility is to use the tracing feature, possibly with the
+`step' option; *note tracing::.  A disadvantage with tracing is that it
+produces a lot of output and is slow.
+
+   Frequently a better way is to use _skipping_.  Call `mdc' with the
+`skip_until' option, or call `mdc:-SkipUntil' directly to assign a
+predicate that skips code until a condition is met.  See the examples
+in the `mdc[SkipUntil]' help page, in Maple.  With a predicate
+assigned, skip to the condition by typing `S' in the showstat buffer.
+
+
+File: mds.info,  Node: Assign a variable,  Next: Save a local result,  Prev: Locate source of unexpected result,  Up: Debugging Tips
+
+6.3 Assign a variable
+=====================
+
+To assign to a Maple variable, evaluate an assignment statement using
+the command `mds-eval-and-display-expr', which is mapped to the `e'
+key.  For example, `e x := 1 <RET>' assigns 1 to the variable `x'.  If
+`x' is a local variable, the local variable is reassigned; this is
+useful for temporarily altering the operation of a procedure.  If `x'
+is not a local variable, a global variable is assigned; this is useful
+for making an internal value available for further manipulation after
+exiting the debugger.
+
+   To assign the value of a local variable to a global variable with the
+same name, use the Maple `assign' procedure; for example, evaluate
+`assign(:-x,x)' to assign the value of the local variable `x' to the
+global variable `:-x'.
+
+
+File: mds.info,  Node: Save a local result,  Next: Recursive debugging,  Prev: Assign a variable,  Up: Debugging Tips
+
+6.4 Save a local result
+=======================
+
+While debugging, it is frequently useful to save a local result to an
+external file so that it can be manipulated afterwards.  One way to do
+this is to first save the result to a global variable, *note Assign a
+variable::, then save the global to a file by evaluating the Maple
+`save' statement in a global context, using
+`mds-eval-and-display-expr-global', which is mapped to the `E' key.
+
+   For example, to save the value of the local variable `x' to the file
+`/tmp/x.mpl', do
+
+     e assign(:-x,x) <RET>
+     E save x, "/tmp/x.mpl" <RET>
+
+   File `/tmp/x.mpl' contains an assignment to the variable `x'.
+
+
+File: mds.info,  Node: Recursive debugging,  Next: Multiple clients,  Prev: Save a local result,  Up: Debugging Tips
+
+6.5 Recursive debugging
+=======================
+
+MDS can recusively debug.  Evaluating an expression in the debugger that
+executes an instrumented procedure debugs that procedure.  When that
+procedure returns, debugging resumes at the point in the original
+procedure.
+
+   This feature allows you to reexecute a procedure with the same
+arguments while inside the debugger, just evaluate the expression
+`thisproc(args)'.
+
+   A convenient way to do this, one that allows reexecuting any
+procedure on the current call stack, is to execute `mds-where' (`K'),
+which prints the stack with arguments in the output buffer.  *Note
+Status::.  Clicking the right-pointing triangle adjacent to the list of
+arguments calls the associated procedure with those arguments.  You may
+want to first set a breakpoint in the procedure.  Do so by clicking its
+hyperlinked name to open it in the dead-showstat buffer, then set the
+breakpoint there.  *Note Breakpoints::.
+
+
+File: mds.info,  Node: Multiple clients,  Next: Remote debugging,  Prev: Recursive debugging,  Up: Debugging Tips
+
+6.6 Multiple clients
+====================
+
+MDS can handle multiple debugger clients concurrently.  This is useful
+for comparing the action of the same code run on different machines, or
+different versions of the same code.
+
+   The `mds-wm-cycle-clients' command cycles through the clients.  Use
+it to inspect and debug each client individually.
+
+   The `mds-wm-display-all' command displays all clients in one frame.
+
+
+File: mds.info,  Node: Remote debugging,  Prev: Multiple clients,  Up: Debugging Tips
+
+6.7 Remote debugging
+====================
+
+To debug Maple on a remote machine, while running Emacs and MDS on a
+local machine, use the remote forwarding option, `-R', of `ssh' to
+forward the TCP port used by MDS when connecting to the machine.  The
+default TCP port is 10000, see *note mds-port::.  For example
+
+      ssh -R 10000 localhost:10000 joe@gauss
+
+   If you frequently debug on the same remote machine, consider adding
+a suitable entry to the ssh configuration file.  For example,
+
+     Host gauss
+     User joe
+     RemoteForward 10000 localhost:10000
+
+
+File: mds.info,  Node: Key Index,  Next: Function Index,  Prev: Debugging Tips,  Up: Top
+
+Key Index
+*********
+
+ [index ]
+* Menu:
+
+* ,:                                     Evaluation.          (line  48)
+* .:                                     Evaluation.          (line  29)
+* <SPACE>:                               Execution.           (line 135)
+* A:                                     Evaluation.          (line  12)
+* a:                                     Evaluation.          (line   8)
+* B:                                     Breakpoints.         (line  19)
+* b:                                     Breakpoints.         (line  14)
+* c:                                     Execution.           (line  37)
+* C-?:                                   Help.                (line  14)
+* C-c C-c:                               Execution.           (line 140)
+* C-c C-p:                               Patching.            (line  18)
+* C-h m:                                 Help.                (line   8)
+* C-u ,:                                 Evaluation.          (line  48)
+* C-u .:                                 Evaluation.          (line  29)
+* C-u E:                                 Evaluation.          (line  23)
+* C-u e:                                 Evaluation.          (line  17)
+* C-u g:                                 Execution.           (line  41)
+* C-u R:                                 Watchpoints.         (line  35)
+* C-u w:                                 Watchpoints.         (line  44)
+* E:                                     Evaluation.          (line  23)
+* e:                                     Evaluation.          (line  17)
+* G <1>:                                 LineInfo Mode.       (line  20)
+* G:                                     Breakpoints.         (line  27)
+* g:                                     Execution.           (line  41)
+* H:                                     Help.                (line  11)
+* h:                                     Execution.           (line  55)
+* I:                                     Watchpoints.         (line  25)
+* i:                                     Execution.           (line  73)
+* j:                                     Execution.           (line  24)
+* K:                                     Status.              (line  15)
+* k:                                     Status.              (line   9)
+* L:                                     Miscellaneous.       (line   6)
+* M:                                     Monitoring.          (line  16)
+* m:                                     Monitoring.          (line  13)
+* M-?:                                   Help.                (line  18)
+* n:                                     Execution.           (line  80)
+* o:                                     Execution.           (line  88)
+* P:                                     Patching.            (line  10)
+* p <1>:                                 Watchpoints.         (line  31)
+* p <2>:                                 Breakpoints.         (line  41)
+* p:                                     Status.              (line  35)
+* Q:                                     Miscellaneous.       (line  12)
+* q:                                     Execution.           (line 100)
+* R:                                     Watchpoints.         (line  35)
+* r:                                     Execution.           (line 103)
+* S:                                     Execution.           (line 113)
+* s:                                     Execution.           (line 107)
+* T:                                     Miscellaneous.       (line  17)
+* t:                                     Execution.           (line 117)
+* u:                                     Breakpoints.         (line  46)
+* v:                                     LineInfo Mode.       (line  10)
+* W:                                     Watchpoints.         (line  48)
+* w:                                     Watchpoints.         (line  44)
+* X:                                     Status.              (line  43)
+* x:                                     Status.              (line  39)
+
+
+File: mds.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
+
+Function Index
+**************
+
+ [index ]
+* Menu:
+
+* maplev-get-tab-width-function:         Customization.       (line  80)
+* maplev-help-at-point:                  Help.                (line  14)
+* maplev-proc-at-point:                  Help.                (line  18)
+* mds:                                   Launching MDS.       (line   6)
+* mds-args:                              Evaluation.          (line   8)
+* mds-breakpoint:                        Breakpoints.         (line  14)
+* mds-breakpoint-cond:                   Breakpoints.         (line  19)
+* mds-call-stack:                        Execution.           (line  24)
+* mds-cont:                              Execution.           (line  37)
+* mds-eval-and-display-expr:             Evaluation.          (line  17)
+* mds-eval-and-display-expr-global:      Evaluation.          (line  23)
+* mds-eval-and-prettyprint:              Evaluation.          (line  29)
+* mds-eval-and-prettyprint-prev:         Evaluation.          (line  48)
+* mds-goback-save:                       Breakpoints.         (line  27)
+* mds-goto-procname:                     Execution.           (line  41)
+* mds-here:                              Execution.           (line  55)
+* mds-info:                              Help.                (line  11)
+* mds-into:                              Execution.           (line  73)
+* mds-kill-maple:                        Execution.           (line 140)
+* mds-li-open-source-at-point:           LineInfo Mode.       (line  20)
+* mds-monitor-define:                    Monitoring.          (line  16)
+* mds-monitor-toggle:                    Monitoring.          (line  13)
+* mds-next:                              Execution.           (line  80)
+* mds-out-write-buffer:                  Output buffer commands.
+                                                              (line   6)
+* mds-outfrom:                           Execution.           (line  88)
+* mds-patch:                             Patching.            (line  10)
+* mds-patch-install:                     Patching.            (line  18)
+* mds-patch-mode:                        Patching.            (line  10)
+* mds-quit:                              Execution.           (line 100)
+* mds-return:                            Execution.           (line 103)
+* mds-select-trace:                      Execution.           (line 117)
+* mds-send-last-command:                 Execution.           (line 135)
+* mds-show-args-as-equations:            Evaluation.          (line  12)
+* mds-showerror:                         Status.              (line  43)
+* mds-showexception:                     Status.              (line  39)
+* mds-showstack:                         Status.              (line   9)
+* mds-showstop <1>:                      Watchpoints.         (line  31)
+* mds-showstop <2>:                      Breakpoints.         (line  41)
+* mds-showstop:                          Status.              (line  35)
+* mds-skip:                              Execution.           (line 113)
+* mds-ss-refresh:                        Miscellaneous.       (line   6)
+* mds-step:                              Execution.           (line 107)
+* mds-stop:                              Launching MDS.       (line  14)
+* mds-stoperror:                         Watchpoints.         (line  35)
+* mds-stopwhen-global:                   Watchpoints.         (line  48)
+* mds-stopwhen-local:                    Watchpoints.         (line  44)
+* mds-stopwhenif:                        Watchpoints.         (line  25)
+* mds-toggle-quiet <1>:                  Output Buffer.       (line  40)
+* mds-toggle-quiet:                      Miscellaneous.       (line  12)
+* mds-toggle-show-args:                  Customization.       (line  36)
+* mds-toggle-stop-trace-at-trapped-error: Customization.      (line  42)
+* mds-toggle-track-input <1>:            Output Buffer.       (line  21)
+* mds-toggle-track-input:                Customization.       (line  48)
+* mds-toggle-truncate-lines <1>:         Miscellaneous.       (line  17)
+* mds-toggle-truncate-lines:             Customization.       (line  58)
+* mds-toggle-wait-until-ready:           Customization.       (line  66)
+* mds-unstopat:                          Breakpoints.         (line  46)
+* mds-version:                           Feedback.            (line   9)
+* mds-where:                             Status.              (line  15)
+* mds-wm-cycle-clients:                  Multiple clients.    (line  10)
+* mds-wm-display-all:                    Multiple clients.    (line  13)
+* mds-wm-toggle-code-view:               LineInfo Mode.       (line  10)
+
+
+File: mds.info,  Node: Variable Index,  Next: Concept Index,  Prev: Function Index,  Up: Top
+
+Variable Index
+**************
+
+ [index ]
+* Menu:
+
+* mds-cursor-ready:                      Execution.           (line  20)
+* mds-cursor-waiting:                    Execution.           (line  20)
+* mds-get-focus-function:                Customization.       (line  12)
+* mds-keep-dead-clients:                 Customization.       (line  29)
+* mds-port:                              Customization.       (line  25)
+* mds-show-args-flag:                    Customization.       (line  36)
+* mds-stop-trace-at-trapped-error-flag <1>: Execution.        (line 117)
+* mds-stop-trace-at-trapped-error-flag:  Customization.       (line  42)
+* mds-track-input-flag <1>:              Output Buffer.       (line  21)
+* mds-track-input-flag:                  Customization.       (line  48)
+* mds-truncate-lines-flag:               Customization.       (line  54)
+* mds-wait-until-ready-flag:             Customization.       (line  60)
+* mds-wm-side-by-side:                   Customization.       (line  68)
+* mds-wm-ss-fractional-size:             Customization.       (line  74)
+* tab-width:                             Customization.       (line  80)
+
+
+File: mds.info,  Node: Concept Index,  Next: Program Index,  Prev: Variable Index,  Up: Top
+
+Concept Index
+*************
+
+ [index ]
+* Menu:
+
+* .emacs:                                Emacs.               (line   6)
+* Accessing LineInfo:                    Accessing LineInfo.  (line   6)
+* Assign a variable:                     Assign a variable.   (line   6)
+* breakpoints:                           Breakpoints.         (line   6)
+* configuration:                         Configuration.       (line   6)
+* customization:                         Customization.       (line   6)
+* dead showstat buffer:                  Dead Showstat Buffer.
+                                                              (line   6)
+* debugging tips:                        Debugging Tips.      (line   6)
+* emacs:                                 Emacs.               (line   6)
+* evaluation, expression:                Evaluation.          (line   6)
+* execution:                             Execution.           (line   6)
+* feedback:                              Feedback.            (line   6)
+* for-less do-loops:                     for-less do-loops.   (line   6)
+* help:                                  Help.                (line   6)
+* installation:                          Installation.        (line   6)
+* introduction:                          Introduction.        (line   6)
+* launching mds:                         Launching MDS.       (line   6)
+* lineinfo buffer:                       LineInfo Buffer.     (line   6)
+* LineInfo Caveats:                      LineInfo Caveats.    (line   6)
+* LineInfo Mode:                         LineInfo Mode.       (line   6)
+* live showstat buffer:                  Live Showstat Buffer.
+                                                              (line   6)
+* Locate source of unexpected result:    Locate source of unexpected result.
+                                                              (line   6)
+* miscellaneous:                         Miscellaneous.       (line   6)
+* monitoring:                            Monitoring.          (line   6)
+* Multiple clients:                      Multiple clients.    (line   6)
+* output buffer:                         Output Buffer.       (line   6)
+* patching:                              Patching.            (line   6)
+* Preprocessor macros:                   Preprocessor macros. (line   6)
+* README:                                Installation.        (line   6)
+* README-installer:                      Installation.        (line   6)
+* Recursive debugging:                   Recursive debugging. (line   6)
+* Remote debugging:                      Remote debugging.    (line   6)
+* requirements:                          Requirements.        (line   6)
+* Save a local result:                   Save a local result. (line   6)
+* Set breakpoint in calling procedure:   Set breakpoint in calling procedure.
+                                                              (line   6)
+* showstat buffer:                       Showstat Buffer.     (line   6)
+* showstat mode:                         Showstat Mode.       (line   6)
+* starting mds:                          Launching MDS.       (line   6)
+* status:                                Status.              (line   6)
+* stopping mds:                          Launching MDS.       (line   6)
+* summary:                               Summary.             (line   6)
+* tracing:                               Execution.           (line 117)
+* use statement:                         use statement.       (line   6)
+* watchpoints:                           Watchpoints.         (line   6)
+
+
+File: mds.info,  Node: Program Index,  Next: GNU Free Documentation License,  Prev: Concept Index,  Up: Top
+
+Program Index
+*************
+
+ [index ]
+* Menu:
+
+* ssh:                                   Remote debugging.      (line 6)
+
+
+File: mds.info,  Node: GNU Free Documentation License,  Prev: Program Index,  Up: Top
+
+Appendix A GNU Free Documentation License
+*****************************************
+
+                     Version 1.3, 3 November 2008
+
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+     `http://fsf.org/'
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft", which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it
+     can be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
+     accept the license if you copy, modify or distribute the work in a
+     way requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.  If a section does not fit the above definition of
+     Secondary then it is not allowed to be designated as Invariant.
+     The Document may contain zero Invariant Sections.  If the Document
+     does not identify any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup, or absence of
+     markup, has been arranged to thwart or discourage subsequent
+     modification by readers is not Transparent.  An image format is
+     not Transparent if used for any substantial amount of text.  A
+     copy that is not "Transparent" is called "Opaque".
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML, PostScript or PDF designed for
+     human modification.  Examples of transparent image formats include
+     PNG, XCF and JPG.  Opaque formats include proprietary formats that
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML, PostScript or PDF
+     produced by some word processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a computer-network location from
+     which the general network-using public has access to download
+     using public-standard network protocols a complete Transparent
+     copy of the Document, free of added material.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section Entitled "Endorsements", provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements", and any sections Entitled "Dedications".  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow
+     this License in all other respects regarding verbatim copying of
+     that document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     `http://www.gnu.org/copyleft/'.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
+
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
+
+   If you have Invariant Sections, Front-Cover Texts and Back-Cover
+Texts, replace the "with...Texts." line with this:
+
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
+
+   If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+   If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License, to
+permit their use in free software.
+
+
+
+Tag Table:
+Node: Top856
+Node: Introduction4662
+Node: Summary5123
+Ref: Summary-Footnote-17936
+Node: Requirements7966
+Node: Installation8747
+Node: Configuration9010
+Node: Emacs9278
+Ref: Emacs-Footnote-110511
+Node: Customization10568
+Ref: mds-port11624
+Node: Feedback14440
+Node: Launching MDS14862
+Node: Showstat Buffer15389
+Node: Live Showstat Buffer15972
+Ref: fibonacci16835
+Node: Dead Showstat Buffer17049
+Node: Showstat Mode17577
+Node: Execution18510
+Ref: mds-goto-procname20284
+Ref: mds-here21013
+Ref: tracing23826
+Node: Status25213
+Ref: mds-where25725
+Node: Breakpoints27234
+Ref: mds-goback-save28420
+Node: Watchpoints29358
+Node: Evaluation31482
+Ref: prettyprint33201
+Node: Miscellaneous33683
+Node: Monitoring34416
+Node: Patching35265
+Node: Help37314
+Node: LineInfo Buffer37902
+Node: Accessing LineInfo38509
+Node: LineInfo Mode39982
+Node: LineInfo Caveats41059
+Node: Preprocessor macros41542
+Node: for-less do-loops42009
+Ref: do-loop42787
+Node: use statement42872
+Node: Declaration Self-Assignment43495
+Node: True or False Conditional44514
+Node: Output Buffer45148
+Node: Output buffer commands46961
+Node: Debugging Tips47244
+Node: Set breakpoint in calling procedure47852
+Node: Locate source of unexpected result48829
+Node: Assign a variable49738
+Node: Save a local result50662
+Node: Recursive debugging51441
+Node: Multiple clients52509
+Node: Remote debugging53044
+Node: Key Index53697
+Node: Function Index57847
+Node: Variable Index62583
+Node: Concept Index63827
+Node: Program Index67466
+Node: GNU Free Documentation License67701
+
+End Tag Table

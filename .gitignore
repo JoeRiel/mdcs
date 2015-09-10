@@ -3,7 +3,6 @@
 !/doc/*.texi
 !/doc/*.html
 !/doc/*.info
-/doc/fdl.texi
 TAGS
 
 # for now
@@ -18,10 +17,10 @@ TAGS
 /scrs/
 
 *.mla
-*.hdb
 *.zip
 *.tags
-
+!/mdc.help
+!/mdc.hdb
 
 /lisp/*.elc
 /lisp/sandbox/
@@ -37,4 +36,3 @@ readline.log
 /bin/byte-compile
 /bin/emacs
 /demo/mdcs-debugger-demo.mw
-/mdc.help
