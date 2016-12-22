@@ -55,3 +55,4 @@ readline.log
 /doc/mds.html
 
 /installer.mk
+/maple/include/version.mi
