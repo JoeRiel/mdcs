@@ -1,5 +1,13 @@
 -*- org -*-
 
+* mdcs-2.6.0
+** Handle updates to lineinfo (expand > to $MAPLE_ROOT)
+   * This will only affect Maple 2017+.
+** Improve version info:
+   * Replace mdc:-Version with mdc:-About.
+   * Redefine mds-version function.
+** Add mds.pdf to installer distribution
+
 * mdcs-2.5.0
 ** Tweak lisp to byte-compile wit no warnings
 ** Remove unused stuff
