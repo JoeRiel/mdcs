@@ -65,8 +65,8 @@ global showstat, showstop;
                 end if;
             elif enter_procname <> NULL then
                 if SearchText(enter_procname
-                               , sprintf("%a",procName)
-                              ) <> 0 then
+                              , sprintf("%a",procName)
+                             ) <> 0 then
                     skip := false;
                     enter_procname := NULL;
                     debugger_printf(TAG_CLEAR_MSG);
@@ -218,7 +218,15 @@ global showstat, showstop;
         end if;
         if not skip then
             state := sprintf("<%d>\n%A", addr, dbg_state);
-            depth := iquo(numelems(debugopts(':-callstack'))-7,3);
+            try
+                depth := iquo(numelems(debugopts(':-callstack'))-7,3);
+            catch:
+                # There are weird situations where the above call
+                # raises an error; I don't know why and didn't record
+                # what the error is.  This is a hack to partially
+                # workaround it by assigning some value to depth.
+                depth := last_depth;
+            end try;
             if state = last_state and depth = last_depth then
                 # WriteTagf(TAG_SAME);
             else
@@ -322,107 +330,70 @@ global showstat, showstop;
 
         #{{{ parse cmd
 
-        if cmd = "cont" then
-            return
-        elif cmd = "next" then
-            debugopts('steplevel'=evalLevel);
-            return
-        elif cmd = "step" and not module_flag then
-            debugopts('steplevel'=999999999);
-            return
-        elif cmd = "into" or cmd = "step" and module_flag then
-            debugopts('steplevel'=evalLevel+6);
-            return
-        elif cmd = "outfrom" then
-            debugopts('steplevel'=evalLevel-2);
-            return
-        elif cmd = "return" then
-            debugopts('steplevel'=evalLevel-statLevel*5);
-            return
-        elif cmd = "quit" or cmd = "done" or cmd = "stop" then
-            debugopts('interrupt'=true)
-        elif cmd = "where" then
-            if nops(line) = 1 then
-                return 'debugopts(callstack)'
-            else
-                # this form is not documented in ?debugopts.
-                # line[2] should be an integer.
-                return 'debugopts'('callstack'=line[2]);
-            fi
-        elif cmd = "showstack" then
-            n := debugopts('callstack');
-            n := [op(1,n),op(5..-1,n)];
-            n := subsop(seq(3*i=``,i=1..(nops(n)+1)/3),n);
-            return n;
-        elif cmd = "stopat" then
-            #{{{ stopat
+        try
 
-            if nops(line) = 4 then
-                try
-                    parse(line[4],parse_debugger);
-                    line := [line[1],line[2],line[3],err];
-                catch:
-                    err := lasterror;
-                end try;
-            fi;
-            if err <> lasterror then
+            if cmd = "cont" then
+                return
+            elif cmd = "next" then
+                debugopts('steplevel'=evalLevel);
+                return
+            elif cmd = "step" and not module_flag then
+                debugopts('steplevel'=999999999);
+                return
+            elif cmd = "into" or cmd = "step" and module_flag then
+                debugopts('steplevel'=evalLevel+6);
+                return
+            elif cmd = "outfrom" then
+                debugopts('steplevel'=evalLevel-2);
+                return
+            elif cmd = "return" then
+                debugopts('steplevel'=evalLevel-statLevel*5);
+                return
+            elif cmd = "quit" or cmd = "done" or cmd = "stop" then
+                debugopts('interrupt'=true)
+            elif cmd = "where" then
+                if nops(line) = 1 then
+                    return 'debugopts(callstack)'
+                else
+                    # this form is not documented in ?debugopts.
+                    # line[2] should be an integer.
+                    return 'debugopts'('callstack'=line[2]);
+                fi
+            elif cmd = "showstack" then
+                n := debugopts('callstack');
+                n := [op(1,n),op(5..-1,n)];
+                n := subsop(seq(3*i=``,i=1..(nops(n)+1)/3),n);
+                return n;
+            elif cmd = "stopat" then
+                #{{{ stopat
+
+                if nops(line) = 4 then
+                    cond := parse(line[4],parse_debugger);
+                    line := [line[1],line[2],line[3],cond];
+                fi;
                 pName := procName;
                 lNum := 1;
                 cond := NULL;
                 for i from 2 to nops(line) do
-                    if i <= nops(line) then
-                        if line[i] :: name then pName := line[i]
-                        elif line[i] ::  '{integer,list(integer)}' then
-                            lNum := line[i]
-                        else cond := line[i]
-                        fi
+                    if line[i] :: name then
+                        pName := line[i];
+                    elif line[i] :: '{integer,list(integer)}' then
+                        lNum := line[i];
+                    else
+                        cond := line[i];
                     fi
                 od;
+                # Set the breakpoint(s); lNum is either an integer or list of integer.
                 if nops(line) > 1 then
-                    try
-                        for n in lNum do
-                            # Can't call stopat() procedure here because cond
-                            # will remain unevaluated (as the name 'cond').
-                            debugopts('stopat'=[pName,n,cond])
-                        od
-                    catch:
-                        err := lasterror
-                    end
+                    for n in lNum do
+                        debugopts('stopat'=[pName,n,cond])
+                    od;
                 fi;
-                if err <> lasterror then return []; (* stopat() *) fi
-            fi
+                return [];
 
-            #}}}
-        elif cmd = "unstopat" then
-            #{{{ unstopat
-            pName := procName;
-            lNum := NULL;
-            for i from 2 to nops(line) do
-                if line[i] :: name then pName := line[i]
-                else lNum := line[i]
-                fi
-            od;
-            try
-                unstopat(pName,lNum);
-            catch:
-                err := lasterror;
-            end try;
-            if err <> lasterror then return err fi
-            #}}}
-        elif cmd = "showstat" or cmd = "list" then
-            #{{{ showstat
-
-            if procName = 0 then
-                debugger_printf(TAG_WARN,"Error, not currently in a procedure\n");
-            elif nops(line) = 1 and cmd = "list" then
-                i := statNumber - 5;
-                if i < 1 then i := 1 fi;
-                try
-                    showstat['nonl'](procName,i..statNumber+1);
-                catch:
-                    err := lasterror;
-                end try;
-            else
+                #}}}
+            elif cmd = "unstopat" then
+                #{{{ unstopat
                 pName := procName;
                 lNum := NULL;
                 for i from 2 to nops(line) do
@@ -430,151 +401,210 @@ global showstat, showstop;
                     else lNum := line[i]
                     fi
                 od;
-                try
-                    showstat['nonl'](pName,lNum);
-                catch:
-                    err := lasterror;
-                end try;
-            fi
+                unstopat(pName,lNum);
+                if err <> lasterror then return err fi
+                #}}}
+            elif cmd = "showstat" or cmd = "list" then
+                #{{{ showstat
 
-            #}}}
-        elif cmd = "showstop" then
-            try
+                if procName = 0 then
+                    debugger_printf(TAG_WARN,"Error, not currently in a procedure\n");
+                elif nops(line) = 1 and cmd = "list" then
+                    i := statNumber - 5;
+                    if i < 1 then i := 1 fi;
+                    showstat(procName,i..statNumber+1);
+                else
+                    pName := procName;
+                    lNum := NULL;
+                    for i from 2 to nops(line) do
+                        if line[i] :: name then pName := line[i]
+                        else lNum := line[i]
+                        fi
+                    od;
+                    showstat(pName,lNum);
+                fi
+
+                #}}}
+            elif cmd = "showstop" then
                 showstop['nonl']();
-            catch:
-                err := lasterror;
-            end try;
-        elif cmd = "stopwhen" then
-            return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
-        elif cmd = "stopwhenif" then
-            return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
-        elif cmd = "unstopwhen" then
-            return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
-        elif cmd = "stoperror" then
-            #{{{ stoperror
-            try
+            elif cmd = "stopwhen" then
+                return 'stopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+            elif cmd = "stopwhenif" then
+                return 'stopwhenif'(`debugger/list`(seq(line[i],i=2..nops(line))))
+            elif cmd = "unstopwhen" then
+                return 'unstopwhen'(`debugger/list`(seq(line[i],i=2..nops(line))))
+            elif cmd = "stoperror" then
+                #{{{ stoperror
                 line := sscanf(original,"%s %1000c");
                 return 'stoperror'(seq(line[i],i=2..nops(line)))
-            catch:
-                err := lasterror;
-            end try;
-            #}}}
-        elif cmd = "unstoperror" then
-            #{{{ unstoperror
-            try
+                #}}}
+            elif cmd = "unstoperror" then
+                #{{{ unstoperror
                 line := sscanf(original,"%s %1000c");
                 return 'unstoperror'(seq(line[i],i=2..nops(line)));
-            catch:
-                err := lasterror;
-            end try;
-            #}}}
-        elif cmd = "help" or cmd = "?" then
-            try
+                #}}}
+            elif cmd = "help" or cmd = "?" then
                 help('debugger');
-            catch:
-                err := lasterror;
-            end try;
-        elif cmd = "showerror" then
-            return ['debugopts'('lasterror')]
-        elif cmd = "showexception" then
-            return ['debugopts'('lastexception')]
-        elif cmd = "setenv" then
-            return 'debugopts'('setenv'=[line[2],line[3]])
-        elif cmd = "_mds_skip" then
-            #{{{ _skip
-            go_back_addr := addr;
-            go_back_state := statNumber;
-            skip := true;
-            return line;
-            #}}}
-        elif cmd = "_mds_here" then
-            #{{{ _here
-            line := sscanf(original, "%s %d %d %d");
-            here_cnt := line[2];
-            here_addr := line[3];
-            here_state := line[4];
-            if here_state = statNumber then
-                here_cnt := here_cnt+1;
-            end if;
-            go_back_addr := addr;
-            go_back_state := statNumber;
-            skip := true;
-            return 'NULL';
-            #}}}
-        elif cmd = "_mds_enter" then
-            #{{{ _mds_enter
-
-            line := sscanf(original, "%s %s");
-            enter_procname := line[2];
-            go_back_addr := addr;
-            go_back_state := statNumber;
-            skip := true;
-            return 'NULL';
-
-            #}}}
-        elif cmd = "_mds_goback_save" then
-            #{{{ _goback_save
-            line := sscanf(original, "%s %d %d");
-            go_back_state := line[2];
-            go_back_addr := line[3];
-            return 'NULL'
-            #}}}
-        elif cmd = "_mds_monitor" then
-            #{{{ _monitor
-
-            line := sscanf(original, "%s %s %d %1000c");
-            cmd := line[2];
-            if cmd = "toggle" then
-                monitoring := not monitoring;
-                return `if`(monitoring
-                            , "monitoring enabled"
-                            , "monitoring disabled"
-                           );
-            elif cmd = "define" then
-                addr := line[3];
-                if numelems(line) = 3 then
-                    monitor_expr[addr] := evaln(monitor_expr[addr]);
-                    return 'NULL'
-                else
-                    monitor_expr[addr] := line[4];
-                    line[4];
+            elif cmd = "showerror" then
+                return ['debugopts'('lasterror')]
+            elif cmd = "showexception" then
+                return ['debugopts'('lastexception')]
+            elif cmd = "setenv" then
+                return 'debugopts'('setenv'=[line[2],line[3]])
+            elif cmd = "_mds_skip" then
+                #{{{ _skip
+                go_back_addr := addr;
+                go_back_state := statNumber;
+                skip := true;
+                return line;
+                #}}}
+            elif cmd = "_mds_here" then
+                #{{{ _here
+                line := sscanf(original, "%s %d %d %d");
+                here_cnt := line[2];
+                here_addr := line[3];
+                here_state := line[4];
+                if here_state = statNumber then
+                    here_cnt := here_cnt+1;
                 end if;
-            else
+                go_back_addr := addr;
+                go_back_state := statNumber;
+                skip := true;
                 return 'NULL';
+                #}}}
+            elif cmd = "_mds_enter" then
+                #{{{ _mds_enter
+
+                line := sscanf(original, "%s %s");
+                enter_procname := line[2];
+                go_back_addr := addr;
+                go_back_state := statNumber;
+                skip := true;
+                return 'NULL';
+
+                #}}}
+            elif cmd = "_mds_goback_save" then
+                #{{{ _goback_save
+                line := sscanf(original, "%s %d %d");
+                go_back_state := line[2];
+                go_back_addr := line[3];
+                return 'NULL'
+                #}}}
+            elif cmd = "_mds_monitor" then
+                #{{{ _monitor
+
+                line := sscanf(original, "%s %s %d %1000c");
+                cmd := line[2];
+                if cmd = "toggle" then
+                    monitoring := not monitoring;
+                    return `if`(monitoring
+                                , "monitoring enabled"
+                                , "monitoring disabled"
+                               );
+                elif cmd = "define" then
+                    addr := line[3];
+                    if numelems(line) = 3 then
+                        monitor_expr[addr] := evaln(monitor_expr[addr]);
+                        return 'NULL'
+                    else
+                        monitor_expr[addr] := line[4];
+                        line[4];
+                    end if;
+                else
+                    return 'NULL';
+                end if;
+
+                #}}}
+            elif cmd = "_mds_request" then
+                #{{{ _mds_request
+                local expr,val;
+                line := sscanf(original, "%s %s %s");
+                expr := line[2];
+                val  := traperror(eval(parse(expr)));
+                if nops(line) = 3 and line[3] = "unlimited" then
+                    debugger_printf(TAG_UNLIMITED, "%Q\n", val);
+                else
+                    debugger_printf(TAG_RESULT, "%Q\n", val);
+                end if;
+                prompt := false;
+                next;
+                #}}}
+            elif cmd = "_mds_unlimited" then
+                #{{{ _mds_unlimited
+                unlimited_flag := true;
+                line := original[16..-1];
+                original := line;
+                cmd := op(traperror(sscanf(line,"%s")));
+                #}}}
+            elif cmd = "inspect" then
+                #{{{ inspect
+
+                local index := NULL;
+                if nops(line) = 1 then
+                    n := debugopts('inspect'=[debugopts('calldepth')-1]);
+                elif nops(line) = 2 or line[3] :: '{integer, integer..integer}' then
+                    n := debugopts('inspect'=[line[2]]);
+                else
+                    local baseName := line[3];
+                    if baseName :: indexed then
+                        index := op(baseName);
+                        baseName := op(0,baseName);
+                    fi;
+                    n := debugopts('inspect' = [line[2], baseName]);
+                fi;
+                if nops(line) <= 2 then
+                    # inspect stackLevel
+                    # n is [procname, statnum]
+                    i := n[2] - 5;
+                    if i < 1 then i := 1 fi;
+                    # showsource['nonl','nowarn'](n[1],i..n[2]+1)
+                    showstat(n[1],i..n[2]+1);
+                elif line[3] :: {integer, integer..integer} then
+                    # inspect stackLevel lineNum [.. lineNum]
+                    # showsource['nonl','nowarn'](n[1],line[3]);
+                    showstat(n[1],line[3]);
+                    # n is [procname, statnum]
+                else
+                    # inspect stackLevel varName
+                    # n is [0, paramValue] or [1, localInstance]
+                    if nops(n) = 1 then
+                        return 'NULL';
+                    elif n[1] = 0 then
+                        if nops(n) > 2 then
+                            if index <> NULL then
+                                return n[2..][index];
+                            else
+                                return op(2..,n);
+                            fi;
+                        else
+                            if index <> NULL then
+                                return n[2][index];
+                            else
+                                return n[2];
+                            fi;
+                        fi;
+                    elif n[1] = 1 then
+                        # return value of parameter/local, possibly with index
+                        if index <> NULL then
+                            return eval(n[2][index]);
+                        else
+                            return eval(n[2]);
+                        fi;
+                    elif n[1] = 2 then
+                        debugger_printf(TAG_RESULT, "%A\n",n[2]);
+                    fi;
+                fi;
+
+                #}}}
             end if;
 
-            #}}}
-        elif cmd = "_mds_request" then
-            #{{{ _mds_request
-            local expr,val;
-            line := sscanf(original, "%s %s %s");
-            expr := line[2];
-            val  := traperror(eval(parse(expr)));
-            if nops(line) = 3 and line[3] = "unlimited" then
-                debugger_printf(TAG_UNLIMITED, "%Q\n", val);
+            if cmd = "statement" then
+                original := original[11..-1];
+                statement := ':-statement';
             else
-                debugger_printf(TAG_RESULT, "%Q\n", val);
+                statement := NULL;
             end if;
-            prompt := false;
-            next;
-            #}}}
-        elif cmd = "_mds_unlimited" then
-            #{{{ _mds_unlimited
-            unlimited_flag := true;
-            line := original[16..-1];
-            original := line;
-            cmd := op(traperror(sscanf(line,"%s")));
-            #}}}
-        end if;
 
-        if cmd = "statement" then
-            original := original[11..-1];
-            statement := ':-statement';
-        else
-            statement := NULL;
-        end if;
-
-        try
             line := parse(original,statement,parse_debugger);
             # *** Avoid returning `line` unevaluated (due to LNED) by
             # evaluating if line refers to a procedure. Note that the check
@@ -583,7 +613,7 @@ global showstat, showstop;
             # for type procedure if it is a TABLEREF (i.e. type indexed).
             if not line :: indexed and line :: procedure then
                 return eval(line);
-                elif line = NULL then
+            elif line = NULL then
                 return 'NULL';
             else
                 return line;

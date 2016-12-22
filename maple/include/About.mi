@@ -1,0 +1,28 @@
+#LINK ../src/mdc.mpl
+
+$include <include/version.mi>
+
+About := subs('_about' = Record(NULL
+                                , "package" = "mdc"
+                                , "version" = "9999"
+                                , "author"  = "Joe Riel"
+                                , "email"   = "jriel@maplesoft.com"
+                                , "date"    = StringTools:-FormatTime()
+                                , "maple"   = proc()
+                                              local all, ver;
+                                                  StringTools:-RegMatch("^Maple ([^,]*)"
+                                                                        , kernelopts('version')
+                                                                        , 'all'
+                                                                        , 'ver'
+                                                                       );
+                                                  ver;
+                                              end proc()
+                                , "build"   = __GIT_BUILD__
+                                , "hash"    = __GIT_HASH__
+                               )
+              , () -> _about
+             );
+
+$undef __GIT_HASH__
+$undef __GIT_VERSION__
+$undef __VERSION__

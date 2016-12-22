@@ -12,7 +12,7 @@ global Installer;
     local Install
         , MakePath
         , ToolboxDir
-        , UpdateDir
+        , UpdateDir := UpdateDir
         ;
 
     uses %FT = FileTools, %ST = StringTools;
@@ -242,7 +242,11 @@ end proc:
 
 CreateInstaller := proc()
 
-local file, elisp, elisp_map, installer, manifest, maplev_dir, maplev_lisp_dir, version;
+local file, elisp_map, installer, manifest
+    , maplev_dir, maplev_elisp, maplev_lisp_dir
+    , mds_dir, mds_elisp, mds_lisp_dir
+    , version
+    ;
 global InstallScript;
 uses %FT = FileTools;
 
@@ -257,33 +261,26 @@ uses %FT = FileTools;
 
     maplev_dir := "/home/joe/emacs/maplev";
     maplev_lisp_dir := %FT:-AbsolutePath("lisp", maplev_dir);
+    maplev_elisp := sort(%FT:-ListDirectory(maplev_lisp_dir, 'returnonly' = "*.el"));
 
-    elisp := sort(%FT:-ListDirectory(maplev_lisp_dir, 'returnonly' = "*.el"));
+    mds_dir :=  "/home/joe/emacs/mdcs";
+    mds_lisp_dir := %FT:-AbsolutePath("lisp", mds_dir);
+    mds_elisp    := sort(%FT:-ListDirectory(mds_lisp_dir, 'returnonly' = "*.el"));
+
     elisp_map := ( NULL
+                   # maplev lisp files
                    , seq(%FT:-AbsolutePath(file, maplev_lisp_dir)
                          = %FT:-AbsolutePath(file, "lisp")
-                         , file = elisp
+                         , file = maplev_elisp
                         )
-                   , seq(`=`(sprintf("lisp/%s",file)$2)
-                         , file = [NULL
-                                   #, "mds-cp.el"
-                                   , "mds-client.el"
-                                   , "mds-custom.el"
-                                   , "mds-li.el"
-                                   , "mds-login.el"
-                                   , "mds-out.el"
-                                   , "mds-patch.el"
-                                   , "mds-queue.el"
-                                   , "mds-re.el"
-                                   , "mds-ss.el"
-                                   , "mds-thing.el"
-                                   , "mds-wm.el"
-                                   , "mds.el"
-                                  ])
+                   # mds lisp files
+                   , seq(%FT:-AbsolutePath(file,mds_lisp_dir)
+                         = %FT:-AbsolutePath(file, "lisp")
+                         , file = mds_elisp)
                  );
 
     manifest := [NULL
-                 , "mdc.mla" = "lib/mdc.mla"
+                 , "maple/mdc.mla" = "lib/mdc.mla"
                  , "mdc.hdb" = "lib/mdc.hdb"
                  , "mdc.help" = "lib/mdc.help"
                  , "../maplev/maplev.mla" = "lib/maplev.mla"
@@ -316,7 +313,7 @@ uses %FT = FileTools;
                                                 , version)
                                         , "\n"
                                         , ( "This installer unpacks the Maple archive "
-                                            "and help database to a folder under the user's HOME directory.\n"
+                                            "and help database to a folder under the user's HOME directory."
                                           )
                                       )
                         ]
@@ -325,9 +322,9 @@ uses %FT = FileTools;
                               , 'text' = ( "Installing the Lisp and Info files...\n"
                                            "\n"
                                            "The default locations are\n"
-                                           "  lisp files --> HOME/.emacs.d/maple\n"
-                                           "  info files --> HOME/share/info\n"
-                                           "where HOME = kernelopts('homedir').\n"
+                                           "  lisp files --> $HOME/.emacs.d/maple\n"
+                                           "  info files --> $HOME/share/info\n"
+                                           "where $HOME = kernelopts('homedir').\n"
                                            "\n"
                                            "To change these defaults, stop the installation,\n"
                                            "rename the file _config.mpl to config.mpl,\n"
@@ -346,6 +343,7 @@ uses %FT = FileTools;
                                                 "in info.  An html version of the mds documentation "
                                                 "is available in $HOME/maple/toolbox/doc/mdc.html.\n"
                                                );
+                                         help("mdc");
                                      end proc
                        ]
 

@@ -3,8 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@set VERSION 2.5.0
-@set DATE June 2011
+@include mds-version.inc
 
 @dircategory Emacs
 @direntry
@@ -1389,7 +1388,7 @@ variable if the variable is not assigned in the procedure body; this
 frequently happens with an index to a @code{seq} call.  For
 example, one might do
 
-@example @asis
+@example
 @iftex
 f := @strong{proc}(X)
 @strong{local} x := x; # dummy assignment to avoid mint nag
@@ -1406,16 +1405,16 @@ end proc;
 
 This is interpreted by Maple as
 
-@example @asis
+@example
 @iftex
 f := @strong{proc}(X)
-@strong{local} x; # note the assignment is removed
+@strong{local} x; # the assignment is removed
     seq(x, x = X);
 @strong{end proc};
 @end iftex
 @ifinfo
 f := proc(X)
-local x;
+local x; # the assignment is removed
     seq(x, x = X);
 end proc;
 @end ifinfo
@@ -1593,7 +1592,7 @@ which is mapped to the @kbd{E} key.
 For example, to save the value of the local variable @code{x}
 to the file @file{/tmp/x.mpl}, do
 
-@example @asis
+@example
 e assign(:-x,x) @key{RET}
 E save x, "/tmp/x.mpl" @key{RET}
 @end example

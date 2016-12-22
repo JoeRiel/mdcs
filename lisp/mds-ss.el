@@ -89,7 +89,8 @@ Echo the command to the output buffer unless HIDE is non-nil."
   "Send EXPR, with newline, to the Maple process.
 Optional DISPLAY, if t, means send EXPR to the output buffer.  If
 not nil and not t, send DISPLAY (should be a string).  If nil,
-send nothing.  This function is intended to be used for
+send nothing.  Optional UNLIMITED, if non-nil, means do not
+truncate the output.  This function is intended to be used for
 evaluating Maple expressions."
   (mds-ss-block-input)
   (if display
@@ -101,13 +102,13 @@ evaluating Maple expressions."
 			      expr)))
 
 (defun mds-ss-eval-proc-statement (cmd &optional save)
-  "Send CMD, with appended newline, to the Maple process and to
-the output buffer, tagged as 'cmd.  If SAVE is non-nil, then save
-it.  Change cursor type to `mds-cursor-waiting', which indicates
-we are waiting for a response from Maple.  This function assumes
-we are in the appropriate `mds-ss-buffer'.  This function is to
-be used with commands that cause Maple to execute procedural
-code."
+  "Send CMD to the Maple process and the output buffer, tagged as 'cmd.
+Append a newline.  If SAVE is non-nil, then save 'cmd as the last
+command.  Change cursor type to `mds-cursor-waiting', which
+indicates we are waiting for a response from Maple.  This
+function assumes we are in the appropriate `mds-ss-buffer'.  This
+function is to be used with commands that cause Maple to execute
+procedural code."
   (mds-ss-block-input)
   (if save (mds-client-set-last-cmd mds-client cmd))
   (setq cursor-type mds-cursor-waiting)
@@ -162,12 +163,14 @@ If ALIVE is non-nil, create a live buffer."
 ;;{{{ (*) mds-ss-update
 
 (defun mds-ss-update (buf addr procname state &optional statement)
-  "Update the showstat buffer BUF, the client field addr, and
-the buffer local variables `mds-ss-procname', and `mds-ss-state'.
-ADDR is the address of PROCNAME, which is the name of the
-procedure, STATE is the current state; all are strings.  If the
-buffer is already displaying PROCNAME, then just move the arrow;
-otherwise call (maple) showstat to display the new procedure."
+  "Update the showstat buffer BUF and associated buffer-local variables.
+The client field addr, and the buffer local variables
+`mds-ss-procname', and `mds-ss-state' are updated.
+ADDR is the address of PROCNAME, which is the name of the procedure,
+STATE is the current state; all are strings.  If the buffer is already
+displaying PROCNAME, then just move the arrow; otherwise
+call (maple) showstat to display the new procedure.
+The optional STATEMENT is saved in `mds-ss-statement'."
 
   (with-current-buffer buf
     (let ((trace (mds-client-get-trace mds-client)))
@@ -433,7 +436,7 @@ Minibuffer completion is used if COMPLETE is non-nil."
     choice))
 
 (defun mds-expr-at-point (&optional default)
-  "Return the expression at point.
+  "Return the expression at point; if nothing use DEFAULT.
 This is specialized to work with a few routines; needs to be generalized."
   (cond
    ((looking-at " *\\(?:el\\)?if \\(.+?\\) then")
@@ -510,7 +513,7 @@ If optional DEPTH is nil, use 1, the top of the stack."
   (interactive "p")
   (let ((depth (or depth 1)))
     (if (< depth 1)
-	(error "stack depth must be positive")
+	(error "Stack depth must be positive")
       (mds-ss-eval-expr (format "mdc:-Debugger:-CallStack(%d,debugopts('callstack'))" depth)
 			(format "callstack(%d)" depth)))))
 		    
@@ -772,9 +775,9 @@ allow return expression of unlimited size."
       (message "No preceding statement."))))
 
 (defun mds-eval-and-display-expr (expr)
-  "Evaluate a Maple expression, EXPR, display result.  If called
-interactively, EXPR is queried.  If called with prefix argument,
-allow return expression of unlimited size."
+  "Evaluate a Maple expression, EXPR, display result.
+If called interactively, EXPR is queried.  If called with prefix
+argument, allow return expression of unlimited size."
   (interactive (list (mds-expr-at-point-interactive
 		      "eval: " "")))
   (mds-ss-eval-expr expr t current-prefix-arg))
@@ -840,7 +843,7 @@ otherwise run through StringTools:-FormatMessage."
     (mds-ss-send-client "showexception\n")))
 
 (defun mds-where (&optional depth)
-  "Send the 'where' command to the debugger.  
+  "Send the 'where' command to the debugger.
 Display the stack content in the output buffer.  Each entry
 consists of the hyperlinked name of the calling procedure,
 followed by the statement from the procedure that was called,
@@ -887,7 +890,7 @@ See `mds-monitor-toggle'."
 ;;{{{ (*) Short cuts
 
 (defun mds-send-last-command ()
-  "Reexecute the last command that executes code."
+  "Reexecute the last command that executed code."
   (interactive)
   (let ((cmd (mds-client-get-last-cmd mds-client)))
     (if cmd
@@ -1041,7 +1044,8 @@ otherwise do so in the `mds-ss-buffer'."
 (defun mds-ss-set-mode-line (proc &optional label)
   "Set the mode-line of an mds-ss buffer.
 PROC is a string corresponding to the displayed procedure,
-it is displayed in square brackets after the mode name."
+it is displayed in square brackets after the mode name.
+If LABEL is non-nil, insert it in brackes, [LABEL]."
   (setq mode-line-format
 	(list
 	 mode-line-buffer-identification

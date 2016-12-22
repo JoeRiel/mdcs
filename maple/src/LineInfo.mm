@@ -72,7 +72,7 @@
 ##
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## macro(NE=testnoerror):
 ### mdc(mdc:-LineInfo:-Store, mdc:-LineInfo:-Get);
 ##
@@ -179,7 +179,7 @@ local ModuleLoad
 ##  the statement.
 ##  The default is false.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include <lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Get):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):
@@ -249,7 +249,7 @@ local ModuleLoad
 ##- See "Info" for a description of the table structure.
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include <lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Store):
 ## macro(NE='testnoerror'
@@ -293,7 +293,7 @@ local ModuleLoad
 
     Store := proc( addr :: integer, info := Info )
 
-    local file, filenames, i, lineinfo, missing, n, delta;
+    local delta, file, filenames, i, lineinfo, missing, mplroot, n, newfilenames;
         try
             lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
         catch:
@@ -311,7 +311,18 @@ local ModuleLoad
                 # The empty string indicates the source is a Maple worksheet.
                 info[addr] := NULL;
             else
-                missing := remove(FileTools:-Exists or Testzero, filenames);
+                mplroot := FileTools:-JoinPath([getenv("MAPLE_ROOT"), ""]);
+                newfilenames := map(proc(nm)
+                                        if nm = 0 then 0
+                                        elif nm[1] = ">" then
+                                            cat(mplroot, nm[2..]);
+                                        else
+                                            FileTools:-AbsolutePath(nm);
+                                        end if
+                                    end proc
+                                    , filenames);
+
+                missing := remove(FileTools:-Exists or Testzero, newfilenames);
                 if missing <> [] then
                     WARNING("cannot find source files: %1", missing);
                     info[addr] := NULL;
@@ -322,16 +333,10 @@ local ModuleLoad
                     # into a two-field record, and store in the sparse table
                     # info, which is indexed by the procedure address.
 
-                    filenames := map(nm -> `if`(nm=0
-                                                , 0
-                                                , FileTools:-AbsolutePath(nm)
-                                               )
-                                     , filenames);
-
                     n := numelems(lineinfo)-1;
                     delta := n - debugopts('statcount' = pointto(addr));
 
-                    info[addr] := Record['packed'](':-filenames' = filenames
+                    info[addr] := Record['packed'](':-filenames' = newfilenames
                                                    , ':-positions' = Array(0..n, 1..4
                                                                            , lineinfo
                                                                            , 'datatype' = integer[4]
@@ -340,7 +345,7 @@ local ModuleLoad
                                                   );
 
                     # Append addr to the entry for each filename.
-                    for file in filenames do
+                    for file in newfilenames do
                         if info[file] = 0 then
                             info[file] := addr;
                         else
@@ -407,7 +412,7 @@ local ModuleLoad
 ##  procedure/statement.
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include "/home/joe/emacs/mdcs/maple/include/lineinfo.mpl"
 ## AssignFUNC(LineInfo:-LookupStatement):
 ## AssignLocal(Store,mdc:-LineInfo:-Store):
@@ -497,7 +502,7 @@ local ModuleLoad
 ##  procedure has breakpoints at offsets 12 and 24, the
 ##  string returned is ~" 12 24"~.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include <lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Breakpoints):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):

@@ -1,12 +1,19 @@
 *~
+auto/
 /doc/*
 !/doc/*.texi
 !/doc/*.html
 !/doc/*.info
-/doc/fdl.texi
 TAGS
 
-# for now
+# mk directory 
+/mk/Makefile.aux
+/mk/Makefile.out
+/mk/Makefile.tex
+/mk/mds-fixup.el
+/mk/default.mk
+
+
 /maple/Browser
 /maple/doti/
 /maple/mdoc/
@@ -14,14 +21,15 @@ TAGS
 /maple/mtest/
 /maple/tst/
 /maple/sandbox/
+/sandbox/
 
 /scrs/
 
 *.mla
-*.hdb
 *.zip
 *.tags
-
+!/mdc.help
+!/mdc.hdb
 
 /lisp/*.elc
 /lisp/sandbox/
@@ -37,4 +45,13 @@ readline.log
 /bin/byte-compile
 /bin/emacs
 /demo/mdcs-debugger-demo.mw
-/mdc.help
+/mk/help.mk
+/mk/version.mk
+/mk/targets.mk
+/mds-version.inc
+/maple/Makefile
+/lisp/Makefile
+/lisp/mds-version.el
+/doc/mds.html
+
+/installer.mk

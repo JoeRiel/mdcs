@@ -1,7 +1,18 @@
+<!--*- markdown -*-->
 MDCS: Maple Debugger Client/Server
 ==================================
 
 **Version 2.5.0**
+
+Table of Contents
+-----------------
+
+* [Description](#description)
+* [Screenshot](#screenshot)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
 
 Description
 -----------
@@ -73,12 +84,23 @@ the following features:
   in-place.  This permits testing changes without access to the full
   source code.
 
+Screenshot
+----------
+Following is a screen shot of the debugger interface.
+
+* The left pane displays the source file.
+  The marker in the left margin indicates the current statement.
+* The top right pane contains output from previously executed statements
+  and a query of the current stack.
+* The bottom right pane shows interpreted code for one of the calls on the stack.
+
+![screen shot](images/mds-example.png?raw=true "Screen Shot")
 
 Requirements
 ------------
-* GNU Emacs 23.1+ (earlier versions may work)
+* [GNU Emacs](https://www.gnu.org/software/emacs/) 23.1+ (earlier versions may work)
 * [maplev-mode](https://github.com/JoeRiel/maplev) 2.33+ (Emacs mode for developing Maple code)
-* Maple 14+ (earlier versions should work)
+* [Maple](https://www.maplesoft.com) 14+ (earlier versions should work)
 
 Installation
 ------------
