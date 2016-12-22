@@ -295,9 +295,10 @@ uses %FT = FileTools;
 
                  , ".emacs" = ".emacs"
 
-                 , "README-installer" = "README-installer"
-                 , "doc/mds.info" = "info/mds.info"
+                 (* documentation *)
                  , "doc/mds.html" = "doc/mds.html"
+                 , "doc/mds.pdf"  = "doc/mds.pdf"
+                 , "doc/mds.info" = "info/mds.info"
 
                  , "maple/installer/config.mpl" = "_config.mpl"
 
