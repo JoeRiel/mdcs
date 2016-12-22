@@ -414,8 +414,8 @@ install: $(addsuffix -install,hdb html info lisp maple)
 
 uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX-DIR))
 uninstall:
-	@rm -rf $(TOOLBOX-DIR)
-	@rm -f $(INSTALLED-EL-FILES) $(INSTALLED-ELC-FILES)
+	$(RM) --recursive $(TOOLBOX-DIR)
+	$(RM) $(LISP-DIR)/mds*.*
 
 # }}}
 # {{{ installer
