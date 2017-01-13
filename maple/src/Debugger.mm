@@ -482,6 +482,9 @@ $endif
             return procname(op(p));
         end if;
         pnam := GetName(p);
+
+        #{{{ debug builtins
+        
         # debugbuiltins is a module local, which is a design flaw, but
         # avoiding it is tricky.  Passing it as a keyword parameter is
         # not possible because cond is optional yet declared as 'uneval'.
@@ -538,6 +541,9 @@ $endif
             return procname(pnam, _passed[2..-1]);
         end if;
 
+        #}}}
+
+        # Call debugopts to set the breakpoints
         statenum := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, statenum])
         else                  debugopts('stopat'=[pnam, statenum, 'cond'])
@@ -653,8 +659,8 @@ $endif
                 # Convert indexed to slashed name;
                 # e.g. pkg[func] --> `pkg/func`
                 pn := indexed2slashed(p);
-                if not eval(pn)::procedure
-                or (eval(p)::procedure and not has(eval(p),pn)) then
+                if not eval(pn) :: procedure
+                or (eval(p) :: procedure and not has(eval(p),pn)) then
                     pn := p;
                 end if;
             elif p :: string then
