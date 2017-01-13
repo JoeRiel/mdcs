@@ -1055,7 +1055,7 @@ end proc;
 ##AUTHOR   Joe Riel
 ##DATE     Nov 2011
 ##CALLINGSEQUENCE
-##- \PROC('tag','rest')
+##- WriteTagf('tag','rest')
 ##PARAMETERS
 ##- 'tag'  : ::name::
 ##- 'rest' : (optional) arguments to "sprintf"
@@ -1113,18 +1113,16 @@ end proc;
 #}}}
 #{{{ CreateID
 
-##DEFINE PROC CreateID
 ##PROCEDURE mdc[CreateID]
 ##HALFLINE create a formatted ID that identifies the client
 ##CALLINGSEQUENCE
-##- \PROC('label')
+##- CreateID('label')
 ##PARAMETERS
 ##- 'label' : ::string::; user-friendly label
 ##RETURNS
 ##- ::string::
 ##DESCRIPTION
-##- The `\PROC` procedure
-##  returns a string that can be used by the server
+##- Return a string that can be used by the server
 ##  to identify this client.
 ##
 ##- Currently the format is ~:label:release:platform:pid:~, where
