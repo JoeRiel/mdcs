@@ -1176,6 +1176,9 @@ to work, `face-remapping-alist' must be buffer-local."
 (define-derived-mode mds-ss-mode maplev-view-mode "showstat-mode"
   "Major mode for stepping through a debugged Maple procedure.
 
+The following summarizes the key bindings.  The parenthesized
+command after a key is the corresponding Maple debugger command.
+\\<mds-ss-mode-map>
 Execution
 ---------
 \\[mds-send-last-command] repeat the last tracing command
