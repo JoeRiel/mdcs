@@ -421,7 +421,6 @@ Minibuffer completion is used if COMPLETE is non-nil."
   (if (not default) (setq default t))
   (let ((enable-recursive-minibuffers t)
 	(expr (mds-expr-at-point default))
-	(maplev-completion-release maplev-release)
         choice)
     (setq prompt (concat prompt (unless (string-equal expr "")
                                   (concat " [" expr "]"))
