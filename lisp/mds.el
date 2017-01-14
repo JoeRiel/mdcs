@@ -49,7 +49,7 @@
 (require 'mds-thing)   ; 
 (require 'mds-wm)      ; window manager
 (require 'mds-li)      ; lineinfo buffer (li interface)
-(require 'mds-version)
+(require 'mds-version) ; assign version
 
 ;;}}}
 
@@ -70,8 +70,6 @@ Automatically assigned to nil if wmctrl is not available."
 ;;}}}
 
 ;;{{{ Version
-
-;; (mds-check-version)
 
 ;;;###autoload
 (defun mds-version (&optional here full message)
