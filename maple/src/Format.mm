@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE mdc[Format]
 ##HALFLINE code used by the Emacs Maple debugger

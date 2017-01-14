@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##
 ##PROCEDURE(help) mdc[HelpMDS]

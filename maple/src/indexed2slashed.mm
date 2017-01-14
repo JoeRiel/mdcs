@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##PROCEDURE mdc[indexed2slashed]
 ##HALFLINE convert indexed name to a slashed name

@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE mdc[Debugger]
 ##HALFLINE replacement functions for Maple debugger
