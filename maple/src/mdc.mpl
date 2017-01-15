@@ -1163,7 +1163,7 @@ end proc;
 CreateID := proc(label :: string
                  , { platform :: string := kernelopts(':-platform') }
                  , { pid :: integer := kernelopts(':-pid') }
-                 , { release :: integer := "DEFAULT" }
+                 , { release :: string := "DEFAULT" }
                  , $
                 )
 local ver;
@@ -1174,12 +1174,11 @@ local ver;
     end if;
     if release = "DEFAULT" then
         ver := kernelopts('version');
-        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-        ver := parse(ver);
+        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(",",ver)-1);
     else
         ver := release;
     end if;
-    return sprintf(":%s:%d:%s:%d:"
+    return sprintf(":%s:%s:%s:%d:"
                    , label
                    , ver
                    , platform
