@@ -154,7 +154,8 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-ss-dead-flag (not alive)
 	    mds-ss-procname ""
 	    mds-ss-state "1"
-	    buffer-read-only 't)
+	    buffer-read-only t
+	    maplev-config maplev-config-default)
       (if mds-truncate-lines-flag
 	  (toggle-truncate-lines 1)))
     buf))
