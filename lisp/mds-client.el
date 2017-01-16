@@ -279,10 +279,10 @@ Alas, this currently is not implemented."
 	   "Use quit to close the debugger connection, "
 	   "then manually interrupt Maple.")))
 
-(defun mds-client-get-maple-release (client)
-  "Return the major release of the Maple kernel used by CLIENT.
-The value is an integer."
-  (string-to-number (nth 1 (mds-client-id client))))
+(defun mds-client-get-maple-version (client)
+  "Return the version of the Maple kernel used by CLIENT.
+The value is a string."
+  (nth 1 (mds-client-id client)))
 
 (defun mds-client-code-buffer (client)
   "Return the code-buffer of CLIENT."
