@@ -293,7 +293,7 @@ local ModuleLoad
 
     Store := proc( addr :: integer, info := Info )
 
-    local delta, file, filenames, i, lineinfo, missing, mplroot, n, newfilenames;
+    local delta, file, filenames, i, lineinfo, n;
         try
             lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
         catch:
@@ -311,48 +311,31 @@ local ModuleLoad
                 # The empty string indicates the source is a Maple worksheet.
                 info[addr] := NULL;
             else
-                mplroot := FileTools:-JoinPath([getenv("MAPLE_ROOT"), ""]);
-                newfilenames := map(proc(nm)
-                                        if nm = 0 then 0
-                                        elif nm[1] = ">" then
-                                            cat(mplroot, nm[2..]);
-                                        else
-                                            FileTools:-AbsolutePath(nm);
-                                        end if
-                                    end proc
-                                    , filenames);
+                # Convert filenames to integers, corresponding to position in 'filenames'
+                lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
+                # Insert filenames and an Array of the statement positions
+                # into a two-field record, and store in the sparse table
+                # info, which is indexed by the procedure address.
 
-                missing := remove(FileTools:-Exists or Testzero, newfilenames);
-                if missing <> [] then
-                    WARNING("cannot find source files: %1", missing);
-                    info[addr] := NULL;
-                else
-                    # Convert filenames to integers, corresponding to position in 'filenames'
-                    lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
-                    # Insert filenames and an Array of the statement positions
-                    # into a two-field record, and store in the sparse table
-                    # info, which is indexed by the procedure address.
+                n := numelems(lineinfo)-1;
+                delta := n - debugopts('statcount' = pointto(addr));
 
-                    n := numelems(lineinfo)-1;
-                    delta := n - debugopts('statcount' = pointto(addr));
+                info[addr] := Record['packed'](':-filenames' = filenames
+                                               , ':-positions' = Array(0..n, 1..4
+                                                                       , lineinfo
+                                                                       , 'datatype' = integer[4]
+                                                                      )
+                                               , ':-delta' = delta
+                                              );
 
-                    info[addr] := Record['packed'](':-filenames' = newfilenames
-                                                   , ':-positions' = Array(0..n, 1..4
-                                                                           , lineinfo
-                                                                           , 'datatype' = integer[4]
-                                                                          )
-                                                   , ':-delta' = delta
-                                                  );
-
-                    # Append addr to the entry for each filename.
-                    for file in newfilenames do
-                        if info[file] = 0 then
-                            info[file] := addr;
-                        else
-                            info[file] := (info[file], addr);
-                        end if;
-                    end do;
-                end if;
+                # Append addr to the entry for each filename.
+                for file in filenames do
+                    if info[file] = 0 then
+                        info[file] := addr;
+                    else
+                        info[file] := (info[file], addr);
+                    end if;
+                end do;
 
             end if;
         end if;
