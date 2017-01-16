@@ -47,7 +47,6 @@
 (require 'mds-out)
 (require 'mds-wm)
 
-
 ;; A queue structure consists of a single cons-cell,
 ;; ( proc . buffer ), where proc is the process
 ;; and buffer is the queue-buffer.
@@ -145,7 +144,8 @@ TAG identifies the operation, MSG is the message."
      ((= tag mds-tag-state)
       (unless (string-match mds-re-line-info msg)
 	(error "Problem with format in LINE_INFO tag: %s" msg))
-      (let ((file (match-string 1 msg))
+      (let ((file (mds-li-find-file (match-string 1 msg) 
+				    (mds-client-get-maple-version client)))
 	    (beg  (1+ (string-to-number (match-string 3 msg))))
 	    (depth       (match-string 5 msg))
 	    (breakpoints (match-string 6 msg))
@@ -154,7 +154,7 @@ TAG identifies the operation, MSG is the message."
 	    (state     	 (match-string 9 msg))
 	    (statement 	 (match-string 10 msg))
 	    (li-buf (mds-client-li-buf client)))
-	(if (string= file "0")
+	(if (null file)
 	    (mds-client-set-has-source client nil)
 	  (mds-li-update li-buf file addr procname state beg
 			 (mapcar 'string-to-number (split-string breakpoints))

@@ -210,20 +210,23 @@ alist with elements of the form \(li \. path\), with LI the
 line-info string that is stored with the procedure and PATH the
 path to the file, or nil if it does not exist.")
 
-(defun mds-li-find-file (li maple-root)
+(defun mds-li-find-file (li version)
   "Return the path to LI, expanding a leading > to MAPLE-ROOT.
 LI is the line-info string stored with procedure.  If no path
 exists, or LI is \"0\", return nil.  Update `mds-li-files'."
   (unless (string= li "0")
-    (let* ((alist (assoc maple-root mds-li-files))
+    (let* ((alist (assoc version mds-li-files))
 	   (path (assoc li (cdr alist))))
       (if path
 	  (cdr path)
 	;; expand leading > to maple-root
 	(setq path (if (= (aref li 0) ?>)
-		       (concat maple-root (substring li 1))
+		       (let ((mroot (maplev-maple-root version)))
+			 (and mroot
+			      (concat (file-name-as-directory mroot)
+				      (substring li 1))))
 		     li))
-	(unless (file-exists-p path)
+	(unless (and path (file-exists-p path))
 	  (message "Cannot find source file %s" path)
 	  (setq path nil))
 	;; add path to `mds-li-li-files'
@@ -232,7 +235,7 @@ exists, or LI is \"0\", return nil.  Update `mds-li-files'."
 	      ;; update existing maple-root branch
 	      (setcdr alist lst)
 	    ;; create maple-root branch
-	    (setq mds-li-files (cons (cons maple-root lst) mds-li-files))))
+	    (setq mds-li-files (cons (cons version lst) mds-li-files))))
 	;; return path
 	path))))
 
