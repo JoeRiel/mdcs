@@ -65,6 +65,7 @@
 (defvar mds-li-beg nil            "Character position of beginning of current statement in lineinfo buffer.")
 (defvar mds-li-depth ""           "String corresponding to current stack depth.")
 (defvar mds-li-file-name ""       "Name of the current source-file in lineinfo buffer.")
+(defvar mds-li->file-name ""      "String stored in mla corresponding to `mds-li-file-name.")
 (defvar mds-li-state 0            "Current state (posint) in lineinfo buffer.")
 
 (mapc #'make-variable-buffer-local
@@ -73,6 +74,7 @@
 	mds-li-beg
 	mds-li-depth
 	mds-li-file-name
+	mds-li->file-name
 	mds-li-state))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
@@ -93,8 +95,9 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file addr procname state beg breakpoints depth)
+(defun mds-li-update (buffer file >file addr procname state beg breakpoints depth)
   "Update source BUFFER with source-file FILE.
+>FILE is the string stored as line-info data in the mla.
 ADDR is the address of PROCNAME.
 PROCNAME is the procedure name.
 STATE is  the current state (a string corresponding to an integer).
@@ -117,7 +120,8 @@ Put point at BEG and move the current statement marker."
 	(insert-file-contents file)
 	;; set the tab-width
 	(maplev-set-tab-width file)
-	(setq mds-li-file-name file))
+	(setq mds-li-file-name file
+	      mds-li->file-name >file))
       (unless same-addr
 	;; insert breakpoints and update buffer-local variable mds-li-addr
 	(let (brkpt)
@@ -152,7 +156,7 @@ If line information is available, a list of three strings is
 returned: address, statement number, and beginning character
 offset."
   (let ((result (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
-					mds-li-file-name
+					mds-li->file-name
 					(mds-client-get-addr mds-client)
 					(line-number-at-pos (point))
 					(1- (point))))))
@@ -210,27 +214,42 @@ alist with elements of the form \(li \. path\), with LI the
 line-info string that is stored with the procedure and PATH the
 path to the file, or nil if it does not exist.")
 
-(defun mds-li-find-file (li version)
-  "Return the path to LI, expanding a leading > to MAPLE-ROOT.
-LI is the line-info string stored with procedure.  If no path
-exists, or LI is \"0\", return nil.  Update `mds-li-files'."
-  (unless (string= li "0")
+;; (setq mds-li-files nil)
+
+(defun mds-li-find-file (>file version)
+  "Return the path to >FILE, expanding a leading > to MAPLE-ROOT.
+>FILE is the line-info string stored with the procedure.  If no path
+exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
+  (unless (string= >file "0")
     (let* ((alist (assoc version mds-li-files))
-	   (path (assoc li (cdr alist))))
+	   (path (assoc >file (cdr alist))))
       (if path
 	  (cdr path)
 	;; expand leading > to maple-root
-	(setq path (if (= (aref li 0) ?>)
+	(setq path (if (= (aref >file 0) ?>)
 		       (let ((mroot (maplev-maple-root version)))
 			 (and mroot
 			      (concat (file-name-as-directory mroot)
-				      (substring li 1))))
-		     li))
-	(unless (and path (file-exists-p path))
+				      (substring >file 1))))
+		     >file))
+	(unless (or (and path (file-exists-p path))
+		    (and t ;; mdc-query-to-download-flag
+			 (let ((mroot-p4dir (cdr (assoc version maplev-source-alist))))
+			   (when (and mroot-p4dir (cadr mroot-p4dir)
+				      (y-or-n-p "Download file"))
+			     (let ((cmd (format "p4 print -q -k -o %s %s/%s"
+						path (cadr mroot-p4dir) (substring >file 1))))
+			       (message "Downloading file from perforce...")
+			       (if (zerop (call-process-shell-command cmd))
+				   ;; download successful
+				   t
+				 (if (file-exists-p path) (delete-file path))
+				 (message "Problem downloading file")
+				 (set path nil)))))))
 	  (message "Cannot find source file %s" path)
 	  (setq path nil))
-	;; add path to `mds-li-li-files'
-	(let ((lst (cons (cons li path) (cdr alist))))
+	;; add path to `mds-li-files'
+	(let ((lst (cons (cons >file path) (cdr alist))))
 	  (if alist 
 	      ;; update existing maple-root branch
 	      (setcdr alist lst)
