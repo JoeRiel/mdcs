@@ -1173,8 +1173,12 @@ local ver;
         error "invalid characters in label '%1'", label;
     end if;
     if release = "DEFAULT" then
-        ver := kernelopts('version');
-        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(",",ver)-1);
+        ver := kernelopts(':-version');
+        ver := sscanf(ver, "Maple %[0-9.] (%[^)])%[0-9.]");
+        ver := `if`(nops(ver) = 3
+                    , cat(ver[1], ver[3])
+                    , ver[1]
+                   );
     else
         ver := release;
     end if;
