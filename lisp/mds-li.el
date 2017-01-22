@@ -208,11 +208,11 @@ Set cursor to ready."
 
 (defvar mds-li-files nil
   "Tree of location of source files.
-Elements have form \(root \. branch\), where ROOT is a string
-pointing to the client-dependent Maple root, and BRANCH is an
-alist with elements of the form \(li \. path\), with LI the
-line-info string that is stored with the procedure and PATH the
-path to the file, or nil if it does not exist.")
+Elements have form \(version \. branch\), where VERSION is the
+Maple version (a string), and BRANCH is an alist with elements of
+the form \(>file \. path\), with >FILE the line-info string that
+is stored with the procedure and PATH the path to the actual
+file, or nil if it does not exist.")
 
 ;; (setq mds-li-files nil)
 
