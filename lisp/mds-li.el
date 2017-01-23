@@ -232,7 +232,7 @@ exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
 			      (concat (file-name-as-directory mroot)
 				      (substring >file 1))))
 		     >file))
-	(unless (and path (file-exists-p path))
+	(when (and path (not (file-exists-p path)))
 	  (message "Cannot find source file %s" path)
 	  (setq path nil))
 	;; add path to `mds-li-files'
