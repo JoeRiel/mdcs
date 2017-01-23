@@ -232,20 +232,7 @@ exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
 			      (concat (file-name-as-directory mroot)
 				      (substring >file 1))))
 		     >file))
-	(unless (or (and path (file-exists-p path))
-		    (and t ;; mdc-query-to-download-flag
-			 (let ((mroot-p4dir (cdr (assoc version maplev-source-alist))))
-			   (when (and mroot-p4dir (cadr mroot-p4dir)
-				      (y-or-n-p "Download file"))
-			     (let ((cmd (format "p4 print -q -k -o %s %s/%s"
-						path (cadr mroot-p4dir) (substring >file 1))))
-			       (message "Downloading file from perforce...")
-			       (if (zerop (call-process-shell-command cmd))
-				   ;; download successful
-				   t
-				 (if (file-exists-p path) (delete-file path))
-				 (message "Problem downloading file")
-				 (set path nil)))))))
+	(unless (and path (file-exists-p path))
 	  (message "Cannot find source file %s" path)
 	  (setq path nil))
 	;; add path to `mds-li-files'
@@ -257,7 +244,6 @@ exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
 	    (setq mds-li-files (cons (cons version lst) mds-li-files))))
 	;; return path
 	path))))
-
 
 ;;}}}
 
