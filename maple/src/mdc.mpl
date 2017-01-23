@@ -1045,6 +1045,7 @@ Disconnect := proc( { quiet :: truefalse := false } )
         catch "argument does not refer to an open socket connection":
         end try;
         sid := -1;
+        NULL;
     end if;
 end proc;
 
