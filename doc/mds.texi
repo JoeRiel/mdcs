@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@include mds-version.inc
+@include mds-version.texi
 
 @dircategory Emacs
 @direntry
