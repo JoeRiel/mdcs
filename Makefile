@@ -10,15 +10,14 @@ SHELL := /bin/bash
 ifneq ($(wildcard .git),)
   GITHASH    ?= $(shell git rev-parse HEAD)
   GIT-VERSION ?= $(shell git describe --match release\* --abbrev=6 HEAD)
-  MDS-VERSION ?= $(subst release-,,$(shell git describe --match release\* \
-                                                       --abbrev=0 HEAD))
+  MDS-VERSION ?= $(subst release-,,$(shell git describe --match release\* --abbrev=0 HEAD))
   GITSTATUS ?= $(shell git status -uno --porcelain)
 else
   GITHASH    ?= N/A
   GIT-VERSION ?= N/A
   MDS-VERSION ?= N/A
 endif
-DATE          = $(shell date +%Y-%m-%d)
+DATE := $(shell date +%Y-%m-%d)
 ifneq ($(GITSTATUS),)
   GIT-VERSION := $(GIT-VERSION:.dirty=).dirty
 endif
@@ -40,17 +39,12 @@ OS := $(shell uname -o)
 # command line.  
 
 EMACS := emacs
-MAPLE := cmaple
+MAPLE := smaple
 
 ifeq ($(OS),GNU/Linux)
   INSTALL-INFO = ginstall-info
 else
   INSTALL-INFO = install-info
-endif
-
-ifeq ($(DEBFULLNAME),Joseph S. Riel)
-  LINEINFO := $(MAPLE_ROOT)/internal/link li
-  STANDARD := $(MAPLE_ROOT)/internal/link mp
 endif
 
 MINT  := mint
@@ -152,9 +146,9 @@ $(LISP-VERSION): $(EL-FILES-NO-VERSION)
 	@echo ";; no-byte-compile: t" >> $@
 	@echo ";; coding: utf-8" >> $@
 	@echo ";; End:" >> $@
-	@echo ";;; mdc-version.el ends here" >> $@
+	@echo ";;; mds-version.el ends here" >> $@
 
-byte-compile: $(call print-help,byte-compile,Byte compile $$(LISP-FILES))
+byte-compile: $(call print-help,byte-compile,Byte compile $$(EL-FILES))
 byte-compile: $(LISP-VERSION) $(EL-FILES-NO-VERSION) $(ELC-FILES)
 
 %.elc: %.el
@@ -206,11 +200,11 @@ mla: remove-preview $(mla)
 %.mla: maple/src/%.mpl $(mms)
 	@$(RM) $@
 	@echo "Building Maple archive $@"
-	$(STANDARD)
 	$(MLOAD) --quiet --skipini --include=$(CURDIR)/maple \
 	         --reindex --readonly \
+	         --maple=$(MAPLE) \
+	         --lib=${MAPLE_ROOT}/lib/maple.mla \
 	         --mla=$@ $<
-	$(LINEINFO)
 
 mla-install: $(call print-help,mla-install,Install mla into $(MAPLE-INSTALL-DIR))
 mla-install: $(mla)
@@ -227,25 +221,23 @@ help: $(call print-separator)
 
 .PHONY: doc info html h i p info-clean info-install
 
-TEXI-FILES = doc/mds.texi
 INFO-FILES = doc/mds.info
 HTML-FILES = doc/mds.html
 PDF-FILES  = doc/mds.pdf
+VERSION-TEXI = doc/mds-version.texi
 
-doc/mds-version.inc: doc/mds.texi
+$(VERSION-TEXI): doc/mds.texi
 	@echo "Update $@: $(MDS-VERSION) ($(GIT-VERSION))"
-	@echo "@c -*- TeXinfo -*-" > $@
-	@echo "@c mds-version.inc --- auto-generated file, do not edit." >> $@
+	@echo "@c mds-version.texi --- auto-generated file, do not edit." > $@
 	@echo "@set VERSION $(MDS-VERSION) ($(GIT-VERSION))" >> $@
 	@echo "@set DATE $(DATE)" >> $@
-	@echo "@c mds-version.inc ends here" >> $@
+	@echo "@c mds-version.texi ends here" >> $@
 
-
-doc/mds.info: doc/mds.texi doc/mds-version.inc
+doc/mds.info: doc/mds.texi $(VERSION-TEXI)
 	@echo "Creating info file $@"
 	@$(call shellerr,cd doc; $(MAKEINFO) --no-split mds.texi --output=mds.info)
 
-doc/mds.pdf: doc/mds.texi doc/mds-version.inc
+doc/mds.pdf: doc/mds.texi $(VERSION-TEXI)
 	(cd doc; $(TEXI2PDF) mds.texi)
 
 
@@ -256,7 +248,7 @@ info: doc/mds.info
 pdf: $(call print-help,pdf,	Create pdf)
 pdf: doc/mds.pdf
 html: $(call print-help,html,	Create html documentation)
-html: doc/mds.html doc/mds-version.inc
+html: doc/mds.html $(VERSION-TEXI)
 
 doc/mds.html: doc/mds.texi
 	@echo "Creating html file $@"
@@ -305,11 +297,11 @@ help: $(call print-separator)
 remove-preview :
 	$(RM) maple/src/_preview_.mm
 
-hdb := mds.hdb
+hdb := mdc.hdb
 hdb: $(call print-help,hdb,	Create Maple help database: $(hdb))
-hdb: mla-install data-install remove-preview mds.hdb
+hdb: mla-install data-install remove-preview mdc.hdb
 
-mds.hdb : maple/src/mdc.mpl $(mms)
+mdc.hdb : maple/src/mdc.mpl $(mms)
 	@echo "Creating Maple help database"
 	$(RM) $@ maple/src/_preview_.mm
 	$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
@@ -322,15 +314,15 @@ hdb-install: hdb
 	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
 	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
 
-hlp := mds.help
+hlp := mdc.help
 hlp: $(call print-help,hlp,	Create Maple help database: $(hlp))
-hlp: mla-install data-install remove-preview mds.help
+hlp: mla-install data-install remove-preview mdc.help
 
-mds.help : maple/src/mdc.mpl $(mms)
+mdc.help : maple/src/mdc.mpl $(mms)
 	@echo "Creating Maple help database"
 	@$(RM) $@ maple/src/_preview_.mm
 	@$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
-	@$(MHELP) --replace --readonly mds
+	@$(MHELP) --replace --readonly mdc
 
 hlp-install: $(call print-help,hlp-install,Install $(hlp) in $(MAPLE-INSTALL-DIR))
 hlp-install: hlp
@@ -365,7 +357,7 @@ tags:
 
 mint: $(call print-help,mint	,Check Maple syntax)
 mint:
-	@$(call showerr,$(MINT) -q -i2 -I $(HOME)/emacs/mdcs/maple < maple/src/mds.mpl)
+	@$(call showerr,$(MINT) -l -q -i2 -I $(HOME)/emacs/mdcs/maple < maple/src/mdc.mpl)
 
 # }}}
 # {{{ test
@@ -402,7 +394,7 @@ install-all := $(addsuffix -install,hdb hlp maple data)
 
 .PHONY: install $(install-all) uninstall
 
-INSTALLED-EL-FILES  := $(addprefix $(LISP-DIR)/,$(notdir $(LISP-FILES)))
+INSTALLED-EL-FILES  := $(addprefix $(LISP-DIR)/,$(notdir $(EL-FILES)))
 INSTALLED-ELC-FILES := $(addprefix $(LISP-DIR)/,$(notdir $(ELC-FILES)))
 
 install-all: $(install-all)
@@ -432,7 +424,7 @@ installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
 $(installer): $(CreateInstaller) hdb hlp mla info .emacs maple/installer/config.mpl data/Sample.mpl
-	@[ "$(git rev-parse --abbrev-ref HEAD)" = release ] || echo $(call warn,"Not on release branch")
+	@[ "$$(git rev-parse --abbrev-ref HEAD)" = release ] || echo $(call warn,"Not on release branch")
 	@$(call shellerr, $(MAPLE) -q $<)
 
 installer-zip := $(pkg)-ins-$(subst .,-,$(MDS-VERSION)).zip
