@@ -313,6 +313,16 @@ local ModuleLoad
             else
                 # Convert filenames to integers, corresponding to position in 'filenames'
                 lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
+
+                # Convert filenames to absolute paths.
+                # This is necessary for emacs to access them,
+                # It won't help if the server is running on a different machine;
+                # maybe the machine name should be stored.
+                filenames := [seq(ifelse(file[1] = ">"
+                                         , file
+                                         , FileTools:-AbsolutePath(file)
+                                        ), file = filenames)];
+
                 # Insert filenames and an Array of the statement positions
                 # into a two-field record, and store in the sparse table
                 # info, which is indexed by the procedure address.
