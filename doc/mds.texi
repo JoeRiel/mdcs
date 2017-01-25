@@ -21,7 +21,7 @@
 
 @copying
 MDS is an Emacs package that implements a Maple Debugger Server.
-It is part of the Maple Debugger Client/Server Architecture. 
+It is part of the Maple Debugger Client/Server architecture. 
 Maple is a computer algebra system from @w{Waterloo Maple Inc}.
 
 This manual is for MDS version @value{VERSION}.
@@ -196,6 +196,9 @@ by MDS, has the following features.
 @item
 The procedure being debugged is displayed in a buffer
 with font-locking to highlight syntactic elements.
+If the @emph{line-info} source data for a procedure points
+to a local file, the content of the file is displayed
+in the buffer, otherwise interpreted Maple code is shown.
 @item
 Executing the code advances an @emph{overlay-arrow} 
 that points to the next statement to be executed.
@@ -335,7 +338,6 @@ To access them load MDS (@code{M-x mds}) then run
 The most useful customizations are the following:
 
 @table @asis
-
 @vindex mds-get-focus-function
 @item @command{mds-get-focus-function}
 A function that calls the window manager to transfer
@@ -351,12 +353,6 @@ function is not called, though it should be.  That is due to a
 limitation of the Maple debugger kernel; it does not provide an
 indication that debugging has either begun or ended.
 
-@vindex mds-port
-@item @code{mds-port}
-@anchor{mds-port}
-An integer that is the TCP port number used for communication.
-The default is 10000.
-
 @vindex mds-keep-dead-clients
 @item @code{mds-keep-dead-clients}
 A boolean variable that when non-nil prevents the buffers
@@ -365,6 +361,22 @@ Setting this to non-nil can be useful when tracing a command
 that causes the Maple kernel to disconnect.
 @xref{tracing}.
 The default value is nil.
+
+@vindex mds-maple-root-alist
+@item @code{mds-maple-root-alist}
+An alist mapping a Maple version to the source root directory.
+Used to access source code from line-info data.
+Each element has the form @samp{(version . maple-root)},
+where @samp{version} is the Maple version number, including
+the minor version and @samp{maple-root} is the corresponding directory.
+A typical entry is @samp{("2017.0" . "/home/joe/maplesoft/sandbox/main")}.
+The default is nil.
+
+@vindex mds-port
+@item @code{mds-port}
+@anchor{mds-port}
+An integer that is the TCP port number used for communication.
+The default is 10000.
 
 @vindex mds-show-args-flag
 @findex mds-toggle-show-args
@@ -423,8 +435,8 @@ Specifies the fractional size of the showstat-live window to the full frame size
 Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
 If nil, the window is set to half the frame size.
 
-@findex maplev-get-tab-width-function
 @vindex tab-width
+@findex maplev-get-tab-width-function
 @item @code{maplev-get-tab-width-function}
 This function, which is also used by @code{maplev-mode},
 is called, if assigned, each time a source file is read

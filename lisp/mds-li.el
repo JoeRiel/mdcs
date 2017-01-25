@@ -227,7 +227,7 @@ exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
 	  (cdr path)
 	;; expand leading > to maple-root
 	(setq path (if (= (aref >file 0) ?>)
-		       (let ((mroot (maplev-maple-root version)))
+		       (let ((mroot (cdr (assoc version mds-maple-root-alist))))
 			 (and mroot
 			      (concat (file-name-as-directory mroot)
 				      (substring >file 1))))
