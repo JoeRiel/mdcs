@@ -318,7 +318,7 @@ local ModuleLoad
                 # This is necessary for emacs to access them,
                 # It won't help if the server is running on a different machine;
                 # maybe the machine name should be stored.
-                filenames := [seq(ifelse(file[1] = ">"
+                filenames := [seq(ifelse(file = 0 or file[1] = ">"
                                          , file
                                          , FileTools:-AbsolutePath(file)
                                         ), file = filenames)];
