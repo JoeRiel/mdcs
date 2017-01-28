@@ -250,7 +250,7 @@ local ModuleLoad
 ##
 ##TEST
 ## $include <include/test_macros.mi>
-## $include <lineinfo.mpl>
+## $include <include/lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
@@ -359,7 +359,7 @@ local ModuleLoad
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##CALLINGSEQUENCE
-##- LookupStatemen('filename','lastaddr','lineno','offset')
+##- LookupStatement('filename','lastaddr','lineno','offset')
 ##PARAMETERS
 ##- 'filename' : ::string::; source file name
 ##- 'lastaddr' : ::integer::; address of likely procedure
