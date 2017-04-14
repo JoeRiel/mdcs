@@ -107,7 +107,7 @@ Installation
 Copy the files to locations appropriate on your system.
 Here is where I put the various files:
 
-    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb mdc.help
+    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.help
     $HOME/.emacs.d/maple           :  lisp/mds*.el
     $HOME/share/info               :  doc/mds.info (do not include the "doc/")
 
