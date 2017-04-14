@@ -151,7 +151,7 @@ global Installer;
                 srcdir := MakePath(ToolboxDir,"lib");
                 if MapleLib <> srcdir then
                     printf("\nInstalling Maple files...\n");
-                    Install(srcdir, MapleLib, ["mdc.mla", "mdc.hdb", "mdc.help"]);
+                    Install(srcdir, MapleLib, ["mdc.mla", "mdc.help"]);
                 end if;
             end if;
             #}}}
@@ -259,7 +259,6 @@ uses %FT = FileTools;
                  , "maple/mdc.mla" = "lib/mdc.mla"
 
                  (* Maple help databases *)
-                 , "mdc.hdb" = "lib/mdc.hdb"
                  , "mdc.help" = "lib/mdc.help"
 
                  (* data files *)
