@@ -51,8 +51,6 @@ MINT  := mint
 MLOAD := mload
 MHELP := mhelp
 
-SHELP := MAPLE_ROOT=${MAPLE_SANDBOX}/Maple17 ${MAPLE_SANDBOX}/Maple17/bin/shelp 
-
 CP := cp --archive
 BROWSER := x-www-browser
 MAKEINFO := makeinfo
@@ -78,7 +76,7 @@ TOOLBOX-DIR := $(HOME)/maple/toolbox/emacs
 # there is no standard place for this.
 HTML-DIR := $(TOOLBOX-DIR)/doc
 
-# where the maple archive and hdb go
+# where the maple archive and help database go
 MAPLE-INSTALL-DIR := $(TOOLBOX-DIR)/lib
 
 MAPLE-DATA-DIR := $(TOOLBOX-DIR)/data
@@ -286,33 +284,17 @@ info-install: $(INFO-FILES)
 
 info-clean:
 	$(RM) $(INFO-FILES) $(HTML-FILES) $(PDF-FILES)
+	$(RM) $(filter-out $(wildcard doc/*.texi),$(wildcard doc/*))o
 
 # }}}
-# {{{ hdb hlp
+# {{{ hlp
 
 help: $(call print-separator)
 
-.PHONY: hdb hlp remove-preview
+.PHONY: hlp remove-preview
 
 remove-preview :
 	$(RM) maple/src/_preview_.mm
-
-hdb := mdc.hdb
-hdb: $(call print-help,hdb,	Create Maple help database: $(hdb))
-hdb: mla-install data-install remove-preview mdc.hdb
-
-mdc.hdb : maple/src/mdc.mpl $(mms)
-	@echo "Creating Maple help database"
-	$(RM) $@ maple/src/_preview_.mm
-	$(call showerr,mpldoc --config nightly $+ 2>&1 | sed -n '/Warning/{p;n};/Error/p')
-	$(SHELP) create -h $@
-	$(SHELP) mwhelpload --config=doc/MapleHelp_en.xml --input=. --output=.
-
-hdb-install: $(call print-help,hdb-install,Install $(hdb) in $(MAPLE-INSTALL-DIR))
-hdb-install: hdb
-	@$(MKDIR) $(MAPLE-INSTALL-DIR)
-	@echo "Installing Maple help data base $(hdb) into $(MAPLE-INSTALL-DIR)/"
-	@$(call shellerr,$(CP) $(hdb) $(MAPLE-INSTALL-DIR))
 
 hlp := mdc.help
 hlp: $(call print-help,hlp,	Create Maple help database: $(hlp))
@@ -390,7 +372,7 @@ test-extract:
 
 help: $(call print-separator)
 
-install-all := $(addsuffix -install,hdb hlp maple data)
+install-all := $(addsuffix -install,hlp maple data)
 
 .PHONY: install $(install-all) uninstall
 
@@ -402,7 +384,7 @@ install-all: $(install-all)
 install: $(call print-help,install	,Install everything)
 install: $(install-all)
 
-install: $(addsuffix -install,hdb html info lisp maple)
+install: $(addsuffix -install,hlp html info lisp maple)
 
 uninstall: $(call print-help,uninstall,Remove directory $(TOOLBOX-DIR))
 uninstall:
@@ -423,7 +405,7 @@ installer := $(pkg)-installer-$(MDS-VERSION).mla
 installer: $(call print-help,installer,Create Maple installer: $(installer))
 installer: $(installer)
 
-$(installer): $(CreateInstaller) hdb hlp mla info .emacs maple/installer/config.mpl data/Sample.mpl
+$(installer): $(CreateInstaller) hlp mla info .emacs maple/installer/config.mpl data/Sample.mpl
 	@[ "$$(git rev-parse --abbrev-ref HEAD)" = release ] || echo $(call warn,"Not on release branch")
 	@$(call shellerr, $(MAPLE) -q $<)
 
@@ -454,7 +436,7 @@ help: $(call print-separator)
 clean: $(call print-help,clean	,Remove built files)
 clean: info-clean
 	-$(RM) lisp/*.elc maple/src/_preview_.mm maple/mdoc/* maple/mhelp/* maple/mtest/* maple/doti/* maple/src/*.{mtest,tst,mw} *.fail
-	-$(RM) $(mla) $(hdb) 
+	-$(RM) $(mla) $(hlp) 
 
 clean: $(call print-help,sweep	,Remove editor temp files)
 sweep:
