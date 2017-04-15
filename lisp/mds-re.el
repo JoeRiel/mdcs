@@ -124,7 +124,7 @@ It has three groups:
    (mds-rx ?\n
 	   (group (+ not-newline))	; procedure name
 	   ?: ?\n (* blank)
-	   (group posint)		; statement number
+	   (group nonnegint)		; statement number
 	   decor
 	   (* blank)
 	   (group (* not-newline))))	; statement

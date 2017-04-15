@@ -198,24 +198,31 @@ global showstat, showstop;
     #{{{ send debug status to server
 
     if procName <> 0 then
-        if statNumber < 0 then
-            if not skip then
-                # handle negative statement number (indicates multiple targets)
-                debugger_printf(TAG_WARN, "Warning, statement number may be incorrect\n");
-            end if;
-            statNumber := -statNumber
-        end if;
-
-        dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
-        # Set module_flag true if next statement appears to
-        # evaluate to a module, which causes a debugger error if one
-        # attempts to step into it.  The test is simple and uses
-        # builtins to keep this fast.
-        if SearchText("module ()", dbg_state) = 0 then
+        if statNumber = 0 then
+            debugger_printf(TAG_WARN, ( "Warning, cannot determine statement number; "
+                                        "procedure may have changed in-place\n" ));
+            dbg_state := nprintf("%a:\n   0  (* unknown *)\n", procName);
             module_flag := false;
         else
-            module_flag := true;
+            if statNumber < 0 then
+                if not skip then
+                    # handle negative statement number (indicates multiple targets)
+                    debugger_printf(TAG_WARN, "Warning, statement number may be incorrect\n");
+                end if;
+                statNumber := -statNumber
+            end if;
+            dbg_state := debugopts('procdump'=[procName, 0..statNumber]);
+            # Set module_flag true if next statement appears to
+            # evaluate to a module, which causes a debugger error if one
+            # attempts to step into it.  The test is simple and uses
+            # builtins to keep this fast.
+            if SearchText("module ()", dbg_state) = 0 then
+                module_flag := false;
+            else
+                module_flag := true;
+            end if;
         end if;
+
         if not skip then
             state := sprintf("<%d>\n%A", addr, dbg_state);
             try

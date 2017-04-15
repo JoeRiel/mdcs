@@ -151,7 +151,7 @@ global Installer;
                 srcdir := MakePath(ToolboxDir,"lib");
                 if MapleLib <> srcdir then
                     printf("\nInstalling Maple files...\n");
-                    Install(srcdir, MapleLib, ["mdc.mla", "mdc.hdb", "mdc.help"]);
+                    Install(srcdir, MapleLib, ["mdc.mla", "mdc.help"]);
                 end if;
             end if;
             #}}}
@@ -242,11 +242,7 @@ end proc:
 
 CreateInstaller := proc()
 
-local file, elisp_map, installer, manifest
-    , maplev_dir, maplev_elisp, maplev_lisp_dir
-    , mds_dir, mds_elisp, mds_lisp_dir
-    , version
-    ;
+local file, installer, manifest, version;
 global InstallScript;
 uses %FT = FileTools;
 
@@ -259,43 +255,22 @@ uses %FT = FileTools;
         %FT:-Remove(installer);
     end if;
 
-    maplev_dir := "/home/joe/emacs/maplev";
-    maplev_lisp_dir := %FT:-AbsolutePath("lisp", maplev_dir);
-    maplev_elisp := sort(%FT:-ListDirectory(maplev_lisp_dir, 'returnonly' = "*.el"));
-
-    mds_dir :=  "/home/joe/emacs/mdcs";
-    mds_lisp_dir := %FT:-AbsolutePath("lisp", mds_dir);
-    mds_elisp    := sort(%FT:-ListDirectory(mds_lisp_dir, 'returnonly' = "*.el"));
-
-    elisp_map := ( NULL
-                   # maplev lisp files
-                   , seq(%FT:-AbsolutePath(file, maplev_lisp_dir)
-                         = %FT:-AbsolutePath(file, "lisp")
-                         , file = maplev_elisp
-                        )
-                   # mds lisp files
-                   , seq(%FT:-AbsolutePath(file,mds_lisp_dir)
-                         = %FT:-AbsolutePath(file, "lisp")
-                         , file = mds_elisp)
-                 );
-
     manifest := [NULL
                  , "maple/mdc.mla" = "lib/mdc.mla"
-                 , "mdc.hdb" = "lib/mdc.hdb"
+
+                 (* Maple help databases *)
                  , "mdc.help" = "lib/mdc.help"
-                 , "../maplev/maplev.mla" = "lib/maplev.mla"
 
                  (* data files *)
                  , "data/Sample.mpl" = "data/Sample.mpl"
 
-                 (* emacs stuff *)
-                 , elisp_map
-                 , %FT:-AbsolutePath("doc/maplev.info", maplev_dir) = "info/maplev.info"
-                 , %FT:-AbsolutePath("doc/maplev.html", maplev_dir) = "doc/maplev.html"
+                 (* lisp files *)
+                 , seq(`=`(cat("lisp/", file)$2)
+                       , file = %FT:-ListDirectory("lisp", 'returnonly' = "*.el"))
 
                  , ".emacs" = ".emacs"
 
-                 (* documentation *)
+                 (* Server documentation *)
                  , "doc/mds.html" = "doc/mds.html"
                  , "doc/mds.pdf"  = "doc/mds.pdf"
                  , "doc/mds.info" = "info/mds.info"

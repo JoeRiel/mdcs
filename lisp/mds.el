@@ -137,7 +137,8 @@ If server is already running, stop then restart it."
 		  :sentinel 'mds-sentinel
 		  :filter 'mds-filter
 		  ;; :log 'mds-log
-		  :server 't))
+		  :server 't)
+	mds-li-files nil)
   (set-process-query-on-exit-flag mds-proc mds-query-on-exit-flag)
   (mds-login-reset))
 

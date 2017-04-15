@@ -64,35 +64,47 @@ fi
 #}}}
 #{{{ Update source files
 
-# Update README
+#{{{ * README
+
 # file="README"
 # [ -z "$version" ] && echo -ne "$file:\t"
 # sed $sed_opt "/^VERSION /$sed_cmd" "$file"
+
+#}}}
+#{{{ * README.md
 
 file="README.md"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/^\*\*Version /$sed_cmd" "$file"
 
-# Update README-installer
+#}}}
+#{{{ * README-installer
+
 file="README-installer"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/^VERSION /$sed_cmd" "$file"
 
-# Update CreateInstaller.mpl
+#}}}
+#{{{ * CreateInstaller.mpl
 file="maple/installer/CreateInstaller.mpl"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/version := /$sed_cmd" "$file"
 
-# Update run-installer
+#}}}
+#{{{ * run-installer
+
 file="run-installer"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/VERSION=/$sed_cmd" "$file"
 
-# Update run-installer.bat
+#}}}
+#{{{ * run-installer.bat
+
 file="run-installer.bat"
 [ -z "$version" ] && echo -ne "$file:\t"
 sed $sed_opt "/VERSION=/$sed_cmd" "$file"
 
+#}}}
 
 #}}}
 

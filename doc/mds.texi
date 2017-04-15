@@ -3,7 +3,7 @@
 @setfilename mds
 @settitle The Maple Debugger Server Manual
 
-@include mds-version.inc
+@include mds-version.texi
 
 @dircategory Emacs
 @direntry
@@ -21,7 +21,7 @@
 
 @copying
 MDS is an Emacs package that implements a Maple Debugger Server.
-It is part of the Maple Debugger Client/Server Architecture. 
+It is part of the Maple Debugger Client/Server architecture. 
 Maple is a computer algebra system from @w{Waterloo Maple Inc}.
 
 This manual is for MDS version @value{VERSION}.
@@ -116,7 +116,7 @@ Showstat Mode
 
 LineInfo Buffer
 
-* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Data::               Creating and accessing line-info data.
 * LineInfo Mode::               Available commands.
 * LineInfo Caveats::            Limitations.
 
@@ -125,12 +125,12 @@ LineInfo Caveats
 * Preprocessor macros::         Avoid multi-statement macros.
 * for-less do-loops::           A glitch with while loops.
 * use statement::               Use @code{uses}.
-* Declaration Self-Assignment:: Restrict this undocumented feature.
+* Declaration Self-Assignment::  Restrict this undocumented feature.
 * True or False Conditional::   Avoid @code{if true then}
 
 Output Buffer
 
-* Output buffer commands::      
+* Output buffer commands::
 
 Debugging Tips
 
@@ -196,6 +196,9 @@ by MDS, has the following features.
 @item
 The procedure being debugged is displayed in a buffer
 with font-locking to highlight syntactic elements.
+If the @emph{line-info} source data for a procedure points
+to a local file, the content of the file is displayed
+in the buffer, otherwise interpreted Maple code is shown.
 @item
 Executing the code advances an @emph{overlay-arrow} 
 that points to the next statement to be executed.
@@ -335,7 +338,6 @@ To access them load MDS (@code{M-x mds}) then run
 The most useful customizations are the following:
 
 @table @asis
-
 @vindex mds-get-focus-function
 @item @command{mds-get-focus-function}
 A function that calls the window manager to transfer
@@ -351,12 +353,6 @@ function is not called, though it should be.  That is due to a
 limitation of the Maple debugger kernel; it does not provide an
 indication that debugging has either begun or ended.
 
-@vindex mds-port
-@item @code{mds-port}
-@anchor{mds-port}
-An integer that is the TCP port number used for communication.
-The default is 10000.
-
 @vindex mds-keep-dead-clients
 @item @code{mds-keep-dead-clients}
 A boolean variable that when non-nil prevents the buffers
@@ -365,6 +361,22 @@ Setting this to non-nil can be useful when tracing a command
 that causes the Maple kernel to disconnect.
 @xref{tracing}.
 The default value is nil.
+
+@vindex mds-maple-root-alist
+@item @code{mds-maple-root-alist}
+An alist mapping a Maple version to the source root directory.
+Used to access library source code from line-info data (@pxref{LineInfo Data}).
+Each element has the form @samp{(version . maple-root)},
+where @samp{version} is the Maple version number, including
+the minor version and @samp{maple-root} is the corresponding directory.
+A typical entry is @samp{("2017.0" . "/home/joe/maplesoft/sandbox/main")}.
+The default is nil.  
+
+@vindex mds-port
+@item @code{mds-port}
+@anchor{mds-port}
+An integer that is the TCP port number used for communication.
+The default is 10000.
 
 @vindex mds-show-args-flag
 @findex mds-toggle-show-args
@@ -423,8 +435,8 @@ Specifies the fractional size of the showstat-live window to the full frame size
 Width is used when @code{mds-wm-side-by-side} is non-nil, otherwise height is used.  
 If nil, the window is set to half the frame size.
 
-@findex maplev-get-tab-width-function
 @vindex tab-width
+@findex maplev-get-tab-width-function
 @item @code{maplev-get-tab-width-function}
 This function, which is also used by @code{maplev-mode},
 is called, if assigned, each time a source file is read
@@ -1194,23 +1206,22 @@ The line-info buffer displays the source file of the
 current Maple procedure during debugging.  An arrow in the
 left margin points to the current line in the procedure.
 
-This mode uses an undocumented, experimental feature introduced in Maple 16.
-As such, there are a few limitations with using it.
+This mode uses a feature introduced in Maple 16 and extended in Maple 2017.
 
 @menu
-* Accessing LineInfo::          Creating the line-info data.
+* LineInfo Data::
 * LineInfo Mode::               Available commands.
 * LineInfo Caveats::            Limitations.
 @end menu
 
-@node Accessing LineInfo, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
-@section Accessing LineInfo
-@cindex Accessing LineInfo
+@node LineInfo Data, LineInfo Mode, LineInfo Buffer, LineInfo Buffer
+@section LineInfo Data
+@cindex LineInfo Data
 
 The line-info buffer is active whenever line-info data is available for
-a procedure.  Line-info data is available when a Maple source file is
+a procedure.  Line-info data is created when a Maple source file is
 read into Maple, either with the Maple @code{read} command, or by
-passing the file as input to tty Maple.  Using an absolute path to the
+passing the file as input to tty Maple.   Using an absolute path to the
 filename may be necessary to permit access to the data while changing
 directories during code execution.  If @code{$include} directives are used,
 the include path, specified on the command line, should be an absolute path.
@@ -1248,9 +1259,15 @@ the following Maple command:
 debugopts(lineinfo = foo);
 @end example
 
+Line-info data created for a procedure is stored with the procedure
+when it is saved to a Maple archive.@footnote{This is new for Maple 2017.}
+To access this data, the @code{kernelopts(keepdebuginfo)} flag must be
+set to true.  Doing so uses a bit more memory when procedures are loaded
+from the library. 
 
 
-@node  LineInfo Mode, LineInfo Caveats, Accessing LineInfo, LineInfo Buffer
+
+@node  LineInfo Mode, LineInfo Caveats, LineInfo Data, LineInfo Buffer
 @section LineInfo Mode
 @cindex LineInfo Mode
 
@@ -1293,6 +1310,7 @@ separate characters.
 @cindex LineInfo Caveats
 
 There are a few known bugs with the line-info feature.
+Most of these have been fixed with Maple 2017.
 
 @menu
 * Preprocessor macros::         Avoid multi-statement macros.
@@ -1321,7 +1339,8 @@ $define IF(x) if x<0 then 1 else 2 end if     # this is not
 @cindex for-less do-loops
 
 A @strong{for}-less @strong{do}-loop does not store the lineinfo-data
-for the @strong{do} statement.  This causes the debugger to
+for the @strong{do} statement.@footnote{This has been fixed in Maple 2017.}
+This causes the debugger to
 automatically switch to the showstat buffer when the current statement
 is the @strong{do} statement.  The debugger switches back to the
 lineinfo buffer when the @strong{do} statement is no longer active.
@@ -1353,7 +1372,7 @@ debugger switches back to the line-info buffer.
 @cindex use statement
 
 The line-info data generated for a procedure
-with a @strong{use}-statement is incorrect.
+with a @strong{use}-statement is incorrect.@footnote{This is fixed in Maple 2017.}
 Use the @strong{uses} statement instead.
 
 For example, instead of 
@@ -1382,11 +1401,12 @@ end proc;
 
 Maple 16 introduced an undocumented feature such that if, in a local
 declaration, a variable is assigned to itself, the assignment is removed
-from the interpreted procedure (the declaration of the variable
-remains).  The purpose of this is prevent a mint warning of an unused
-variable if the variable is not assigned in the procedure body; this
-frequently happens with an index to a @code{seq} call.  For
-example, one might do
+from the interpreted procedure (the declaration of the variable remains).  
+The purpose of this is to prevent a Mint warning@footnote{
+  Mint is a syntax checker for the Maple language.}
+of an unused variable if the variable is not assigned in the procedure body; 
+this frequently happens with an index to a @code{seq} call.  
+For example, one might do
 
 @example
 @iftex
@@ -1420,9 +1440,9 @@ end proc;
 @end ifinfo
 @end example
 
-The line-info data for such a procedure is incorrect.  The debugger
-automatically corrects for this, provided all self-assignments
-occur before any normal assignments.
+The line-info data for such a procedure is incorrect.@footnote{This is fixed in Maple 2017.}
+The debugger automatically corrects for this, 
+provided all self-assignments occur before any normal assignments.
 
 
 @node True or False Conditional,  , Declaration Self-Assignment, LineInfo Caveats
@@ -1432,7 +1452,8 @@ While developing code, it is occasionally useful to enable or disable an @strong
 by making its condition always true or false.  Doing this by replacing the condition
 with @code{true} or @code{false} causes the Maple simplifier to remove the condition.
 Because this happens after the line-info data is generated, the resulting
-line-info data is corrupted.  Instead, replace the condition with an expression
+line-info data is corrupted.@footnote{This is fixed in Maple 2017.}
+Instead, replace the condition with an expression
 that evaluates true or false, such as @code{0=0} or @code{0=1}.
 
 
@@ -1483,7 +1504,7 @@ The @code{mds-toggle-quiet} (@kbd{Q}) command, executed from the showstat or lin
 toggles the display of the output of statements executed during debugging.
 
 @menu
-* Output buffer commands::      
+* Output buffer commands::
 @end menu
 
 @node  Output buffer commands,  , Output Buffer, Output Buffer
@@ -1603,7 +1624,7 @@ File @file{/tmp/x.mpl} contains an assignment to the variable @code{x}.
 @section Recursive debugging
 @cindex Recursive debugging
 
-MDS can recusively debug.  Evaluating an expression in the debugger that
+MDS can recursively debug.  Evaluating an expression in the debugger that
 executes an instrumented procedure debugs that procedure.  When that
 procedure returns, debugging resumes at the point in the original
 procedure.

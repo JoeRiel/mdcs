@@ -1045,6 +1045,7 @@ Disconnect := proc( { quiet :: truefalse := false } )
         catch "argument does not refer to an open socket connection":
         end try;
         sid := -1;
+        NULL;
     end if;
 end proc;
 
@@ -1163,7 +1164,7 @@ end proc;
 CreateID := proc(label :: string
                  , { platform :: string := kernelopts(':-platform') }
                  , { pid :: integer := kernelopts(':-pid') }
-                 , { release :: integer := "DEFAULT" }
+                 , { release :: string := "DEFAULT" }
                  , $
                 )
 local ver;
@@ -1173,13 +1174,16 @@ local ver;
         error "invalid characters in label '%1'", label;
     end if;
     if release = "DEFAULT" then
-        ver := kernelopts('version');
-        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-        ver := parse(ver);
+        ver := kernelopts(':-version');
+        ver := sscanf(ver, "Maple %[0-9.] (%[^)])%[0-9.]");
+        ver := `if`(nops(ver) = 3
+                    , cat(ver[1], ver[3])
+                    , ver[1]
+                   );
     else
         ver := release;
     end if;
-    return sprintf(":%s:%d:%s:%d:"
+    return sprintf(":%s:%s:%s:%d:"
                    , label
                    , ver
                    , platform

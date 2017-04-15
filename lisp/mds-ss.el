@@ -154,7 +154,8 @@ If ALIVE is non-nil, create a live buffer."
 	    mds-ss-dead-flag (not alive)
 	    mds-ss-procname ""
 	    mds-ss-state "1"
-	    buffer-read-only 't)
+	    buffer-read-only t
+	    maplev-config maplev-config-default)
       (if mds-truncate-lines-flag
 	  (toggle-truncate-lines 1)))
     buf))
@@ -556,14 +557,12 @@ exits."
 		  (thing-at-point 'procname)))
 	       (t (thing-at-point 'procname)))))
     (if (or flag
-	    (and
-	     ;; check for reserved words, builtins, etc
-	     (let ((release (mds-client-get-maple-release mds-client)))
-	       (or (member proc maplev-reserved-words)
-		   (member proc maplev-builtin-functions)
-		   (member proc maplev-special-words)
-		   (member proc maplev-initial-variables)))
-	     (or (beep) t)))
+	    ;; check for reserved words, builtins, etc
+	    (member proc maplev-reserved-words)
+	    (member proc maplev-builtin-functions)
+	    (member proc maplev-special-words)
+	    (member proc maplev-initial-variables)
+	    (beep) t)
 	(setq proc (read-string (format "procedure [%s]: " (or proc "")) nil nil proc)))
     (message "Stop in procedure %s..." proc)
     (mds-ss-eval-proc-statement (format "_mds_enter %s" proc))))
