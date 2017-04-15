@@ -7,7 +7,7 @@
    * Replace mdc:-Version with mdc:-About.
    * Redefine mds-version function.
 ** Add mds.pdf to installer distribution
-
+** Replace mdc.hdb with mdc.help
 * mdcs-2.5.0
 ** Tweak lisp to byte-compile wit no warnings
 ** Remove unused stuff
