@@ -2,7 +2,17 @@
 MDCS: Maple Debugger Client/Server
 ==================================
 
-**Version 2.5.0**
+**Version 2.6.1**
+
+Table of Contents
+-----------------
+
+* [Description](#description)
+* [Screenshot](#screenshot)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
 
 Table of Contents
 -----------------
