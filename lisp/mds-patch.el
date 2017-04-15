@@ -112,20 +112,28 @@
       ["Install"  mds-patch-install t]
       )))
 ;;}}}
-;;{{{ mode
+;;{{{ mode map
 
-(define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
-  "Major mode for live patching a Maple procedure."
-  :group 'mds
-  :abbrev-table nil
-  (let ((map mds-patch-mode-map)
+(defvar mds-patch-mode-map nil
+  "Keymap for `mds-patch-mode'.")
+
+(unless mds-patch-mode-map
+  (let ((map (make-sparse-keymap))
 	(bindings
 	 '(([(control c) (control p)] . mds-patch-install))))
-    ;; assign bindings
     (mapc (lambda (binding) (define-key map (car binding) (cdr binding)))
 	  bindings)
-    (setq mds-patch-mode-map map))
-  )
+    (setq mds-patch-mode-map map)))
+
+;;}}}
+;;{{{ mode definition
+
+(define-derived-mode mds-patch-mode maplev-mode "Maple Patch Mode"
+  "Major mode for live patching a Maple procedure.
+\\<mds-patch-mode-map>
+\\{mds-patch-mode-map}"
+  :group 'mds
+  :abbrev-table nil)
 
 ;;}}}
 

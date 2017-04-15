@@ -64,7 +64,6 @@ that the debugger may have exited."
   :type 'boolean
   :group 'mds)
 
-
 ;;{{{ Cursors
 
 (defcustom mds-cursor-waiting 'hollow
@@ -76,6 +75,26 @@ that the debugger may have exited."
   "Cursor used in showstat buffer when ready for a user input."
   :type 'symbol
   :group 'mds)
+
+;;}}}
+;;{{{ Source Location
+
+(defcustom mds-maple-root-alist nil
+  "Alist mapping a Maple version to the library source directory.
+Each element has the form \(version maple-root\).
+
+VERSION comes from the string returned by kernelopts(version) and 
+includes the decimal and fractional part; for example, \"2016.2\".
+
+MAPLE-ROOT is the directory of the installed Maple sandbox;
+for example, \"/home/joe/maplesoft/sandbox/2016.2\".
+
+This is used to expand a leading right angle-bracket (>) in line-info data
+to the corresponding directory; it is only useful if the source files
+for the Maple library code are available."
+  :group 'mds
+  :type '(alist :key-type   (string :tag "Version")
+		:value-type (directory :tag "Maple root")))
 
 ;;}}}
 ;;{{{ Window manager

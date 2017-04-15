@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE mdc[Debugger]
 ##HALFLINE replacement functions for Maple debugger
@@ -50,7 +51,6 @@ local _debugger
     , enter_procname := NULL
     , _showstat
     , _showstop
-    , _print
     , go_back := false        # flag, true skips to go_back_proc : go_back_state
     , go_back_addr            # address of procedure to go-back to.
     , go_back_state := 0      # statement number to go-back to
@@ -61,10 +61,8 @@ local _debugger
     , last_evalLevel
     , last_state
     , monitoring := false
-    , monitor_addr := 0
     , monitor_expr
     , monitor_result := false
-    , orig_print
     , orig_stopat
     , Quiet := false
     , Respond := false
@@ -126,7 +124,6 @@ $endif
     Replace := proc()
         if replaced <> true then
             # Save these
-            orig_print  := eval(print);
             orig_stopat := eval(:-stopat);
             # Reassign library debugger procedures
             unprotect('DEBUGGER_PROCS', ':-stopat');
@@ -134,9 +131,6 @@ $endif
             :-showstat          := eval(_showstat);
             :-showstop          := eval(_showstop);
             :-stopat            := eval(stopat);
-            :-where             := eval(_where);
-            #print              := eval(_print);
-            #printf             := eval(_printf);
             protect('DEBUGGER_PROCS', :-stopat);
             replaced := true;
 $ifdef LOG_READLINE
@@ -192,16 +186,10 @@ $endif
     end proc;
 #}}}
 
-#{{{ Print and _printf
+#{{{ Printf
 
     Printf := proc()
         debugger_printf(TAG_PRINTF, _rest);
-    end proc;
-
-    # currently not used
-    _print := proc()
-        orig_print(_passed);
-        debugger_printf(TAG_WARN, "print output does not display in debugger\n");
     end proc;
 
 #}}}
@@ -324,7 +312,7 @@ $include <src/_debugger.mm>
     description `Display a procedure with statement numbers and breakpoints.`;
     local res;
     global showstat;
-        if _npassed = 0 then map(procname,stopat())
+        if _npassed = 0 then map(thisproc,stopat())
         else
             if _npassed = 1 then
                 res := debugopts('procdump'=p)
@@ -495,6 +483,9 @@ $endif
             return procname(op(p));
         end if;
         pnam := GetName(p);
+
+        #{{{ debug builtins
+        
         # debugbuiltins is a module local, which is a design flaw, but
         # avoiding it is tricky.  Passing it as a keyword parameter is
         # not possible because cond is optional yet declared as 'uneval'.
@@ -551,6 +542,9 @@ $endif
             return procname(pnam, _passed[2..-1]);
         end if;
 
+        #}}}
+
+        # Call debugopts to set the breakpoints
         statenum := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts('stopat'=[pnam, statenum])
         else                  debugopts('stopat'=[pnam, statenum, 'cond'])
@@ -561,7 +555,7 @@ $endif
 #}}}
 #{{{ unstopat
 
-##PROCEDURE mds[Debugger][unstopat]
+##PROCEDURE mdc[Debugger][unstopat]
 ##HALFLINE clear a breakpoint in a procedure
 ##AUTHOR   Joe Riel
 ##CALLINGSEQUENCE
@@ -587,7 +581,7 @@ $endif
         pnam := GetName(p);
         st := `if`(_npassed=1,1,n);
         if _npassed <= 2 then debugopts(':-stopat'=[pnam, -st])
-        else                  debugopts(':-stopat'=[pnam, -st, ':-cond'])
+        else                  debugopts(':-stopat'=[pnam, -st, 'cond'])
         end if;
         if assigned(debugged_builtins[pnam]) then
             proc(f) f := eval(debugged_builtins[pnam]); end proc(pnam);
@@ -622,7 +616,7 @@ $endif
 ##- The 'stk' parameter is a list equal to
 ##  the output of ~debugopts('callstack')~.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(Debugger:-CallStack);
 ### mdc(FUNC):
 ## Try("1.0", FUNC(1,[DEBUG, f,`f(x)`,[x]]), f(x));
@@ -648,7 +642,7 @@ $endif
 ##DESCRIPTION
 ##- Return the name of a procedure.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(Debugger:-GetName):
 ## mdc(FUNC):
 ##
@@ -666,8 +660,8 @@ $endif
                 # Convert indexed to slashed name;
                 # e.g. pkg[func] --> `pkg/func`
                 pn := indexed2slashed(p);
-                if not eval(pn)::procedure
-                or (eval(p)::procedure and not has(eval(p),pn)) then
+                if not eval(pn) :: procedure
+                or (eval(p) :: procedure and not has(eval(p),pn)) then
                     pn := p;
                 end if;
             elif p :: string then

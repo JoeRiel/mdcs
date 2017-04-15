@@ -72,7 +72,7 @@
 ##
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## macro(NE=testnoerror):
 ### mdc(mdc:-LineInfo:-Store, mdc:-LineInfo:-Get);
 ##
@@ -179,7 +179,7 @@ local ModuleLoad
 ##  the statement.
 ##  The default is false.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include <lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Get):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):
@@ -249,8 +249,8 @@ local ModuleLoad
 ##- See "Info" for a description of the table structure.
 ##
 ##TEST
-## $include <test_macros.mi>
-## $include <lineinfo.mpl>
+## $include <include/test_macros.mi>
+## $include <include/lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Store):
 ## macro(NE='testnoerror'
 ##       ,TA='(verify,table(Or(truefalse,record(Or(truefalse,Array)))))'
@@ -293,7 +293,7 @@ local ModuleLoad
 
     Store := proc( addr :: integer, info := Info )
 
-    local file, filenames, i, lineinfo, missing, n, delta;
+    local delta, file, filenames, i, lineinfo, n;
         try
             lineinfo := [debugopts(':-lineinfo' = pointto(addr))];
         catch:
@@ -311,43 +311,41 @@ local ModuleLoad
                 # The empty string indicates the source is a Maple worksheet.
                 info[addr] := NULL;
             else
-                missing := remove(FileTools:-Exists or Testzero, filenames);
-                if missing <> [] then
-                    WARNING("cannot find source files: %1", missing);
-                    info[addr] := NULL;
-                else
-                    # Convert filenames to integers, corresponding to position in 'filenames'
-                    lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
-                    # Insert filenames and an Array of the statement positions
-                    # into a two-field record, and store in the sparse table
-                    # info, which is indexed by the procedure address.
+                # Convert filenames to integers, corresponding to position in 'filenames'
+                lineinfo := subs([seq(filenames[i]=i, i=1..numelems(filenames))], lineinfo);
 
-                    filenames := map(nm -> `if`(nm=0
-                                                , 0
-                                                , FileTools:-AbsolutePath(nm)
-                                               )
-                                     , filenames);
+                # Convert filenames to absolute paths.
+                # This is necessary for emacs to access them,
+                # It won't help if the server is running on a different machine;
+                # maybe the machine name should be stored.
+                filenames := [seq(ifelse(file = 0 or file[1] = ">"
+                                         , file
+                                         , FileTools:-AbsolutePath(file)
+                                        ), file = filenames)];
 
-                    n := numelems(lineinfo)-1;
-                    delta := n - debugopts('statcount' = pointto(addr));
+                # Insert filenames and an Array of the statement positions
+                # into a two-field record, and store in the sparse table
+                # info, which is indexed by the procedure address.
 
-                    info[addr] := Record['packed'](':-filenames' = filenames
-                                                   , ':-positions' = Array(0..n, 1..4
-                                                                           , lineinfo
-                                                                           , 'datatype' = integer[4]
-                                                                          )
-                                                   , ':-delta' = delta
-                                                  );
+                n := numelems(lineinfo)-1;
+                delta := n - debugopts('statcount' = pointto(addr));
 
-                    # Append addr to the entry for each filename.
-                    for file in filenames do
-                        if info[file] = 0 then
-                            info[file] := addr;
-                        else
-                            info[file] := (info[file], addr);
-                        end if;
-                    end do;
-                end if;
+                info[addr] := Record['packed'](':-filenames' = filenames
+                                               , ':-positions' = Array(0..n, 1..4
+                                                                       , lineinfo
+                                                                       , 'datatype' = integer[4]
+                                                                      )
+                                               , ':-delta' = delta
+                                              );
+
+                # Append addr to the entry for each filename.
+                for file in filenames do
+                    if info[file] = 0 then
+                        info[file] := addr;
+                    else
+                        info[file] := (info[file], addr);
+                    end if;
+                end do;
 
             end if;
         end if;
@@ -361,7 +359,7 @@ local ModuleLoad
 ##AUTHOR   Joe Riel
 ##DATE     May 2012
 ##CALLINGSEQUENCE
-##- LookupStatemen('filename','lastaddr','lineno','offset')
+##- LookupStatement('filename','lastaddr','lineno','offset')
 ##PARAMETERS
 ##- 'filename' : ::string::; source file name
 ##- 'lastaddr' : ::integer::; address of likely procedure
@@ -407,7 +405,7 @@ local ModuleLoad
 ##  procedure/statement.
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include "/home/joe/emacs/mdcs/maple/include/lineinfo.mpl"
 ## AssignFUNC(LineInfo:-LookupStatement):
 ## AssignLocal(Store,mdc:-LineInfo:-Store):
@@ -497,7 +495,7 @@ local ModuleLoad
 ##  procedure has breakpoints at offsets 12 and 24, the
 ##  string returned is ~" 12 24"~.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## $include <lineinfo.mpl>
 ## AssignFUNC(LineInfo:-Breakpoints):
 ## AssignLocal(Store, mdc:-LineInfo:-Store):

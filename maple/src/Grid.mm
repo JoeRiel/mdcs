@@ -146,14 +146,12 @@ export CodeString
 ##- "mdc[Grid][CodeString]"
 
     Procedure := proc(prc :: procedure)
-        subs('_opts' = _rest
-             , '_prc' = eval(prc)
-             , '_lbl' = sprintf("%s_%d", kernelopts('username,pid'))
+        subs("opts" = _rest
+             , "prc" = eval(prc)
+             , "lbl" = sprintf("%s_%d", kernelopts('username,pid'))
              , proc()
-                   prc := _prc;
-                   mdc('label' = _lbl
-                       , _opts
-                      );
+               local prc := "prc";
+                   mdc('label' = "lbl", "opts");
                    prc(_rest);
                end proc
             );

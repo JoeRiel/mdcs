@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##PROCEDURE mdc[indexed2slashed]
 ##HALFLINE convert indexed name to a slashed name
@@ -16,7 +17,7 @@
 ##
 ##- If a name is not indexed it is returned as is.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(indexed2slashed);
 ## $define NE testnoerror
 ### mdc(FUNC):
