@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 unprotect('SHA');
 module SHA()
 

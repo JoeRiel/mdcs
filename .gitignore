@@ -1,11 +1,19 @@
 *~
+auto/
 /doc/*
 !/doc/*.texi
 !/doc/*.html
 !/doc/*.info
 TAGS
 
-# for now
+# mk directory 
+/mk/Makefile.aux
+/mk/Makefile.out
+/mk/Makefile.tex
+/mk/mds-fixup.el
+/mk/default.mk
+
+
 /maple/Browser
 /maple/doti/
 /maple/mdoc/
@@ -13,6 +21,7 @@ TAGS
 /maple/mtest/
 /maple/tst/
 /maple/sandbox/
+/sandbox/
 
 /scrs/
 

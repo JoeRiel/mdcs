@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE mdc[DataFile]
 ##HALFLINE return the path to a data file provided with the toolbox
@@ -18,7 +19,7 @@
 ##SEEALSO
 ##- "kernelopts"
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(DataFile):
 ##
 ## Try("1", FUNC(), "/home/joe/maple/toolbox/emacs/data/");

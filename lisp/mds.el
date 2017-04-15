@@ -32,9 +32,6 @@
 ;; It is a part of the Maple Debugger Client Server package.
 
 ;;}}}
-;;{{{ TODO
-
-;;}}}
 
 ;;; Code:
 
@@ -49,9 +46,10 @@
 (require 'mds-queue)   ; handle the queue and dispatch tags
 (require 'mds-re)      ; regular expressions
 (require 'mds-ss)      ; showstat buffers (ss interface)
-(require 'mds-thing)
+(require 'mds-thing)   ; 
 (require 'mds-wm)      ; window manager
 (require 'mds-li)      ; lineinfo buffer (li interface)
+(require 'mds-version) ; assign version
 
 ;;}}}
 
@@ -71,9 +69,30 @@ Automatically assigned to nil if wmctrl is not available."
 
 ;;}}}
 
+;;{{{ Version
+
+;;;###autoload
+(defun mds-version (&optional here full message)
+  "Show the mds-mode version in the echo area.
+With prefix argument HERE, insert it at point.
+When FULL is non-nil, use a verbose version string.
+When MESSAGE is non-nil, display a message with the version."
+  (interactive (list current-prefix-arg t (not current-prefix-arg)))
+  (let* ((mds-version (mds-release))
+	 (git-version (mds-git-version))
+	 (version (if full
+		      (format "Mds-mode version %s (%s)"
+			      mds-version
+			      git-version)
+		    mds-version)))
+    (when here (insert version))
+    (when message (message "%s" version))
+    version))
+	
+;;}}}
+
 ;;{{{ Constants
 
-(defconst mds-version "2.5.0" "Version number of mds.")
 (defconst mds-max-number-clients 4  "Maximum number of clients allowed.")
 (defconst mds-log-buffer-name "*mds-log*"  "Name of buffer used to log connections.")
 
@@ -118,7 +137,8 @@ If server is already running, stop then restart it."
 		  :sentinel 'mds-sentinel
 		  :filter 'mds-filter
 		  ;; :log 'mds-log
-		  :server 't))
+		  :server 't)
+	mds-li-files nil)
   (set-process-query-on-exit-flag mds-proc mds-query-on-exit-flag)
   (mds-login-reset))
 
@@ -283,11 +303,6 @@ When true, tracing stops if an error is raised."
 	   (if (setq mds-stop-trace-at-trapped-error-flag (not mds-stop-trace-at-trapped-error-flag))
 	       "enabled"
 	     "disabled")))
-
-(defun mds-version ()
-  "Display the version of mds."
-  (interactive)
-  (message "mds version: %s" mds-version))
 
 ;;}}}
 

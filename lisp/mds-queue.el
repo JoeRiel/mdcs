@@ -47,7 +47,6 @@
 (require 'mds-out)
 (require 'mds-wm)
 
-
 ;; A queue structure consists of a single cons-cell,
 ;; ( proc . buffer ), where proc is the process
 ;; and buffer is the queue-buffer.
@@ -108,22 +107,21 @@ communicate with the process.  Data is sent to the queue via
 ;;}}}
 ;;{{{ define tags
 
-(eval-and-compile
-  (defconst mds-tag-clear-echo	?C  "Clear message displayed at bottom of screen")
-  (defconst mds-tag-error	?E  "Message is an error")
-  (defconst mds-tag-eval	?O  "Message is the output from a computation" )
-  (defconst mds-tag-info	?I  "Message is debugger query information")
-  (defconst mds-tag-monitor	?M  "Message is the output of a monitored expression")
-  (defconst mds-tag-printf	?P)
-  (defconst mds-tag-prompt	?>  "Display a prompt.  Message is empty.")
-  (defconst mds-tag-result	?R  "Message is the result of a call to `mds-ss-request'.")
-  (defconst mds-tag-same	?%  "Indicates the state and procedure have not changed.")
-  (defconst mds-tag-ss-dead	?D  "Message is a showstat output for the dead buffer." )
-  (defconst mds-tag-ss-live	?L  "Message is a showstat output for the live buffer." )
-  (defconst mds-tag-stack	?K  "Stack output")
-  (defconst mds-tag-state	?S  "Message defines current state")
-  (defconst mds-tag-warn	?W  "Message is a warning")
-  (defconst mds-tag-watched	?w  "Message is watched errors, conditiona"))
+(defconst mds-tag-clear-echo    ?C  "Clear message displayed at bottom of screen")
+(defconst mds-tag-error         ?E  "Message is an error")
+(defconst mds-tag-eval          ?O  "Message is the output from a computation" )
+(defconst mds-tag-info          ?I  "Message is debugger query information")
+(defconst mds-tag-monitor       ?M  "Message is the output of a monitored expression")
+(defconst mds-tag-printf        ?P)
+(defconst mds-tag-prompt        ?>  "Display a prompt.  Message is empty.")
+(defconst mds-tag-result        ?R  "Message is the result of a call to `mds-ss-request'.")
+(defconst mds-tag-same          ?%  "Indicates the state and procedure have not changed.")
+(defconst mds-tag-ss-dead       ?D  "Message is a showstat output for the dead buffer." )
+(defconst mds-tag-ss-live       ?L  "Message is a showstat output for the live buffer." )
+(defconst mds-tag-stack         ?K  "Stack output")
+(defconst mds-tag-state         ?S  "Message defines current state")
+(defconst mds-tag-warn          ?W  "Message is a warning")
+(defconst mds-tag-watched       ?w  "Message is watched errors, conditiona")
 
 ;;}}}
 ;;{{{ mds-queue-dispatch-tags
@@ -139,14 +137,14 @@ TAG identifies the operation, MSG is the message."
     ;; route MSG to proper buffer
     (cond
      
-     ((= tag (eval-when-compile mds-tag-eval))
+     ((= tag mds-tag-eval)
       (mds-out-display out-buf msg 'output))
 
 
-     ((= tag (eval-when-compile mds-tag-state))
+     ((= tag mds-tag-state)
       (unless (string-match mds-re-line-info msg)
 	(error "Problem with format in LINE_INFO tag: %s" msg))
-      (let ((file (match-string 1 msg))
+      (let ((>file       (match-string 1 msg))
 	    (beg  (1+ (string-to-number (match-string 3 msg))))
 	    (depth       (match-string 5 msg))
 	    (breakpoints (match-string 6 msg))
@@ -154,10 +152,12 @@ TAG identifies the operation, MSG is the message."
 	    (procname  	 (match-string 8 msg))
 	    (state     	 (match-string 9 msg))
 	    (statement 	 (match-string 10 msg))
-	    (li-buf (mds-client-li-buf client)))
-	(if (string= file "0")
+	    (li-buf (mds-client-li-buf client))
+	    file)
+	(setq file (mds-li-find-file >file (mds-client-get-maple-version client)))
+	(if (null file)
 	    (mds-client-set-has-source client nil)
-	  (mds-li-update li-buf file addr procname state beg
+	  (mds-li-update li-buf file >file addr procname state beg
 			 (mapcar 'string-to-number (split-string breakpoints))
 			 depth)
 	  (mds-client-set-has-source client t))
@@ -172,7 +172,7 @@ TAG identifies the operation, MSG is the message."
 	;; buffer.  Maybe there is a cheaper method.
 	(mds-goto-current-state client)))
 
-     ((= tag (eval-when-compile mds-tag-prompt))
+     ((= tag mds-tag-prompt)
       ;; Extract the state-number and pass it along
       (mds-out-display out-buf
 		       (mds-client-get-state client)
@@ -186,41 +186,41 @@ TAG identifies the operation, MSG is the message."
 	  (mds-out-display out-buf trace-mode 'cmd)
 	  (mds-client-send client (concat trace-mode "\n")))))
       
-     ((= tag (eval-when-compile mds-tag-result))
+     ((= tag mds-tag-result)
       (mds-client-set-result client msg))
 
-     ((= tag (eval-when-compile mds-tag-ss-live))
+     ((= tag mds-tag-ss-live)
      ;; msg is showstat output (printout of procedure).
      ;; Insert into live-showstat buffer.
       (mds-ss-insert-proc live-buf msg))
 
-     ((= tag (eval-when-compile mds-tag-ss-dead))
+     ((= tag mds-tag-ss-dead)
      ;; msg is an inactive showstat output.
      ;; Insert into dead-showstat buffer.
       (mds-ss-insert-proc (mds-client-dead-buf client) msg))
 
-     ((= tag (eval-when-compile mds-tag-stack))
+     ((= tag mds-tag-stack)
       (mds-out-display out-buf msg 'stack))
 
-     ((= tag (eval-when-compile mds-tag-monitor))
+     ((= tag mds-tag-monitor)
       (mds-out-display out-buf msg 'monitor))
      
-     ((= tag (eval-when-compile mds-tag-warn))
+     ((= tag mds-tag-warn)
       (mds-out-display out-buf msg 'warn))
 
-     ((= tag (eval-when-compile mds-tag-error))
+     ((= tag mds-tag-error)
       (mds-out-display out-buf msg 'error))
 
-     ((= tag (eval-when-compile mds-tag-printf))
+     ((= tag mds-tag-printf)
       (mds-out-display out-buf msg 'printf))
 
-     ((= tag (eval-when-compile mds-tag-info))
+     ((= tag mds-tag-info)
       (mds-out-display out-buf msg 'info))
 
-     ((= tag (eval-when-compile mds-tag-watched))
+     ((= tag mds-tag-watched)
       (mds-out-display out-buf msg 'watched))
 
-     ((= tag (eval-when-compile mds-tag-clear-echo))
+     ((= tag mds-tag-clear-echo)
       (message ""))
 
      ;; otherwise print to debugger output buffer

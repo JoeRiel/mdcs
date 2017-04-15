@@ -26,7 +26,7 @@
 ##  to use it.
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(InstallPatch);
 ## macro(NE=testnoerror):
 ##

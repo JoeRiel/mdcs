@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##
 ##PROCEDURE(help) mdc[HelpMDS]
@@ -35,7 +36,7 @@ local html,platform,shellExecute,uri;
     if platform <> "windows" then
         error "this command is only available on Windows machines";
     end if;
-    html := sprintf("%s/maple/toolbox/mdc/doc/mds.html", kernelopts('homedir'));
+    html := FileTools:-JoinPath([kernelopts('toolboxdir' = "emacs"), "doc", "mds.html"]);
     if not FileTools:-Exists(html) then
         error "file '%1' does not exist", html;
     end if;

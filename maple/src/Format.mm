@@ -1,3 +1,4 @@
+#LINK mdc.mpl
 ##INCLUDE ../include/mpldoc_macros.mpi
 ##MODULE mdc[Format]
 ##HALFLINE code used by the Emacs Maple debugger
@@ -10,7 +11,7 @@ export ArgsToEqs
     ,  GoTry
     ,  PrettyPrint
     ,  showstat
-    ,  Try
+    ,  Try := Try
     ;
 
 local prettyprint
@@ -73,7 +74,7 @@ local prettyprint
 ##> g();
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(Format:-ArgsToEqs):
 ## $define NE testnoerror
 ##
@@ -204,7 +205,7 @@ local prettyprint
 ##NOTES
 ##- Need to provide a means to indicate the type.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(Format:-prettyprint):
 ## kernelopts(opaquemodules=false):
 ## mdc:-Debugger:-Printf := printf:
@@ -222,7 +223,7 @@ local prettyprint
 
     prettyprint := proc(top :: truefalse := true)
     local dims, eqs, ex, fld, i, ix, j, m, n, numdims, typ, opacity, rest;
-    global _fake_name;
+    global anonymous;
 
         if nargs > 2 then
             return seq(procname(false,ex), ex in [_rest]);
@@ -297,7 +298,7 @@ local prettyprint
 
         elif rest :: table then
             typ := op(0,eval(rest));
-            eqs := seq(ix[] = procname(false, rest[ix[]]), ix in [indices(rest)]);
+            eqs := seq(ix[] = procname(false, rest[ix[]]), ix in sort([indices(rest)]));
             if top then
                 return (Debugger:-Printf("(*%a*)\n", typ), eqs);
             else
@@ -310,11 +311,11 @@ local prettyprint
                     Format:-showstat(convert(_rest,string));
                 else
                     # rest is an evaluated expression.  Assign to
-                    # a the global name _fake_name, which is then
+                    # a the global name anonymous, which is then
                     # displayed.  This is done because
                     # debugopts(procdump) requires a name.
-                    _fake_name := rest;
-                    Format:-showstat("_fake_name");
+                    anonymous := rest;
+                    Format:-showstat("anonymous");
                 end if;
                 return NULL;
             else

@@ -65,6 +65,7 @@
 (defvar mds-li-beg nil            "Character position of beginning of current statement in lineinfo buffer.")
 (defvar mds-li-depth ""           "String corresponding to current stack depth.")
 (defvar mds-li-file-name ""       "Name of the current source-file in lineinfo buffer.")
+(defvar mds-li->file-name ""      "String stored in mla corresponding to `mds-li-file-name.")
 (defvar mds-li-state 0            "Current state (posint) in lineinfo buffer.")
 
 (mapc #'make-variable-buffer-local
@@ -73,6 +74,7 @@
 	mds-li-beg
 	mds-li-depth
 	mds-li-file-name
+	mds-li->file-name
 	mds-li-state))
 
 (add-to-list 'overlay-arrow-variable-list 'mds-li-arrow-position)
@@ -93,8 +95,9 @@
 
 ;;{{{ Update source buffer
   
-(defun mds-li-update (buffer file addr procname state beg breakpoints depth)
+(defun mds-li-update (buffer file >file addr procname state beg breakpoints depth)
   "Update source BUFFER with source-file FILE.
+>FILE is the string stored as line-info data in the mla.
 ADDR is the address of PROCNAME.
 PROCNAME is the procedure name.
 STATE is  the current state (a string corresponding to an integer).
@@ -117,7 +120,8 @@ Put point at BEG and move the current statement marker."
 	(insert-file-contents file)
 	;; set the tab-width
 	(maplev-set-tab-width file)
-	(setq mds-li-file-name file))
+	(setq mds-li-file-name file
+	      mds-li->file-name >file))
       (unless same-addr
 	;; insert breakpoints and update buffer-local variable mds-li-addr
 	(let (brkpt)
@@ -152,7 +156,7 @@ If line information is available, a list of three strings is
 returned: address, statement number, and beginning character
 offset."
   (let ((result (mds-ss-request (format "mdc:-LineInfo:-LookupStatement(\"%s\",%s,%s,%d)"
-					mds-li-file-name
+					mds-li->file-name
 					(mds-client-get-addr mds-client)
 					(line-number-at-pos (point))
 					(1- (point))))))
@@ -200,7 +204,48 @@ Set cursor to ready."
 	    (delete-overlay ov))
 	(setq overlays (cdr overlays))))))
 
+;;{{{ (*) find file
 
+(defvar mds-li-files nil
+  "Tree of location of source files.
+Elements have form \(version \. branch\), where VERSION is the
+Maple version (a string), and BRANCH is an alist with elements of
+the form \(>file \. path\), with >FILE the line-info string that
+is stored with the procedure and PATH the path to the actual
+file, or nil if it does not exist.")
+
+;; (setq mds-li-files nil)
+
+(defun mds-li-find-file (>file version)
+  "Return the path to >FILE, expanding a leading > to MAPLE-ROOT.
+>FILE is the line-info string stored with the procedure.  If no path
+exists, or >FILE is \"0\", return nil.  Update `mds-li-files'."
+  (unless (string= >file "0")
+    (let* ((alist (assoc version mds-li-files))
+	   (path (assoc >file (cdr alist))))
+      (if path
+	  (cdr path)
+	;; expand leading > to maple-root
+	(setq path (if (= (aref >file 0) ?>)
+		       (let ((mroot (cdr (assoc version mds-maple-root-alist))))
+			 (and mroot
+			      (concat (file-name-as-directory mroot)
+				      (substring >file 1))))
+		     >file))
+	(when (and path (not (file-exists-p path)))
+	  (message "Cannot find source file %s" path)
+	  (setq path nil))
+	;; add path to `mds-li-files'
+	(let ((lst (cons (cons >file path) (cdr alist))))
+	  (if alist 
+	      ;; update existing maple-root branch
+	      (setcdr alist lst)
+	    ;; create maple-root branch
+	    (setq mds-li-files (cons (cons version lst) mds-li-files))))
+	;; return path
+	path))))
+
+;;}}}
 
 ;;}}}
 

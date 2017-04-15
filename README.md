@@ -2,7 +2,17 @@
 MDCS: Maple Debugger Client/Server
 ==================================
 
-**Version 2.5.0**
+**Version 2.6.0**
+
+Table of Contents
+-----------------
+
+* [Description](#description)
+* [Screenshot](#screenshot)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
 
 Table of Contents
 -----------------
@@ -107,7 +117,7 @@ Installation
 Copy the files to locations appropriate on your system.
 Here is where I put the various files:
 
-    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.hdb mdc.help
+    $HOME/maple/toolbox/mdc/lib    :  mdc.mla mdc.help
     $HOME/.emacs.d/maple           :  lisp/mds*.el
     $HOME/share/info               :  doc/mds.info (do not include the "doc/")
 

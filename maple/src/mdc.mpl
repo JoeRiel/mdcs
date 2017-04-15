@@ -1,5 +1,7 @@
 # -*- mpldoc -*-
 
+#LINK ../../.maplev
+#LINK ../../Makefile
 ##INCLUDE ../include/mpldoc_macros.mpi
 
 #{{{ mpldoc
@@ -278,15 +280,6 @@
 ##  This may be useful if the server had to be reset.
 ##  The default is false.
 ##
-##opt(showoptions,truefalse)
-##  True means the **options** and **description** statements
-##  in procedures are displayed in the showstat listing.
-##  *Because of a debug kernel deficiency, when this option
-##  is in effect, the debugger may occasionally continue to
-##  the end when first debugging a procedure.*
-##  The second time the debugger enters the procedure, it should work properly.
-##  The default is false; this option is sticky.
-##
 ##opt(skip_before,string)
 ##  The string is matched against the next statement;
 ##  if it matches, skipping is halted.
@@ -548,7 +541,9 @@ module mdc()
 option package;
 
 #{{{ exports
-export Count
+
+export About
+    ,  Count
     ,  DataFile
     ,  Debugger
     ,  Format
@@ -558,10 +553,10 @@ export Count
     ,  Monitor
     ,  Sleep
     ,  Skip
-    ,  Version
     ,  HelpMDS
     ,  _pexports
     ;
+
 #}}}
 
 #{{{ local declarations
@@ -585,14 +580,13 @@ local Connect
 
     , cnt
     , debugbuiltins := false
-    , Host
+    #, Host
     , match_predicate := () -> true
     , max_length
-    , Port
+    #, Port
     , Quiet := false
     , sid := -1
     , view_flag
-    , show_options_flag
     , PrintInertRecord
     , print_to_maple_flag
     , SkipCheckStack
@@ -635,7 +629,7 @@ local Connect
 
     Warnings := {}; # initialize
 
-
+$include <include/About.mi>
 $include <src/DataFile.mm>
 $include <src/Debugger.mm>
 $include <src/Format.mm>
@@ -664,7 +658,6 @@ $include <src/PrintRtable.mm>
                          , { print_to_maple :: truefalse := GetDefault(':-print_to_maple',false) }
                          , { quiet :: truefalse := GetDefault(':-quiet',Quiet) }
                          , { reconnect :: truefalse := false }
-                         , { showoptions :: {truefalse,identical(ignore)} := GetDefault(':-showoptions','ignore') }
                          , { stopat :: {string,name,list,set({string,name,list})} := "" }
                          , { stoperror :: {truefalse,string,set} := false }
                          , { stopwarning :: {string,set(string),truefalse} := NULL }
@@ -732,11 +725,6 @@ $include <src/PrintRtable.mm>
 
         lbl := label;
 
-        #}}}
-        #{{{ showoptions
-        if showoptions :: truefalse then
-            show_options_flag := showoptions;
-        end if;
         #}}}
         #{{{ skip_until (clear skip)
 
@@ -1015,8 +1003,8 @@ local cmd,connected,line;
             end if;
         end if;
     end try;
-    Host := host;
-    Port := port;
+    # Host := host;
+    # Port := port;
     # handle login (hack for now)
     try
         line := Sockets:-Read(sid);
@@ -1057,6 +1045,7 @@ Disconnect := proc( { quiet :: truefalse := false } )
         catch "argument does not refer to an open socket connection":
         end try;
         sid := -1;
+        NULL;
     end if;
 end proc;
 
@@ -1069,7 +1058,7 @@ end proc;
 ##AUTHOR   Joe Riel
 ##DATE     Nov 2011
 ##CALLINGSEQUENCE
-##- \PROC('tag','rest')
+##- WriteTagf('tag','rest')
 ##PARAMETERS
 ##- 'tag'  : ::name::
 ##- 'rest' : (optional) arguments to "sprintf"
@@ -1127,18 +1116,16 @@ end proc;
 #}}}
 #{{{ CreateID
 
-##DEFINE PROC CreateID
 ##PROCEDURE mdc[CreateID]
 ##HALFLINE create a formatted ID that identifies the client
 ##CALLINGSEQUENCE
-##- \PROC('label')
+##- CreateID('label')
 ##PARAMETERS
 ##- 'label' : ::string::; user-friendly label
 ##RETURNS
 ##- ::string::
 ##DESCRIPTION
-##- The `\PROC` procedure
-##  returns a string that can be used by the server
+##- Return a string that can be used by the server
 ##  to identify this client.
 ##
 ##- Currently the format is ~:label:release:platform:pid:~, where
@@ -1158,7 +1145,7 @@ end proc;
 ##- The format will probably be expanded once this is in place.
 ##  Note that a different machine could generate the same ID.
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(CreateID):
 ## macro(LA='verify,label', NLA='verify,Not(label)', TE=testerror);
 ### mdc(FUNC):
@@ -1177,7 +1164,7 @@ end proc;
 CreateID := proc(label :: string
                  , { platform :: string := kernelopts(':-platform') }
                  , { pid :: integer := kernelopts(':-pid') }
-                 , { release :: integer := "DEFAULT" }
+                 , { release :: string := "DEFAULT" }
                  , $
                 )
 local ver;
@@ -1187,25 +1174,22 @@ local ver;
         error "invalid characters in label '%1'", label;
     end if;
     if release = "DEFAULT" then
-        ver := kernelopts('version');
-        ver := substring(ver, SearchText(" ",ver)+1 .. SearchText(".",ver)-1);
-        ver := parse(ver);
+        ver := kernelopts(':-version');
+        ver := sscanf(ver, "Maple %[0-9.] (%[^)])%[0-9.]");
+        ver := `if`(nops(ver) = 3
+                    , cat(ver[1], ver[3])
+                    , ver[1]
+                   );
     else
         ver := release;
     end if;
-    return sprintf(":%s:%d:%s:%d:"
+    return sprintf(":%s:%s:%s:%d:"
                    , label
                    , ver
                    , platform
                    , pid
                   );
 end proc;
-
-#}}}
-
-#{{{ Version
-
-Version := "2.5.0";
 
 #}}}
 
@@ -1533,11 +1517,11 @@ local alloc_orig, alloc_max;
 
     elif stacklevel <> NULL then
 
-        match_predicate := subs('_S' = stacklevel+51  # 48 = 20+4+4+20, but 51 is better
+        match_predicate := subs("level" = stacklevel+51  # 48 = 20+4+4+20, but 51 is better
                                 , proc()
                                   local lev;
                                       lev := kernelopts(':-level');
-                                      if _S < lev then
+                                      if "level" < lev then
                                           sprintf("stack level [%d] exceeded %d"
                                                   , lev - 51
                                                   , stacklevel
@@ -1652,7 +1636,7 @@ end proc;
 ##- "stopat"
 ##
 ##TEST
-## $include <test_macros.mi>
+## $include <include/test_macros.mi>
 ## AssignFUNC(Count):
 ## macro(AS='verify,as_set');
 ##
