@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-2.6.1
+** Remove empty.hdb from git.
 * mdcs-2.6.0
 ** Handle updates to lineinfo (expand > to $MAPLE_ROOT)
    * This will only affect Maple 2017+.

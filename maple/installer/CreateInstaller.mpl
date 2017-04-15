@@ -247,7 +247,7 @@ global InstallScript;
 uses %FT = FileTools;
 
     # This is updated by bin/version
-    version := "2.6.0";
+    version := "2.6.1";
 
     installer := sprintf("mdcs-installer-%s.mla", version);
 
