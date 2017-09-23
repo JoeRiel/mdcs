@@ -1,10 +1,14 @@
 #LINK ../src/mdc.mpl
 
-$include <include/version.mi>
+$ifndef __GIT_HASH__
+$define __GIT_HASH__ "unknown"
+$define __GIT_BUILD__ "unknown"
+$define __VERSION__ "unknown"
+$endif
 
 About := subs('_about' = Record(NULL
                                 , "package" = "mdc"
-                                , "version" = "9999"
+                                , "version" = __VERSION__
                                 , "author"  = "Joe Riel"
                                 , "email"   = "jriel@maplesoft.com"
                                 , "date"    = StringTools:-FormatTime()
