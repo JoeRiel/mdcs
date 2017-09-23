@@ -45,3 +45,10 @@ readline.log
 /bin/byte-compile
 /bin/emacs
 /demo/mdcs-debugger-demo.mw
+/maple/include/version.mi
+/doc/mds.html
+/doc/mds.info
+/mdc.hdb
+/mdc.help
+/README-kernel
+/README.html
