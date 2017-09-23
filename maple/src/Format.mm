@@ -86,7 +86,7 @@ local prettyprint
 ##
 ## Try[NE]("2.1.0", proc(x, {b::truefalse:=false}, $) end, 'assign' = "proc2_1");
 ## Try("2.1.1", [FUNC]("proc2_1", [[1]], [], [b=false]), [x=1, b=false]);
-## Try("2.2.2", [FUNC]("proc2_1", [[1]], [], [b=true]),  [x=1, b=true ]);
+## Try("2.1.2", [FUNC]("proc2_1", [[1]], [], [b=true]),  [x=1, b=true ]);
 ##
 ## Try[NE]("3.1.0", proc(x,y:=1,z::integer:=2) end, 'assign' = "proc3_1");
 ## Try("3.1.1", [FUNC]("proc3_1", [[1],[2]], [], []), [y=1, z=2] );
@@ -132,18 +132,26 @@ local prettyprint
         # Remove default parameters from parameters.
         (defparams, params) := selectremove(type, params, 'assignment');
 
-        # Remove type declarations from params and defparams.
-        params := [seq(`if`(p :: symbol
-                            , p
-                            , op(1,p)
-                           )
-                       , p in params)];
+        # Remove type declarations from params.
+        params := [seq(ifelse(p :: symbol
+                              , p
+                              , op(1,p)
+                             )
+                       , p = params)];
 
-        defparams := [seq(`if`(op(1,p) :: symbol
-                               , op(1,p)
-                               , op([1,1],p)
-                              )
-                          , p in defparams)];
+        # Remove type declaration from defparams and select primary keyword,
+        # if applicable.  For example, handle [a,b] :: integer := 23 ==> a.
+        defparams := map(proc(p)
+                         local param;
+                             param := op(1,p);
+                             if param :: `::` then
+                                 param := op(1,param);
+                             end if;
+                             if param :: list then
+                                 param := param[1];
+                             end if;
+                             param;
+                         end proc, defparams);
 
         # Remove remaining options from the default positional parameters.
         defparams := remove(member, defparams, lhs~(oargs));
@@ -155,10 +163,10 @@ local prettyprint
                     , seq(params[i] = pargs[i][], i=1..n)       # required positional
                     , seq(defparams[i] = pargs[n+i][], i=1..m)  # default positional
                     , oargs[]                                   # optional args
-                    , `if`( rargs = []                          # _rest
-                            , NULL
-                            , ':-_rest' = rargs[]
-                          )
+                    , ifelse( rargs = []                          # _rest
+                              , NULL
+                              , ':-_rest' = rargs[]
+                            )
                   );
 
         # return ppargs;
@@ -235,29 +243,29 @@ local prettyprint
         if rest :: set then
             if top then
                 Debugger:-Printf("(*set: %d*)\n", nops(rest));
-                return `if`(rest = []
-                            , Debugger:-Printf("NULL\n")
-                            , rest[]
-                           );
+                return ifelse(rest = []
+                              , Debugger:-Printf("NULL\n")
+                              , rest[]
+                             );
             else
                 return rest;
             end if;
         elif rest :: list then
             if top then
                 Debugger:-Printf("(*list: %d*)\n", nops(rest));
-                return `if`(rest = []
-                            , Debugger:-Printf("NULL\n")
-                            , rest[]
-                           );
+                return ifelse(rest = []
+                              , Debugger:-Printf("NULL\n")
+                              , rest[]
+                             );
             else
                 return rest;
             end if;
 
         elif rest :: 'record' then
-            eqs := seq(`if`(assigned(rest[fld])
-                            , fld = procname(false, rest[fld])
-                            , fld
-                           )
+            eqs := seq(ifelse(assigned(rest[fld])
+                              , fld = procname(false, rest[fld])
+                              , fld
+                             )
                        , fld in sort([exports(rest)]));
             if top then
                 return Debugger:-Printf("(*record*)\n"), eqs;
@@ -274,10 +282,10 @@ local prettyprint
                         return ModulePrint(rest);
                     end if;
                     if top then
-                        eqs := seq(`if`(assigned(rest[fld])
-                                        , fld = thisproc(false, rest[fld])
-                                        , fld
-                                       )
+                        eqs := seq(ifelse(assigned(rest[fld])
+                                          , fld = thisproc(false, rest[fld])
+                                          , fld
+                                         )
                                    , fld = [exports(rest)]);
                         return Debugger:-Printf("(*object*)\n"), eqs;
                     else
@@ -345,10 +353,10 @@ local prettyprint
             elif rest :: Matrix then
                 (m,n) := op(1,rest);
                 Debugger:-Printf("(*Matrix: %d x %d*)\n", m,n);
-                return seq([seq(`if`(rest[i,j]=NULL
-                                     , 'NULL'
-                                     , rest[i,j]
-                                    ), j=1..n)], i=1..m);
+                return seq([seq(ifelse(rest[i,j]=NULL
+                                       , 'NULL'
+                                       , rest[i,j]
+                                      ), j=1..n)], i=1..m);
             elif rest :: Array then
                 numdims := ArrayNumDims(rest);
                 if numdims = 1 then
@@ -358,10 +366,10 @@ local prettyprint
                 elif numdims = 2 then
                     dims := ArrayDims(rest);
                     Debugger:-Printf("(*Array: %q*)\n", dims);
-                    return seq([seq(`if`(rest[i,j]=NULL
-                                         , 'NULL'
-                                         , rest[i,j]
-                                        ), j=dims[2])], i=dims[1]);
+                    return seq([seq(ifelse(rest[i,j]=NULL
+                                           , 'NULL'
+                                           , rest[i,j]
+                                          ), j=dims[2])], i=dims[1]);
                 else
                     return rest;
                 end if;
