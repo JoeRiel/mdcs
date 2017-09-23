@@ -14,6 +14,16 @@ Table of Contents
 * [Configuration](#configuration)
 * [Usage](#usage)
 
+Table of Contents
+-----------------
+
+* [Description](#description)
+* [Screenshot](#screenshot)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
+
 Description
 -----------
 

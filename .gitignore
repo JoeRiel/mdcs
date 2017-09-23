@@ -45,14 +45,3 @@ readline.log
 /bin/byte-compile
 /bin/emacs
 /demo/mdcs-debugger-demo.mw
-/mk/help.mk
-/mk/version.mk
-/mk/targets.mk
-/mds-version.inc
-/maple/Makefile
-/lisp/Makefile
-/lisp/mds-version.el
-/doc/mds.html
-
-/installer.mk
-/maple/include/version.mi
