@@ -225,18 +225,10 @@ help: $(call print-separator)
 INFO-FILES = doc/mds.info
 HTML-FILES = doc/mds.html
 PDF-FILES  = doc/mds.pdf
-VERSION-TEXI = doc/mds-version.texi
 
 MAKEINFO-VARS = -D 'VERSION $(GIT-VERSION)' -D 'DATE $(DATE)'
 
-# $(VERSION-TEXI): doc/mds.texi
-# 	@echo "Update $@: $(MDS-VERSION) ($(GIT-VERSION))"
-# 	@echo "@c mds-version.texi --- auto-generated file, do not edit." > $@
-# 	@echo "@set VERSION $(MDS-VERSION) ($(GIT-VERSION))" >> $@
-# 	@echo "@set DATE $(DATE)" >> $@
-# 	@echo "@c mds-version.texi ends here" >> $@
-
-doc/mds.info: doc/mds.texi $(VERSION-TEXI)
+doc/mds.info: doc/mds.texi
 	@echo "Creating info file $@"
 	@$(call shellerr,cd doc; $(MAKEINFO) \
 	   --no-split mds.texi \

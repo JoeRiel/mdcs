@@ -1,4 +1,0 @@
-@c mds-version.texi --- auto-generated file, do not edit.
-@set VERSION unknown
-@set DATE unknown
-@c mds-version.texi ends here
