@@ -1,5 +1,7 @@
 -*- org -*-
 
+* mdcs-2.6.3
+** Remove doc/mds-version.texi.
 * mdcs-2.6.2
 ** Handle aliased keyword option in Format.
 * mdcs-2.6.1
