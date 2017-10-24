@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=2.6.3
+set VERSION=2.6.4
 
 :: Modify per your setup. 
 set MAPLECLI="%PROGRAMFILES%\Maple 15\bin.X86_64_WINDOWS\cmaple.exe"
