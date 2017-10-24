@@ -236,7 +236,7 @@ doc/mds.info: doc/mds.texi
 	   $(MAKEINFO-VARS) \
 	  )
 
-doc/mds.pdf: doc/mds.texi $(VERSION-TEXI)
+doc/mds.pdf: doc/mds.texi
 	(cd doc; $(TEXI2PDF) $(MAKEINFO-VARS) mds.texi)
 
 
@@ -247,7 +247,7 @@ info: doc/mds.info
 pdf: $(call print-help,pdf,	Create pdf)
 pdf: doc/mds.pdf
 html: $(call print-help,html,	Create html documentation)
-html: doc/mds.html $(VERSION-TEXI)
+html: doc/mds.html
 
 doc/mds.html: doc/mds.texi
 	@echo "Creating html file $@"
