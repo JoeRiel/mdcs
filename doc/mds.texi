@@ -1,6 +1,7 @@
 \input texinfo
 @c %***start of header
 @setfilename mds
+@include version.texi
 @settitle The Maple Debugger Server Manual
 
 @dircategory Emacs
@@ -9,7 +10,6 @@
 @end direntry
 
 @c Version and Contact Info
-@c @set MAINTAINERSITE @uref{http://orgmode.org,maintainers webpage}
 @set AUTHOR Joe Riel
 @set MAINTAINER Joe Riel
 @set MAINTAINEREMAIL @email{jriel at san dot rr dot com}
@@ -51,12 +51,10 @@ Texts.  A copy of the license is included in the section entitled
 @c Output the table of contents at the beginning.
 @contents
 
-@ifnottex
 @node Top, Introduction, (dir), (dir)
 @top Maple Debugger Server Manual
 
 @insertcopying
-@end ifnottex
 
 @menu
 * Introduction::                Installing and configuring.

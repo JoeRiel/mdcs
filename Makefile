@@ -56,7 +56,7 @@ BROWSER := x-www-browser
 MAKEINFO := makeinfo
 MKDIR := mkdir -p
 MTAGS := mtags
-TEXI2PDF := texi2pdf
+TEXI2PDF := $(MAKEINFO) --pdf
 TEXI2HTML := makeinfo --html --number-sections
 
 # }}}
@@ -220,7 +220,7 @@ mla-install: $(mla)
 
 help: $(call print-separator)
 
-.PHONY: doc info html h i p info-clean info-install
+.PHONY: doc info html h i p info-clean info-install TEXI-VERSION
 
 INFO-FILES = doc/mds.info
 HTML-FILES = doc/mds.html
@@ -228,16 +228,18 @@ PDF-FILES  = doc/mds.pdf
 
 MAKEINFO-VARS = -D 'VERSION $(GIT-VERSION)' -D 'DATE $(DATE)'
 
-doc/mds.info: doc/mds.texi
+TEXI-VERSION:
+	echo -e @set VERSION $(MDS-VERSION)\\n@set DATE $(DATE) > doc/version.texi
+
+doc/mds.info: doc/mds.texi TEXI-VERSION
 	@echo "Creating info file $@"
 	@$(call shellerr,cd doc; $(MAKEINFO) \
 	   --no-split mds.texi \
 	   --output=mds.info \
-	   $(MAKEINFO-VARS) \
 	  )
 
-doc/mds.pdf: doc/mds.texi
-	(cd doc; $(TEXI2PDF) $(MAKEINFO-VARS) mds.texi)
+doc/mds.pdf: doc/mds.texi TEXI-VERSION
+	(cd doc; $(TEXI2PDF) mds.texi)
 
 
 doc: $(call print-help,doc,	Create info$(comma) html$(comma) and pdf)
@@ -249,7 +251,7 @@ pdf: doc/mds.pdf
 html: $(call print-help,html,	Create html documentation)
 html: doc/mds.html
 
-doc/mds.html: doc/mds.texi
+doc/mds.html: doc/mds.texi TEXI-VERSION
 	@echo "Creating html file $@"
 	@(cd doc; $(TEXI2HTML) --no-split -o mds.html mds.texi)
 
