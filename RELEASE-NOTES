@@ -2,6 +2,7 @@
 
 * mdcs-2.6.4
 ** Remove VERSION-TEXI Makefile variable.
+** Create version.texi on the fly.
 * mdcs-2.6.3
 ** Remove doc/mds-version.texi.
 * mdcs-2.6.2
